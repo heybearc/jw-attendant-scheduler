@@ -1,0 +1,30 @@
+{{ site_name }} - Account Invitation
+
+Dear {{ user.first_name }} {{ user.last_name }},
+
+You have been invited to join the {{ site_name }} system. This platform helps coordinate attendant assignments for congregation events and assemblies.
+
+What you can do with your account:
+- View your upcoming assignments
+- Update your availability and contact information
+- Access event schedules and details
+- Communicate with event coordinators
+
+To activate your account and set up your password, please visit:
+{{ invitation_url }}
+
+Your account details:
+Username: {{ user.username }}
+Email: {{ user.email }}
+
+If you have any questions about using the system, please contact your local coordinator.
+
+We look forward to working with you!
+
+Best regards,
+The {{ site_name }} Team
+
+---
+This invitation was sent to {{ user.email }}.
+If you did not expect this invitation, please contact your local coordinator.
+© {{ current_year }} {{ site_name }}. All rights reserved.

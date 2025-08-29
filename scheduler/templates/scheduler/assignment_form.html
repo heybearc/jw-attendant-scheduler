@@ -1,0 +1,156 @@
+{% extends 'scheduler/base.html' %}
+
+{% block title %}{% if assignment %}Edit Assignment{% else %}Add Assignment{% endif %} - JW Attendant Scheduler{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>{% if assignment %}Edit Assignment{% else %}Add Assignment{% endif %}</h1>
+    {% if request.session.selected_event_id %}
+        <a href="{% url 'scheduler:event_detail' request.session.selected_event_id %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Event
+        </a>
+    {% else %}
+        <a href="{% url 'scheduler:event_selection' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Select Event
+        </a>
+    {% endif %}
+</div>
+
+<!-- Conflict Detection Alert -->
+<div id="conflictAlert" class="alert alert-warning" style="display: none;">
+    <h5><i class="fas fa-exclamation-triangle"></i> Scheduling Conflict Detected</h5>
+    <p id="conflictMessage"></p>
+    <div id="conflictDetails"></div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" id="assignmentForm">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    <h5><i class="fas fa-times-circle"></i> Assignment Conflict</h5>
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label for="{{ form.attendant.id_for_label }}" class="form-label">
+                            Attendant <span class="text-danger">*</span>
+                        </label>
+                        {{ form.attendant }}
+                        {% if form.attendant.errors %}
+                            <div class="text-danger small">{{ form.attendant.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="{{ form.event.id_for_label }}" class="form-label">
+                            Event <span class="text-danger">*</span>
+                        </label>
+                        {{ form.event }}
+                        {% if form.event.errors %}
+                            <div class="text-danger small">{{ form.event.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="{{ form.position.id_for_label }}" class="form-label">
+                            Position <span class="text-danger">*</span>
+                        </label>
+                        {{ form.position }}
+                        {% if form.position.errors %}
+                            <div class="text-danger small">{{ form.position.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label for="{{ form.station_number.id_for_label }}" class="form-label">
+                            Station Number
+                        </label>
+                        {{ form.station_number }}
+                        {% if form.station_number.errors %}
+                            <div class="text-danger small">{{ form.station_number.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="{{ form.shift_start.id_for_label }}" class="form-label">
+                            Shift Start <span class="text-danger">*</span>
+                        </label>
+                        {{ form.shift_start }}
+                        {% if form.shift_start.errors %}
+                            <div class="text-danger small">{{ form.shift_start.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="{{ form.shift_end.id_for_label }}" class="form-label">
+                            Shift End <span class="text-danger">*</span>
+                        </label>
+                        {{ form.shift_end }}
+                        {% if form.shift_end.errors %}
+                            <div class="text-danger small">{{ form.shift_end.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="{{ form.notes.id_for_label }}" class="form-label">
+                    Notes
+                </label>
+                {{ form.notes }}
+                {% if form.notes.errors %}
+                    <div class="text-danger small">{{ form.notes.errors.0 }}</div>
+                {% endif %}
+                <div class="form-text">Special instructions or requirements</div>
+            </div>
+
+            <div class="form-actions mt-4 pt-3 border-top">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Save Assignment
+                </button>
+                {% if request.session.selected_event_id %}
+                    <a href="{% url 'scheduler:event_detail' request.session.selected_event_id %}" class="btn btn-secondary ms-2">
+                        Cancel
+                    </a>
+                {% else %}
+                    <a href="{% url 'scheduler:event_selection' %}" class="btn btn-secondary ms-2">
+                        Cancel
+                    </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if assignment %}
+<div class="card mt-3">
+    <div class="card-header">
+        <h5 class="mb-0">Assignment Information</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <strong>Created:</strong><br>
+                {{ assignment.created_at|date:"M d, Y g:i A" }}
+            </div>
+            <div class="col-md-4">
+                <strong>Last Updated:</strong><br>
+                {{ assignment.updated_at|date:"M d, Y g:i A" }}
+            </div>
+            <div class="col-md-4">
+                <strong>Assignment ID:</strong><br>
+                #{{ assignment.id }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

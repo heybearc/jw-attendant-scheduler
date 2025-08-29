@@ -1,0 +1,302 @@
+{% extends 'scheduler/base.html' %}
+{% load static %}
+
+{% block title %}Edit Event - JW Attendant Scheduler{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-1">Edit Event</h1>
+                    <p class="text-muted">Update event details and configuration</p>
+                </div>
+                <div>
+                    <a href="{% url 'scheduler:event_selection' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Events
+                    </a>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Event Details</h5>
+                            <div class="d-flex gap-2">
+                                {% if event.status != 'current' %}
+                                <button type="button" class="btn btn-sm btn-success" onclick="setCurrentEvent()">
+                                    <i class="fas fa-play"></i> Set as Current
+                                </button>
+                                {% endif %}
+                                <a href="{% url 'scheduler:copy_event' event.id %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-copy"></i> Copy Event
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <form method="post">
+                                {% csrf_token %}
+                                
+                                <div class="row">
+                                    <div class="col-md-8 mb-3">
+                                        <label for="{{ form.name.id_for_label }}" class="form-label">Event Name *</label>
+                                        {{ form.name }}
+                                        {% if form.name.errors %}
+                                            <div class="text-danger small">{{ form.name.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="{{ form.event_type.id_for_label }}" class="form-label">Event Type *</label>
+                                        {{ form.event_type }}
+                                        {% if form.event_type.errors %}
+                                            <div class="text-danger small">{{ form.event_type.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="{{ form.start_date.id_for_label }}" class="form-label">Start Date *</label>
+                                        {{ form.start_date }}
+                                        {% if form.start_date.errors %}
+                                            <div class="text-danger small">{{ form.start_date.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="{{ form.end_date.id_for_label }}" class="form-label">End Date *</label>
+                                        {{ form.end_date }}
+                                        {% if form.end_date.errors %}
+                                            <div class="text-danger small">{{ form.end_date.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="{{ form.location.id_for_label }}" class="form-label">Location</label>
+                                    {{ form.location }}
+                                    {% if form.location.errors %}
+                                        <div class="text-danger small">{{ form.location.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                                    {{ form.description }}
+                                    {% if form.description.errors %}
+                                        <div class="text-danger small">{{ form.description.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label for="{{ form.status.id_for_label }}" class="form-label">Status</label>
+                                        {{ form.status }}
+                                        {% if form.status.errors %}
+                                            <div class="text-danger small">{{ form.status.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="{{ form.total_stations.id_for_label }}" class="form-label">Total Stations</label>
+                                        {{ form.total_stations }}
+                                        {% if form.total_stations.errors %}
+                                            <div class="text-danger small">{{ form.total_stations.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="{{ form.expected_attendants.id_for_label }}" class="form-label">Expected Attendants</label>
+                                        {{ form.expected_attendants }}
+                                        {% if form.expected_attendants.errors %}
+                                            <div class="text-danger small">{{ form.expected_attendants.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                {% if form.non_field_errors %}
+                                    <div class="alert alert-danger">
+                                        {{ form.non_field_errors }}
+                                    </div>
+                                {% endif %}
+
+                                <div class="d-flex justify-content-between">
+                                    <button type="button" class="btn btn-danger" onclick="confirmDelete()">
+                                        <i class="fas fa-trash"></i> Delete Event
+                                    </button>
+                                    <div class="d-flex gap-2">
+                                        <a href="{% url 'scheduler:event_selection' %}" class="btn btn-secondary">Cancel</a>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-save"></i> Save Changes
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">Event Statistics</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <div class="border-end">
+                                        <h4 class="text-primary mb-0">{{ event.assignments.count }}</h4>
+                                        <small class="text-muted">Assignments</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <h4 class="text-success mb-0">{{ event.assignments.values:'attendant'.distinct.count }}</h4>
+                                    <small class="text-muted">Attendants</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">Quick Actions</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'scheduler:event_dashboard' event.id %}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-tachometer-alt"></i> Event Dashboard
+                                </a>
+                                <a href="{% url 'scheduler:attendant_list' %}?event={{ event.id }}" class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-users"></i> Manage Attendants
+                                </a>
+                                <a href="{% url 'scheduler:assignment_list' %}?event={{ event.id }}" class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-calendar-alt"></i> Manage Assignments
+                                </a>
+                                <a href="{% url 'scheduler:export_event_schedule' event.id %}" class="btn btn-outline-info btn-sm">
+                                    <i class="fas fa-download"></i> Export Schedule
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if event.status == 'current' %}
+                    <div class="alert alert-success mt-3">
+                        <i class="fas fa-check-circle"></i>
+                        <strong>Current Event</strong><br>
+                        This is the active event for attendant management.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Event</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this event?</p>
+                <div class="alert alert-warning">
+                    <strong>Warning:</strong> This will permanently delete:
+                    <ul class="mb-0">
+                        <li>All assignments for this event</li>
+                        <li>All lanyard assignments</li>
+                        <li>All related data</li>
+                    </ul>
+                </div>
+                <p class="text-muted">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="deleteEvent()">Delete Event</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Set Current Modal -->
+<div class="modal fade" id="setCurrentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Set Current Event</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Set this event as the current active event?</p>
+                <p class="text-muted">This will change the status of other events accordingly.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="confirmSetCurrent()">Set as Current</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmDelete() {
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+
+function deleteEvent() {
+    // Create a form to submit DELETE request
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = window.location.href;
+    
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = 'csrfmiddlewaretoken';
+    csrfInput.value = csrfToken;
+    
+    const deleteInput = document.createElement('input');
+    deleteInput.type = 'hidden';
+    deleteInput.name = 'delete_event';
+    deleteInput.value = 'true';
+    
+    form.appendChild(csrfInput);
+    form.appendChild(deleteInput);
+    document.body.appendChild(form);
+    form.submit();
+}
+
+function setCurrentEvent() {
+    const modal = new bootstrap.Modal(document.getElementById('setCurrentModal'));
+    modal.show();
+}
+
+function confirmSetCurrent() {
+    fetch(`{% url 'scheduler:set_current_event' event.id %}`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + (data.error || 'Failed to set current event'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while setting the current event');
+    });
+    
+    bootstrap.Modal.getInstance(document.getElementById('setCurrentModal')).hide();
+}
+</script>
+{% endblock %}

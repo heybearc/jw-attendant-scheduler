@@ -1,0 +1,68 @@
+# JW Attendant Scheduler - Docker Compose for Development/Testing
+# Production deployment will use LXC containers as per infrastructure spec
+
+version: '3.8'
+
+services:
+  # PostgreSQL Database (mirrors postgres-01 LXC setup)
+  postgres:
+    image: postgres:15
+    container_name: jw_scheduler_db
+    environment:
+      POSTGRES_DB: jw_scheduler
+      POSTGRES_USER: jw_scheduler
+      POSTGRES_PASSWORD: Cloudy_92!
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+    networks:
+      - jw_scheduler_net
+
+  # Django Application (mirrors jw-scheduler LXC setup)
+  web:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: jw_scheduler_app
+    environment:
+      - DB_NAME=jw_scheduler
+      - DB_USER=jw_scheduler
+      - DB_PASSWORD=Cloudy_92!
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DEBUG=True
+      - SECRET_KEY=dev-secret-key-change-in-production
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../:/app
+      - static_volume:/app/static
+      - media_volume:/app/media
+    depends_on:
+      - postgres
+    networks:
+      - jw_scheduler_net
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
+             gunicorn --bind 0.0.0.0:8000 --reload jw_scheduler.wsgi:application"
+
+  # Redis (for future caching/sessions)
+  redis:
+    image: redis:7-alpine
+    container_name: jw_scheduler_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - jw_scheduler_net
+
+volumes:
+  postgres_data:
+  static_volume:
+  media_volume:
+
+networks:
+  jw_scheduler_net:
+    driver: bridge

@@ -1,23 +1,22 @@
 # Core Framework
-Flask==2.3.3
-Flask-SQLAlchemy==3.0.5
-Flask-Login==0.6.3
-Flask-WTF==1.1.1
-Werkzeug==2.3.7
+Django==4.2.5
+django-extensions==3.2.3
+cryptography==41.0.4
+psycopg[binary]==3.2.9
 
-# Database
-SQLAlchemy==2.0.21
-Alembic==1.12.0
+# Database (Django ORM replaces SQLAlchemy)
+# SQLAlchemy==2.0.21
+# Alembic==1.12.0
 
-# Forms and Validation
-WTForms==3.0.1
+# Forms and Validation (Django forms replace WTForms)
+# WTForms==3.0.1
 
 # Date/Time handling
 python-dateutil==2.8.2
 
 # Excel/CSV export
 openpyxl==3.1.2
-pandas==2.1.1
+# pandas==2.1.1  # Removed due to Python 3.13 compatibility issues
 
 # PDF generation
 reportlab==4.0.4
@@ -26,22 +25,29 @@ reportlab==4.0.4
 python-dotenv==1.0.0
 
 # File handling
-secure-filename==0.1
+# secure-filename==0.1  # Not needed for Django
 
-# Email support (for notifications)
-Flask-Mail==0.9.1
+# Email support (Django built-in email backend)
+# django-email-extras==0.3.0
 
-# Pagination support
-Flask-SQLAlchemy-Paginate==2023.10.24
+# Google Gmail API integration
+google-auth==2.23.3
+google-auth-oauthlib==1.1.0
+google-auth-httplib2==0.1.1
+google-api-python-client==2.103.0
 
 # JSON handling
 jsonschema==4.19.1
 
 # Development
 pytest==7.4.2
-pytest-flask==1.2.0
+pytest-django>=4.5.0
 black==23.7.0
 flake8==6.0.0
+django-debug-toolbar>=4.0.0
+reportlab>=4.0.0
+openpyxl>=3.1.0
 
 # Production server
 gunicorn==21.2.0
+whitenoise==6.5.0

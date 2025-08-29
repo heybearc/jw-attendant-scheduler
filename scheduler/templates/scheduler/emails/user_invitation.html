@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invitation to {{ site_name }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #007bff;
+        }
+        .header h1 {
+            color: #007bff;
+            margin: 0;
+        }
+        .content {
+            margin-bottom: 30px;
+        }
+        .invitation-button {
+            display: inline-block;
+            background-color: #007bff;
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .invitation-button:hover {
+            background-color: #0056b3;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            color: #666;
+            font-size: 12px;
+        }
+        .highlight {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{{ site_name }}</h1>
+            <p>You're Invited to Join Our Attendant Scheduling System</p>
+        </div>
+        
+        <div class="content">
+            <p>Dear {{ user.first_name }} {{ user.last_name }},</p>
+            
+            <p>You have been invited to join the <strong>{{ site_name }}</strong> system. This platform helps coordinate attendant assignments for congregation events and assemblies.</p>
+            
+            <div class="highlight">
+                <h3>What you can do with your account:</h3>
+                <ul>
+                    <li>View your upcoming assignments</li>
+                    <li>Update your availability and contact information</li>
+                    <li>Access event schedules and details</li>
+                    <li>Communicate with event coordinators</li>
+                </ul>
+            </div>
+            
+            <p>To activate your account and set up your password, please click the button below:</p>
+            
+            <div style="text-align: center;">
+                <a href="{{ invitation_url }}" class="invitation-button">Activate My Account</a>
+            </div>
+            
+            <p><strong>Your account details:</strong></p>
+            <ul>
+                <li><strong>Username:</strong> {{ user.username }}</li>
+                <li><strong>Email:</strong> {{ user.email }}</li>
+            </ul>
+            
+            <p>If you have any questions about using the system, please contact your local coordinator.</p>
+            
+            <p>We look forward to working with you!</p>
+            
+            <p>Best regards,<br>
+            The {{ site_name }} Team</p>
+        </div>
+        
+        <div class="footer">
+            <p>This invitation was sent to {{ user.email }}.</p>
+            <p>If you did not expect this invitation, please contact your local coordinator.</p>
+            <p>&copy; {{ current_year }} {{ site_name }}. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

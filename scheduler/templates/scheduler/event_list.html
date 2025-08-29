@@ -1,0 +1,221 @@
+{% extends 'scheduler/base.html' %}
+
+{% block title %}Events - JW Attendant Scheduler{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-calendar-event"></i> Events</h1>
+    {% if user.role == 'admin' or user.role == 'overseer' or user.role == 'assistant_overseer' or user.is_admin or user.is_staff %}
+        <div class="btn-group" role="group">
+            <a href="{% url 'scheduler:event_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Add Event
+            </a>
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="bi bi-download"></i> Export
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{% url 'scheduler:export_events' %}">
+                        <i class="bi bi-filetype-csv"></i> Export as CSV
+                    </a></li>
+                </ul>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Search and Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label for="search" class="form-label">Search</label>
+                <input type="text" class="form-control" id="search" name="search" 
+                       value="{{ search_query }}" placeholder="Event name, location...">
+            </div>
+            <div class="col-md-3">
+                <label for="status" class="form-label">Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">All Statuses</option>
+                    <option value="upcoming" {% if status_filter == 'upcoming' %}selected{% endif %}>Upcoming</option>
+                    <option value="current" {% if status_filter == 'current' %}selected{% endif %}>Current</option>
+                    <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
+                    <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="event_type" class="form-label">Event Type</label>
+                <select class="form-select" id="event_type" name="event_type">
+                    <option value="">All Types</option>
+                    <option value="circuit_assembly" {% if type_filter == 'circuit_assembly' %}selected{% endif %}>Circuit Assembly</option>
+                    <option value="regional_convention" {% if type_filter == 'regional_convention' %}selected{% endif %}>Regional Convention</option>
+                    <option value="special_assembly_day" {% if type_filter == 'special_assembly_day' %}selected{% endif %}>Special Assembly Day</option>
+                    <option value="meeting" {% if type_filter == 'meeting' %}selected{% endif %}>Meeting</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="date_range" class="form-label">Date Range</label>
+                <select class="form-select" name="date_range">
+                    <option value="">All Dates</option>
+                    <option value="upcoming" {% if date_range_filter == 'upcoming' %}selected{% endif %}>Upcoming Events</option>
+                    <option value="this_month" {% if date_range_filter == 'this_month' %}selected{% endif %}>This Month</option>
+                    <option value="next_month" {% if date_range_filter == 'next_month' %}selected{% endif %}>Next Month</option>
+                    <option value="past" {% if date_range_filter == 'past' %}selected{% endif %}>Past Events</option>
+                </select>
+            </div>
+            <div class="col-md-12">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search"></i> Search
+                    </button>
+                    <a href="{% url 'scheduler:event_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-clockwise"></i> Clear
+                    </a>
+                    <button type="button" class="btn btn-outline-info" onclick="toggleEventAdvancedFilters()">
+                        <i class="bi bi-funnel"></i> Advanced Filters
+                    </button>
+                </div>
+            </div>
+        </form>
+        
+        <!-- Advanced Filters -->
+        <div id="eventAdvancedFilters" class="mt-3" style="display: none;">
+            <form method="get" class="row g-3">
+                <!-- Preserve existing filters -->
+                <input type="hidden" name="search" value="{{ search_query }}">
+                <input type="hidden" name="status" value="{{ status_filter }}">
+                <input type="hidden" name="date_range" value="{{ date_range_filter }}">
+                
+                <div class="col-md-3">
+                    <label for="event_type" class="form-label">Event Type</label>
+                    <select class="form-select" name="event_type">
+                        <option value="">All Types</option>
+                        <option value="convention" {% if event_type_filter == 'convention' %}selected{% endif %}>Convention</option>
+                        <option value="assembly" {% if event_type_filter == 'assembly' %}selected{% endif %}>Assembly</option>
+                        <option value="special_event" {% if event_type_filter == 'special_event' %}selected{% endif %}>Special Event</option>
+                        <option value="public_witnessing" {% if event_type_filter == 'public_witnessing' %}selected{% endif %}>Public Witnessing</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="min_stations" class="form-label">Min Stations</label>
+                    <input type="number" class="form-control" name="min_stations" 
+                           value="{{ min_stations_filter }}" placeholder="0">
+                </div>
+                <div class="col-md-3">
+                    <label for="location_search" class="form-label">Location Contains</label>
+                    <input type="text" class="form-control" name="location_search" 
+                           value="{{ location_search_filter }}" placeholder="City, venue...">
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-success mt-4">
+                        <i class="bi bi-funnel-fill"></i> Apply Advanced Filters
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Events Table -->
+<div class="card">
+    <div class="card-body">
+        {% if page_obj %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Event Name</th>
+                            <th>Type</th>
+                            <th>Date Range</th>
+                            <th>Location</th>
+                            <th>Status</th>
+                            <th>Stations</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for event in page_obj %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'scheduler:event_detail' event.id %}">
+                                    <strong>{{ event.name }}</strong>
+                                </a>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">{{ event.get_event_type_display }}</span>
+                            </td>
+                            <td>
+                                {{ event.start_date|date:"M j, Y" }}
+                                {% if event.end_date != event.start_date %}
+                                    - {{ event.end_date|date:"M j, Y" }}
+                                {% endif %}
+                            </td>
+                            <td>{{ event.location|default:"TBD" }}</td>
+                            <td>
+                                {% if event.status == 'upcoming' %}
+                                    <span class="badge bg-primary">{{ event.get_status_display }}</span>
+                                {% elif event.status == 'current' %}
+                                    <span class="badge bg-success">{{ event.get_status_display }}</span>
+                                {% elif event.status == 'completed' %}
+                                    <span class="badge bg-secondary">{{ event.get_status_display }}</span>
+                                {% else %}
+                                    <span class="badge bg-danger">{{ event.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ event.total_stations|default:"0" }}</td>
+                            <td>
+                                <a href="{% url 'scheduler:event_detail' event.id %}" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="/admin/scheduler/event/{{ event.id }}/change/" 
+                                   class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <nav aria-label="Events pagination">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if type_filter %}&event_type={{ type_filter }}{% endif %}">First</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if type_filter %}&event_type={{ type_filter }}{% endif %}">Previous</a>
+                        </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">
+                            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                        </span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if type_filter %}&event_type={{ type_filter }}{% endif %}">Next</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if type_filter %}&event_type={{ type_filter }}{% endif %}">Last</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-calendar-event display-1 text-muted"></i>
+                <h3 class="text-muted">No events found</h3>
+                <p class="text-muted">Try adjusting your search criteria or add some events.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

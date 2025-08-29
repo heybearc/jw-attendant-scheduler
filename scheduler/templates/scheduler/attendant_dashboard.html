@@ -1,0 +1,367 @@
+{% extends 'scheduler/base.html' %}
+{% load static %}
+
+{% block title %}My Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Mobile-responsive attendant dashboard styles */
+@media (max-width: 768px) {
+    .card {
+        margin-bottom: 1rem;
+    }
+    
+    .card-body {
+        padding: 1rem 0.75rem;
+    }
+    
+    .card h4 {
+        font-size: 1.5rem;
+    }
+    
+    .card small {
+        font-size: 0.8rem;
+    }
+    
+    .fa-2x {
+        font-size: 1.5em !important;
+    }
+    
+    /* Stack assignment cards vertically */
+    .assignment-card {
+        margin-bottom: 0.75rem;
+    }
+    
+    .assignment-card .card-body {
+        padding: 0.75rem;
+    }
+    
+    .assignment-card .badge {
+        font-size: 0.7rem;
+    }
+    
+    /* Compact table on mobile */
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+    
+    .table td, .table th {
+        padding: 0.5rem 0.25rem;
+    }
+}
+
+@media (max-width: 576px) {
+    h1 {
+        font-size: 1.5rem;
+    }
+    
+    .card h4 {
+        font-size: 1.25rem;
+    }
+    
+    .card-body {
+        padding: 0.75rem 0.5rem;
+    }
+    
+    /* Hide icons on very small screens */
+    .d-none-xs {
+        display: none !important;
+    }
+    
+    /* Full width buttons */
+    .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* Touch-friendly elements */
+.card {
+    transition: transform 0.2s;
+}
+
+@media (hover: none) and (pointer: coarse) {
+    .card:active {
+        transform: scale(0.98);
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    {% if no_profile %}
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-warning">
+                    <h4>Profile Not Found</h4>
+                    <p>Your account is not linked to an attendant profile. Please contact an administrator to set up your profile.</p>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="h3 mb-3">Welcome, {{ attendant.get_full_name }}</h1>
+                <p class="text-muted">Your personal attendant dashboard</p>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4 class="mb-0">{{ stats.total_assignments }}</h4>
+                                <small>Total Assignments</small>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-clipboard-list fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4 class="mb-0">{{ stats.current_assignments }}</h4>
+                                <small>Current Assignments</small>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-clock fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4 class="mb-0">{{ stats.upcoming_assignments }}</h4>
+                                <small>Upcoming Assignments</small>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-calendar-alt fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4 class="mb-0">{{ stats.events_assigned }}</h4>
+                                <small>Events Assigned</small>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-calendar-check fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Current Assignments -->
+            <div class="col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-clock text-success"></i>
+                            Current Assignments
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if current_assignments %}
+                            {% for assignment in current_assignments %}
+                                <div class="border-bottom pb-2 mb-2">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="mb-1">{{ assignment.event.name }}</h6>
+                                            <p class="mb-1 text-muted">
+                                                <strong>Position:</strong> {{ assignment.position }}<br>
+                                                <strong>Department:</strong> {{ assignment.department.name }}<br>
+                                                <strong>Station:</strong> {{ assignment.station_number }}
+                                            </p>
+                                            <small class="text-muted">
+                                                {{ assignment.shift_start|date:"M d, Y g:i A" }} - 
+                                                {{ assignment.shift_end|date:"g:i A" }}
+                                            </small>
+                                        </div>
+                                        <span class="badge bg-success">Active</span>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted">No current assignments</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upcoming Assignments -->
+            <div class="col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-calendar-alt text-info"></i>
+                            Upcoming Assignments
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if upcoming_assignments %}
+                            {% for assignment in upcoming_assignments %}
+                                <div class="border-bottom pb-2 mb-2">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="mb-1">{{ assignment.event.name }}</h6>
+                                            <p class="mb-1 text-muted">
+                                                <strong>Position:</strong> {{ assignment.position }}<br>
+                                                <strong>Department:</strong> {{ assignment.department.name }}<br>
+                                                <strong>Station:</strong> {{ assignment.station_number }}
+                                            </p>
+                                            <small class="text-muted">
+                                                {{ assignment.shift_start|date:"M d, Y g:i A" }} - 
+                                                {{ assignment.shift_end|date:"g:i A" }}
+                                            </small>
+                                        </div>
+                                        <span class="badge bg-info">Upcoming</span>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted">No upcoming assignments</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Assigned Events -->
+            <div class="col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-calendar-check text-primary"></i>
+                            My Events
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if assigned_events %}
+                            {% for event in assigned_events %}
+                                <div class="border-bottom pb-2 mb-2">
+                                    <h6 class="mb-1">{{ event.name }}</h6>
+                                    <p class="mb-1 text-muted">
+                                        <strong>Date:</strong> {{ event.start_date|date:"M d, Y" }}<br>
+                                        <strong>Location:</strong> {{ event.location }}<br>
+                                        <strong>Status:</strong> {{ event.get_status_display }}
+                                    </p>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted">No events assigned</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Oversight Information -->
+            <div class="col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-user-tie text-warning"></i>
+                            Oversight Contact
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if oversight_info %}
+                            <div class="text-center mb-3">
+                                <i class="fas fa-user-circle fa-3x text-muted"></i>
+                            </div>
+                            <h6 class="text-center mb-3">{{ oversight_info.overseer.get_full_name }}</h6>
+                            <div class="text-muted">
+                                <p class="mb-1">
+                                    <strong>Email:</strong> 
+                                    <a href="mailto:{{ oversight_info.overseer.user.email }}">
+                                        {{ oversight_info.overseer.user.email }}
+                                    </a>
+                                </p>
+                                {% if oversight_info.overseer.phone %}
+                                    <p class="mb-1">
+                                        <strong>Phone:</strong> {{ oversight_info.overseer.phone }}
+                                    </p>
+                                {% endif %}
+                                <p class="mb-1">
+                                    <strong>Department:</strong> {{ oversight_info.department.name }}
+                                </p>
+                                {% if oversight_info.station_range %}
+                                    <p class="mb-1">
+                                        <strong>Station Range:</strong> {{ oversight_info.station_range.name }}
+                                    </p>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted">No oversight contact assigned</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Assignments -->
+        {% if recent_assignments %}
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-history text-secondary"></i>
+                                Recent Assignments
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Event</th>
+                                            <th>Position</th>
+                                            <th>Department</th>
+                                            <th>Station</th>
+                                            <th>Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for assignment in recent_assignments %}
+                                            <tr>
+                                                <td>{{ assignment.event.name }}</td>
+                                                <td>{{ assignment.position }}</td>
+                                                <td>{{ assignment.department.name }}</td>
+                                                <td>{{ assignment.station_number }}</td>
+                                                <td>{{ assignment.shift_start|date:"M d, Y" }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% endif %}
+</div>
+{% endblock %}

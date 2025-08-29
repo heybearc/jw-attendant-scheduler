@@ -2,14 +2,14 @@
 JW Attendant Scheduler - Django Models
 
 Django models equivalent to Flask SQLAlchemy models for managing attendants, events, and assignments.
-Converted from Flask SQLAlchemy to Django ORM while maintaining data compatibility.
 """
 
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinLengthValidator
-from datetime import datetime
-
+from django.utils import timezone
+from datetime import datetime, timedelta
+import secrets
 
 class UserRole(models.TextChoices):
     """User role enumeration"""
@@ -21,7 +21,7 @@ class UserRole(models.TextChoices):
 
 
 class JWStatus(models.TextChoices):
-    """JW organizational status enumeration"""
+    """JW organizational status enumeration - Serving As"""
     ELDER = 'elder', 'Elder'
     MINISTERIAL_SERVANT = 'ministerial_servant', 'Ministerial Servant'
     REGULAR_PIONEER = 'regular_pioneer', 'Regular Pioneer'
@@ -74,32 +74,39 @@ class User(AbstractUser):
     def __str__(self):
         return f"{self.username} ({self.get_role_display()})"
     
+    @staticmethod
+    def generate_invitation_token():
+        """Generate a secure invitation token"""
+        return secrets.token_urlsafe(32)
+    
     class Meta:
         db_table = 'auth_user'  # Use Django's default user table
 
 
 class Attendant(models.Model):
-    """Attendant information model (formerly Volunteer in Flask version)"""
-    user = models.OneToOneField(
-        User,
-        on_delete=models.CASCADE,
-        related_name='attendant_profile',
+    """Attendant model for JW convention attendants"""
+    user = models.OneToOneField(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='attendant_profile')
+    
+    # Event associations - attendants can be associated with multiple events
+    events = models.ManyToManyField(
+        'Event',
         blank=True,
-        null=True
+        related_name='attendants',
+        help_text="Events this attendant is associated with"
     )
     
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
-    email = models.EmailField(unique=True)
+    email = models.EmailField(blank=True, null=True, unique=True)
     phone = models.CharField(max_length=20)
     congregation = models.CharField(max_length=100)
     address = models.TextField(blank=True)
     
-    # JW organizational status
-    jw_status = models.CharField(
-        max_length=25,
-        choices=JWStatus.choices,
-        default=JWStatus.PUBLISHER
+    # JW organizational status - now supports multiple selections
+    serving_as = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="List of organizational positions (Elder, Ministerial Servant, Regular Pioneer, etc.)"
     )
     
     # Experience and availability
@@ -114,14 +121,19 @@ class Attendant(models.Model):
         default='beginner'
     )
     
-    preferred_positions = models.TextField(
-        blank=True,
-        help_text="Comma-separated list of preferred positions"
-    )
-    
     availability_notes = models.TextField(blank=True)
-    emergency_contact = models.CharField(max_length=100, blank=True)
-    emergency_phone = models.CharField(max_length=20, blank=True)
+    
+    # Event-specific fields
+    is_active = models.BooleanField(default=True, help_text="Whether attendant is active for current event")
+    oversight = models.ForeignKey(
+        'self', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        limit_choices_to={'serving_as__overlap': ['overseer', 'assistant_overseer', 'keyman']},
+        related_name='oversight_attendants',
+        help_text="Assigned oversight (Overseer, Assistant Overseer, or Keyman)"
+    )
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -130,12 +142,28 @@ class Attendant(models.Model):
         """Get the full name of the attendant"""
         return f"{self.first_name} {self.last_name}"
     
+    def get_serving_as_display(self):
+        """Get formatted display of serving positions"""
+        if not self.serving_as:
+            return "Publisher"
+        
+        # Map values to display names
+        display_map = {
+            'elder': 'Elder',
+            'ministerial_servant': 'Ministerial Servant',
+            'regular_pioneer': 'Regular Pioneer',
+            'auxiliary_pioneer': 'Auxiliary Pioneer',
+            'publisher': 'Publisher'
+        }
+        
+        display_names = [display_map.get(pos, pos) for pos in self.serving_as if pos in display_map]
+        return ', '.join(display_names) if display_names else "Publisher"
+    
     def __str__(self):
         return self.get_full_name()
     
     class Meta:
         db_table = 'volunteer'  # Keep original table name for compatibility
-        ordering = ['last_name', 'first_name']
 
 
 class Event(models.Model):
@@ -209,6 +237,72 @@ class Assignment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
+    def clean(self):
+        """Validate assignment for conflicts"""
+        from django.core.exceptions import ValidationError
+        from django.db.models import Q
+        
+        if not self.shift_start or not self.shift_end:
+            return
+        
+        if self.shift_start >= self.shift_end:
+            raise ValidationError("Shift start time must be before shift end time.")
+        
+        # Check for overlapping assignments for the same attendant
+        overlapping_assignments = Assignment.objects.filter(
+            attendant=self.attendant
+        ).exclude(id=self.id if self.id else None)
+        
+        # Check for time overlap
+        conflicts = overlapping_assignments.filter(
+            Q(shift_start__lt=self.shift_end) & Q(shift_end__gt=self.shift_start)
+        )
+        
+        if conflicts.exists():
+            conflict_details = []
+            for conflict in conflicts:
+                conflict_details.append(
+                    f"{conflict.event.name} ({conflict.shift_start.strftime('%m/%d %H:%M')} - {conflict.shift_end.strftime('%H:%M')})"
+                )
+            raise ValidationError(
+                f"Assignment conflicts with existing assignments: {', '.join(conflict_details)}"
+            )
+    
+    def save(self, *args, **kwargs):
+        """Override save to run validation"""
+        self.clean()
+        super().save(*args, **kwargs)
+    
+    def get_duration_hours(self):
+        """Get assignment duration in hours"""
+        if self.shift_start and self.shift_end:
+            delta = self.shift_end - self.shift_start
+            return round(delta.total_seconds() / 3600, 1)
+        return 0
+    
+    def has_conflict(self):
+        """Check if this assignment has conflicts with other assignments"""
+        try:
+            self.clean()
+            return False
+        except:
+            return True
+    
+    def get_conflicts(self):
+        """Get list of conflicting assignments"""
+        from django.db.models import Q
+        
+        if not self.shift_start or not self.shift_end:
+            return Assignment.objects.none()
+        
+        overlapping_assignments = Assignment.objects.filter(
+            attendant=self.attendant
+        ).exclude(id=self.id if self.id else None)
+        
+        return overlapping_assignments.filter(
+            Q(shift_start__lt=self.shift_end) & Q(shift_end__gt=self.shift_start)
+        )
+    
     def __str__(self):
         return f"{self.attendant.get_full_name()} - {self.position} ({self.event.name})"
     
@@ -246,6 +340,25 @@ class StationRange(models.Model):
     
     class Meta:
         ordering = ['start_station']
+
+
+class LanyardAssignment(models.Model):
+    """Track lanyard assignments for events"""
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    badge_number = models.PositiveIntegerField()
+    attendant = models.ForeignKey(Attendant, on_delete=models.SET_NULL, null=True, blank=True)
+    checked_out = models.BooleanField(default=False)
+    checked_out_at = models.DateTimeField(null=True, blank=True)
+    returned = models.BooleanField(default=False)
+    returned_at = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        unique_together = ['event', 'badge_number']
+        ordering = ['badge_number']
+    
+    def __str__(self):
+        attendant_name = self.attendant.get_full_name() if self.attendant else "Unassigned"
+        return f"Badge #{self.badge_number} - {attendant_name}"
 
 
 class OverseerAssignment(models.Model):
@@ -303,3 +416,97 @@ class AttendantOverseerAssignment(models.Model):
     
     class Meta:
         unique_together = ['attendant', 'overseer_assignment']
+
+
+class EmailConfiguration(models.Model):
+    """Email configuration settings for Gmail integration"""
+    
+    # Gmail API Settings
+    gmail_enabled = models.BooleanField(
+        default=False,
+        help_text="Enable Gmail API integration for sending emails"
+    )
+    gmail_credentials_uploaded = models.BooleanField(
+        default=False,
+        help_text="Whether Gmail credentials file has been uploaded"
+    )
+    gmail_authenticated = models.BooleanField(
+        default=False,
+        help_text="Whether Gmail API has been authenticated"
+    )
+    
+    # Email Templates Settings
+    site_name = models.CharField(
+        max_length=100,
+        default="JW Attendant Scheduler",
+        help_text="Name displayed in email templates"
+    )
+    from_name = models.CharField(
+        max_length=100,
+        default="Event Coordination Team",
+        help_text="Name displayed as email sender"
+    )
+    
+    # Notification Settings
+    send_invitation_emails = models.BooleanField(
+        default=True,
+        help_text="Send email invitations to new users"
+    )
+    send_assignment_notifications = models.BooleanField(
+        default=False,
+        help_text="Send email notifications for new assignments"
+    )
+    send_event_reminders = models.BooleanField(
+        default=False,
+        help_text="Send email reminders for upcoming events"
+    )
+    
+    # Advanced Settings
+    test_email_address = models.EmailField(
+        blank=True,
+        help_text="Email address for testing email functionality"
+    )
+    
+    # Secure credential storage
+    encrypted_gmail_token = models.TextField(
+        blank=True,
+        help_text="Encrypted Gmail OAuth2 token (stored securely)"
+    )
+    
+    # App Password method (simpler alternative)
+    gmail_email = models.EmailField(
+        blank=True,
+        help_text="Gmail address for sending emails"
+    )
+    encrypted_gmail_app_password = models.TextField(
+        blank=True,
+        help_text="Encrypted Gmail App Password (16-character password from Google)"
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Email Configuration"
+        verbose_name_plural = "Email Configuration"
+    
+    def __str__(self):
+        return f"Email Configuration - Gmail {'Enabled' if self.gmail_enabled else 'Disabled'}"
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one configuration exists
+        if not self.pk and EmailConfiguration.objects.exists():
+            raise ValueError("Only one email configuration can exist")
+        super().save(*args, **kwargs)
+    
+    @classmethod
+    def get_config(cls):
+        """Get or create the email configuration"""
+        config, created = cls.objects.get_or_create(
+            pk=1,
+            defaults={
+                'site_name': 'JW Attendant Scheduler',
+                'from_name': 'Event Coordination Team',
+            }
+        )
+        return config

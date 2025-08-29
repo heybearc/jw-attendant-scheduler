@@ -1,0 +1,166 @@
+{% extends 'scheduler/base.html' %}
+{% load static %}
+
+{% block title %}{{ attendant.get_full_name }} - Attendant Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>{{ attendant.get_full_name }}</h1>
+                <div>
+                    {% if request.session.selected_event_id %}
+                        <a href="{% url 'scheduler:event_detail' request.session.selected_event_id %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to List
+                        </a>
+                    {% else %}
+                        <a href="{% url 'scheduler:event_selection' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Select Event
+                        </a>
+                    {% endif %}
+                    {% if user.role == 'admin' or user.role == 'overseer' or user.role == 'assistant_overseer' or user.is_admin or user.is_staff %}
+                    <a href="{% url 'scheduler:attendant_edit' attendant.id %}" class="btn btn-primary ms-2">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Personal Information</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <th width="40%">Name:</th>
+                            <td>{{ attendant.get_full_name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Email:</th>
+                            <td><a href="mailto:{{ attendant.email }}">{{ attendant.email }}</a></td>
+                        </tr>
+                        <tr>
+                            <th>Phone:</th>
+                            <td>{{ attendant.phone }}</td>
+                        </tr>
+                        <tr>
+                            <th>Congregation:</th>
+                            <td>{{ attendant.congregation }}</td>
+                        </tr>
+                        <tr>
+                            <th>Serving As:</th>
+                            <td>{{ attendant.get_serving_as_display }}</td>
+                        </tr>
+                        {% if attendant.address %}
+                        <tr>
+                            <th>Address:</th>
+                            <td>{{ attendant.address|linebreaks }}</td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Service Information</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        {% if attendant.preferred_positions %}
+                        <tr>
+                            <th width="40%">Preferred Positions:</th>
+                            <td>{{ attendant.preferred_positions }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if attendant.availability_notes %}
+                        <tr>
+                            <th>Availability Notes:</th>
+                            <td>{{ attendant.availability_notes|linebreaks }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if attendant.emergency_contact %}
+                        <tr>
+                            <th>Emergency Contact:</th>
+                            <td>{{ attendant.emergency_contact }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if attendant.emergency_phone %}
+                        <tr>
+                            <th>Emergency Phone:</th>
+                            <td>{{ attendant.emergency_phone }}</td>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                            <th>Registered:</th>
+                            <td>{{ attendant.created_at|date:"M d, Y" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Last Updated:</th>
+                            <td>{{ attendant.updated_at|date:"M d, Y" }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Assignment History</h5>
+                </div>
+                <div class="card-body">
+                    {% if assignments %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Event</th>
+                                    <th>Position</th>
+                                    <th>Date</th>
+                                    <th>Shift Time</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for assignment in assignments %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'scheduler:event_detail' assignment.event.id %}">
+                                            {{ assignment.event.name }}
+                                        </a>
+                                    </td>
+                                    <td>{{ assignment.position }}</td>
+                                    <td>{{ assignment.shift_start|date:"M d, Y" }}</td>
+                                    <td>
+                                        {{ assignment.shift_start|time:"g:i A" }} - 
+                                        {{ assignment.shift_end|time:"g:i A" }}
+                                    </td>
+                                    <td>{{ assignment.notes|default:"-" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No assignments found for this attendant.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

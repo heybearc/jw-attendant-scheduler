@@ -1,10 +1,10 @@
-# JW Attendant Scheduler
+# JW Attendant Scheduler - Django
 
-A comprehensive attendant scheduling system for Jehovah's Witness events including regional conventions, circuit assemblies, and local congregation events.
+A comprehensive Django-based attendant scheduling system for Jehovah's Witness events including regional conventions, circuit assemblies, and local congregation events.
 
 ## Overview
 
-This application provides volunteer management, assignment tracking, and reporting capabilities for event oversight, with distributable schedule generation.
+This Django application provides volunteer management, assignment tracking, and reporting capabilities for event oversight, with distributable schedule generation.
 
 ## Features
 
@@ -17,18 +17,49 @@ This application provides volunteer management, assignment tracking, and reporti
 ## Project Structure
 
 ```
-jw-attendant-scheduler/
-├── src/                    # Source code
+jw-attendant-scheduler-django/
+├── jw_scheduler/           # Django project settings
+├── scheduler/              # Main Django app
 ├── docs/                   # Documentation
 ├── tests/                  # Test files
 ├── config/                 # Configuration files
 ├── data/                   # Sample data and templates
-└── scripts/                # Utility scripts
+├── scripts/                # Utility scripts
+├── manage.py               # Django management script
+└── requirements.txt        # Python dependencies
 ```
 
 ## Getting Started
 
-This project is in initial development phase. More documentation will be added as the project progresses.
+1. **Setup Virtual Environment**:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+2. **Install Dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Run Migrations**:
+   ```bash
+   python manage.py migrate
+   ```
+
+4. **Create Superuser**:
+   ```bash
+   python manage.py createsuperuser
+   ```
+
+5. **Run Development Server**:
+   ```bash
+   python manage.py runserver
+   ```
+
+## Development Status
+
+This Django project is actively under development with a 4-week roadmap for complete implementation.
 
 ## License
 

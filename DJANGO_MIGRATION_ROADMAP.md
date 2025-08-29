@@ -1,65 +1,21 @@
-# JW Attendant Scheduler - Django Migration Roadmap
+# JW Attendant Scheduler - Django Development Roadmap
 
 ## 🎯 **Project Overview**
 
-**Dual-Track Development Strategy:**
-- **Track 1:** Fix Flask login issues (immediate stability)
-- **Track 2:** Django migration (long-term scalability)
+**Django-First Development Strategy:**
+- Complete Django application development
+- Data migration from existing database
+- Production-ready deployment
 
 **Current Status:**
-- Flask app: 95% functional, login authentication issue
-- Django fork: Created, ready for development
-- Feature branch: `fix/flask-login-authentication` created
+- Django project: Initialized and ready for development
+- Database: Existing SQLite database with data ready for migration
 
 ---
 
-## 🚀 **TRACK 1: Flask Stabilization (1-2 weeks)**
+## 🏗️ **Django Development (4 weeks)**
 
-### **Phase 1A: Login Fix (Priority 1 - 1-2 days)**
-**Branch:** `fix/flask-login-authentication`
-
-#### **🔧 Cory's Tasks:**
-- [ ] Test current login functionality in browser
-- [ ] Verify database contains expected users
-- [ ] Document specific error scenarios encountered
-
-#### **🤖 AI Assistant Tasks:**
-- [ ] Investigate Flask session handling and context issues
-- [ ] Fix database initialization to prevent user data loss on restart
-- [ ] Debug Flask-Login user_loader and authentication flow
-- [ ] Add comprehensive error logging to login route
-- [ ] Test login with all user roles (admin, overseer, assistant, keyman, attendant)
-- [ ] Verify password hashing compatibility across Python versions
-- [ ] Create login integration tests
-
-#### **✅ Success Criteria:**
-- [ ] All users can log in successfully
-- [ ] Session persistence works correctly
-- [ ] No database reinitialization on Flask restart
-- [ ] Login redirects to appropriate dashboard
-
-### **Phase 1B: Flask Stabilization (1 week)**
-
-#### **🔧 Cory's Tasks:**
-- [ ] Review and approve login fixes
-- [ ] Test full application workflow end-to-end
-- [ ] Document any additional bugs or issues found
-- [ ] Decide on Flask production deployment strategy
-
-#### **🤖 AI Assistant Tasks:**
-- [ ] Fix any remaining Flask routing issues
-- [ ] Optimize database queries for better performance
-- [ ] Add comprehensive error handling throughout app
-- [ ] Create production deployment documentation
-- [ ] Set up proper logging and monitoring
-- [ ] Security audit of Flask application
-- [ ] Performance testing and optimization
-
----
-
-## 🏗️ **TRACK 2: Django Migration (3-4 weeks)**
-
-### **Phase 2A: Foundation Setup (Week 1)**
+### **Phase 1: Foundation Setup (Week 1)**
 
 #### **🔧 Cory's Tasks:**
 - [ ] Review Django project structure and organization
@@ -87,7 +43,7 @@
 - [ ] Data migration from Flask database
 - [ ] Basic project documentation
 
-### **Phase 2B: Core Features (Week 2)**
+### **Phase 2: Core Features (Week 2)**
 
 #### **🔧 Cory's Tasks:**
 - [ ] Test Django admin interface functionality
@@ -117,7 +73,7 @@
 - [ ] Responsive UI matching Flask design
 - [ ] Basic user management
 
-### **Phase 2C: Advanced Features (Week 3)**
+### **Phase 3: Advanced Features (Week 3)**
 
 #### **🔧 Cory's Tasks:**
 - [ ] Test oversight management system
@@ -151,7 +107,7 @@
 - [ ] Export functionality for all formats
 - [ ] Comprehensive reporting system
 
-### **Phase 2D: Testing, Security & Deployment (Week 4)**
+### **Phase 4: Testing, Security & Deployment (Week 4)**
 
 #### **🔧 Cory's Tasks:**
 - [ ] Comprehensive user acceptance testing
@@ -221,44 +177,37 @@
 
 ## 🎯 **Success Metrics**
 
-### **Flask Track Success:**
-- ✅ Login authentication working 100%
-- ✅ Zero critical bugs in production
-- ✅ All existing features stable
-- ✅ Performance maintained or improved
-
-### **Django Track Success:**
-- ✅ 100% feature parity with Flask version
+### **Django Development Success:**
+- ✅ Complete Django application with all features
 - ✅ >90% test coverage
 - ✅ Security audit passed
-- ✅ Performance equal or better than Flask
+- ✅ Optimized performance
 - ✅ Production deployment successful
 - ✅ User acceptance testing passed
+- ✅ Data migration completed successfully
 
 ---
 
 ## 🚦 **Risk Management**
 
-### **Flask Track Risks:**
-- **Risk:** Login fix more complex than expected
-- **Mitigation:** Allocate extra time, consider Quart migration as backup
-
-### **Django Track Risks:**
-- **Risk:** Migration takes longer than 4 weeks
+### **Django Development Risks:**
+- **Risk:** Development takes longer than 4 weeks
 - **Mitigation:** Prioritize core features, defer advanced features if needed
 - **Risk:** Data migration issues
 - **Mitigation:** Create comprehensive backup and rollback procedures
+- **Risk:** Complex model relationships
+- **Mitigation:** Thorough testing and validation of all relationships
 
 ---
 
 ## 📅 **Timeline Summary**
 
-| Week | Flask Track | Django Track |
-|------|-------------|--------------|
-| **Week 1** | Login fix + stabilization | Foundation setup + models |
-| **Week 2** | Production deployment | Core features + templates |
-| **Week 3** | Maintenance + monitoring | Advanced features |
-| **Week 4** | Support Django testing | Testing + deployment |
+| Week | Django Development |
+|------|--------------------|
+| **Week 1** | Foundation setup + models + admin |
+| **Week 2** | Core features + templates + authentication |
+| **Week 3** | Advanced features + exports + reports |
+| **Week 4** | Testing + security + deployment |
 
 ---
 

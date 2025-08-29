@@ -1,0 +1,167 @@
+{% extends 'scheduler/base.html' %}
+
+{% block title %}Edit User - JW Attendant Scheduler{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-person-gear"></i> Edit User: {{ user_obj.username }}</h1>
+    <a href="{% url 'scheduler:user_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Back to Users
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">User Information</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="username" name="username" 
+                                       value="{{ user_obj.username }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       value="{{ user_obj.email }}" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="first_name" class="form-label">First Name</label>
+                                <input type="text" class="form-control" id="first_name" name="first_name" 
+                                       value="{{ user_obj.first_name }}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="last_name" class="form-label">Last Name</label>
+                                <input type="text" class="form-control" id="last_name" name="last_name" 
+                                       value="{{ user_obj.last_name }}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="role" class="form-label">Role</label>
+                                <select class="form-control" id="role" name="role" required>
+                                    <option value="admin" {% if user_obj.role == 'admin' %}selected{% endif %}>Admin</option>
+                                    <option value="overseer" {% if user_obj.role == 'overseer' %}selected{% endif %}>Overseer</option>
+                                    <option value="assistant_overseer" {% if user_obj.role == 'assistant_overseer' %}selected{% endif %}>Assistant Overseer</option>
+                                    <option value="keyman" {% if user_obj.role == 'keyman' %}selected{% endif %}>Keyman</option>
+                                    <option value="attendant" {% if user_obj.role == 'attendant' %}selected{% endif %}>Attendant</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="is_active" name="is_active" 
+                                           {% if user_obj.is_active %}checked{% endif %}>
+                                    <label class="form-check-label" for="is_active">
+                                        Active User
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="is_staff" name="is_staff" 
+                                           {% if user_obj.is_staff %}checked{% endif %}>
+                                    <label class="form-check-label" for="is_staff">
+                                        Staff Access
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i> Save Changes
+                        </button>
+                        <a href="{% url 'scheduler:user_list' %}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Attendant Association</h5>
+            </div>
+            <div class="card-body">
+                {% if user_obj.attendant_profile %}
+                    <div class="alert alert-success">
+                        <i class="bi bi-link"></i> <strong>Linked to Attendant:</strong><br>
+                        <a href="{% url 'scheduler:attendant_detail' user_obj.attendant_profile.id %}">
+                            {{ user_obj.attendant_profile.get_full_name }}
+                        </a>
+                    </div>
+                    <form method="post" action="{% url 'scheduler:unlink_attendant' user_obj.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-warning btn-sm" 
+                                onclick="return confirm('Unlink this attendant from the user?')">
+                            <i class="bi bi-unlink"></i> Unlink Attendant
+                        </button>
+                    </form>
+                {% else %}
+                    <p class="text-muted">No attendant linked to this user.</p>
+                    
+                    <form method="post" action="{% url 'scheduler:link_attendant' user_obj.id %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="attendant_id" class="form-label">Link to Attendant:</label>
+                            <select class="form-control" id="attendant_id" name="attendant_id">
+                                <option value="">Select an attendant...</option>
+                                {% for attendant in available_attendants %}
+                                    <option value="{{ attendant.id }}">
+                                        {{ attendant.get_full_name }} 
+                                        {% if attendant.email %}({{ attendant.email }}){% endif %}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-link"></i> Link Attendant
+                        </button>
+                    </form>
+                    
+                    {% if suggested_attendants %}
+                    <hr>
+                    <h6>Suggested Matches:</h6>
+                    {% for attendant in suggested_attendants %}
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <small>
+                                <strong>{{ attendant.get_full_name }}</strong><br>
+                                <span class="text-muted">{{ attendant.email }}</span>
+                            </small>
+                            <form method="post" action="{% url 'scheduler:link_attendant' user_obj.id %}" style="display: inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="attendant_id" value="{{ attendant.id }}">
+                                <button type="submit" class="btn btn-outline-success btn-sm">
+                                    <i class="bi bi-link"></i>
+                                </button>
+                            </form>
+                        </div>
+                    {% endfor %}
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

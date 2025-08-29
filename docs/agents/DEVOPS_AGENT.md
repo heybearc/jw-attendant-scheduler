@@ -3,6 +3,8 @@
 ## Agent Responsibilities
 Deployment automation, infrastructure management, monitoring, and production environment optimization.
 
+**Infrastructure Integration**: Always reference `/auto-load-infra-spec` workflow for homelab context and use SSH shortcuts with proper key authentication.
+
 ## Current Focus Areas
 
 ### 1. Staging Environment Validation
@@ -59,6 +61,14 @@ Deployment automation, infrastructure management, monitoring, and production env
 - [ ] Document deployment processes
 
 ## Technical Specifications
+
+### SSH Access Configuration
+```bash
+# SSH shortcuts for infrastructure access
+ssh jw-staging     # LXC 134 (10.92.3.24) - Staging environment
+ssh jw-production  # LXC 132 (10.92.3.22) - Production environment
+ssh postgres-db    # LXC 131 (10.92.3.21) - PostgreSQL database
+```
 
 ### Infrastructure Stack
 ```yaml

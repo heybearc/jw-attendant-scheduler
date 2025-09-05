@@ -117,8 +117,23 @@
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="auto-assign-tab" data-bs-toggle="tab" data-bs-target="#auto-assign" type="button" role="tab">
+                        <i class="bi bi-magic"></i> Auto-Assign
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="count-times-tab" data-bs-toggle="tab" data-bs-target="#count-times" type="button" role="tab">
+                        <i class="bi bi-clock"></i> Count Times
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
                     <button class="nav-link" id="reports-tab" data-bs-toggle="tab" data-bs-target="#reports" type="button" role="tab">
                         <i class="bi bi-graph-up"></i> Reports
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="lanyard-tab" data-bs-toggle="tab" data-bs-target="#lanyard" type="button" role="tab">
+                        <i class="bi bi-award"></i> Lanyard Management
                     </button>
                 </li>
             </ul>
@@ -228,7 +243,6 @@
                                             <th>Position</th>
                                             <th>Shift Start</th>
                                             <th>Shift End</th>
-                                            <th>Status</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
@@ -244,13 +258,6 @@
                                             </td>
                                             <td>{{ assignment.shift_start|date:"M d, Y H:i" }}</td>
                                             <td>{{ assignment.shift_end|date:"M d, Y H:i" }}</td>
-                                            <td>
-                                                {% if assignment.confirmed %}
-                                                    <span class="badge bg-success">Confirmed</span>
-                                                {% else %}
-                                                    <span class="badge bg-warning">Pending</span>
-                                                {% endif %}
-                                            </td>
                                             <td>
                                                 <div class="btn-group btn-group-sm" role="group">
                                                     <a href="{% url 'scheduler:assignment_edit' assignment.id %}" class="btn btn-outline-secondary" title="Edit">
@@ -282,17 +289,252 @@
                     </div>
                 </div>
 
-                <!-- Reports Tab -->
-                <div class="tab-pane fade" id="reports" role="tabpanel">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h4><i class="bi bi-graph-up"></i> Event Reports</h4>
-                        <div>
-                            <a href="{% url 'scheduler:export_event_schedule' event.id %}" class="btn btn-outline-info">
-                                <i class="bi bi-file-pdf"></i> Export Schedule
-                            </a>
+                <!-- Auto-Assign Tab -->
+                <div class="tab-pane fade" id="auto-assign" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h4><i class="bi bi-magic"></i> Auto-Assignment System</h4>
+                            <p class="text-muted">Automatically assign attendants to positions based on availability, experience, and workload balance.</p>
+                            
+                            <!-- Assignment Configuration -->
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h5 class="mb-0"><i class="bi bi-gear"></i> Assignment Configuration</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form id="autoAssignForm">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Max Assignments per Attendant</label>
+                                                    <select class="form-select" id="maxAssignments">
+                                                        <option value="1">1 Assignment</option>
+                                                        <option value="2" selected>2 Assignments</option>
+                                                        <option value="3">3 Assignments</option>
+                                                        <option value="4">4 Assignments</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Assignment Strategy</label>
+                                                    <select class="form-select" id="assignmentStrategy">
+                                                        <option value="balanced" selected>Balanced Workload</option>
+                                                        <option value="experience">Experience Priority</option>
+                                                        <option value="leadership">Leadership First</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="preserveExisting" checked>
+                                                <label class="form-check-label" for="preserveExisting">
+                                                    Preserve existing assignments
+                                                </label>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="dryRun" checked>
+                                                <label class="form-check-label" for="dryRun">
+                                                    Preview assignments before applying (recommended)
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                            
+                            <!-- Position Requirements - New System -->
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h5 class="mb-0"><i class="bi bi-list-check"></i> Position Requirements</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="positionRequirements">
+                                        {% if event_positions %}
+                                            <div class="alert alert-info">
+                                                <i class="bi bi-info-circle"></i> This event has {{ event_positions.count }} configured positions with shift windows.
+                                            </div>
+                                            <div class="table-responsive">
+                                                <table class="table table-sm">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Position #</th>
+                                                            <th>Name</th>
+                                                            <th>Shift Windows</th>
+                                                            <th>Status</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for position in event_positions %}
+                                                        <tr>
+                                                            <td><span class="badge bg-primary">{{ position.position_number }}</span></td>
+                                                            <td>{{ position.position_name|default:"<em>No name</em>" }}</td>
+                                                            <td>
+                                                                {% for shift in position.shifts.all %}
+                                                                    <small class="text-muted">{{ shift.shift_start|time:"H:i" }}-{{ shift.shift_end|time:"H:i" }}</small>{% if not forloop.last %}, {% endif %}
+                                                                {% empty %}
+                                                                    <small class="text-warning">No shifts configured</small>
+                                                                {% endfor %}
+                                                            </td>
+                                                            <td>
+                                                                {% if position.shifts.count > 0 %}
+                                                                    <span class="badge bg-success">Ready</span>
+                                                                {% else %}
+                                                                    <span class="badge bg-warning">Needs Shifts</span>
+                                                                {% endif %}
+                                                            </td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div class="mt-3">
+                                                <a href="{% url 'scheduler:event_positions' event.id %}" class="btn btn-outline-primary">
+                                                    <i class="bi bi-gear"></i> Manage Positions & Shifts
+                                                </a>
+                                            </div>
+                                        {% else %}
+                                            <div class="alert alert-warning">
+                                                <i class="bi bi-exclamation-triangle"></i> No positions configured for this event yet.
+                                            </div>
+                                            <p class="text-muted">Set up numbered positions (1-53) with shift windows before running auto-assignment.</p>
+                                            <a href="{% url 'scheduler:event_positions' event.id %}" class="btn btn-primary">
+                                                <i class="bi bi-plus-circle"></i> Configure Positions
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Action Buttons -->
+                            <div class="d-flex gap-3">
+                                <button type="button" class="btn btn-primary btn-lg" onclick="runAutoAssignment()">
+                                    <i class="bi bi-magic"></i> Run Auto-Assignment
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="resetConfiguration()">
+                                    <i class="bi bi-arrow-clockwise"></i> Reset
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Status Panel -->
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Assignment Status</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="assignmentStatus">
+                                        <div class="text-center text-muted">
+                                            <i class="bi bi-clock-history fa-2x mb-3"></i>
+                                            <p>Ready to run auto-assignment</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Prerequisites Check -->
+                            <div class="card mt-3">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="bi bi-check-circle"></i> Prerequisites</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                        <span>{{ attendants_count }} attendants available</span>
+                                    </div>
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                        <span>Event configured</span>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-{% if assignments_count > 0 %}exclamation-triangle-fill text-warning{% else %}check-circle-fill text-success{% endif %} me-2"></i>
+                                        <span>{{ assignments_count }} existing assignments</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
+                </div>
+
+                <!-- Count Times Tab -->
+                <div class="tab-pane fade" id="count-times" role="tabpanel">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4><i class="bi bi-clock"></i> Count Times Configuration</h4>
+                        <button class="btn btn-success" onclick="addCountTime()">
+                            <i class="bi bi-plus-circle"></i> Add Count Time
+                        </button>
+                    </div>
+                    
                     <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="bi bi-stopwatch"></i> Scheduled Count Times</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div id="count-times-list">
+                                        {% if event.count_sessions.all %}
+                                            {% for session in event.count_sessions.all %}
+                                            <div class="count-time-item border rounded p-3 mb-3" data-session-id="{{ session.id }}">
+                                                <div class="row align-items-center">
+                                                    <div class="col-md-3">
+                                                        <strong>{{ session.session_name }}</strong>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <i class="bi bi-clock"></i> {{ session.count_time|date:"H:i" }}
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <span class="badge bg-{% if session.is_active %}success{% else %}secondary{% endif %}">
+                                                            {% if session.is_active %}Active{% else %}Inactive{% endif %}
+                                                        </span>
+                                                    </div>
+                                                    <div class="col-md-3 text-end">
+                                                        <div class="btn-group btn-group-sm">
+                                                            <button class="btn btn-outline-primary" onclick="editCountTime({{ session.id }})" title="Edit">
+                                                                <i class="bi bi-pencil"></i>
+                                                            </button>
+                                                            <button class="btn btn-outline-danger" onclick="deleteCountTime({{ session.id }})" title="Delete">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {% if session.notes %}
+                                                <div class="row mt-2">
+                                                    <div class="col-12">
+                                                        <small class="text-muted">{{ session.notes }}</small>
+                                                    </div>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            {% endfor %}
+                                        {% else %}
+                                        <div class="text-center py-5">
+                                            <i class="bi bi-clock" style="font-size: 3rem; color: #ccc;"></i>
+                                            <h5 class="mt-3 text-muted">No count times configured</h5>
+                                            <p class="text-muted">Add count times to track attendance during the event.</p>
+                                            <button class="btn btn-primary" onclick="addCountTime()">
+                                                <i class="bi bi-plus-circle"></i> Add First Count Time
+                                            </button>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reports Tab -->
+                <div class="tab-pane fade" id="reports" role="tabpanel">
+                    <h4><i class="bi bi-graph-up"></i> Event Reports</h4>
+                    <p>Reports and analytics for this event will be displayed here.</p>
                         <div class="col-md-6 mb-4">
                             <div class="card">
                                 <div class="card-header">
@@ -558,5 +800,311 @@
             </div>
         </div>
     </div>
-</div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Event Management</h5>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content" id="myTabContent">
+                        <!-- Assignment Management Tab -->
+                        <div class="tab-pane fade show active" id="assignment" role="tabpanel">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h4><i class="bi bi-person-badge"></i> Assignment Management</h4>
+                                {% if user.role == 'admin' or user.role == 'overseer' %}
+                                <a href="{% url 'scheduler:create_assignment' %}?event={{ event.id }}" class="btn btn-primary">
+                                    <i class="bi bi-plus"></i> Create New Assignment
+                                </a>
+                                {% endif %}
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-info-circle"></i>
+                                        <strong>Assignment Management System</strong><br>
+                                        Manage assignments for event attendants. Create new assignments, view existing ones, and more.
+                                    </div>
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h6 class="mb-0"><i class="bi bi-person-badge"></i> Assignment Overview</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <p class="text-muted">Assignment management functionality will be displayed here.</p>
+                                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                                {% if user.role == 'admin' or user.role == 'overseer' %}
+                                                <a href="{% url 'scheduler:create_assignment' %}?event={{ event.id }}" class="btn btn-outline-primary">
+                                                    <i class="bi bi-plus"></i> Create New Assignment
+                                                </a>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Lanyard Management Tab -->
+                        <div class="tab-pane fade" id="lanyard" role="tabpanel">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h4><i class="bi bi-award"></i> Lanyard Management</h4>
+                                <a href="{% url 'scheduler:lanyard_tracking' %}" class="btn btn-primary">
+                                    <i class="bi bi-gear"></i> Manage Lanyards
+                                </a>
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-info-circle"></i>
+                                        <strong>Lanyard Assignment System</strong><br>
+                                        Track and manage badge assignments for event attendants. Click "Manage Lanyards" to access the full lanyard tracking interface.
+                                    </div>
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h6 class="mb-0"><i class="bi bi-award"></i> Lanyard Overview</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <p class="text-muted">Lanyard management functionality will be displayed here.</p>
+                                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                                <a href="{% url 'scheduler:lanyard_tracking' %}" class="btn btn-outline-primary">
+                                                    <i class="bi bi-box-arrow-up-right"></i> Open Lanyard System
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+<script>
+// Helper function to get CSRF token from cookies
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function runAutoAssignment() {
+    console.log('runAutoAssignment function called');
+    
+    const button = document.querySelector('button[onclick="runAutoAssignment()"]');
+    const statusDiv = document.getElementById('assignmentStatus');
+    const eventId = {{ event.id }};
+    
+    console.log('Button found:', button);
+    console.log('Status div found:', statusDiv);
+    console.log('Event ID:', eventId);
+    
+    if (!button) {
+        console.error('Button not found!');
+        return;
+    }
+    
+    if (!statusDiv) {
+        console.error('Status div not found!');
+        return;
+    }
+    
+    // Disable button and show loading
+    button.disabled = true;
+    button.innerHTML = '<i class="bi bi-hourglass-split"></i> Running...';
+    
+    statusDiv.innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border text-primary mb-3" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p>Running auto-assignment...</p>
+        </div>
+    `;
+    
+    // Make API call
+    fetch('{% url "scheduler:auto_assign_api" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            event_id: eventId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            statusDiv.innerHTML = `
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle"></i> ${data.message}
+                    <br><small>Assigned ${data.metrics.assigned_positions} positions</small>
+                </div>
+            `;
+            // Reload page to show new assignments
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+        } else {
+            statusDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle"></i> ${data.error}
+                </div>
+            `;
+        }
+    })
+    .catch(error => {
+        console.error('Auto-assignment error:', error);
+        statusDiv.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-triangle"></i> Error running auto-assignment
+            </div>
+        `;
+    })
+    .finally(() => {
+        // Re-enable button
+        button.disabled = false;
+        button.innerHTML = '<i class="bi bi-magic"></i> Run Auto-Assignment';
+    });
+}
+
+function resetConfiguration() {
+    if (confirm('Are you sure you want to reset all assignments for this event?')) {
+        // TODO: Implement reset functionality
+        alert('Reset functionality not yet implemented');
+    }
+}
+
+// Count Times Management Functions
+function addCountTime() {
+    const sessionName = prompt('Enter count session name (e.g., "Opening Count", "Mid-Program Count"):');
+    if (!sessionName) return;
+    
+    const countTime = prompt('Enter count time (HH:MM format):');
+    if (!countTime || !/^\d{2}:\d{2}$/.test(countTime)) {
+        alert('Please enter time in HH:MM format');
+        return;
+    }
+    
+    const notes = prompt('Enter optional notes:') || '';
+    
+    const eventId = {{ event.id }};
+    const csrfToken = getCookie('csrftoken');
+    
+    fetch(`/scheduler/events/${eventId}/count-sessions/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+            session_name: sessionName,
+            count_time: countTime,
+            notes: notes,
+            is_active: true
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload(); // Refresh to show new count time
+        } else {
+            alert('Error creating count time: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error creating count time');
+    });
+}
+
+function editCountTime(sessionId) {
+    const sessionElement = document.querySelector(`[data-session-id="${sessionId}"]`);
+    if (!sessionElement) return;
+    
+    const currentName = sessionElement.querySelector('strong').textContent;
+    const currentTime = sessionElement.querySelector('.bi-clock').nextSibling.textContent.trim();
+    
+    const sessionName = prompt('Enter count session name:', currentName);
+    if (!sessionName) return;
+    
+    const countTime = prompt('Enter count time (HH:MM format):', currentTime);
+    if (!countTime || !/^\d{2}:\d{2}$/.test(countTime)) {
+        alert('Please enter time in HH:MM format');
+        return;
+    }
+    
+    const notes = prompt('Enter optional notes:') || '';
+    
+    const eventId = {{ event.id }};
+    const csrfToken = getCookie('csrftoken');
+    
+    fetch(`/scheduler/events/${eventId}/count-sessions/${sessionId}/`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+            session_name: sessionName,
+            count_time: countTime,
+            notes: notes,
+            is_active: true
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload(); // Refresh to show updated count time
+        } else {
+            alert('Error updating count time: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating count time');
+    });
+}
+
+function deleteCountTime(sessionId) {
+    if (!confirm('Are you sure you want to delete this count time?')) return;
+    
+    const eventId = {{ event.id }};
+    const csrfToken = getCookie('csrftoken');
+    
+    fetch(`/scheduler/events/${eventId}/count-sessions/${sessionId}/`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload(); // Refresh to remove deleted count time
+        } else {
+            alert('Error deleting count time: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error deleting count time');
+    });
+}
+</script>
+
 {% endblock %}

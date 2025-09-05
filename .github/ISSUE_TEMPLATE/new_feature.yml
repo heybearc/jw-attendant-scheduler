@@ -1,0 +1,26 @@
+name: New Feature (SDD)
+description: Start a new feature using the SDD spec template.
+title: "feat: <short name>"
+body:
+  - type: textarea
+    id: spec
+    attributes:
+      label: Feature spec
+      description: Describe WHAT and WHY (not HOW). Include Examples and [NEEDS CLARIFICATION].
+      value: |
+        # Feature: <name>
+        ## Problem / Outcome
+        ...
+        ## Examples (Specification by Example)
+        - Example A:
+          - Given ...
+          - When ...
+          - Then ...
+        - Example B:
+          - Given ...
+          - When ...
+          - Then ...
+        ## Open questions
+        - [NEEDS CLARIFICATION: ...]
+    validations:
+      required: true

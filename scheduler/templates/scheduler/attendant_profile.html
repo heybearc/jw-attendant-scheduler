@@ -28,37 +28,35 @@
                     <form method="post">
                         {% csrf_token %}
                         
-                        <!-- User Information -->
+                        <!-- Read-only User Information -->
                         <div class="row mb-4">
                             <div class="col-12">
-                                <h6 class="text-muted mb-3">Account Information</h6>
+                                <h6 class="text-muted mb-3">Account Information (Read Only)</h6>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="first_name" class="form-label">First Name</label>
-                                    <input type="text" class="form-control" id="first_name" name="first_name" 
-                                           value="{{ user.first_name }}" required>
+                                    <label class="form-label">Name</label>
+                                    <input type="text" class="form-control" 
+                                           value="{{ attendant.get_full_name }}" readonly>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="last_name" class="form-label">Last Name</label>
-                                    <input type="text" class="form-control" id="last_name" name="last_name" 
-                                           value="{{ user.last_name }}" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="email" class="form-label">Email Address</label>
-                                    <input type="email" class="form-control" id="email" name="email" 
-                                           value="{{ user.email }}" required>
+                                    <label class="form-label">Email Address</label>
+                                    <input type="email" class="form-control" 
+                                           value="{{ attendant.email|default:user.email }}" readonly>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Username</label>
                                     <input type="text" class="form-control" value="{{ user.username }}" readonly>
-                                    <small class="form-text text-muted">Username cannot be changed</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Role</label>
+                                    <input type="text" class="form-control" value="{{ user.get_role_display }}" readonly>
                                 </div>
                             </div>
                         </div>
@@ -73,6 +71,20 @@
                                     <label for="phone" class="form-label">Phone Number</label>
                                     <input type="tel" class="form-control" id="phone" name="phone" 
                                            value="{{ attendant.phone|default:'' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="emergency_contact_name" class="form-label">Emergency Contact Name</label>
+                                    <input type="text" class="form-control" id="emergency_contact_name" name="emergency_contact_name" 
+                                           value="{{ attendant.emergency_contact_name|default:'' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="emergency_contact_phone" class="form-label">Emergency Contact Phone</label>
+                                    <input type="tel" class="form-control" id="emergency_contact_phone" name="emergency_contact_phone" 
+                                           value="{{ attendant.emergency_contact_phone|default:'' }}">
                                 </div>
                             </div>
                             <div class="col-12">
@@ -93,7 +105,7 @@
                                 <div class="mb-3">
                                     <label class="form-label">Serving As</label>
                                     <input type="text" class="form-control" 
-                                           value="{{ attendant.get_jw_status_display|default:'Not Set' }}" readonly>
+                                           value="{{ attendant.get_serving_as_display|default:'Publisher' }}" readonly>
                                 </div>
                             </div>
                             {% if attendant.congregation %}

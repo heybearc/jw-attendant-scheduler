@@ -63,4 +63,4 @@ This Django project is actively under development with a 4-week roadmap for comp
 
 ## License
 
-This project is for use within Jehovah's Witness congregations and events.
+This project is designed for volunteer scheduling and event management.

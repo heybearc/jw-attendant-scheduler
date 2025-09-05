@@ -1,0 +1,411 @@
+{% extends 'scheduler/base.html' %}
+
+{% block title %}Position Templates - JW Attendant Scheduler{% endblock %}
+
+{% block extra_css %}
+<style>
+    .template-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+        cursor: pointer;
+    }
+    .template-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .position-badge {
+        margin: 2px;
+        font-size: 0.8rem;
+    }
+    .template-actions {
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+    .template-card:hover .template-actions {
+        opacity: 1;
+    }
+    
+    @media (max-width: 768px) {
+        .template-actions {
+            opacity: 1;
+        }
+        .template-card {
+            margin-bottom: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1><i class="bi bi-layout-text-window-reverse"></i> Position Templates</h1>
+                    <p class="text-muted mb-0">Manage reusable position templates for different event types</p>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createTemplateModal">
+                        <i class="bi bi-plus-circle"></i> Create Template
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template Categories -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="nav nav-pills" id="templateCategories" role="tablist">
+                <button class="nav-link active" id="all-tab" data-bs-toggle="pill" data-bs-target="#all-templates" type="button" role="tab">
+                    All Templates
+                </button>
+                <button class="nav-link" id="convention-tab" data-bs-toggle="pill" data-bs-target="#convention-templates" type="button" role="tab">
+                    Convention
+                </button>
+                <button class="nav-link" id="assembly-tab" data-bs-toggle="pill" data-bs-target="#assembly-templates" type="button" role="tab">
+                    Assembly
+                </button>
+                <button class="nav-link" id="meeting-tab" data-bs-toggle="pill" data-bs-target="#meeting-templates" type="button" role="tab">
+                    Meeting
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Templates Grid -->
+    <div class="tab-content" id="templateTabContent">
+        <div class="tab-pane fade show active" id="all-templates" role="tabpanel">
+            <div class="row" id="templatesContainer">
+                <!-- Templates will be loaded here -->
+                <div class="col-md-4 mb-4">
+                    <div class="card template-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="card-title mb-0">Regional Convention</h5>
+                                <div class="template-actions">
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="editTemplate(1)">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-success" onclick="applyTemplate(1)">
+                                            <i class="bi bi-check-circle"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteTemplate(1)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="card-text text-muted">Standard positions for regional conventions</p>
+                            <div class="mb-3">
+                                <span class="badge bg-primary position-badge">Sound</span>
+                                <span class="badge bg-primary position-badge">Stage</span>
+                                <span class="badge bg-secondary position-badge">Attendant Captain</span>
+                                <span class="badge bg-secondary position-badge">Platform</span>
+                                <span class="badge bg-info position-badge">Usher</span>
+                                <span class="badge bg-info position-badge">Parking</span>
+                            </div>
+                            <div class="d-flex justify-content-between text-muted small">
+                                <span><i class="bi bi-people"></i> 6 positions</span>
+                                <span><i class="bi bi-calendar"></i> Convention</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-4">
+                    <div class="card template-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="card-title mb-0">Circuit Assembly</h5>
+                                <div class="template-actions">
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="editTemplate(2)">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-success" onclick="applyTemplate(2)">
+                                            <i class="bi bi-check-circle"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteTemplate(2)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="card-text text-muted">Positions for circuit assemblies</p>
+                            <div class="mb-3">
+                                <span class="badge bg-primary position-badge">Sound</span>
+                                <span class="badge bg-primary position-badge">Stage</span>
+                                <span class="badge bg-secondary position-badge">Attendant Captain</span>
+                                <span class="badge bg-info position-badge">Usher</span>
+                            </div>
+                            <div class="d-flex justify-content-between text-muted small">
+                                <span><i class="bi bi-people"></i> 4 positions</span>
+                                <span><i class="bi bi-calendar"></i> Assembly</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-4">
+                    <div class="card template-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="card-title mb-0">Meeting</h5>
+                                <div class="template-actions">
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="editTemplate(3)">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-success" onclick="applyTemplate(3)">
+                                            <i class="bi bi-check-circle"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteTemplate(3)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="card-text text-muted">Basic meeting positions</p>
+                            <div class="mb-3">
+                                <span class="badge bg-primary position-badge">Sound</span>
+                                <span class="badge bg-secondary position-badge">Platform</span>
+                            </div>
+                            <div class="d-flex justify-content-between text-muted small">
+                                <span><i class="bi bi-people"></i> 2 positions</span>
+                                <span><i class="bi bi-calendar"></i> Meeting</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Template Modal -->
+<div class="modal fade" id="createTemplateModal" tabindex="-1" aria-labelledby="createTemplateModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createTemplateModalLabel">
+                    <i class="bi bi-plus-circle"></i> Create Position Template
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createTemplateForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="templateName" class="form-label">Template Name</label>
+                                <input type="text" class="form-control" id="templateName" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="eventType" class="form-label">Event Type</label>
+                                <select class="form-select" id="eventType" required>
+                                    <option value="">Select event type</option>
+                                    <option value="convention">Convention</option>
+                                    <option value="assembly">Assembly</option>
+                                    <option value="meeting">Meeting</option>
+                                    <option value="special_event">Special Event</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="templateDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="templateDescription" rows="2"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Positions</label>
+                        <div id="positionsList">
+                            <div class="row mb-2 position-row">
+                                <div class="col-md-5">
+                                    <select class="form-select position-name">
+                                        <option value="Sound">Sound</option>
+                                        <option value="Stage">Stage</option>
+                                        <option value="Attendant Captain">Attendant Captain</option>
+                                        <option value="Platform">Platform</option>
+                                        <option value="Usher">Usher</option>
+                                        <option value="Parking">Parking</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="number" class="form-control position-count" placeholder="Count" value="1" min="1">
+                                </div>
+                                <div class="col-md-3">
+                                    <select class="form-select position-priority">
+                                        <option value="high">High</option>
+                                        <option value="medium" selected>Medium</option>
+                                        <option value="low">Low</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-1">
+                                    <button type="button" class="btn btn-outline-success btn-sm" onclick="addPositionToTemplate()">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveTemplate()">
+                    <i class="bi bi-save"></i> Save Template
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Apply Template Modal -->
+<div class="modal fade" id="applyTemplateModal" tabindex="-1" aria-labelledby="applyTemplateModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="applyTemplateModalLabel">
+                    <i class="bi bi-check-circle"></i> Apply Template
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Apply this template to the current event? This will:</p>
+                <ul>
+                    <li>Add the template positions to the auto-assignment configuration</li>
+                    <li>Set position priorities based on the template</li>
+                    <li>Preserve any existing manual assignments</li>
+                </ul>
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    You can review and modify the positions before running auto-assignment.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="confirmApplyTemplate()">
+                    <i class="bi bi-check-circle"></i> Apply Template
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let selectedTemplateId = null;
+
+function addPositionToTemplate() {
+    const container = document.getElementById('positionsList');
+    const newRow = container.querySelector('.position-row').cloneNode(true);
+    
+    // Reset values
+    newRow.querySelector('.position-count').value = '1';
+    newRow.querySelector('.position-priority').value = 'medium';
+    
+    // Change add button to remove button
+    const button = newRow.querySelector('button');
+    button.className = 'btn btn-outline-danger btn-sm';
+    button.innerHTML = '<i class="bi bi-dash"></i>';
+    button.onclick = function() { this.closest('.position-row').remove(); };
+    
+    container.appendChild(newRow);
+}
+
+function saveTemplate() {
+    const form = document.getElementById('createTemplateForm');
+    const formData = new FormData(form);
+    
+    // Collect positions
+    const positions = [];
+    document.querySelectorAll('.position-row').forEach(row => {
+        const name = row.querySelector('.position-name').value;
+        const count = parseInt(row.querySelector('.position-count').value);
+        const priority = row.querySelector('.position-priority').value;
+        
+        positions.push({
+            name: name,
+            count: count,
+            priority: priority
+        });
+    });
+    
+    const templateData = {
+        name: document.getElementById('templateName').value,
+        event_type: document.getElementById('eventType').value,
+        description: document.getElementById('templateDescription').value,
+        positions: positions
+    };
+    
+    // Here you would make an API call to save the template
+    console.log('Saving template:', templateData);
+    
+    // For now, just close the modal and show success
+    const modal = bootstrap.Modal.getInstance(document.getElementById('createTemplateModal'));
+    modal.hide();
+    
+    // Show success message
+    showToast('Template created successfully!', 'success');
+}
+
+function editTemplate(templateId) {
+    // Load template data and open edit modal
+    console.log('Editing template:', templateId);
+    // Implementation would load template data and populate form
+}
+
+function applyTemplate(templateId) {
+    selectedTemplateId = templateId;
+    const modal = new bootstrap.Modal(document.getElementById('applyTemplateModal'));
+    modal.show();
+}
+
+function confirmApplyTemplate() {
+    if (!selectedTemplateId) return;
+    
+    // Apply template to current event
+    console.log('Applying template:', selectedTemplateId);
+    
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('applyTemplateModal'));
+    modal.hide();
+    
+    // Navigate back to event detail with auto-assign tab active
+    window.location.href = `/events/{{ request.session.selected_event_id }}/detail/#auto-assign`;
+}
+
+function deleteTemplate(templateId) {
+    if (confirm('Are you sure you want to delete this template? This action cannot be undone.')) {
+        // Make API call to delete template
+        console.log('Deleting template:', templateId);
+        showToast('Template deleted successfully!', 'success');
+    }
+}
+
+function showToast(message, type = 'info') {
+    // Simple toast notification
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type} position-fixed`;
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    toast.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="bi bi-${type === 'success' ? 'check-circle' : 'info-circle'} me-2"></i>
+            ${message}
+        </div>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+}
+</script>
+{% endblock %}

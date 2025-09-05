@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 from . import gmail_auth_views
 from . import simple_gmail_auth
+from .api_views import auto_assign_api
 from django.contrib.auth import views as auth_views
 
 app_name = 'scheduler'
@@ -70,7 +71,7 @@ urlpatterns = [
     
     path('users/invite/', views.user_invite, name='user_invite'),
     path('users/<int:user_id>/edit/', views.user_edit, name='user_edit'),
-    path('users/<int:user_id>/delete/', views.delete_user, name='delete_user'),
+    path('users/<int:user_id>/delete/', views.user_delete, name='user_delete'),
     path('users/<int:user_id>/link-attendant/', views.link_attendant, name='link_attendant'),
     path('users/<int:user_id>/unlink-attendant/', views.unlink_attendant, name='unlink_attendant'),
     path('activate/<str:token>/', views.user_activate, name='user_activate'),
@@ -82,12 +83,38 @@ urlpatterns = [
     path('export/events/', views.export_events, name='export_events'),
     path('export/assignments/', views.export_assignments, name='export_assignments'),
     
-    # API URLs for conflict detection
+    # API URLs for conflict detection and auto-assignment
     path('api/attendant/<int:attendant_id>/assignments/', views.attendant_assignments_api, name='attendant_assignments_api'),
     path('api/check-conflicts/', views.check_conflicts_api, name='check_conflicts_api'),
+    path('api/auto-assign/', auto_assign_api, name='auto_assign_api'),
+    
+    # Health check endpoint for CI/CD
+    path('health/', views.health_check, name='health_check'),
+    
+    # Bulk assignment operations
+    path('bulk-assignment/delete/', views.bulk_assignment_delete, name='bulk_assignment_delete'),
+    
+    
+    # Position management
+    path('events/<int:event_id>/positions/', views.event_positions, name='event_positions'),
+    path('events/<int:event_id>/positions/bulk-create/', views.bulk_create_positions, name='bulk_create_positions'),
+    path('events/<int:event_id>/positions/add-single/', views.add_single_position, name='add_single_position'),
+    path('events/<int:event_id>/positions/add-range/', views.add_position_range, name='add_position_range'),
+    path('events/<int:event_id>/positions/bulk-apply-shifts/', views.bulk_apply_shifts, name='bulk_apply_shifts'),
+    path('positions/<int:position_id>/add-shift/', views.add_position_shift, name='add_position_shift'),
+    path('positions/<int:position_id>/update-name/', views.update_position_name, name='update_position_name'),
+    path('positions/<int:position_id>/delete/', views.delete_position, name='delete_position'),
+    path('shifts/<int:shift_id>/delete/', views.delete_shift, name='delete_shift'),
+    path('assignments/bulk/update/', views.bulk_assignment_update, name='bulk_assignment_update'),
     
     # Bulk assignment operations
     path('assignments/bulk/create/', views.bulk_assignment_create, name='bulk_assignment_create'),
-    path('assignments/bulk/update/', views.bulk_assignment_update, name='bulk_assignment_update'),
-    path('assignments/bulk/delete/', views.bulk_assignment_delete, name='bulk_assignment_delete'),
+    
+    # Position templates
+    path('templates/positions/', views.position_templates, name='position_templates'),
+    
+    # Count Session Management API
+    path('events/<int:event_id>/count-sessions/', views.create_count_session, name='create_count_session'),
+    path('events/<int:event_id>/count-sessions/<int:session_id>/', views.update_count_session, name='update_count_session'),
+    path('events/<int:event_id>/count-sessions/<int:session_id>/', views.delete_count_session, name='delete_count_session'),
 ]

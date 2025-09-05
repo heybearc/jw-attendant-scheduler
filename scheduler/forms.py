@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import Attendant, Event, Assignment, User
+from .models import Attendant, Event, Assignment, User, UserRole, EventPosition, PositionShift, CountSession, PositionCount
 
 
 class AttendantForm(forms.ModelForm):
@@ -181,28 +181,16 @@ class AssignmentForm(forms.ModelForm):
         if shift_start >= shift_end:
             raise forms.ValidationError("Shift start time must be before shift end time.")
         
-        # Check for conflicts
-        from django.db.models import Q
-        
-        overlapping_assignments = Assignment.objects.filter(
-            attendant=attendant
-        ).exclude(id=self.instance.id if self.instance.id else None)
-        
-        conflicts = overlapping_assignments.filter(
-            Q(shift_start__lt=shift_end) & Q(shift_end__gt=shift_start)
-        )
-        
-        if conflicts.exists():
-            conflict_list = []
-            for conflict in conflicts:
-                conflict_list.append(
-                    f"{conflict.event.name} ({conflict.shift_start.strftime('%m/%d %H:%M')} - {conflict.shift_end.strftime('%H:%M')})"
-                )
-            
-            # Add non-field error for conflicts
-            raise forms.ValidationError(
-                f"This assignment conflicts with existing assignments: {', '.join(conflict_list)}"
+        # Check for conflicts using the assignment model
+        try:
+            temp_assignment = Assignment(
+                attendant=attendant, 
+                shift_start=shift_start, 
+                shift_end=shift_end
             )
+            temp_assignment.clean()
+        except Exception as e:
+            raise forms.ValidationError(f"Assignment conflict: {str(e)}")
         
         return cleaned_data
     
@@ -215,7 +203,7 @@ class AssignmentForm(forms.ModelForm):
 
 
 class BulkAssignmentForm(forms.Form):
-    """Form for creating multiple assignments at once"""
+    """Form for creating multiple assignments at once using new position system"""
     event = forms.ModelChoiceField(
         queryset=Event.objects.all().order_by('-start_date'),
         widget=forms.Select(attrs={'class': 'form-select'}),
@@ -226,18 +214,10 @@ class BulkAssignmentForm(forms.Form):
         widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'}),
         help_text="Select multiple attendants to assign"
     )
-    position = forms.CharField(
-        max_length=100,
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., Attendant, Parking, Security'}),
-        help_text="Position/role for all selected attendants"
-    )
-    shift_start = forms.DateTimeField(
-        widget=forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
-        help_text="Start time for all assignments"
-    )
-    shift_end = forms.DateTimeField(
-        widget=forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
-        help_text="End time for all assignments"
+    position_shifts = forms.ModelMultipleChoiceField(
+        queryset=None,  # Will be set dynamically based on selected event
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'}),
+        help_text="Select position shifts to assign attendants to"
     )
     notes = forms.CharField(
         required=False,
@@ -250,55 +230,64 @@ class BulkAssignmentForm(forms.Form):
         widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         help_text="Check for scheduling conflicts before creating assignments"
     )
+    allow_overrides = forms.BooleanField(
+        required=False,
+        initial=False,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        help_text="Allow individual position assignments to override bulk settings"
+    )
     
     def __init__(self, *args, **kwargs):
+        event_id = kwargs.pop('event_id', None)
         super().__init__(*args, **kwargs)
-        # Set default shift times based on event if provided
-        if 'initial' in kwargs and 'event' in kwargs['initial']:
-            event = kwargs['initial']['event']
-            if hasattr(event, 'start_date') and hasattr(event, 'end_date'):
-                self.fields['shift_start'].initial = event.start_date
-                self.fields['shift_end'].initial = event.end_date
+        
+        # Set position_shifts queryset based on event
+        if event_id:
+            from .models import PositionShift
+            self.fields['position_shifts'].queryset = PositionShift.objects.filter(
+                position__event_id=event_id
+            ).select_related('position').order_by('position__position_number', 'shift_start')
+        else:
+            from .models import PositionShift
+            self.fields['position_shifts'].queryset = PositionShift.objects.none()
     
     def clean(self):
         cleaned_data = super().clean()
-        shift_start = cleaned_data.get('shift_start')
-        shift_end = cleaned_data.get('shift_end')
+        position_shifts = cleaned_data.get('position_shifts')
         attendants = cleaned_data.get('attendants')
         check_conflicts = cleaned_data.get('check_conflicts', True)
         
-        if shift_start and shift_end and shift_start >= shift_end:
-            raise forms.ValidationError("Shift start time must be before shift end time.")
+        # Validate position shifts and attendants
+        if not position_shifts:
+            raise forms.ValidationError("Please select at least one position shift.")
+        
+        if not attendants:
+            raise forms.ValidationError("Please select at least one attendant.")
         
         # Check for conflicts if requested
-        if check_conflicts and attendants and shift_start and shift_end:
+        if check_conflicts and attendants and position_shifts:
             from django.db.models import Q
+            from .models import Assignment
             conflicts = []
             
             for attendant in attendants:
-                overlapping = Assignment.objects.filter(
-                    attendant=attendant,
-                    shift_start__lt=shift_end,
-                    shift_end__gt=shift_start
-                )
-                
-                if overlapping.exists():
-                    conflict_details = []
-                    for conflict in overlapping:
-                        conflict_details.append(
-                            f"{conflict.event.name} ({conflict.shift_start.strftime('%m/%d %H:%M')} - {conflict.shift_end.strftime('%H:%M')})"
-                        )
-                    conflicts.append(f"{attendant.get_full_name()}: {', '.join(conflict_details)}")
+                for position_shift in position_shifts:
+                    # Check if attendant has conflicting assignments
+                    conflicting_assignments = Assignment.objects.filter(
+                        attendant=attendant,
+                        event=position_shift.position.event
+                    ).filter(
+                        Q(shift_start__lt=position_shift.shift_end) &
+                        Q(shift_end__gt=position_shift.shift_start)
+                    )
+                    
+                    if conflicting_assignments.exists():
+                        conflicts.append(f"{attendant.get_full_name()} has conflicting assignment for position {position_shift.position.position_number}")
             
             if conflicts:
-                raise forms.ValidationError(
-                    f"Scheduling conflicts detected:\n" + "\n".join(conflicts[:5]) + 
-                    (f"\n... and {len(conflicts) - 5} more conflicts" if len(conflicts) > 5 else "")
-                )
+                raise forms.ValidationError("Scheduling conflicts found: " + "; ".join(conflicts))
         
         return cleaned_data
-
-
 
 
 

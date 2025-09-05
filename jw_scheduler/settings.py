@@ -107,6 +107,16 @@ DATABASES = {
     }
 }
 
+# PostgreSQL-specific configuration
+if os.getenv('DB_ENGINE') == 'django.db.backends.postgresql':
+    DATABASES['default']['OPTIONS'] = {
+        'sslmode': 'prefer',
+        'connect_timeout': 10,
+    }
+    # Set default port for PostgreSQL if not specified
+    if not DATABASES['default']['PORT']:
+        DATABASES['default']['PORT'] = '5432'
+
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators

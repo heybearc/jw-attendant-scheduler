@@ -2,80 +2,181 @@
 
 {% block title %}Events - JW Attendant Scheduler{% endblock %}
 
-{% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1><i class="bi bi-calendar-event"></i> Events</h1>
-    {% if user.role == 'admin' or user.role == 'overseer' or user.role == 'assistant_overseer' or user.is_admin or user.is_staff %}
-        <div class="btn-group" role="group">
-            <a href="{% url 'scheduler:event_create' %}" class="btn btn-primary">
-                <i class="bi bi-plus-circle"></i> Add Event
-            </a>
-            <div class="btn-group" role="group">
-                <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
-                    <i class="bi bi-download"></i> Export
-                </button>
-                <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="{% url 'scheduler:export_events' %}">
-                        <i class="bi bi-filetype-csv"></i> Export as CSV
-                    </a></li>
-                </ul>
-            </div>
-        </div>
-    {% endif %}
-</div>
+{% block extra_css %}
+<style>
+/* Mobile-responsive event list enhancements */
+@media (max-width: 768px) {
+    .d-flex.justify-content-between {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 1rem;
+    }
+    
+    .d-flex.justify-content-between h1 {
+        font-size: 1.5rem;
+        margin-bottom: 0;
+    }
+    
+    .btn-group {
+        width: 100%;
+    }
+    
+    .btn-group .btn {
+        font-size: 0.875rem;
+    }
+    
+    /* Stack filter form elements */
+    .row.g-3 > div {
+        margin-bottom: 1rem;
+    }
+    
+    /* Mobile-friendly event cards */
+    .event-card {
+        margin-bottom: 1rem;
+        border-left: 4px solid #007bff;
+    }
+    
+    .event-card.status-current {
+        border-left-color: #28a745;
+    }
+    
+    .event-card.status-completed {
+        border-left-color: #17a2b8;
+    }
+    
+    .event-card.status-cancelled {
+        border-left-color: #ffc107;
+    }
+    
+    .event-card.status-archived {
+        border-left-color: #6c757d;
+    }
+    
+    .event-actions {
+        margin-top: 0.75rem;
+    }
+    
+    .event-actions .btn {
+        font-size: 0.8rem;
+        padding: 0.375rem 0.75rem;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Hide table on mobile, show cards instead */
+    .table-responsive {
+        display: none;
+    }
+    
+    .mobile-event-list {
+        display: block;
+    }
+}
 
-<!-- Search and Filters -->
-<div class="card mb-4">
-    <div class="card-body">
-        <form method="get" class="row g-3">
-            <div class="col-md-4">
-                <label for="search" class="form-label">Search</label>
-                <input type="text" class="form-control" id="search" name="search" 
-                       value="{{ search_query }}" placeholder="Event name, location...">
-            </div>
-            <div class="col-md-3">
-                <label for="status" class="form-label">Status</label>
-                <select class="form-select" id="status" name="status">
-                    <option value="">All Statuses</option>
-                    <option value="upcoming" {% if status_filter == 'upcoming' %}selected{% endif %}>Upcoming</option>
-                    <option value="current" {% if status_filter == 'current' %}selected{% endif %}>Current</option>
-                    <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
-                    <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label for="event_type" class="form-label">Event Type</label>
-                <select class="form-select" id="event_type" name="event_type">
-                    <option value="">All Types</option>
-                    <option value="circuit_assembly" {% if type_filter == 'circuit_assembly' %}selected{% endif %}>Circuit Assembly</option>
-                    <option value="regional_convention" {% if type_filter == 'regional_convention' %}selected{% endif %}>Regional Convention</option>
-                    <option value="special_assembly_day" {% if type_filter == 'special_assembly_day' %}selected{% endif %}>Special Assembly Day</option>
-                    <option value="meeting" {% if type_filter == 'meeting' %}selected{% endif %}>Meeting</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label for="date_range" class="form-label">Date Range</label>
-                <select class="form-select" name="date_range">
-                    <option value="">All Dates</option>
-                    <option value="upcoming" {% if date_range_filter == 'upcoming' %}selected{% endif %}>Upcoming Events</option>
-                    <option value="this_month" {% if date_range_filter == 'this_month' %}selected{% endif %}>This Month</option>
-                    <option value="next_month" {% if date_range_filter == 'next_month' %}selected{% endif %}>Next Month</option>
-                    <option value="past" {% if date_range_filter == 'past' %}selected{% endif %}>Past Events</option>
-                </select>
-            </div>
-            <div class="col-md-12">
-                <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-search"></i> Search
+@media (min-width: 769px) {
+    .mobile-event-list {
+        display: none;
+    }
+}
+
+@media (max-width: 576px) {
+    .container-fluid {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+    
+    .card-body {
+        padding: 1rem 0.75rem;
+    }
+    
+    .btn-group .btn {
+        font-size: 0.8rem;
+        padding: 0.5rem 0.75rem;
+    }
+    
+    .form-control, .form-select {
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+}
+
+/* Touch-friendly enhancements */
+.event-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+@media (hover: none) and (pointer: coarse) {
+    .event-card:active {
+        transform: scale(0.98);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-calendar-event"></i> Events</h1>
+        {% if user.role == 'admin' or user.role == 'overseer' or user.role == 'assistant_overseer' or user.is_admin or user.is_staff %}
+            <div class="btn-group" role="group">
+                <a href="{% url 'scheduler:event_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> <span class="d-none d-sm-inline">Add Event</span>
+                </a>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="bi bi-download"></i> <span class="d-none d-sm-inline">Export</span>
                     </button>
-                    <a href="{% url 'scheduler:event_list' %}" class="btn btn-outline-secondary">
-                        <i class="bi bi-arrow-clockwise"></i> Clear
-                    </a>
-                    <button type="button" class="btn btn-outline-info" onclick="toggleEventAdvancedFilters()">
-                        <i class="bi bi-funnel"></i> Advanced Filters
-                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{% url 'scheduler:export_events' %}">
+                            <i class="bi bi-filetype-csv"></i> Export as CSV
+                        </a></li>
+                    </ul>
                 </div>
             </div>
+        {% endif %}
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4 col-sm-6">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" class="form-control" id="search" name="search" 
+                           value="{{ search_query }}" placeholder="Event name, location...">
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <label for="status" class="form-label">Status</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="">All Statuses</option>
+                        <option value="upcoming" {% if status_filter == 'upcoming' %}selected{% endif %}>Upcoming</option>
+                        <option value="current" {% if status_filter == 'current' %}selected{% endif %}>Current</option>
+                        <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
+                        <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                        <option value="archived" {% if status_filter == 'archived' %}selected{% endif %}>Archived</option>
+                    </select>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <label for="event_type" class="form-label">Event Type</label>
+                    <select class="form-select" id="event_type" name="event_type">
+                        <option value="">All Types</option>
+                        <option value="circuit_assembly" {% if type_filter == 'circuit_assembly' %}selected{% endif %}>Circuit Assembly</option>
+                        <option value="regional_convention" {% if type_filter == 'regional_convention' %}selected{% endif %}>Regional Convention</option>
+                        <option value="special_assembly_day" {% if type_filter == 'special_assembly_day' %}selected{% endif %}>Special Assembly Day</option>
+                        <option value="meeting" {% if type_filter == 'meeting' %}selected{% endif %}>Meeting</option>
+                    </select>
+                </div>
+                <div class="col-md-2 col-sm-6">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary flex-fill">
+                            <i class="bi bi-search"></i> <span class="d-none d-sm-inline">Search</span>
+                        </button>
+                        <a href="{% url 'scheduler:event_list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-clockwise"></i>
+                        </a>
+                    </div>
+                </div>
         </form>
         
         <!-- Advanced Filters -->
@@ -119,14 +220,14 @@
 <!-- Events Table -->
 <div class="card">
     <div class="card-body">
-        {% if page_obj %}
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
+            <!-- Events Table - Desktop -->
+            <div class="table-responsive d-none d-md-block">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
                         <tr>
                             <th>Event Name</th>
                             <th>Type</th>
-                            <th>Date Range</th>
+                            <th>Date</th>
                             <th>Location</th>
                             <th>Status</th>
                             <th>Stations</th>
@@ -152,31 +253,146 @@
                             </td>
                             <td>{{ event.location|default:"TBD" }}</td>
                             <td>
-                                {% if event.status == 'upcoming' %}
-                                    <span class="badge bg-primary">{{ event.get_status_display }}</span>
-                                {% elif event.status == 'current' %}
-                                    <span class="badge bg-success">{{ event.get_status_display }}</span>
-                                {% elif event.status == 'completed' %}
-                                    <span class="badge bg-secondary">{{ event.get_status_display }}</span>
-                                {% else %}
-                                    <span class="badge bg-danger">{{ event.get_status_display }}</span>
-                                {% endif %}
+                                <span class="badge {{ event.get_status_badge_class }}">{{ event.get_status_display }}</span>
                             </td>
                             <td>{{ event.total_stations|default:"0" }}</td>
                             <td>
-                                <a href="{% url 'scheduler:event_detail' event.id %}" 
-                                   class="btn btn-sm btn-outline-primary">
-                                    <i class="bi bi-eye"></i>
-                                </a>
-                                <a href="/admin/scheduler/event/{{ event.id }}/change/" 
-                                   class="btn btn-sm btn-outline-secondary">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'scheduler:event_detail' event.id %}" 
+                                       class="btn btn-sm btn-outline-primary" title="View Details">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{% url 'scheduler:event_edit' event.id %}" 
+                                       class="btn btn-sm btn-outline-secondary" title="Edit Event">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    
+                                    {% if user.role == 'admin' or user.role == 'overseer' or user.is_staff %}
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-sm btn-outline-info dropdown-toggle" 
+                                                    data-bs-toggle="dropdown" title="Status Actions">
+                                                <i class="bi bi-gear"></i>
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                {% if event.status == 'upcoming' or event.status == 'current' %}
+                                                    <li><a class="dropdown-item" href="#" 
+                                                           onclick="updateEventStatus('{{ event.id }}', 'completed', 'Mark as Completed')">
+                                                        <i class="bi bi-check-circle text-info"></i> Mark Completed
+                                                    </a></li>
+                                                    <li><a class="dropdown-item" href="#" 
+                                                           onclick="updateEventStatus('{{ event.id }}', 'cancelled', 'Cancel Event')">
+                                                        <i class="bi bi-x-circle text-warning"></i> Cancel Event
+                                                    </a></li>
+                                                {% endif %}
+                                                
+                                                {% if event.status == 'completed' or event.status == 'cancelled' %}
+                                                    <li><a class="dropdown-item" href="#" 
+                                                           onclick="updateEventStatus('{{ event.id }}', 'archived', 'Archive Event')">
+                                                        <i class="bi bi-archive text-secondary"></i> Archive
+                                                    </a></li>
+                                                {% endif %}
+                                                
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><a class="dropdown-item" href="{% url 'scheduler:copy_event' event.id %}">
+                                                    <i class="bi bi-files text-primary"></i> Copy Event
+                                                </a></li>
+                                            </ul>
+                                        </div>
+                                    {% endif %}
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
+            </div>
+
+            <!-- Events Cards - Mobile -->
+            <div class="d-md-none">
+                {% for event in page_obj %}
+                <div class="card mb-3 event-mobile-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="card-title mb-0">
+                                <a href="{% url 'scheduler:event_detail' event.id %}" class="text-decoration-none">
+                                    {{ event.name }}
+                                </a>
+                            </h6>
+                            <span class="badge {{ event.get_status_badge_class }}">{{ event.get_status_display }}</span>
+                        </div>
+                        
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <small class="text-muted">Type:</small><br>
+                                <span class="badge bg-info">{{ event.get_event_type_display }}</span>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Stations:</small><br>
+                                <strong>{{ event.total_stations|default:"0" }}</strong>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <small class="text-muted">Date:</small><br>
+                            <strong>
+                                {{ event.start_date|date:"M j, Y" }}
+                                {% if event.end_date != event.start_date %}
+                                    - {{ event.end_date|date:"M j, Y" }}
+                                {% endif %}
+                            </strong>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <small class="text-muted">Location:</small><br>
+                            <strong>{{ event.location|default:"TBD" }}</strong>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'scheduler:event_detail' event.id %}" 
+                               class="btn btn-sm btn-primary flex-fill">
+                                <i class="bi bi-eye"></i> View
+                            </a>
+                            <a href="{% url 'scheduler:event_edit' event.id %}" 
+                               class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            
+                            {% if user.role == 'admin' or user.role == 'overseer' or user.is_staff %}
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-sm btn-outline-info dropdown-toggle" 
+                                            data-bs-toggle="dropdown">
+                                        <i class="bi bi-gear"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        {% if event.status == 'upcoming' or event.status == 'current' %}
+                                            <li><a class="dropdown-item" href="#" 
+                                                   onclick="updateEventStatus('{{ event.id }}', 'completed', 'Mark as Completed')">
+                                                <i class="bi bi-check-circle text-info"></i> Mark Completed
+                                            </a></li>
+                                            <li><a class="dropdown-item" href="#" 
+                                                   onclick="updateEventStatus('{{ event.id }}', 'cancelled', 'Cancel Event')">
+                                                <i class="bi bi-x-circle text-warning"></i> Cancel Event
+                                            </a></li>
+                                        {% endif %}
+                                        
+                                        {% if event.status == 'completed' or event.status == 'cancelled' %}
+                                            <li><a class="dropdown-item" href="#" 
+                                                   onclick="updateEventStatus('{{ event.id }}', 'archived', 'Archive Event')">
+                                                <i class="bi bi-archive text-secondary"></i> Archive
+                                            </a></li>
+                                        {% endif %}
+                                        
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" href="{% url 'scheduler:copy_event' event.id %}">
+                                            <i class="bi bi-files text-primary"></i> Copy Event
+                                        </a></li>
+                                    </ul>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
             </div>
 
             <!-- Pagination -->
@@ -218,4 +434,55 @@
         {% endif %}
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateEventStatus(eventId, newStatus, actionName) {
+    if (!confirm(`Are you sure you want to ${actionName.toLowerCase()}?`)) {
+        return;
+    }
+    
+    // Create a form and submit it
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `/events/${eventId}/edit/`;
+    
+    // Add CSRF token
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                     document.querySelector('meta[name=csrf-token]')?.getAttribute('content');
+    if (csrfToken) {
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+    }
+    
+    // Add status action
+    const statusInput = document.createElement('input');
+    statusInput.type = 'hidden';
+    if (newStatus === 'completed') {
+        statusInput.name = 'mark_completed';
+    } else if (newStatus === 'cancelled') {
+        statusInput.name = 'mark_cancelled';
+    } else if (newStatus === 'archived') {
+        statusInput.name = 'archive_event';
+    }
+    statusInput.value = '1';
+    form.appendChild(statusInput);
+    
+    document.body.appendChild(form);
+    form.submit();
+}
+
+function toggleEventAdvancedFilters() {
+    const filters = document.getElementById('eventAdvancedFilters');
+    if (filters.style.display === 'none') {
+        filters.style.display = 'block';
+    } else {
+        filters.style.display = 'none';
+    }
+}
+</script>
 {% endblock %}

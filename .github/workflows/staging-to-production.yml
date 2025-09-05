@@ -1,0 +1,72 @@
+name: Deploy Staging to Production
+
+on:
+  push:
+    branches: [ main, develop ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+        - production
+        - staging
+
+jobs:
+  deploy-to-production:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup SSH key
+      uses: webfactory/ssh-agent@v0.8.0
+      with:
+        ssh-private-key: ${{ secrets.JW_ATTENDANT_SSH_KEY }}
+        
+    - name: Add SSH known hosts
+      run: |
+        ssh-keyscan -H 10.92.3.22 >> ~/.ssh/known_hosts
+        ssh-keyscan -H 10.92.3.23 >> ~/.ssh/known_hosts
+        
+    - name: Deploy to Production
+      run: |
+        # Backup current production
+        ssh root@10.92.3.23 'cd /opt/jw-attendant-production && cp -r . /opt/backups/jw-attendant-$(date +%Y%m%d_%H%M%S)/'
+        
+        # Sync from staging to production
+        ssh root@10.92.3.22 'cd /opt/jw-attendant-staging && rsync -avz --exclude=venv --exclude=__pycache__ --exclude=.git . root@10.92.3.23:/opt/jw-attendant-production/'
+        
+        # Run migrations on production
+        ssh root@10.92.3.23 'cd /opt/jw-attendant-production && source venv/bin/activate && python3 manage.py migrate'
+        
+        # Collect static files
+        ssh root@10.92.3.23 'cd /opt/jw-attendant-production && source venv/bin/activate && python3 manage.py collectstatic --noinput'
+        
+        # Restart production service
+        ssh root@10.92.3.23 'systemctl restart jw-attendant-production'
+        
+        # Health check
+        sleep 10
+        curl -f http://10.92.3.23:8000/health/ || exit 1
+        
+    - name: Notify deployment success
+      if: success()
+      run: |
+        echo "✅ Production deployment successful"
+        echo "🔗 Production URL: http://10.92.3.23:8000"
+        
+    - name: Rollback on failure
+      if: failure()
+      run: |
+        echo "❌ Deployment failed, initiating rollback"
+        # Find latest backup
+        BACKUP=$(ssh root@10.92.3.23 'ls -t /opt/backups/jw-attendant-* | head -1')
+        # Restore from backup
+        ssh root@10.92.3.23 "cd /opt && rm -rf jw-attendant-production && cp -r $BACKUP jw-attendant-production"
+        # Restart service
+        ssh root@10.92.3.23 'systemctl restart jw-attendant-production'

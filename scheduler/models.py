@@ -43,6 +43,7 @@ class EventStatus(models.TextChoices):
     CURRENT = 'current', 'Current'
     COMPLETED = 'completed', 'Completed'
     CANCELLED = 'cancelled', 'Cancelled'
+    ARCHIVED = 'archived', 'Archived'
 
 
 class User(AbstractUser):
@@ -187,6 +188,11 @@ class Event(models.Model):
         default=EventStatus.UPCOMING
     )
     
+    # Metadata fields
+    archived_at = models.DateTimeField(null=True, blank=True, help_text="When this event was archived")
+    cancelled_at = models.DateTimeField(null=True, blank=True, help_text="When this event was cancelled")
+    completed_at = models.DateTimeField(null=True, blank=True, help_text="When this event was marked as completed")
+    
     # Capacity and logistics
     total_stations = models.IntegerField(default=0)
     expected_attendants = models.IntegerField(default=0)
@@ -209,12 +215,191 @@ class Event(models.Model):
         self.status = EventStatus.CURRENT
         self.save()
     
+    def mark_completed(self):
+        """Mark this event as completed"""
+        from django.utils import timezone
+        self.status = EventStatus.COMPLETED
+        self.completed_at = timezone.now()
+        self.save()
+    
+    def mark_cancelled(self):
+        """Mark this event as cancelled"""
+        from django.utils import timezone
+        self.status = EventStatus.CANCELLED
+        self.cancelled_at = timezone.now()
+        self.save()
+    
+    def archive(self):
+        """Archive this event (removes from active lists)"""
+        from django.utils import timezone
+        self.status = EventStatus.ARCHIVED
+        self.archived_at = timezone.now()
+        self.save()
+    
+    def can_be_deleted(self):
+        """Check if event can be safely deleted"""
+        # Event can be deleted if it has no assignments or if it's archived/cancelled
+        has_assignments = self.assignments.exists()
+        return not has_assignments or self.status in [EventStatus.ARCHIVED, EventStatus.CANCELLED]
+    
+    def get_status_badge_class(self):
+        """Get Bootstrap badge class for event status"""
+        status_classes = {
+            EventStatus.UPCOMING: 'badge-primary',
+            EventStatus.CURRENT: 'badge-success',
+            EventStatus.COMPLETED: 'badge-info',
+            EventStatus.CANCELLED: 'badge-warning',
+            EventStatus.ARCHIVED: 'badge-secondary'
+        }
+        return status_classes.get(self.status, 'badge-light')
+    
     class Meta:
         ordering = ['-start_date']
 
 
+class EventPosition(models.Model):
+    """Numbered positions for events with optional names"""
+    event = models.ForeignKey(
+        Event,
+        on_delete=models.CASCADE,
+        related_name='positions'
+    )
+    position_number = models.PositiveIntegerField(
+        help_text="Position number (1-53)"
+    )
+    position_name = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="Optional name for position (e.g., 'Main Gate', 'Parking Lot A')"
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ['event', 'position_number']
+        ordering = ['position_number']
+    
+    def __str__(self):
+        if self.position_name:
+            return f"Position {self.position_number}: {self.position_name}"
+        return f"Position {self.position_number}"
+
+
+class PositionShift(models.Model):
+    """Shift windows for positions"""
+    position = models.ForeignKey(
+        EventPosition,
+        on_delete=models.CASCADE,
+        related_name='shifts'
+    )
+    shift_start = models.DateTimeField()
+    shift_end = models.DateTimeField()
+    is_all_day = models.BooleanField(default=False)
+    notes = models.TextField(blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['shift_start']
+    
+    def clean(self):
+        """Validate shift times"""
+        from django.core.exceptions import ValidationError
+        
+        if self.shift_start and self.shift_end:
+            if self.shift_start >= self.shift_end:
+                raise ValidationError("Shift start time must be before shift end time.")
+    
+    def __str__(self):
+        return f"{self.position} - {self.shift_start.strftime('%H:%M')} to {self.shift_end.strftime('%H:%M')}"
+
+
+class CountSession(models.Model):
+    """Count sessions for events (typically twice daily)"""
+    event = models.ForeignKey(
+        Event,
+        on_delete=models.CASCADE,
+        related_name='count_sessions'
+    )
+    session_name = models.CharField(
+        max_length=50,
+        help_text="e.g., 'Morning Count', 'Afternoon Count'"
+    )
+    count_time = models.DateTimeField(
+        help_text="When the count should be taken"
+    )
+    is_completed = models.BooleanField(default=False)
+    total_count = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Auto-calculated total from position counts"
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['count_time']
+        unique_together = ['event', 'session_name', 'count_time']
+    
+    def calculate_total(self):
+        """Calculate total count from all position counts"""
+        total = sum(pc.count for pc in self.position_counts.all() if pc.count is not None)
+        self.total_count = total
+        self.save()
+        return total
+    
+    def __str__(self):
+        return f"{self.event.name} - {self.session_name} ({self.count_time.strftime('%m/%d %H:%M')})"
+
+
+class PositionCount(models.Model):
+    """Individual position counts for count sessions"""
+    count_session = models.ForeignKey(
+        CountSession,
+        on_delete=models.CASCADE,
+        related_name='position_counts'
+    )
+    position = models.ForeignKey(
+        EventPosition,
+        on_delete=models.CASCADE,
+        related_name='counts'
+    )
+    count = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Count for this position"
+    )
+    entered_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text="Oversight member who entered the count"
+    )
+    notes = models.TextField(blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ['count_session', 'position']
+        ordering = ['position__position_number']
+    
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Recalculate total when position count changes
+        self.count_session.calculate_total()
+    
+    def __str__(self):
+        count_str = str(self.count) if self.count is not None else "Not entered"
+        return f"{self.position} - {count_str}"
+
+
 class Assignment(models.Model):
-    """Assignment tracking model"""
+    """Assignment tracking model - keeping existing structure for now"""
     attendant = models.ForeignKey(
         Attendant,
         on_delete=models.CASCADE,
@@ -253,43 +438,28 @@ class Assignment(models.Model):
             attendant=self.attendant
         ).exclude(id=self.id if self.id else None)
         
-        # Check for time overlap
+        # Check for time overlap with other assignments
         conflicts = overlapping_assignments.filter(
-            Q(shift_start__lt=self.shift_end) & Q(shift_end__gt=self.shift_start)
+            Q(shift_start__lt=self.shift_end) & 
+            Q(shift_end__gt=self.shift_start)
         )
         
         if conflicts.exists():
             conflict_details = []
             for conflict in conflicts:
                 conflict_details.append(
-                    f"{conflict.event.name} ({conflict.shift_start.strftime('%m/%d %H:%M')} - {conflict.shift_end.strftime('%H:%M')})"
+                    f"{conflict.event.name} - {conflict.position} ({conflict.shift_start.strftime('%m/%d %H:%M')} - {conflict.shift_end.strftime('%H:%M')})"
                 )
             raise ValidationError(
                 f"Assignment conflicts with existing assignments: {', '.join(conflict_details)}"
             )
     
     def save(self, *args, **kwargs):
-        """Override save to run validation"""
-        self.clean()
+        self.full_clean()
         super().save(*args, **kwargs)
     
-    def get_duration_hours(self):
-        """Get assignment duration in hours"""
-        if self.shift_start and self.shift_end:
-            delta = self.shift_end - self.shift_start
-            return round(delta.total_seconds() / 3600, 1)
-        return 0
-    
-    def has_conflict(self):
-        """Check if this assignment has conflicts with other assignments"""
-        try:
-            self.clean()
-            return False
-        except:
-            return True
-    
-    def get_conflicts(self):
-        """Get list of conflicting assignments"""
+    def get_conflicting_assignments(self):
+        """Get assignments that conflict with this one"""
         from django.db.models import Q
         
         if not self.shift_start or not self.shift_end:
@@ -300,14 +470,14 @@ class Assignment(models.Model):
         ).exclude(id=self.id if self.id else None)
         
         return overlapping_assignments.filter(
-            Q(shift_start__lt=self.shift_end) & Q(shift_end__gt=self.shift_start)
+            Q(shift_start__lt=self.shift_end) & 
+            Q(shift_end__gt=self.shift_start)
         )
     
     def __str__(self):
-        return f"{self.attendant.get_full_name()} - {self.position} ({self.event.name})"
+        return f"{self.attendant.get_full_name()} - {self.position} ({self.shift_start.strftime('%m/%d %H:%M')} - {self.shift_end.strftime('%H:%M')})"
     
     class Meta:
-        unique_together = ['attendant', 'event', 'shift_start']
         ordering = ['shift_start']
 
 

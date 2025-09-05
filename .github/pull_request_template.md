@@ -1,0 +1,6 @@
+- [ ] All [NEEDS CLARIFICATION] resolved/deferred with issue #
+- [ ] Contract tests added and passing
+- [ ] Unit/integration tests reflect spec examples
+- [ ] Phase –1 gates ticked
+- [ ] Security notes reviewed; basic input validation present
+- [ ] Observability added for key flows

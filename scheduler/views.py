@@ -2,22 +2,44 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
+from django.views.decorators.http import require_http_methods, require_POST
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.core.paginator import Paginator
-from django.db import models, transaction
+from django.db.models import Q, Count
+from django.contrib.auth import get_user_model
+from django.db import transaction
+from django.contrib.auth import login
 from django.utils import timezone
-from django.views.decorators.http import require_POST, require_http_methods
-from django.views.decorators.csrf import csrf_protect
-from datetime import datetime, timedelta
+from django.conf import settings
+import json
 import csv
 import io
+from datetime import datetime, timedelta
 
 from .models import (
-    User, Attendant, Event, Assignment, Department, 
-    StationRange, OverseerAssignment, AttendantOverseerAssignment, LanyardAssignment, UserRole, EventStatus
+    Attendant, Event, Assignment, LanyardAssignment, UserRole, EventStatus, EventType,
+    Department, StationRange, OverseerAssignment, AttendantOverseerAssignment,
+    EventPosition, PositionShift, CountSession, PositionCount
 )
-from .forms import (
-    AttendantForm, EventForm, AssignmentForm, UserCreateForm, UserInvitationForm, BulkAssignmentForm
-)
+from .forms import AttendantForm, EventForm, AssignmentForm, UserInvitationForm, BulkAssignmentForm
+
+# Get User model
+User = get_user_model()
+
+# Health check endpoint for deployment monitoring
+@login_required
+def health_check(request):
+    """Simple health check endpoint for monitoring"""
+    return JsonResponse({
+        'status': 'healthy',
+        'timestamp': timezone.now().isoformat(),
+        'version': '1.0.0'
+    })
+
+@login_required
+def position_templates(request):
+    """Position templates management page"""
+    return render(request, 'scheduler/position_templates.html')
 
 # Event-centric views
 
@@ -217,26 +239,48 @@ def event_edit(request, event_id):
     event = get_object_or_404(Event, id=event_id)
     
     if request.method == 'POST':
-        # Handle delete request
-        if request.POST.get('delete_event'):
-            event_name = event.name
-            event.delete()
-            messages.success(request, f'Event "{event_name}" deleted successfully.')
+        # Handle status change requests
+        if request.POST.get('mark_completed'):
+            event.mark_completed()
+            messages.success(request, f'Event "{event.name}" marked as completed.')
             return redirect('scheduler:event_selection')
         
-        # Handle edit request
-        form = EventForm(request.POST, instance=event)
-        if form.is_valid():
-            event = form.save()
-            messages.success(request, f'Event "{event.name}" updated successfully!')
+        elif request.POST.get('mark_cancelled'):
+            event.mark_cancelled()
+            messages.success(request, f'Event "{event.name}" marked as cancelled.')
             return redirect('scheduler:event_selection')
+        
+        elif request.POST.get('archive_event'):
+            event.archive()
+            messages.success(request, f'Event "{event.name}" archived successfully.')
+            return redirect('scheduler:event_selection')
+        
+        # Handle delete request with safety checks
+        elif request.POST.get('delete_event'):
+            if event.can_be_deleted():
+                event_name = event.name
+                event.delete()
+                messages.success(request, f'Event "{event_name}" deleted successfully.')
+                return redirect('scheduler:event_selection')
+            else:
+                messages.error(request, f'Cannot delete "{event.name}" - it has active assignments. Archive or cancel it first.')
+        
+        # Handle edit request
+        else:
+            form = EventForm(request.POST, instance=event)
+            if form.is_valid():
+                event = form.save()
+                messages.success(request, f'Event "{event.name}" updated successfully!')
+                return redirect('scheduler:event_selection')
     else:
         form = EventForm(instance=event)
     
     context = {
         'form': form,
         'event': event,
-        'title': f'Edit Event: {event.name}'
+        'title': f'Edit Event: {event.name}',
+        'can_delete': event.can_be_deleted(),
+        'assignment_count': event.assignments.count()
     }
     
     return render(request, 'scheduler/event_form.html', context)
@@ -273,6 +317,9 @@ def event_detail(request, event_id):
     event_lanyards = LanyardAssignment.objects.filter(
         event=event
     ).select_related('attendant')
+    
+    # Get event positions and shifts for new system
+    event_positions = EventPosition.objects.filter(event=event).prefetch_related('shifts').order_by('position_number')
 
     context = {
         'event': event,
@@ -284,18 +331,312 @@ def event_detail(request, event_id):
         'assignments_by_position': assignments_by_position,
         'event_attendants': attendants,
         'event_lanyards': event_lanyards,
+        'event_positions': event_positions,
     }
     
     return render(request, 'scheduler/event_detail.html', context)
 
 
 @login_required
+def event_positions(request, event_id):
+    """Manage event positions and shift windows"""
+    event = get_object_or_404(Event, id=event_id)
+    positions = EventPosition.objects.filter(event=event).prefetch_related('shifts').order_by('position_number')
+    
+    context = {
+        'event': event,
+        'positions': positions,
+    }
+    
+    return render(request, 'scheduler/event_positions.html', context)
+
+
+@login_required
+def bulk_create_positions(request, event_id):
+    """Create multiple numbered positions for an event"""
+    if request.method == 'POST':
+        event = get_object_or_404(Event, id=event_id)
+        position_count = int(request.POST.get('position_count', 0))
+        
+        if position_count > 0:
+            created_count = 0
+            for i in range(1, position_count + 1):
+                position, created = EventPosition.objects.get_or_create(
+                    event=event,
+                    position_number=i,
+                    defaults={'name': f'Position {i}'}
+                )
+                if created:
+                    created_count += 1
+            
+            messages.success(request, f'Created {created_count} new positions.')
+        else:
+            messages.error(request, 'Please specify a valid number of positions.')
+    
+    return redirect('scheduler:event_positions', event_id=event_id)
+
+
+@login_required
+def add_single_position(request, event_id):
+    """Add a single position with specific number"""
+    if request.method == 'POST':
+        event = get_object_or_404(Event, id=event_id)
+        position_number = int(request.POST.get('position_number', 0))
+        
+        if position_number > 0:
+            position, created = EventPosition.objects.get_or_create(
+                event=event,
+                position_number=position_number,
+                defaults={'name': f'Position {position_number}'}
+            )
+            
+            if created:
+                messages.success(request, f'Added Position {position_number}.')
+            else:
+                messages.warning(request, f'Position {position_number} already exists.')
+        else:
+            messages.error(request, 'Please specify a valid position number.')
+    
+    return redirect('scheduler:event_positions', event_id=event_id)
+
+
+@login_required
+def add_position_range(request, event_id):
+    """Add a range of positions"""
+    if request.method == 'POST':
+        event = get_object_or_404(Event, id=event_id)
+        start_position = int(request.POST.get('start_position', 0))
+        end_position = int(request.POST.get('end_position', 0))
+        
+        if start_position > 0 and end_position > 0 and start_position <= end_position:
+            created_count = 0
+            existing_count = 0
+            
+            for i in range(start_position, end_position + 1):
+                position, created = EventPosition.objects.get_or_create(
+                    event=event,
+                    position_number=i,
+                    defaults={'name': f'Position {i}'}
+                )
+                if created:
+                    created_count += 1
+                else:
+                    existing_count += 1
+            
+            if created_count > 0:
+                messages.success(request, f'Added {created_count} new positions ({start_position}-{end_position}).')
+            if existing_count > 0:
+                messages.info(request, f'{existing_count} positions already existed in this range.')
+        else:
+            messages.error(request, 'Please specify a valid position range (start ≤ end).')
+    
+    return redirect('scheduler:event_positions', event_id=event_id)
+
+
+@login_required
+def bulk_apply_shifts(request, event_id):
+    """Apply shift window to positions in an event (all or range)"""
+    if request.method == 'POST':
+        event = get_object_or_404(Event, id=event_id)
+        apply_type = request.POST.get('apply_type', 'all')
+        is_all_day_bulk = request.POST.get('is_all_day_bulk') == 'on'
+        shift_start_time = request.POST.get('shift_start')
+        shift_end_time = request.POST.get('shift_end')
+        
+        from datetime import datetime, time
+        from django.utils import timezone
+        
+        try:
+            # Determine target positions
+            if apply_type == 'range':
+                position_start = int(request.POST.get('position_start', 1))
+                position_end = int(request.POST.get('position_end', 1))
+                positions = EventPosition.objects.filter(
+                    event=event,
+                    position_number__gte=position_start,
+                    position_number__lte=position_end
+                )
+                target_desc = f'positions {position_start}-{position_end}'
+            else:
+                positions = EventPosition.objects.filter(event=event)
+                target_desc = 'all positions'
+            
+            if is_all_day_bulk:
+                # All-day shift
+                event_date = event.start_date
+                shift_start = timezone.make_aware(datetime.combine(event_date, time(0, 0)))
+                shift_end = timezone.make_aware(datetime.combine(event_date, time(23, 59)))
+                shift_desc = 'all-day shift'
+            elif shift_start_time and shift_end_time:
+                # Parse time strings and combine with event date
+                start_time = datetime.strptime(shift_start_time, '%H:%M').time()
+                end_time = datetime.strptime(shift_end_time, '%H:%M').time()
+                event_date = event.start_date
+                
+                shift_start = timezone.make_aware(datetime.combine(event_date, start_time))
+                shift_end = timezone.make_aware(datetime.combine(event_date, end_time))
+                shift_desc = f'{shift_start_time}-{shift_end_time} shift'
+            else:
+                messages.error(request, 'Please provide both start and end times or select all-day.')
+                return redirect('scheduler:event_positions', event_id=event_id)
+            
+            # Apply to target positions
+            created_count = 0
+            for position in positions:
+                shift, created = PositionShift.objects.get_or_create(
+                    position=position,
+                    shift_start=shift_start,
+                    shift_end=shift_end,
+                    defaults={'is_all_day': is_all_day_bulk}
+                )
+                if created:
+                    created_count += 1
+            
+            messages.success(request, f'Applied {shift_desc} to {created_count} of {target_desc}.')
+            
+        except ValueError as e:
+            messages.error(request, f'Invalid time format. Please use HH:MM format (e.g., 08:00).')
+        except Exception as e:
+            messages.error(request, f'Error applying shifts: {str(e)}')
+    
+    return redirect('scheduler:event_positions', event_id=event_id)
+
+
+@login_required
+def add_position_shift(request, position_id):
+    """Add shift window to a specific position"""
+    if request.method == 'POST':
+        position = get_object_or_404(EventPosition, id=position_id)
+        is_all_day = request.POST.get('is_all_day') == 'on'
+        shift_start = request.POST.get('shift_start')
+        shift_end = request.POST.get('shift_end')
+        
+        from datetime import datetime, time
+        from django.utils import timezone
+        
+        try:
+            if is_all_day:
+                # All-day shift: combine event date with 00:00 and 23:59
+                event_date = position.event.start_date
+                start_datetime = timezone.make_aware(datetime.combine(event_date, time(0, 0)))
+                end_datetime = timezone.make_aware(datetime.combine(event_date, time(23, 59)))
+                
+                PositionShift.objects.create(
+                    position=position,
+                    shift_start=start_datetime,
+                    shift_end=end_datetime,
+                    is_all_day=True
+                )
+                messages.success(request, f'Added all-day shift to Position {position.position_number}.')
+            elif shift_start and shift_end:
+                # Parse time strings and combine with event date
+                try:
+                    start_time = datetime.strptime(shift_start, '%H:%M').time()
+                    end_time = datetime.strptime(shift_end, '%H:%M').time()
+                    event_date = position.event.start_date
+                    
+                    start_datetime = timezone.make_aware(datetime.combine(event_date, start_time))
+                    end_datetime = timezone.make_aware(datetime.combine(event_date, end_time))
+                    
+                    PositionShift.objects.create(
+                        position=position,
+                        shift_start=start_datetime,
+                        shift_end=end_datetime,
+                        is_all_day=False
+                    )
+                    messages.success(request, f'Added shift window to Position {position.position_number}.')
+                except ValueError:
+                    messages.error(request, 'Invalid time format. Please use HH:MM format.')
+            else:
+                messages.error(request, 'Please provide both start and end times or select all-day.')
+        except Exception as e:
+            messages.error(request, f'Error creating shift: {str(e)}')
+    
+    return redirect('scheduler:event_positions', event_id=position.event.id)
+
+
+@login_required
+@csrf_protect
+@require_POST
+def delete_shift(request, shift_id):
+    """Delete a position shift"""
+    shift = get_object_or_404(PositionShift, id=shift_id)
+    event_id = shift.position.event.id
+    position_number = shift.position.position_number
+    
+    try:
+        shift.delete()
+        messages.success(request, f'Shift deleted from Position {position_number}.')
+    except Exception as e:
+        messages.error(request, f'Error deleting shift: {str(e)}')
+    
+    return JsonResponse({'success': True})
+
+
+@login_required
+@csrf_protect
+@require_POST
+def delete_position(request, position_id):
+    """Delete a position and all its shifts"""
+    position = get_object_or_404(EventPosition, id=position_id)
+    event_id = position.event.id
+    position_number = position.position_number
+    
+    try:
+        position.delete()
+        messages.success(request, f'Position {position_number} and all its shifts deleted.')
+    except Exception as e:
+        messages.error(request, f'Error deleting position: {str(e)}')
+    
+    return JsonResponse({'success': True})
+
+
+@login_required
+@csrf_protect
+@require_POST
+def update_position_name(request, position_id):
+    """Update position name via AJAX"""
+    position = get_object_or_404(EventPosition, id=position_id)
+    
+    try:
+        import json
+        data = json.loads(request.body)
+        position.position_name = data.get('name', '')
+        position.save()
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+@login_required
 def event_list(request):
-    """List all events"""
-    events = Event.objects.all().order_by('-start_date')
+    """List events - role-based filtering"""
+    # Attendant users can only see events they're assigned to
+    if request.user.role == UserRole.ATTENDANT:
+        try:
+            attendant = request.user.attendant_profile
+            if attendant:
+                events = attendant.events.all().order_by('-start_date')
+            else:
+                events = Event.objects.none()
+        except:
+            events = Event.objects.none()
+    else:
+        # Admin/overseer users can see all events
+        events = Event.objects.all().order_by('-start_date')
+    
+    # Search functionality
+    search_query = request.GET.get('search', '')
+    if search_query:
+        events = events.filter(
+            Q(name__icontains=search_query) |
+            Q(location__icontains=search_query) |
+            Q(description__icontains=search_query)
+        )
     
     context = {
         'events': events,
+        'search_query': search_query,
     }
     
     return render(request, 'scheduler/event_list.html', context)
@@ -303,7 +644,12 @@ def event_list(request):
 
 @login_required
 def assignment_list(request):
-    """List assignments with event-scoped filtering"""
+    """List assignments with event-scoped filtering - role-based access"""
+    # Block attendant users from accessing this view
+    if request.user.role == UserRole.ATTENDANT:
+        messages.error(request, 'Access denied. You can view your assignments from your dashboard.')
+        return redirect('scheduler:attendant_dashboard')
+    
     selected_event_id = request.session.get('selected_event_id')
     if not selected_event_id:
         messages.warning(request, 'Please select an event first.')
@@ -379,7 +725,7 @@ def assignment_edit(request, assignment_id):
 
 @login_required
 def reports(request):
-    """Reports dashboard"""
+    """Advanced reports dashboard with analytics"""
     selected_event_id = request.session.get('selected_event_id')
     if not selected_event_id:
         messages.warning(request, 'Please select an event first.')
@@ -387,19 +733,63 @@ def reports(request):
     
     selected_event = get_object_or_404(Event, id=selected_event_id)
     
-    # Generate report data
+    # Generate comprehensive report data
     assignments = Assignment.objects.filter(event=selected_event)
     attendants = Attendant.objects.filter(events=selected_event)
     
+    # Basic statistics
     stats = {
         'total_assignments': assignments.count(),
         'total_attendants': attendants.count(),
-        'assignments_by_position': assignments.values('position').annotate(count=models.Count('id')),
+        'assignments_by_position': assignments.values('position').annotate(count=Count('id')).order_by('-count'),
+        'attendants_by_congregation': attendants.values('congregation').annotate(count=Count('id')).order_by('-count'),
+        'assignments_by_day': assignments.extra({
+            'day': "date(shift_start)"
+        }).values('day').annotate(count=Count('id')).order_by('day'),
+    }
+    
+    # Experience level distribution
+    experience_stats = {}
+    for attendant in attendants:
+        level = attendant.experience_level
+        experience_stats[level] = experience_stats.get(level, 0) + 1
+    
+    # Serving position distribution
+    serving_stats = {}
+    for attendant in attendants:
+        if attendant.serving_as:
+            for position in attendant.serving_as:
+                serving_stats[position] = serving_stats.get(position, 0) + 1
+    
+    # Assignment duration analysis
+    assignment_durations = []
+    for assignment in assignments:
+        duration = assignment.get_duration_hours()
+        if duration > 0:
+            assignment_durations.append(duration)
+    
+    duration_stats = {
+        'avg_duration': sum(assignment_durations) / len(assignment_durations) if assignment_durations else 0,
+        'total_hours': sum(assignment_durations),
+        'min_duration': min(assignment_durations) if assignment_durations else 0,
+        'max_duration': max(assignment_durations) if assignment_durations else 0,
+    }
+    
+    # Oversight coverage
+    oversight_stats = {
+        'attendants_with_oversight': AttendantOverseerAssignment.objects.filter(
+            overseer_assignment__event=selected_event
+        ).count(),
+        'total_overseers': OverseerAssignment.objects.filter(event=selected_event).count(),
     }
     
     context = {
         'selected_event': selected_event,
         'stats': stats,
+        'experience_stats': experience_stats,
+        'serving_stats': serving_stats,
+        'duration_stats': duration_stats,
+        'oversight_stats': oversight_stats,
     }
     
     return render(request, 'scheduler/reports.html', context)
@@ -415,8 +805,35 @@ def oversight_dashboard(request):
     
     selected_event = get_object_or_404(Event, id=selected_event_id)
     
+    # Get oversight assignments for this event
+    overseer_assignments = OverseerAssignment.objects.filter(
+        event=selected_event
+    ).select_related('overseer', 'department', 'station_range')
+    
+    # Get departments and station ranges
+    departments = Department.objects.all()
+    station_ranges = StationRange.objects.all()
+    
+    # Get attendant-overseer assignments
+    attendant_assignments = AttendantOverseerAssignment.objects.filter(
+        overseer_assignment__event=selected_event
+    ).select_related('attendant', 'overseer_assignment__overseer')
+    
+    # Statistics
+    stats = {
+        'total_overseers': overseer_assignments.count(),
+        'total_departments': departments.count(),
+        'total_station_ranges': station_ranges.count(),
+        'attendants_with_oversight': attendant_assignments.count(),
+    }
+    
     context = {
         'selected_event': selected_event,
+        'overseer_assignments': overseer_assignments,
+        'departments': departments,
+        'station_ranges': station_ranges,
+        'attendant_assignments': attendant_assignments,
+        'stats': stats,
     }
     
     return render(request, 'scheduler/oversight_dashboard.html', context)
@@ -475,11 +892,14 @@ def attendant_dashboard(request):
         messages.error(request, 'No attendant record found for your account.')
         return redirect('scheduler:dashboard')
     
-    # Get assignments for this attendant
-    assignments = Assignment.objects.filter(attendant=attendant).select_related('event').order_by('shift_start')
+    # Get attendant's assignments for display (read-only)
+    assignments = Assignment.objects.filter(
+        attendant=attendant
+    ).select_related('event').order_by('-shift_start')[:10]
     
     context = {
         'attendant': attendant,
+        'user': request.user,
         'assignments': assignments,
     }
     
@@ -586,7 +1006,7 @@ def check_conflicts_api(request):
 
 @login_required
 def bulk_assignment_create(request):
-    """Bulk create assignments"""
+    """Bulk create assignments using new position system"""
     selected_event_id = request.session.get('selected_event_id')
     if not selected_event_id:
         messages.warning(request, 'Please select an event first.')
@@ -595,15 +1015,65 @@ def bulk_assignment_create(request):
     selected_event = get_object_or_404(Event, id=selected_event_id)
     
     if request.method == 'POST':
-        form = BulkAssignmentForm(request.POST)
+        form = BulkAssignmentForm(request.POST, event_id=selected_event_id)
         if form.is_valid():
-            # Bulk assignment creation logic here
-            messages.success(request, 'Bulk assignments created successfully.')
+            # Create assignments for each attendant-position_shift combination
+            attendants = form.cleaned_data['attendants']
+            position_shifts = form.cleaned_data['position_shifts']
+            notes = form.cleaned_data.get('notes', '')
+            allow_overrides = form.cleaned_data.get('allow_overrides', False)
+            
+            created_count = 0
+            skipped_count = 0
+            
+            for attendant in attendants:
+                for position_shift in position_shifts:
+                    try:
+                        # Check if assignment already exists
+                        existing = Assignment.objects.filter(
+                            event=selected_event,
+                            attendant=attendant,
+                            position=position_shift.position.position_number,
+                            shift_start=position_shift.shift_start,
+                            shift_end=position_shift.shift_end
+                        ).first()
+                        
+                        if existing and not allow_overrides:
+                            skipped_count += 1
+                            continue
+                        
+                        # Create or update assignment
+                        assignment, created = Assignment.objects.update_or_create(
+                            event=selected_event,
+                            attendant=attendant,
+                            position=position_shift.position.position_number,
+                            shift_start=position_shift.shift_start,
+                            shift_end=position_shift.shift_end,
+                            defaults={
+                                'notes': notes,
+                                'position_shift': position_shift
+                            }
+                        )
+                        
+                        if created:
+                            created_count += 1
+                        
+                    except Exception as e:
+                        messages.warning(request, f'Could not create assignment for {attendant.get_full_name()} at position {position_shift.position.position_number}: {str(e)}')
+            
+            if created_count > 0:
+                messages.success(request, f'Successfully created {created_count} assignments.')
+            if skipped_count > 0:
+                messages.info(request, f'Skipped {skipped_count} existing assignments. Use "Allow overrides" to update existing assignments.')
+            
             return redirect('scheduler:assignment_list')
     else:
-        form = BulkAssignmentForm()
+        form = BulkAssignmentForm(event_id=selected_event_id)
         # Filter attendants by selected event
         form.fields['attendants'].queryset = Attendant.objects.filter(events=selected_event)
+        # Pre-select the event
+        form.fields['event'].initial = selected_event
+        form.fields['event'].widget = forms.HiddenInput()
     
     context = {
         'form': form,
@@ -763,7 +1233,12 @@ def attendant_create(request):
 @login_required
 @user_passes_test(is_not_attendant)
 def attendant_list(request):
-    """List attendants with event-scoped filtering and pagination"""
+    """List attendants with event-scoped filtering and pagination - restricted access"""
+    # Block attendant users from accessing this view
+    if request.user.role == UserRole.ATTENDANT:
+        messages.error(request, 'Access denied. You do not have permission to view all attendants.')
+        return redirect('scheduler:attendant_dashboard')
+    
     # Get selected event from session
     selected_event_id = request.session.get('selected_event_id')
     selected_event = None
@@ -867,8 +1342,19 @@ def attendant_list(request):
 
 @login_required
 def attendant_detail(request, attendant_id):
-    """View attendant details and assignments"""
+    """View attendant details and assignments - role-based access"""
     attendant = get_object_or_404(Attendant, id=attendant_id)
+    
+    # Attendant users can only view their own profile
+    if request.user.role == UserRole.ATTENDANT:
+        try:
+            if request.user.attendant_profile != attendant:
+                messages.error(request, 'Access denied. You can only view your own profile.')
+                return redirect('scheduler:attendant_dashboard')
+        except:
+            messages.error(request, 'Access denied.')
+            return redirect('scheduler:attendant_dashboard')
+    
     assignments = Assignment.objects.filter(attendant=attendant).select_related('event').order_by('-shift_start')
     
     context = {
@@ -893,6 +1379,8 @@ def event_list(request):
             models.Q(description__icontains=search_query)
         )
     
+    # Date range filtering
+    date_range_filter = request.GET.get('date_range', 'all')
     now = timezone.now().date()
     if date_range_filter == 'upcoming':
         events = events.filter(start_date__gte=now)
@@ -1434,6 +1922,30 @@ def user_edit(request, user_id):
 
 
 @login_required
+@user_passes_test(lambda u: u.is_staff or u.is_superuser or getattr(u, 'role', None) == 'admin')
+def user_delete(request, user_id):
+    """Admin-only user deletion"""
+    user_obj = get_object_or_404(User, id=user_id)
+    
+    # Prevent self-deletion
+    if user_obj == request.user:
+        messages.error(request, 'You cannot delete your own account.')
+        return redirect('scheduler:user_list')
+    
+    if request.method == 'POST':
+        username = user_obj.username
+        try:
+            user_obj.delete()
+            messages.success(request, f'User {username} deleted successfully.')
+        except Exception as e:
+            messages.error(request, f'Error deleting user: {str(e)}')
+        
+        return redirect('scheduler:user_list')
+    
+    return redirect('scheduler:user_list')
+
+
+@login_required
 @user_passes_test(is_staff_or_superuser)
 @csrf_protect
 @require_POST
@@ -1554,9 +2066,10 @@ def toggle_attendant_status(request, attendant_id):
 
 @login_required
 def attendant_dashboard(request):
-    """Event-aware personal dashboard for attendant users - shows only their own data"""
+    """Personal dashboard for attendant users - shows only their own data with proper isolation"""
     # Ensure only attendant users can access this view
     if request.user.role != UserRole.ATTENDANT:
+        messages.error(request, 'Access denied. This page is for attendant users only.')
         return redirect('scheduler:dashboard')
     
     # Get the attendant profile for this user
@@ -1565,99 +2078,59 @@ def attendant_dashboard(request):
         if not attendant:
             messages.warning(request, 'Your account is not linked to an attendant profile. Please contact an administrator.')
             return render(request, 'scheduler/attendant_dashboard.html', {'no_profile': True})
-    except:
+    except AttributeError:
         messages.warning(request, 'Your account is not linked to an attendant profile. Please contact an administrator.')
         return render(request, 'scheduler/attendant_dashboard.html', {'no_profile': True})
     
-    # Get selected event from session (if any)
-    selected_event_id = request.session.get('selected_event_id')
-    selected_event = None
-    if selected_event_id:
-        try:
-            selected_event = Event.objects.get(id=selected_event_id)
-        except Event.DoesNotExist:
-            request.session.pop('selected_event_id', None)
-    
-    # Get events this attendant is assigned to
-    assigned_events = Event.objects.filter(
-        assignments__attendant=attendant
-    ).distinct().order_by('start_date')
-    
-    # If no selected event but attendant has assignments, auto-select the most current event
-    if not selected_event and assigned_events.exists():
-        # Try to find current event first, then upcoming, then most recent
-        current_event = assigned_events.filter(status='current').first()
-        if current_event:
-            selected_event = current_event
-            request.session['selected_event_id'] = selected_event.id
-        else:
-            upcoming_event = assigned_events.filter(status='upcoming').first()
-            if upcoming_event:
-                selected_event = upcoming_event
-                request.session['selected_event_id'] = selected_event.id
-            else:
-                selected_event = assigned_events.first()
-                request.session['selected_event_id'] = selected_event.id
-    
-    # Get assignments filtered by selected event (if any)
-    now = timezone.now()
-    assignment_filter = {'attendant': attendant}
-    if selected_event:
-        assignment_filter['event'] = selected_event
-    
-    current_assignments = Assignment.objects.filter(
-        shift_start__lte=now,
-        shift_end__gte=now,
-        **assignment_filter
+    # Get assignments for this attendant ONLY (strict data isolation)
+    all_assignments = Assignment.objects.filter(
+        attendant=attendant
     ).select_related('event').order_by('shift_start')
     
-    upcoming_assignments = Assignment.objects.filter(
-        shift_start__gt=now,
-        **assignment_filter
-    ).select_related('event').order_by('shift_start')[:10]
+    # Categorize assignments by time
+    now = timezone.now()
+    current_assignments = all_assignments.filter(
+        shift_start__lte=now,
+        shift_end__gte=now
+    )
     
-    recent_assignments = Assignment.objects.filter(
-        shift_end__lt=now,
-        **assignment_filter
-    ).select_related('event').order_by('-shift_end')[:5]
+    upcoming_assignments = all_assignments.filter(
+        shift_start__gt=now
+    ).order_by('shift_start')[:5]
     
-    # Get oversight information
+    recent_assignments = all_assignments.filter(
+        shift_end__lt=now
+    ).order_by('-shift_end')[:10]
+    
+    # Get events this attendant is assigned to ONLY (their events only)
+    assigned_events = attendant.events.all().order_by('-start_date')
+    
+    # Get oversight information for this attendant
     oversight_info = None
     try:
-        # Check if this attendant has oversight assigned
         attendant_oversight = AttendantOverseerAssignment.objects.filter(
             attendant=attendant
-        ).select_related('overseer_assignment__overseer').first()
+        ).select_related(
+            'overseer_assignment__overseer',
+            'overseer_assignment__department',
+            'overseer_assignment__station_range'
+        ).first()
         
         if attendant_oversight:
-            oversight_info = {
-                'overseer': attendant_oversight.overseer_assignment.overseer,
-                'event': attendant_oversight.overseer_assignment.event,
-                'department': attendant_oversight.overseer_assignment.department,
-                'station_range': attendant_oversight.overseer_assignment.station_range,
-            }
+            oversight_info = attendant_oversight.overseer_assignment
     except:
         pass
     
-    # Statistics for this attendant (event-scoped if event selected)
-    if selected_event:
-        attendant_stats = {
-            'total_assignments': Assignment.objects.filter(attendant=attendant, event=selected_event).count(),
-            'current_assignments': current_assignments.count(),
-            'upcoming_assignments': upcoming_assignments.count(),
-            'event_name': selected_event.name,
-        }
-    else:
-        attendant_stats = {
-            'total_assignments': Assignment.objects.filter(attendant=attendant).count(),
-            'current_assignments': current_assignments.count(),
-            'upcoming_assignments': upcoming_assignments.count(),
-            'events_assigned': assigned_events.count(),
-        }
+    # Calculate statistics (only for this attendant's data)
+    attendant_stats = {
+        'total_assignments': all_assignments.count(),
+        'current_assignments': current_assignments.count(),
+        'upcoming_assignments': upcoming_assignments.count(),
+        'events_assigned': assigned_events.count(),
+    }
     
     context = {
         'attendant': attendant,
-        'selected_event': selected_event,
         'current_assignments': current_assignments,
         'upcoming_assignments': upcoming_assignments,
         'recent_assignments': recent_assignments,
@@ -1670,9 +2143,13 @@ def attendant_dashboard(request):
 
 
 @login_required
-@user_passes_test(is_attendant_only)
 def attendant_profile(request):
-    """Allow attendant users to edit their own profile information"""
+    """Allow attendant users to view and edit their own profile information only"""
+    # Ensure only attendant users can access this view
+    if request.user.role != UserRole.ATTENDANT:
+        messages.error(request, 'Access denied. This page is for attendant users only.')
+        return redirect('scheduler:dashboard')
+    
     try:
         attendant = request.user.attendant_profile
         if not attendant:
@@ -1683,29 +2160,12 @@ def attendant_profile(request):
         return redirect('scheduler:attendant_dashboard')
     
     if request.method == 'POST':
-        # Handle user information updates
-        user_form_data = {
-            'first_name': request.POST.get('first_name', ''),
-            'last_name': request.POST.get('last_name', ''),
-            'email': request.POST.get('email', ''),
-        }
-        
-        # Handle attendant profile updates
-        attendant_form_data = {
-            'phone': request.POST.get('phone', ''),
-            'notes': request.POST.get('notes', ''),
-        }
-        
         try:
-            # Update user information
-            request.user.first_name = user_form_data['first_name']
-            request.user.last_name = user_form_data['last_name']
-            request.user.email = user_form_data['email']
-            request.user.save()
-            
-            # Update attendant profile
-            attendant.phone = attendant_form_data['phone']
-            attendant.notes = attendant_form_data['notes']
+            # Allow attendants to update limited profile fields only
+            attendant.phone = request.POST.get('phone', '').strip()
+            attendant.emergency_contact_name = request.POST.get('emergency_contact_name', '').strip()
+            attendant.emergency_contact_phone = request.POST.get('emergency_contact_phone', '').strip()
+            attendant.notes = request.POST.get('notes', '').strip()
             attendant.save()
             
             messages.success(request, 'Your profile has been updated successfully.')
@@ -1720,3 +2180,402 @@ def attendant_profile(request):
     }
     
     return render(request, 'scheduler/attendant_profile.html', context)
+
+
+# Oversight Management Views
+
+@login_required
+@user_passes_test(lambda u: u.role in ['admin', 'overseer'] or u.is_staff)
+def department_list(request):
+    """List all departments"""
+    departments = Department.objects.all().order_by('name')
+    
+    context = {
+        'departments': departments,
+    }
+    
+    return render(request, 'scheduler/department_list.html', context)
+
+
+@login_required
+@user_passes_test(lambda u: u.role in ['admin', 'overseer'] or u.is_staff)
+def department_create(request):
+    """Create a new department"""
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        description = request.POST.get('description', '').strip()
+        
+        if name:
+            Department.objects.create(name=name, description=description)
+            messages.success(request, f'Department "{name}" created successfully.')
+            return redirect('scheduler:department_list')
+        else:
+            messages.error(request, 'Department name is required.')
+    
+    return render(request, 'scheduler/department_form.html', {
+        'title': 'Create Department'
+    })
+
+
+@login_required
+@user_passes_test(lambda u: u.role in ['admin', 'overseer'] or u.is_staff)
+def overseer_assignment_create(request):
+    """Create overseer assignment for selected event"""
+    selected_event_id = request.session.get('selected_event_id')
+    if not selected_event_id:
+        messages.warning(request, 'Please select an event first.')
+        return redirect('scheduler:event_selection')
+    
+    selected_event = get_object_or_404(Event, id=selected_event_id)
+    
+    if request.method == 'POST':
+        overseer_id = request.POST.get('overseer')
+        department_id = request.POST.get('department')
+        station_range_id = request.POST.get('station_range')
+        
+        try:
+            overseer = get_object_or_404(User, id=overseer_id)
+            department = Department.objects.get(id=department_id) if department_id else None
+            station_range = StationRange.objects.get(id=station_range_id) if station_range_id else None
+            
+            # Check if overseer already has assignment for this event
+            existing = OverseerAssignment.objects.filter(
+                overseer=overseer, event=selected_event
+            ).first()
+            
+            if existing:
+                messages.error(request, f'{overseer.get_full_name()} already has an assignment for this event.')
+            else:
+                OverseerAssignment.objects.create(
+                    overseer=overseer,
+                    event=selected_event,
+                    department=department,
+                    station_range=station_range
+                )
+                messages.success(request, f'Overseer assignment created for {overseer.get_full_name()}.')
+                return redirect('scheduler:oversight_dashboard')
+        except Exception as e:
+            messages.error(request, f'Error creating assignment: {str(e)}')
+    
+    # Get available overseers
+    overseers = User.objects.filter(
+        role__in=[UserRole.OVERSEER, UserRole.ASSISTANT_OVERSEER]
+    ).order_by('last_name', 'first_name')
+    
+    departments = Department.objects.all().order_by('name')
+    station_ranges = StationRange.objects.all().order_by('start_station')
+    
+    context = {
+        'selected_event': selected_event,
+        'overseers': overseers,
+        'departments': departments,
+        'station_ranges': station_ranges,
+        'title': 'Create Overseer Assignment'
+    }
+    
+    return render(request, 'scheduler/overseer_assignment_form.html', context)
+
+
+# PDF Generation Views
+
+@login_required
+def export_schedule_pdf(request):
+    """Export schedule as PDF for selected event"""
+    selected_event_id = request.session.get('selected_event_id')
+    if not selected_event_id:
+        messages.warning(request, 'Please select an event first.')
+        return redirect('scheduler:event_selection')
+    
+    selected_event = get_object_or_404(Event, id=selected_event_id)
+    
+    try:
+        from reportlab.lib import colors
+        from reportlab.lib.pagesizes import letter, A4
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.units import inch
+        from io import BytesIO
+        
+        # Create PDF buffer
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4)
+        elements = []
+        
+        # Styles
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=16,
+            spaceAfter=30,
+            alignment=1  # Center alignment
+        )
+        
+        # Title
+        title = Paragraph(f"Assignment Schedule - {selected_event.name}", title_style)
+        elements.append(title)
+        elements.append(Spacer(1, 12))
+        
+        # Event details
+        event_info = [
+            ['Event:', selected_event.name],
+            ['Type:', selected_event.get_event_type_display()],
+            ['Date:', f"{selected_event.start_date} to {selected_event.end_date}"],
+            ['Location:', selected_event.location or 'TBD'],
+        ]
+        
+        event_table = Table(event_info, colWidths=[1.5*inch, 4*inch])
+        event_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ]))
+        elements.append(event_table)
+        elements.append(Spacer(1, 20))
+        
+        # Assignments table
+        assignments = Assignment.objects.filter(event=selected_event).select_related('attendant').order_by('shift_start', 'position')
+        
+        if assignments:
+            # Table headers
+            data = [['Name', 'Position', 'Start Time', 'End Time', 'Duration']]
+            
+            # Table data
+            for assignment in assignments:
+                data.append([
+                    assignment.attendant.get_full_name(),
+                    assignment.position,
+                    assignment.shift_start.strftime('%m/%d %H:%M'),
+                    assignment.shift_end.strftime('%H:%M'),
+                    f"{assignment.get_duration_hours()}h"
+                ])
+            
+            # Create table
+            table = Table(data, colWidths=[2*inch, 1.5*inch, 1*inch, 1*inch, 0.8*inch])
+            table.setStyle(TableStyle([
+                # Header row
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                
+                # Data rows
+                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 1), (-1, -1), 9),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                
+                # Alternating row colors
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.lightgrey]),
+            ]))
+            
+            elements.append(table)
+        else:
+            no_assignments = Paragraph("No assignments found for this event.", styles['Normal'])
+            elements.append(no_assignments)
+        
+        # Build PDF
+        doc.build(elements)
+        
+        # Return PDF response
+        buffer.seek(0)
+        response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="schedule_{selected_event.name.replace(" ", "_")}.pdf"'
+        
+        return response
+        
+    except ImportError:
+        messages.error(request, 'PDF generation requires reportlab package. Please install it: pip install reportlab')
+        return redirect('scheduler:reports')
+    except Exception as e:
+        messages.error(request, f'Error generating PDF: {str(e)}')
+        return redirect('scheduler:reports')
+
+
+@login_required
+def export_attendant_list_pdf(request):
+    """Export attendant list as PDF for selected event"""
+    selected_event_id = request.session.get('selected_event_id')
+    if not selected_event_id:
+        messages.warning(request, 'Please select an event first.')
+        return redirect('scheduler:event_selection')
+    
+    selected_event = get_object_or_404(Event, id=selected_event_id)
+    
+    try:
+        from reportlab.lib import colors
+        from reportlab.lib.pagesizes import letter, A4
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.units import inch
+        from io import BytesIO
+        
+        # Create PDF buffer
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4)
+        elements = []
+        
+        # Styles
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=16,
+            spaceAfter=30,
+            alignment=1  # Center alignment
+        )
+        
+        # Title
+        title = Paragraph(f"Attendant List - {selected_event.name}", title_style)
+        elements.append(title)
+        elements.append(Spacer(1, 12))
+        
+        # Attendants table
+        attendants = Attendant.objects.filter(events=selected_event).order_by('last_name', 'first_name')
+        
+        if attendants:
+            # Table headers
+            data = [['Name', 'Congregation', 'Phone', 'Serving As', 'Experience']]
+            
+            # Table data
+            for attendant in attendants:
+                data.append([
+                    attendant.get_full_name(),
+                    attendant.congregation,
+                    attendant.phone or 'N/A',
+                    attendant.get_serving_as_display(),
+                    attendant.get_experience_level_display()
+                ])
+            
+            # Create table
+            table = Table(data, colWidths=[1.8*inch, 1.5*inch, 1.2*inch, 1.5*inch, 1*inch])
+            table.setStyle(TableStyle([
+                # Header row
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                
+                # Data rows
+                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 1), (-1, -1), 8),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                
+                # Alternating row colors
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.lightgrey]),
+            ]))
+            
+            elements.append(table)
+        else:
+            no_attendants = Paragraph("No attendants found for this event.", styles['Normal'])
+            elements.append(no_attendants)
+        
+        # Build PDF
+        doc.build(elements)
+        
+        # Return PDF response
+        buffer.seek(0)
+        response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="attendants_{selected_event.name.replace(" ", "_")}.pdf"'
+        
+        return response
+        
+    except ImportError:
+        messages.error(request, 'PDF generation requires reportlab package. Please install it: pip install reportlab')
+        return redirect('scheduler:attendant_list')
+    except Exception as e:
+        messages.error(request, f'Error generating PDF: {str(e)}')
+        return redirect('scheduler:attendant_list')
+
+# Count Session Management Views
+
+@login_required
+@require_http_methods(["POST"])
+def create_count_session(request, event_id):
+    """Create a new count session for an event"""
+    try:
+        event = get_object_or_404(Event, id=event_id)
+        data = json.loads(request.body)
+        
+        # Parse time string to time object
+        time_str = data.get('count_time')
+        try:
+            count_time = datetime.strptime(time_str, '%H:%M').time()
+        except ValueError:
+            return JsonResponse({'success': False, 'error': 'Invalid time format. Use HH:MM'})
+        
+        # Create count session
+        session = CountSession.objects.create(
+            event=event,
+            session_name=data.get('session_name'),
+            count_time=count_time,
+            notes=data.get('notes', ''),
+            is_active=data.get('is_active', True)
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'session_id': session.id,
+            'message': f'Count session "{session.session_name}" created successfully'
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON data'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+@login_required
+@require_http_methods(["PUT"])
+def update_count_session(request, event_id, session_id):
+    """Update an existing count session"""
+    try:
+        event = get_object_or_404(Event, id=event_id)
+        session = get_object_or_404(CountSession, id=session_id, event=event)
+        data = json.loads(request.body)
+        
+        # Parse time string to time object
+        time_str = data.get('count_time')
+        try:
+            count_time = datetime.strptime(time_str, '%H:%M').time()
+        except ValueError:
+            return JsonResponse({'success': False, 'error': 'Invalid time format. Use HH:MM'})
+        
+        # Update session
+        session.session_name = data.get('session_name', session.session_name)
+        session.count_time = count_time
+        session.notes = data.get('notes', session.notes)
+        session.is_active = data.get('is_active', session.is_active)
+        session.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Count session "{session.session_name}" updated successfully'
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON data'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+@login_required
+@require_http_methods(["DELETE"])
+def delete_count_session(request, event_id, session_id):
+    """Delete a count session"""
+    try:
+        event = get_object_or_404(Event, id=event_id)
+        session = get_object_or_404(CountSession, id=session_id, event=event)
+        
+        session_name = session.session_name
+        session.delete()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Count session "{session_name}" deleted successfully'
+        })
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})

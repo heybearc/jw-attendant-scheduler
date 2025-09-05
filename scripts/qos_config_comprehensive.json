@@ -1,0 +1,171 @@
+{
+  "monitoring": {
+    "interval_seconds": 30,
+    "health_check_interval": 60,
+    "error_threshold": 3,
+    "auto_restart_enabled": true,
+    "notification_enabled": true,
+    "database_check_interval": 120
+  },
+  "environments": {
+    "jw_staging": {
+      "name": "JW Scheduler Staging (PRIMARY DEV)",
+      "base_url": "http://10.92.3.24:8001",
+      "ssh_host": "jw-staging",
+      "service_name": "jw-attendant-staging",
+      "priority": "critical",
+      "endpoints": ["/health/", "/dashboard/", "/reports/", "/users/"],
+      "log_files": [
+        "/var/log/jw-attendant-staging/error.log",
+        "/var/log/nginx/error.log"
+      ]
+    },
+    "jw_production": {
+      "name": "JW Scheduler Production",
+      "base_url": "http://10.92.3.22:8000",
+      "ssh_host": "jw-attendant",
+      "service_name": "jw-attendant",
+      "priority": "critical",
+      "endpoints": ["/health/", "/dashboard/", "/reports/", "/users/"],
+      "log_files": [
+        "/var/log/jw-attendant/error.log",
+        "/var/log/nginx/error.log"
+      ]
+    },
+    "ldc_production": {
+      "name": "LDC Construction Tools Production",
+      "base_url": null,
+      "frontend_url": "http://10.92.3.23:3001",
+      "ssh_host": "ldc",
+      "service_name": "ldc-construction",
+      "priority": "high",
+      "endpoints": ["/health", "/", "/projects", "/volunteers", "/admin"],
+      "log_files": [
+        "/opt/ldc-construction-tools/backend/logs/error.log",
+        "/opt/ldc-construction-tools/frontend/logs/error.log"
+      ]
+    },
+    "ldc_staging": {
+      "name": "LDC Construction Tools Staging (PRIMARY)",
+      "priority": "high",
+      "ip": "10.92.3.25",
+      "ssh_host": "ldc-construction-tools",
+      "service_name": "ldc-backend-staging",
+      "web_endpoints": [
+        {"url": "http://10.92.3.25:8000/health", "name": "Backend Health"},
+        {"url": "http://10.92.3.25:3001", "name": "Frontend"}
+      ],
+      "log_files": [
+        "/opt/ldc-construction-tools/backend/backend.log",
+        "/opt/ldc-construction-tools/frontend/frontend.log"
+      ],
+      "database_checks": {
+        "enabled": false
+      }
+    },
+    "ldc_production_deprecated": {
+      "name": "LDC Construction Tools Production (DEPRECATED)",
+      "priority": "low",
+      "ip": "10.92.3.23",
+      "ssh_host": "ldc-construction-tools-prod",
+      "service_name": "ldc-construction",
+      "web_endpoints": [
+        {"url": "http://10.92.3.23:8000/health", "name": "Backend Health"},
+        {"url": "http://10.92.3.23:3000", "name": "Frontend"}
+      ],
+      "log_files": [
+        "/opt/ldc-construction-tools/backend/backend.log",
+        "/opt/ldc-construction-tools/frontend/frontend.log"
+      ],
+      "database_checks": {
+        "enabled": false
+      }
+    },
+    "postgresql": {
+      "name": "PostgreSQL Database Server",
+      "base_url": null,
+      "ssh_host": "jw-postgres",
+      "service_name": "postgresql",
+      "priority": "critical",
+      "database_checks": {
+        "port": 5432,
+        "databases": ["jw_attendant", "ldc_construction"],
+        "max_connections_threshold": 80,
+        "slow_query_threshold": 5000
+      },
+      "log_files": [
+        "/var/log/postgresql/postgresql-15-main.log"
+      ]
+    }
+  },
+  "ssh_config": {
+    "config_file": "/Users/cory/Documents/Cloudy-Work/ssh_config_master.conf",
+    "timeout": 10,
+    "connection_attempts": 3
+  },
+  "checks": {
+    "web_endpoints": {
+      "timeout": 10,
+      "expected_status": 200,
+      "response_time_threshold": 5.0
+    },
+    "database": {
+      "connection_timeout": 5,
+      "query_timeout": 10,
+      "health_queries": {
+        "postgresql": "SELECT 1"
+      }
+    },
+    "system_resources": {
+      "cpu_threshold": 90,
+      "memory_threshold": 85,
+      "disk_threshold": 90
+    },
+    "log_analysis": {
+      "error_patterns": ["error", "exception", "critical", "fatal"],
+      "warning_patterns": ["warning", "warn"],
+      "max_recent_errors": 5
+    }
+  },
+  "interventions": {
+    "restart_service": {
+      "enabled": true,
+      "cooldown_minutes": 10,
+      "max_attempts_per_hour": 3
+    },
+    "reload_nginx": {
+      "enabled": true,
+      "cooldown_minutes": 5,
+      "max_attempts_per_hour": 6
+    },
+    "clear_cache": {
+      "enabled": true,
+      "cooldown_minutes": 15,
+      "max_attempts_per_hour": 2
+    },
+    "database_maintenance": {
+      "enabled": true,
+      "vacuum_threshold": 1000000,
+      "reindex_threshold": 5000000
+    }
+  },
+  "notifications": {
+    "critical_errors": {
+      "enabled": true,
+      "methods": ["log", "file"]
+    },
+    "intervention_success": {
+      "enabled": true,
+      "methods": ["log"]
+    },
+    "daily_summary": {
+      "enabled": true,
+      "time": "06:00"
+    }
+  },
+  "reporting": {
+    "metrics_retention_days": 30,
+    "generate_daily_reports": true,
+    "report_directory": "logs/reports"
+  }
+}

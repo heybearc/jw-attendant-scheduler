@@ -73,7 +73,7 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h1>Assignments{% if selected_event %} - {{ selected_event.name }}{% endif %}</h1>
+                    <h1><i class="bi bi-clipboard-check"></i> Assignments{% if selected_event %} - {{ selected_event.name }}{% endif %}</h1>
                     {% if selected_event and not show_all_events %}
                         <div class="d-flex align-items-center gap-2 mt-2">
                             <span class="badge bg-primary">{{ selected_event.name }}</span>
@@ -84,20 +84,24 @@
                     {% elif show_all_events %}
                         <div class="d-flex align-items-center gap-2 mt-2">
                             <span class="badge bg-secondary">All Events</span>
-                            <a href="?" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-funnel"></i> Filter to Current Event
-                            </a>
                         </div>
                     {% endif %}
                 </div>
-                {% if user.role == 'admin' or user.role == 'overseer' or user.role == 'assistant_overseer' or user.is_admin or user.is_staff %}
-                <div class="btn-group d-flex flex-column flex-md-row" role="group">
-                    <a href="{% url 'scheduler:assignment_create' %}" class="btn btn-primary mb-2 mb-md-0">
-                        <i class="bi bi-plus-circle"></i> <span class="d-none d-sm-inline">Add Assignment</span>
+                <div class="btn-group" role="group">
+                    {% if selected_event %}
+                        <a href="{% url 'scheduler:event_detail' selected_event.id %}#auto-assign" class="btn btn-primary">
+                            <i class="bi bi-magic"></i> <span class="d-none d-md-inline">Auto-Assign</span>
+                        </a>
+                    {% endif %}
+                    <a href="{% url 'scheduler:assignment_create' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-plus-circle"></i> <span class="d-none d-md-inline">New Assignment</span>
                     </a>
-                    <div class="btn-group" role="group">
-                        <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
-                            <i class="bi bi-download"></i> <span class="d-none d-sm-inline">Export</span>
+                    <a href="{% url 'scheduler:bulk_assignment_create' %}" class="btn btn-success">
+                        <i class="bi bi-plus-square"></i> <span class="d-none d-md-inline">Bulk Create</span>
+                    </a>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-download"></i> <span class="d-none d-md-inline">Export</span>
                         </button>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="{% url 'scheduler:export_assignments' %}?format=csv">
@@ -112,7 +116,6 @@
                         </ul>
                     </div>
                 </div>
-                {% endif %}
             </div>
         </div>
     </div>

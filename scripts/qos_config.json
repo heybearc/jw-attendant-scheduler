@@ -1,0 +1,50 @@
+{
+  "monitoring": {
+    "interval_seconds": 30,
+    "health_check_interval": 60,
+    "error_threshold": 3,
+    "auto_restart_enabled": true,
+    "notification_enabled": true
+  },
+  "endpoints": {
+    "staging": {
+      "base_url": "http://10.92.3.24:8001",
+      "ssh_host": "jw-staging",
+      "service_name": "jw-attendant-staging"
+    },
+    "production": {
+      "base_url": "http://10.92.3.22:8000",
+      "ssh_host": "jw-production", 
+      "service_name": "jw-attendant"
+    }
+  },
+  "checks": {
+    "web_endpoints": ["/health/", "/dashboard/", "/reports/", "/users/"],
+    "critical_processes": ["gunicorn", "nginx"],
+    "log_files": [
+      "/var/log/jw-attendant-staging/error.log",
+      "/var/log/nginx/error.log"
+    ]
+  },
+  "interventions": {
+    "restart_service": true,
+    "clear_cache": true,
+    "fix_permissions": true,
+    "reload_nginx": true
+  },
+  "alerts": {
+    "error_patterns": [
+      "Internal Server Error",
+      "Bad Gateway", 
+      "Connection refused",
+      "Permission denied",
+      "Database connection failed"
+    ],
+    "critical_thresholds": {
+      "memory_usage": 90,
+      "disk_usage": 95,
+      "cpu_usage": 95,
+      "response_time": 10.0
+    }
+  }
+}

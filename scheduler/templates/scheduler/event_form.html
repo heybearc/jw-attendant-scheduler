@@ -128,13 +128,51 @@
                         </div>
 
                         <div class="form-actions mt-4 pt-3 border-top">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i> Save Event
-                            </button>
-                            <a href="{% if event %}{% url 'scheduler:event_detail' event.id %}{% else %}{% url 'scheduler:event_list' %}{% endif %}" 
-                               class="btn btn-secondary ms-2">
-                                Cancel
-                            </a>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i> Save Event
+                                    </button>
+                                    <a href="{% if event %}{% url 'scheduler:event_detail' event.id %}{% else %}{% url 'scheduler:event_list' %}{% endif %}" 
+                                       class="btn btn-secondary ms-2">
+                                        Cancel
+                                    </a>
+                                </div>
+                                
+                                {% if event %}
+                                <div class="btn-group" role="group">
+                                    {% if event.status == 'upcoming' or event.status == 'current' %}
+                                        <button type="submit" name="mark_completed" class="btn btn-info btn-sm" 
+                                                onclick="return confirm('Mark this event as completed?')">
+                                            <i class="fas fa-check"></i> Mark Completed
+                                        </button>
+                                        <button type="submit" name="mark_cancelled" class="btn btn-warning btn-sm" 
+                                                onclick="return confirm('Mark this event as cancelled?')">
+                                            <i class="fas fa-times"></i> Cancel Event
+                                        </button>
+                                    {% endif %}
+                                    
+                                    {% if event.status == 'completed' or event.status == 'cancelled' %}
+                                        <button type="submit" name="archive_event" class="btn btn-secondary btn-sm" 
+                                                onclick="return confirm('Archive this event? It will be hidden from active lists.')">
+                                            <i class="fas fa-archive"></i> Archive
+                                        </button>
+                                    {% endif %}
+                                    
+                                    {% if can_delete %}
+                                        <button type="submit" name="delete_event" class="btn btn-danger btn-sm" 
+                                                onclick="return confirm('Are you sure you want to permanently delete this event? This action cannot be undone.')">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    {% else %}
+                                        <button type="button" class="btn btn-danger btn-sm" disabled 
+                                                title="Cannot delete event with {{ assignment_count }} assignment(s). Archive or cancel first.">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            </div>
                         </div>
                     </form>
                 </div>

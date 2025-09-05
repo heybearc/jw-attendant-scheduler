@@ -1,0 +1,159 @@
+{% extends 'scheduler/base.html' %}
+{% load static %}
+
+{% block title %}Bulk Assignment - JW Attendant Scheduler{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Bulk Assignment Creation</h4>
+                    <p class="mb-0 text-muted">Assign multiple attendants to position shifts at once</p>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="close" data-dismiss="alert">
+                                    <span>&times;</span>
+                                </button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post" id="bulkAssignmentForm">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.event.id_for_label }}">{{ form.event.label }}</label>
+                                    {{ form.event }}
+                                    {% if form.event.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.event.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">{{ form.event.help_text }}</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <div class="form-check">
+                                        {{ form.check_conflicts }}
+                                        <label class="form-check-label" for="{{ form.check_conflicts.id_for_label }}">
+                                            {{ form.check_conflicts.label }}
+                                        </label>
+                                    </div>
+                                    <small class="form-text text-muted">{{ form.check_conflicts.help_text }}</small>
+                                </div>
+                                <div class="form-group">
+                                    <div class="form-check">
+                                        {{ form.allow_overrides }}
+                                        <label class="form-check-label" for="{{ form.allow_overrides.id_for_label }}">
+                                            {{ form.allow_overrides.label }}
+                                        </label>
+                                    </div>
+                                    <small class="form-text text-muted">{{ form.allow_overrides.help_text }}</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.attendants.id_for_label }}">{{ form.attendants.label }}</label>
+                                    <div class="border p-3" style="max-height: 300px; overflow-y: auto;">
+                                        {{ form.attendants }}
+                                    </div>
+                                    {% if form.attendants.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.attendants.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">{{ form.attendants.help_text }}</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.position_shifts.id_for_label }}">{{ form.position_shifts.label }}</label>
+                                    <div class="border p-3" id="positionShiftsContainer" style="max-height: 300px; overflow-y: auto;">
+                                        {{ form.position_shifts }}
+                                    </div>
+                                    {% if form.position_shifts.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.position_shifts.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">{{ form.position_shifts.help_text }}</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ form.notes.id_for_label }}">{{ form.notes.label }}</label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.notes.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">{{ form.notes.help_text }}</small>
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-users"></i> Create Bulk Assignments
+                            </button>
+                            <a href="{% url 'scheduler:assignment_list' %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const eventSelect = document.getElementById('{{ form.event.id_for_label }}');
+    const positionShiftsContainer = document.getElementById('positionShiftsContainer');
+    
+    eventSelect.addEventListener('change', function() {
+        const eventId = this.value;
+        if (eventId) {
+            // Fetch position shifts for the selected event
+            fetch(`/scheduler/api/position-shifts/?event_id=${eventId}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Update position shifts checkboxes
+                    let html = '';
+                    data.forEach(shift => {
+                        html += `
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" 
+                                       name="position_shifts" value="${shift.id}" 
+                                       id="position_shift_${shift.id}">
+                                <label class="form-check-label" for="position_shift_${shift.id}">
+                                    Position ${shift.position_number}${shift.position_name ? ' - ' + shift.position_name : ''}<br>
+                                    <small class="text-muted">${shift.shift_start} - ${shift.shift_end}</small>
+                                </label>
+                            </div>
+                        `;
+                    });
+                    positionShiftsContainer.innerHTML = html || '<p class="text-muted">No position shifts available for this event.</p>';
+                })
+                .catch(error => {
+                    console.error('Error fetching position shifts:', error);
+                    positionShiftsContainer.innerHTML = '<p class="text-danger">Error loading position shifts.</p>';
+                });
+        } else {
+            positionShiftsContainer.innerHTML = '<p class="text-muted">Please select an event first.</p>';
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -11,8 +11,8 @@ from django.shortcuts import get_object_or_404
 import json
 import logging
 
-from ..models import Event, Assignment, Attendant
-from ..auto_assign import auto_assign_event
+from .models import Event, Assignment, Attendant
+from .auto_assign import auto_assign_event
 
 logger = logging.getLogger(__name__)
 
@@ -37,12 +37,11 @@ def auto_assign_api(request):
     try:
         data = json.loads(request.body)
         event_id = data.get('event_id')
-        positions = data.get('positions', [])
         
-        if not event_id or not positions:
+        if not event_id:
             return JsonResponse({
                 'success': False,
-                'error': 'event_id and positions are required'
+                'error': 'event_id is required'
             }, status=400)
         
         # Verify event exists and user has permission
@@ -55,8 +54,8 @@ def auto_assign_api(request):
                 'error': 'Insufficient permissions'
             }, status=403)
         
-        # Execute auto-assignment
-        result = auto_assign_event(event_id, positions)
+        # Execute auto-assignment with new position system
+        result = auto_assign_event(event_id)
         
         if result['success']:
             # Format assignments for response
@@ -70,9 +69,9 @@ def auto_assign_api(request):
                         'email': assignment.attendant.email
                     },
                     'position': assignment.position,
-                    'start_time': assignment.start_time.isoformat() if assignment.start_time else None,
-                    'end_time': assignment.end_time.isoformat() if assignment.end_time else None,
-                    'status': assignment.status
+                    'shift_start': assignment.shift_start.isoformat() if assignment.shift_start else None,
+                    'shift_end': assignment.shift_end.isoformat() if assignment.shift_end else None,
+                    'notes': assignment.notes
                 })
             
             return JsonResponse({
@@ -126,8 +125,8 @@ def assignment_conflicts_api(request):
         conflicts = Assignment.objects.filter(
             attendant_id=attendant_id,
             event_id=event_id,
-            start_time__lt=end_time,
-            end_time__gt=start_time
+            shift_start__lt=end_time,
+            shift_end__gt=start_time
         ).select_related('event', 'attendant')
         
         conflicts_data = []
@@ -135,8 +134,8 @@ def assignment_conflicts_api(request):
             conflicts_data.append({
                 'id': conflict.id,
                 'position': conflict.position,
-                'start_time': conflict.start_time.isoformat() if conflict.start_time else None,
-                'end_time': conflict.end_time.isoformat() if conflict.end_time else None,
+                'shift_start': conflict.shift_start.isoformat() if conflict.shift_start else None,
+                'shift_end': conflict.shift_end.isoformat() if conflict.shift_end else None,
                 'event': conflict.event.name
             })
         
@@ -194,8 +193,8 @@ def attendant_availability_api(request):
                 'assignments': [
                     {
                         'position': a.position,
-                        'start_time': a.start_time.isoformat() if a.start_time else None,
-                        'end_time': a.end_time.isoformat() if a.end_time else None
+                        'shift_start': a.shift_start.isoformat() if a.shift_start else None,
+                        'shift_end': a.shift_end.isoformat() if a.shift_end else None
                     }
                     for a in assignments
                 ]

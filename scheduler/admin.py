@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from .models import (
     User, Attendant, Event, Assignment, Department, 
     StationRange, OverseerAssignment, AttendantOverseerAssignment,
-    EmailConfiguration
+    EmailConfiguration, EventPosition, PositionShift, CountSession, PositionCount
 )
 
 
@@ -74,8 +74,8 @@ class AssignmentAdmin(admin.ModelAdmin):
     """Assignment admin interface"""
     list_display = ('attendant', 'event', 'position', 'shift_start', 'shift_end')
     list_filter = ('event', 'position', 'shift_start')
-    search_fields = ('attendant__first_name', 'attendant__last_name', 'position', 'event__name')
-    ordering = ('-shift_start',)
+    search_fields = ('attendant__first_name', 'attendant__last_name', 'position')
+    ordering = ('shift_start',)
     date_hierarchy = 'shift_start'
     
     fieldsets = (
@@ -87,6 +87,77 @@ class AssignmentAdmin(admin.ModelAdmin):
         }),
         ('Notes', {
             'fields': ('notes',)
+        }),
+    )
+
+
+@admin.register(EventPosition)
+class EventPositionAdmin(admin.ModelAdmin):
+    """Event Position admin interface"""
+    list_display = ('position_number', 'position_name', 'event', 'created_at')
+    list_filter = ('event', 'created_at')
+    search_fields = ('position_name', 'position_number')
+    ordering = ('event', 'position_number')
+    
+    fieldsets = (
+        ('Position Details', {
+            'fields': ('event', 'position_number', 'position_name')
+        }),
+    )
+
+
+@admin.register(PositionShift)
+class PositionShiftAdmin(admin.ModelAdmin):
+    """Position Shift admin interface"""
+    list_display = ('position', 'shift_start', 'shift_end', 'created_at')
+    list_filter = ('position__event', 'shift_start')
+    search_fields = ('position__position_name', 'position__position_number')
+    ordering = ('position__event', 'shift_start')
+    date_hierarchy = 'shift_start'
+    
+    fieldsets = (
+        ('Shift Details', {
+            'fields': ('position', 'shift_start', 'shift_end')
+        }),
+        ('Notes', {
+            'fields': ('notes',)
+        }),
+    )
+
+
+@admin.register(CountSession)
+class CountSessionAdmin(admin.ModelAdmin):
+    """Count Session admin interface"""
+    list_display = ('event', 'session_name', 'count_time', 'total_count', 'is_completed')
+    list_filter = ('event', 'is_completed', 'count_time')
+    search_fields = ('session_name', 'event__name')
+    ordering = ('event', 'count_time')
+    date_hierarchy = 'count_time'
+    
+    fieldsets = (
+        ('Session Details', {
+            'fields': ('event', 'session_name', 'count_time')
+        }),
+        ('Count Results', {
+            'fields': ('total_count', 'is_completed')
+        }),
+    )
+
+
+@admin.register(PositionCount)
+class PositionCountAdmin(admin.ModelAdmin):
+    """Position Count admin interface"""
+    list_display = ('count_session', 'position', 'count', 'entered_by', 'created_at')
+    list_filter = ('count_session__event', 'count_session', 'entered_by')
+    search_fields = ('position__position_name', 'count_session__session_name')
+    ordering = ('count_session', 'position__position_number')
+    
+    fieldsets = (
+        ('Count Details', {
+            'fields': ('count_session', 'position', 'count')
+        }),
+        ('Entry Info', {
+            'fields': ('entered_by', 'notes')
         }),
     )
 

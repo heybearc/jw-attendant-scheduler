@@ -3,6 +3,7 @@ from . import views
 from . import gmail_auth_views
 from . import simple_gmail_auth
 from .api_views import auto_assign_api
+from .views import library_views
 from django.contrib.auth import views as auth_views
 
 app_name = 'scheduler'
@@ -116,5 +117,21 @@ urlpatterns = [
     # Count Session Management API
     path('events/<int:event_id>/count-sessions/', views.create_count_session, name='create_count_session'),
     path('events/<int:event_id>/count-sessions/<int:session_id>/', views.update_count_session, name='update_count_session'),
-    path('events/<int:event_id>/count-sessions/<int:session_id>/', views.delete_count_session, name='delete_count_session'),
+    path('events/<int:event_id>/count-sessions/<int:session_id>/delete/', views.delete_count_session, name='delete_count_session'),
+    
+    # Count Entry and Reports
+    path('events/<int:event_id>/counts/', views.count_entry, name='count_entry'),
+    path('events/<int:event_id>/counts/<int:session_id>/', views.count_entry, name='count_entry'),
+    path('events/<int:event_id>/count-reports/', views.count_reports, name='count_reports'),
+    
+    # SDD Library-First Interface URLs
+    path('library/', library_views.library_dashboard, name='library_dashboard'),
+    path('library/events/', library_views.library_event_list, name='library_event_list'),
+    path('library/events/<int:event_id>/', library_views.library_event_detail, name='library_event_detail'),
+    path('library/attendants/', library_views.library_attendant_list, name='library_attendant_list'),
+    path('library/attendants/<int:attendant_id>/', library_views.library_attendant_detail, name='library_attendant_detail'),
+    path('library/events/<int:event_id>/count-sessions/', library_views.library_count_sessions, name='library_count_sessions'),
+    path('library/api/assignments/', library_views.library_create_assignment, name='library_create_assignment'),
+    path('library/api/count-records/', library_views.library_record_count, name='library_record_count'),
+    path('library/api-info/', library_views.library_api_info, name='library_api_info'),
 ]

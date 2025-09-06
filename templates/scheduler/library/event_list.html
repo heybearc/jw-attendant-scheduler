@@ -1,0 +1,172 @@
+{% extends "scheduler/base.html" %}
+{% load static %}
+
+{% block title %}Events - Library Interface{% endblock %}
+
+{% block extra_css %}
+<style>
+    .library-badge {
+        background: linear-gradient(45deg, #28a745, #20c997);
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: bold;
+        margin-left: 0.5rem;
+    }
+    .fallback-badge {
+        background: #ffc107;
+        color: #212529;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: bold;
+        margin-left: 0.5rem;
+    }
+    .event-card {
+        transition: transform 0.2s ease-in-out;
+    }
+    .event-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .stats-badge {
+        background: #e9ecef;
+        color: #495057;
+        padding: 0.25rem 0.5rem;
+        border-radius: 1rem;
+        font-size: 0.75rem;
+        margin: 0.125rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    Events
+                    {% if using_libraries %}
+                        <span class="library-badge">SDD Library-First</span>
+                    {% else %}
+                        <span class="fallback-badge">Fallback Mode</span>
+                    {% endif %}
+                </h1>
+                <div>
+                    <a href="{% url 'library_dashboard' %}" class="btn btn-outline-primary me-2">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                    <a href="{% url 'library_api_info' %}" class="btn btn-outline-info">
+                        <i class="fas fa-info-circle"></i> API Info
+                    </a>
+                </div>
+            </div>
+
+            {% if using_libraries %}
+            <div class="alert alert-success" role="alert">
+                <i class="fas fa-check-circle"></i>
+                <strong>Library-First Architecture Active:</strong> 
+                This view is powered by the Event Management Library with full SDD compliance.
+            </div>
+            {% else %}
+            <div class="alert alert-warning" role="alert">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Fallback Mode:</strong> 
+                Libraries are not available. Using direct model access.
+            </div>
+            {% endif %}
+
+            {% if events %}
+            <div class="row">
+                {% for event in events %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card event-card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">{{ event.name }}</h5>
+                            <span class="badge bg-{{ event.status|default:'primary' }}">
+                                {{ event.status|default:'Active'|title }}
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar"></i>
+                                    {{ event.start_date }} to {{ event.end_date }}
+                                </small>
+                            </div>
+                            
+                            <div class="d-flex flex-wrap mb-3">
+                                <span class="stats-badge">
+                                    <i class="fas fa-users"></i> 
+                                    {{ event.attendants_count|default:0 }} Attendants
+                                </span>
+                                <span class="stats-badge">
+                                    <i class="fas fa-map-marker-alt"></i> 
+                                    {{ event.positions_count|default:0 }} Positions
+                                </span>
+                            </div>
+                            
+                            {% if event.location %}
+                            <p class="card-text">
+                                <small class="text-muted">
+                                    <i class="fas fa-location-dot"></i> {{ event.location }}
+                                </small>
+                            </p>
+                            {% endif %}
+                        </div>
+                        <div class="card-footer">
+                            <div class="btn-group w-100" role="group">
+                                <a href="{% url 'library_event_detail' event.id %}" 
+                                   class="btn btn-primary">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                                <a href="{% url 'library_count_sessions' event.id %}" 
+                                   class="btn btn-outline-secondary">
+                                    <i class="fas fa-calculator"></i> Counts
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-calendar-plus fa-3x text-muted mb-3"></i>
+                <h3 class="text-muted">No Events Found</h3>
+                <p class="text-muted">Get started by creating your first event.</p>
+                <a href="#" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Create Event
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add hover effects and animations
+    const cards = document.querySelectorAll('.event-card');
+    cards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-4px)';
+        });
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+    
+    // Log library usage if available
+    {% if using_libraries %}
+    console.log('✅ SDD Library-First Architecture: Event Management Library active');
+    {% else %}
+    console.log('⚠️ Fallback Mode: Direct model access');
+    {% endif %}
+});
+</script>
+{% endblock %}

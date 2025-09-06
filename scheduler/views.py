@@ -1,4 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from .views.count_views import count_entry, count_reports, create_count_session, update_count_session, delete_count_session
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse

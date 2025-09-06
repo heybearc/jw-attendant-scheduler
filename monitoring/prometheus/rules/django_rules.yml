@@ -1,0 +1,38 @@
+groups:
+- name: django_alerts
+  rules:
+  - alert: HighRequestLatency
+    expr: django_http_requests_latency_seconds_by_view_method_sum{env="staging"} > 0.5
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High request latency on {{ $labels.instance }}"
+      description: "Django request latency is above 500ms for 5m on {{ $labels.instance }} for view {{ $labels.view }} with method {{ $labels.method }}"
+
+  - alert: HighErrorRate
+    expr: sum(rate(django_http_responses_total_by_status_total{status=~"5.."}[5m])) / sum(rate(django_http_responses_total_by_status_total[5m])) > 0.05
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "High error rate on {{ $labels.instance }}"
+      description: "Django error rate is above 5% for 5m on {{ $labels.instance }}"
+
+  - alert: DatabaseConnectionPoolExhausted
+    expr: django_db_connections_available < 2
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Database connection pool nearly exhausted on {{ $labels.instance }}"
+      description: "Django database connection pool has less than 2 connections available for 5m on {{ $labels.instance }}"
+
+  - alert: HighDatabaseQueryTime
+    expr: django_db_query_duration_seconds_bucket{le="1.0"} / ignoring(le) django_db_query_duration_seconds_count < 0.95
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Slow database queries on {{ $labels.instance }}"
+      description: "Less than 95% of database queries complete within 1 second on {{ $labels.instance }}"

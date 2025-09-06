@@ -466,9 +466,17 @@
                 <div class="tab-pane fade" id="count-times" role="tabpanel">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h4><i class="bi bi-clock"></i> Count Times Configuration</h4>
-                        <button class="btn btn-success" onclick="addCountTime()">
-                            <i class="bi bi-plus-circle"></i> Add Count Time
-                        </button>
+                        <div>
+                            <a href="{% url 'count_entry' event.id %}" class="btn btn-primary me-2">
+                                <i class="bi bi-pencil-square"></i> Enter Counts
+                            </a>
+                            <a href="{% url 'count_reports' event.id %}" class="btn btn-info me-2">
+                                <i class="bi bi-graph-up"></i> View Reports
+                            </a>
+                            <button class="btn btn-success" onclick="addCountTime()">
+                                <i class="bi bi-plus-circle"></i> Add Count Time
+                            </button>
+                        </div>
                     </div>
                     
                     <div class="row">

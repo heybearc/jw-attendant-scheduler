@@ -1,0 +1,17 @@
+{
+  "name": "@jw-scheduler/authentication",
+  "version": "0.1.0",
+  "description": "Authentication flows, permissions, and sessions",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest",
+    "lint": "eslint src/**/*.ts"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
+  }
+}

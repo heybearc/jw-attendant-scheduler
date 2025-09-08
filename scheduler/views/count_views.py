@@ -17,6 +17,7 @@ from ..models import Event, CountSession, PositionCount, EventPosition, UserRole
 def count_entry(request, event_id, session_id=None):
     """
     View for entering position counts for a specific count session
+    Allows both oversight and attendants to enter counts for their assigned positions
     """
     event = get_object_or_404(Event, id=event_id)
     
@@ -26,13 +27,34 @@ def count_entry(request, event_id, session_id=None):
         if not count_session:
             # No count sessions exist, redirect to event detail
             messages.warning(request, "No count sessions found. Please create a count session first.")
-            return redirect('event_detail', event_id=event.id)
+            return redirect('scheduler:event_detail', event_id=event.id)
     else:
         count_session = get_object_or_404(CountSession, id=session_id, event=event)
     
-    # Get or create position counts for all positions
+    # Filter positions based on user role
+    if request.user.role == UserRole.ATTENDANT:
+        # Attendants can only see positions they are assigned to
+        from ..models import Assignment
+        assigned_positions = Assignment.objects.filter(
+            attendant__user=request.user,
+            event=event
+        ).values_list('position', flat=True)
+        
+        # Find EventPositions that match assigned position names
+        available_positions = event.positions.filter(
+            position_name__in=assigned_positions
+        )
+        
+        if not available_positions.exists():
+            messages.warning(request, "You are not assigned to any positions for count entry.")
+            return redirect('scheduler:attendant_dashboard')
+    else:
+        # Oversight can see all positions
+        available_positions = event.positions.all()
+    
+    # Get or create position counts for available positions
     position_counts = []
-    for position in event.positions.all():
+    for position in available_positions:
         position_count, created = PositionCount.objects.get_or_create(
             count_session=count_session,
             position=position,
@@ -64,13 +86,16 @@ def count_entry(request, event_id, session_id=None):
                 position_count.entered_by = request.user
                 position_count.save()
             
-            # Update session status
-            all_entered = all(pc.count is not None for pc in position_counts)
-            if all_entered:
+            # Update session status - only mark complete if ALL positions have counts
+            all_positions_entered = all(
+                pc.count is not None 
+                for pc in PositionCount.objects.filter(count_session=count_session)
+            )
+            if all_positions_entered:
                 count_session.is_completed = True
                 count_session.save()
             
-            # Recalculate total count
+            # Recalculate total count from all positions
             count_session.calculate_total()
         
         # Handle AJAX requests
@@ -99,17 +124,26 @@ def create_count_session(request, event_id):
     """Create a new count session for an event"""
     try:
         event = get_object_or_404(Event, id=event_id)
-        data = request.POST
+        
+        # Handle JSON data from frontend
+        import json
+        if request.content_type == 'application/json':
+            data = json.loads(request.body)
+        else:
+            data = request.POST
         
         # Parse time string to time object
         time_str = data.get('count_time')
         try:
             hour, minute = map(int, time_str.split(':'))
-            count_date = timezone.datetime.strptime(data.get('count_date'), '%Y-%m-%d').date()
+            # Use event date or today's date
+            count_date = event.start_date if event.start_date else timezone.now().date()
             count_time = timezone.datetime.combine(
                 count_date,
                 timezone.datetime.min.time().replace(hour=hour, minute=minute)
             )
+            # Make timezone aware
+            count_time = timezone.make_aware(count_time)
         except (ValueError, AttributeError):
             return JsonResponse({'success': False, 'error': 'Invalid time format. Use HH:MM'})
         
@@ -138,23 +172,34 @@ def create_count_session(request, event_id):
 
 
 @login_required
-@require_http_methods(["PUT"])
+@require_http_methods(["PUT", "POST"])
 def update_count_session(request, event_id, session_id):
     """Update an existing count session"""
     try:
         event = get_object_or_404(Event, id=event_id)
         session = get_object_or_404(CountSession, id=session_id, event=event)
-        data = request.POST
+        
+        # Handle JSON data from frontend
+        import json
+        if request.content_type == 'application/json':
+            data = json.loads(request.body)
+        else:
+            data = request.POST
         
         # Parse time string to time object
         time_str = data.get('count_time')
         try:
             hour, minute = map(int, time_str.split(':'))
-            count_date = timezone.datetime.strptime(data.get('count_date'), '%Y-%m-%d').date()
+            # Use existing date or event date
+            count_date = session.count_time.date() if session.count_time else event.start_date
+            if not count_date:
+                count_date = timezone.now().date()
             count_time = timezone.datetime.combine(
                 count_date,
                 timezone.datetime.min.time().replace(hour=hour, minute=minute)
             )
+            # Make timezone aware
+            count_time = timezone.make_aware(count_time)
         except (ValueError, AttributeError):
             return JsonResponse({'success': False, 'error': 'Invalid time format. Use HH:MM'})
         

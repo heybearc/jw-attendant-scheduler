@@ -466,9 +466,17 @@
                 <div class="tab-pane fade" id="count-times" role="tabpanel">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h4><i class="bi bi-clock"></i> Count Times Configuration</h4>
-                        <button class="btn btn-success" onclick="addCountTime()">
-                            <i class="bi bi-plus-circle"></i> Add Count Time
-                        </button>
+                        <div>
+                            <button class="btn btn-success" onclick="addCountTime()">
+                                <i class="bi bi-plus-circle"></i> Add Count Time
+                            </button>
+                            <a href="{% url 'scheduler:count_entry' event.id %}" class="btn btn-primary ms-2">
+                                <i class="bi bi-pencil-square"></i> Enter Counts
+                            </a>
+                            <a href="{% url 'scheduler:count_reports' event.id %}" class="btn btn-info ms-2">
+                                <i class="bi bi-bar-chart"></i> View Reports
+                            </a>
+                        </div>
                     </div>
                     
                     <div class="row">
@@ -884,7 +892,6 @@
     </div>
 
     <script>
-<script>
 // Helper function to get CSRF token from cookies
 function getCookie(name) {
     let cookieValue = null;
@@ -1002,7 +1009,7 @@ function addCountTime() {
     
     const notes = prompt('Enter optional notes:') || '';
     
-    const eventId = {{ event.id }};
+    const eventId = parseInt('{{ event.id }}');
     const csrfToken = getCookie('csrftoken');
     
     fetch(`/scheduler/events/${eventId}/count-sessions/`, {
@@ -1050,14 +1057,14 @@ function editCountTime(sessionId) {
     
     const notes = prompt('Enter optional notes:') || '';
     
-    const eventId = {{ event.id }};
-    const csrfToken = getCookie('csrftoken');
+    const eventId2 = parseInt('{{ event.id }}');
+    const csrfToken2 = getCookie('csrftoken');
     
-    fetch(`/scheduler/events/${eventId}/count-sessions/${sessionId}/`, {
+    fetch(`/scheduler/events/${eventId2}/count-sessions/${sessionId}/`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRFToken': csrfToken
+            'X-CSRFToken': csrfToken2
         },
         body: JSON.stringify({
             session_name: sessionName,
@@ -1083,13 +1090,13 @@ function editCountTime(sessionId) {
 function deleteCountTime(sessionId) {
     if (!confirm('Are you sure you want to delete this count time?')) return;
     
-    const eventId = {{ event.id }};
-    const csrfToken = getCookie('csrftoken');
+    const eventId3 = parseInt('{{ event.id }}');
+    const csrfToken3 = getCookie('csrftoken');
     
-    fetch(`/scheduler/events/${eventId}/count-sessions/${sessionId}/`, {
+    fetch(`/scheduler/events/${eventId3}/count-sessions/${sessionId}/`, {
         method: 'DELETE',
         headers: {
-            'X-CSRFToken': csrfToken
+            'X-CSRFToken': csrfToken3
         }
     })
     .then(response => response.json())

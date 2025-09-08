@@ -115,6 +115,11 @@ urlpatterns = [
     
     # Count Session Management API
     path('events/<int:event_id>/count-sessions/', views.create_count_session, name='create_count_session'),
-    path('events/<int:event_id>/count-sessions/<int:session_id>/', views.update_count_session, name='update_count_session'),
-    path('events/<int:event_id>/count-sessions/<int:session_id>/', views.delete_count_session, name='delete_count_session'),
+    path('events/<int:event_id>/count-sessions/<int:session_id>/update/', views.update_count_session, name='update_count_session'),
+    path('events/<int:event_id>/count-sessions/<int:session_id>/delete/', views.delete_count_session, name='delete_count_session'),
+    
+    # Count Entry and Reports
+    path('events/<int:event_id>/count-entry/', views.count_entry, name='count_entry'),
+    path('events/<int:event_id>/count-entry/<int:session_id>/', views.count_entry, name='count_entry_session'),
+    path('events/<int:event_id>/count-reports/', views.count_reports, name='count_reports'),
 ]

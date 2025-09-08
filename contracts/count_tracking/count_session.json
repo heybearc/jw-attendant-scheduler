@@ -1,0 +1,85 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://jw-attendant-scheduler.local/schemas/count_session.json",
+  "title": "Count Session Schema",
+  "description": "JSON Schema for Count Session creation and validation",
+  "type": "object",
+  "properties": {
+    "event_id": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "ID of the event this count session belongs to"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "pattern": "^[a-zA-Z0-9\\s\\-_:]+$",
+      "description": "Human-readable name for the count session"
+    },
+    "scheduled_time": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 datetime when the count should be performed"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["scheduled", "active", "completed", "cancelled"],
+      "default": "scheduled",
+      "description": "Current status of the count session"
+    },
+    "notes": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "Optional notes about the count session"
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "created_by": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "User ID who created the session"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the session was created"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the session was last updated"
+        },
+        "position_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of positions in this event"
+        },
+        "expected_duration_minutes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 480,
+          "default": 30,
+          "description": "Expected duration for completing the count"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["event_id", "name", "scheduled_time"],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "event_id": 1,
+      "name": "Morning Count",
+      "scheduled_time": "2025-09-08T09:00:00Z",
+      "status": "scheduled",
+      "notes": "First count of the day",
+      "metadata": {
+        "created_by": 1,
+        "expected_duration_minutes": 30
+      }
+    }
+  ]
+}

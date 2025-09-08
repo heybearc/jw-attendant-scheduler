@@ -1,0 +1,17 @@
+{
+  "name": "@jw-scheduler/shared",
+  "version": "0.1.0",
+  "description": "Common utilities, types, and contracts",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest",
+    "lint": "eslint src/**/*.ts"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
+  }
+}

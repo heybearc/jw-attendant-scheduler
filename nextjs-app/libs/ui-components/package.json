@@ -1,0 +1,17 @@
+{
+  "name": "@jw-scheduler/ui-components",
+  "version": "0.1.0",
+  "description": "Reusable React components with TypeScript",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest",
+    "lint": "eslint src/**/*.ts"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
+  }
+}

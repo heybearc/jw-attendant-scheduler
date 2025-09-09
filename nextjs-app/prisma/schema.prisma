@@ -6,10 +6,58 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Attendant {
+  id          Int      @id @default(autoincrement())
+  firstName   String
+  lastName    String
+  email       String   @unique
+  phone       String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  assignments Assignment[]
+}
+
+model Event {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  eventDate   DateTime
+  location    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  assignments Assignment[]
+  countSessions CountSession[]
+}
+
+model Assignment {
+  id          Int      @id @default(autoincrement())
+  attendantId Int
+  eventId     Int
+  role        String
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  attendant   Attendant @relation(fields: [attendantId], references: [id])
+  event       Event     @relation(fields: [eventId], references: [id])
+}
+
+model CountSession {
+  id          Int      @id @default(autoincrement())
+  sessionName String   @unique
+  eventId     Int
+  countTime   DateTime
+  notes       String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  event       Event    @relation(fields: [eventId], references: [id])
 }

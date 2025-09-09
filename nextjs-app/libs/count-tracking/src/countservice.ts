@@ -149,8 +149,8 @@ export class CountService {
     return await this.prisma.countSession.findMany({
       where: {
         OR: [
-          { sessionName: { contains: query, mode: 'insensitive' } },
-          { notes: { contains: query, mode: 'insensitive' } },
+          { sessionName: { contains: query } },
+          { notes: { contains: query } },
           { event: { name: { contains: query, mode: 'insensitive' } } }
         ],
         isActive: true

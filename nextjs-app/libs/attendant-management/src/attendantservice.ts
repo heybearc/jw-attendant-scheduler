@@ -83,9 +83,9 @@ export class AttendantService {
     return await this.prisma.attendant.findMany({
       where: {
         OR: [
-          { firstName: { contains: query, mode: 'insensitive' } },
-          { lastName: { contains: query, mode: 'insensitive' } },
-          { email: { contains: query, mode: 'insensitive' } }
+          { firstName: { contains: query } },
+          { lastName: { contains: query } },
+          { email: { contains: query } }
         ],
         isActive: true
       },

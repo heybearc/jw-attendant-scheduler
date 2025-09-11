@@ -30,6 +30,15 @@ JSON Schema-based validation:
 - Output validation for critical operations
 - Contract decorators for automatic validation
 
+### Article V: Windsurf Development Methodology ✅
+**Spec-Driven Development Only - No Memory Dependencies:**
+- Windsurf agents operate exclusively from specification documents
+- No reliance on conversation memories or previous context
+- All development decisions based on documented specifications
+- Complete project state must be derivable from specs and code
+- Self-contained documentation enables context-free development
+- Specifications serve as single source of truth for all agents
+
 ## Agent Architecture
 
 ### 1. **SDD Library Agent** (Primary)
@@ -203,23 +212,129 @@ python manage.py count analytics --event-id 1 --export csv
 - Schema evolution with backward compatibility
 - Automated contract testing in CI/CD
 
+## Core Feature Modules
+
+### 1. **Event Management Module** ✅
+**Status:** Production Ready
+**Components:**
+- Event creation and management
+- Event scheduling and calendar integration
+- Event-attendant assignment workflows
+- Event reporting and analytics
+
+**Technical Implementation:**
+- Library: `scheduler.libs.event_management`
+- CLI: `python manage.py event`
+- Web Interface: `/events/*`
+- Database: Event, EventPosition, EventAssignment models
+
+### 2. **Event-Centric Attendant Management** ✅
+**Status:** Production Ready - **EVENT SUBMODULE**
+**Components:**
+- Attendant assignment within event context
+- Event-specific attendant management
+- Position-based assignments
+- Event attendant analytics
+
+**Technical Implementation:**
+- Library: `scheduler.libs.attendant_scheduling` (event-scoped)
+- CLI: `python manage.py attendant` (event-focused operations)
+- Web Interface: `/events/[id]/attendants` (event submodule only)
+- Database: Attendant, Assignment models (event-centric)
+
+**Event-Centric Architecture:**
+- No standalone attendant pages or navigation
+- All attendant functionality accessed through events
+- Attendant management is contextual to specific events
+- Maintains event-first approach throughout application
+
+### 3. **Administration Module** ✅
+**Status:** Production Ready - **MAJOR FEATURE**
+**Components:**
+- **User Management System**
+  - User invitation workflow with email integration
+  - Role-based access control (Admin, Overseer, Attendant)
+  - User profile management and status tracking
+  - Resend invitation functionality
+  - User deletion with cascade cleanup
+- **Email Configuration System**
+  - SMTP configuration interface
+  - Support for Gmail, Outlook, Yahoo, custom SMTP
+  - Email template management
+  - Test email functionality
+  - Configuration validation
+- **System Administration Dashboard**
+  - Centralized admin interface
+  - System health monitoring
+  - Configuration management
+  - Administrative reporting
+
+**Technical Implementation:**
+- Web Interface: `/admin/*`
+  - `/admin` - Main dashboard
+  - `/admin/users` - User management
+  - `/admin/email-config` - Email configuration
+- API Endpoints: `/api/admin/*`, `/api/users/*`
+- Database: User, EmailConfig models
+- Features: Email integration, role management, invitation system
+
+**Development Complexity:** HIGH
+- Multi-step user invitation workflow
+- Complex email configuration with multiple providers
+- Role-based access control implementation
+- Comprehensive user lifecycle management
+- Advanced error handling and validation
+
+### 4. **Dashboard Module** 🔄
+**Status:** In Development
+**Components:**
+- Personal assignment dashboard
+- Role-based data filtering
+- Upcoming events overview
+- Activity summaries
+
+**Technical Implementation:**
+- Web Interface: `/dashboard`
+- Role-based views for different user types
+- Real-time data updates
+
+### 5. **Reporting Module** 📋
+**Status:** Planned
+**Components:**
+- Attendance analytics
+- Scheduling reports
+- Performance metrics
+- Export functionality
+
+**Technical Implementation:**
+- Library: `scheduler.libs.count_tracking`
+- CLI: `python manage.py count`
+- Web Interface: `/reports/*`
+
 ## Current Development Priorities
 
-### Phase 1: SDD Foundation (COMPLETED ✅)
+### Phase 1: Core Infrastructure (COMPLETED ✅)
 - **SDD Library Agent**: Core libraries with CLI interfaces
 - **Backend Integration Agent**: Django integration with fallback
 - **Frontend Agent**: Library-first UI with status indicators
 - **Testing Agent**: Comprehensive library testing
 - **Documentation Agent**: SDD compliance documentation
 
-### Phase 2: Production Deployment
+### Phase 2: Production Deployment (COMPLETED ✅)
 - **DevOps Agent**: Deploy SDD libraries to staging environment
 - **Testing Agent**: Validate library interfaces in production-like environment
 - **SDD Library Agent**: Performance optimization and monitoring
 - **Backend Integration Agent**: Production database integration
 - **Frontend Agent**: Production UI optimization
+- **Administration Module**: Complete user and email management system
 
-### Phase 3: Advanced SDD Features
+### Phase 3: Role-Based Access Control (IN PROGRESS 🔄)
+- **Frontend Agent**: Implement attendant-only dashboard views
+- **Backend Integration Agent**: Role-based data filtering
+- **Testing Agent**: Access control validation
+- **Documentation Agent**: Role management guides
+
+### Phase 4: Advanced Features (PLANNED 📋)
 - **SDD Library Agent**: Event sourcing and audit trails
 - **Backend Integration Agent**: Advanced caching with library awareness
 - **DevOps Agent**: Microservices extraction of libraries

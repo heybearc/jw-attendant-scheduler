@@ -81,13 +81,14 @@ export default function EventAttendantsPage() {
     lastName: '',
     email: '',
     phone: '',
+    congregation: '',
     availabilityStatus: 'AVAILABLE' as 'AVAILABLE' | 'LIMITED' | 'UNAVAILABLE',
     servingAs: [] as string[],
     notes: ''
   });
 
   const servingRoleOptions = [
-    { id: 'elder', label: 'Elder', isOversight: true },
+    { id: 'elder', label: 'Elder', isOversight: false },
     { id: 'ministerial_servant', label: 'Ministerial Servant', isOversight: false },
     { id: 'regular_pioneer', label: 'Regular Pioneer', isOversight: false },
     { id: 'overseer', label: 'Overseer', isOversight: true },
@@ -181,6 +182,7 @@ export default function EventAttendantsPage() {
         lastName: formData.lastName,
         email: formData.email,
         phone: formData.phone,
+        congregation: formData.congregation,
         availabilityStatus: formData.availabilityStatus,
         servingAs: formData.servingAs, // Ensure servingAs array is included
         notes: formData.notes,
@@ -222,6 +224,7 @@ export default function EventAttendantsPage() {
         lastName: formData.lastName,
         email: formData.email,
         phone: formData.phone,
+        congregation: formData.congregation,
         availabilityStatus: formData.availabilityStatus,
         servingAs: formData.servingAs, // Ensure servingAs array is included
         notes: formData.notes,
@@ -319,6 +322,7 @@ export default function EventAttendantsPage() {
       lastName: '',
       email: '',
       phone: '',
+      congregation: '',
       availabilityStatus: 'AVAILABLE',
       servingAs: [],
       notes: ''
@@ -332,6 +336,7 @@ export default function EventAttendantsPage() {
       lastName: attendant.lastName,
       email: attendant.email,
       phone: attendant.phone || '',
+      congregation: attendant.congregation || '',
       availabilityStatus: attendant.availabilityStatus,
       servingAs: attendant.servingAs || [],
       notes: attendant.notes || ''
@@ -658,6 +663,18 @@ Alice,Wilson,alice.wilson@example.com,555-0104,AVAILABLE,Expert level attendant`
                           value={formData.phone}
                           onChange={(e) => setFormData({...formData, phone: e.target.value})}
                           className="w-full border border-gray-300 rounded-md px-3 py-2"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Congregation
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.congregation}
+                          onChange={(e) => setFormData({...formData, congregation: e.target.value})}
+                          className="w-full border border-gray-300 rounded-md px-3 py-2"
+                          placeholder="Enter congregation name"
                         />
                       </div>
                     </div>

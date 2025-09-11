@@ -182,8 +182,8 @@ from scheduler.forms import UserCreateForm
         # Deploy count times templates
         subprocess.run([
             "scp", "-F", self.ssh_config,
-            "/Users/cory/Documents/Cloudy-Work/applications/jw-attendant-scheduler-django/templates/scheduler/count_entry.html",
-            "/Users/cory/Documents/Cloudy-Work/applications/jw-attendant-scheduler-django/templates/scheduler/count_reports.html",
+            "/Users/cory/Documents/Cloudy-Work/applications/jw-attendant-scheduler/templates/scheduler/count_entry.html",
+            "/Users/cory/Documents/Cloudy-Work/applications/jw-attendant-scheduler/templates/scheduler/count_reports.html",
             f"{self.staging_server}:{self.app_path}/templates/scheduler/"
         ], check=True)
         

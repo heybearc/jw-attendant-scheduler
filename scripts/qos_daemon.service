@@ -7,8 +7,8 @@ Wants=network.target
 Type=simple
 User=root
 Group=root
-WorkingDirectory=/opt/jw-attendant-scheduler-django
-ExecStart=/usr/bin/python3 /opt/jw-attendant-scheduler-django/scripts/qos_daemon.py /opt/jw-attendant-scheduler-django /opt/jw-attendant-scheduler-django/scripts/qos_config.json
+WorkingDirectory=/opt/jw-attendant-scheduler
+ExecStart=/usr/bin/python3 /opt/jw-attendant-scheduler/scripts/qos_daemon.py /opt/jw-attendant-scheduler /opt/jw-attendant-scheduler/scripts/qos_config.json
 Restart=always
 RestartSec=10
 StandardOutput=journal
@@ -16,7 +16,7 @@ StandardError=journal
 SyslogIdentifier=qos-daemon
 
 # Environment variables
-Environment=PYTHONPATH=/opt/jw-attendant-scheduler-django
+Environment=PYTHONPATH=/opt/jw-attendant-scheduler
 Environment=DJANGO_SETTINGS_MODULE=jw_scheduler.settings
 
 # Security settings
@@ -24,7 +24,7 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/opt/jw-attendant-scheduler-django/logs
+ReadWritePaths=/opt/jw-attendant-scheduler/logs
 ReadWritePaths=/var/log
 
 [Install]

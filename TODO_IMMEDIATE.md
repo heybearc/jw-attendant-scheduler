@@ -1,7 +1,7 @@
 # JW Attendant Scheduler Django - Status Update
 
 ## ✅ **Phase 2 Complete: Enhanced Features & Gmail Integration**
-**Directory:** `jw-attendant-scheduler-django/`
+**Directory:** `jw-attendant-scheduler/`
 **Status:** PRODUCTION READY
 
 ### **✅ Phase 1 Completed Tasks:**

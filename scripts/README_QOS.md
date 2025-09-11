@@ -22,7 +22,7 @@ The QOS (Quality of Service) Daemon provides 24/7 monitoring of the JW Attendant
 
 ### Test the monitoring system:
 ```bash
-cd /path/to/jw-attendant-scheduler-django
+cd /path/to/jw-attendant-scheduler
 python3 scripts/qos_control.py . test
 ```
 

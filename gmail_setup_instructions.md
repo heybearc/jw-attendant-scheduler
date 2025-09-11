@@ -39,7 +39,7 @@ The JW Attendant Scheduler now includes Gmail integration for sending user invit
 2. Rename it to `gmail_credentials.json`
 3. Place it in your project root directory:
    ```
-   /Users/cory/Documents/Cloudy-Work/applications/jw-attendant-scheduler-django/gmail_credentials.json
+   /Users/cory/Documents/Cloudy-Work/applications/jw-attendant-scheduler/gmail_credentials.json
    ```
 
 ## Step 5: First-Time Authentication

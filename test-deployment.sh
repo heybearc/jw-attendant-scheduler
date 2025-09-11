@@ -3,7 +3,7 @@
 
 set -e
 
-LOCAL_PATH="/Users/cory/Documents/Cloudy-Work/applications/jw-attendant-scheduler-django"
+LOCAL_PATH="/Users/cory/Documents/Cloudy-Work/applications/jw-attendant-scheduler"
 REMOTE_HOST="jwa"
 REMOTE_PATH="/opt/jw-attendant"
 

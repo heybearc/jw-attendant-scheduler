@@ -21,7 +21,7 @@
 
 1. **Place the downloaded `gmail_credentials.json` file in your project root:**
    ```
-   /Users/cory/Documents/Cloudy-Work/applications/jw-attendant-scheduler-django/gmail_credentials.json
+   /Users/cory/Documents/Cloudy-Work/applications/jw-attendant-scheduler/gmail_credentials.json
    ```
 
 ### 3. Authenticate in Django Admin

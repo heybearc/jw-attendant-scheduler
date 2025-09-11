@@ -9,7 +9,7 @@ import sys
 import django
 
 # Add the project directory to the Python path
-sys.path.append('/Users/cory/Documents/Cloudy-Work/applications/jw-attendant-scheduler-django')
+sys.path.append('/Users/cory/Documents/Cloudy-Work/applications/jw-attendant-scheduler')
 
 # Set up Django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'jw_scheduler.settings')

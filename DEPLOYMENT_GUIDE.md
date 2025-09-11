@@ -15,7 +15,7 @@ All local development changes are synced to staging environment:
 ```bash
 # Sync local changes to staging
 rsync -avz --exclude='.git' --exclude='venv' --exclude='__pycache__' --exclude='*.pyc' \
-  /Users/cory/Documents/Cloudy-Work/applications/jw-attendant-scheduler-django/ \
+  /Users/cory/Documents/Cloudy-Work/applications/jw-attendant-scheduler/ \
   jw-staging:/opt/jw-attendant-staging/
 
 # Restart staging service

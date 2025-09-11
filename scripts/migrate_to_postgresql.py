@@ -12,7 +12,7 @@ from django.db import connections
 from django.core.management.base import BaseCommand
 
 # Add the project directory to Python path
-sys.path.append('/Users/cory/Documents/Cloudy-Work/applications/jw-attendant-scheduler-django')
+sys.path.append('/Users/cory/Documents/Cloudy-Work/applications/jw-attendant-scheduler')
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'jw_scheduler.settings')
 
 django.setup()
@@ -33,7 +33,7 @@ def test_postgresql_connection():
 def backup_sqlite_data():
     """Create backup of SQLite database"""
     import shutil
-    sqlite_path = '/Users/cory/Documents/Cloudy-Work/applications/jw-attendant-scheduler-django/db.sqlite3'
+    sqlite_path = '/Users/cory/Documents/Cloudy-Work/applications/jw-attendant-scheduler/db.sqlite3'
     backup_path = f'{sqlite_path}.backup'
     
     if os.path.exists(sqlite_path):

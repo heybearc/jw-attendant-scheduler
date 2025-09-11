@@ -17,7 +17,7 @@ This Django application provides volunteer management, assignment tracking, and 
 ## Project Structure
 
 ```
-jw-attendant-scheduler-django/
+jw-attendant-scheduler/
 ├── jw_scheduler/           # Django project settings
 ├── scheduler/              # Main Django app
 ├── docs/                   # Documentation

@@ -6,7 +6,7 @@ set -e
 
 CONTAINER_IP="10.92.3.22"
 APP_DIR="/opt/jw-attendant"
-LOCAL_APP_DIR="/Users/cory/Documents/Cloudy-Work/applications/jw-attendant-scheduler-django"
+LOCAL_APP_DIR="/Users/cory/Documents/Cloudy-Work/applications/jw-attendant-scheduler"
 
 echo "🚀 Deploying JW Attendant Scheduler to container 132 (10.92.3.22)"
 

@@ -1,6 +1,0 @@
-first_name,last_name,email,phone,congregation,experience_level,availability
-John,Smith,john.smith@example.com,555-0101,Central Congregation,Experienced,"Morning shifts preferred"
-Jane,Doe,jane.doe@example.com,555-0102,North Congregation,Intermediate,"Available weekends"
-Michael,Johnson,michael.johnson@example.com,555-0103,South Congregation,Beginner,"Flexible schedule"
-Sarah,Williams,sarah.williams@example.com,555-0104,East Congregation,Experienced,"Afternoon shifts only"
-David,Brown,david.brown@example.com,555-0105,West Congregation,Intermediate,"Available all days"

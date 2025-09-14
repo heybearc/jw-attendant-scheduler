@@ -5,8 +5,8 @@ const prisma = new PrismaClient();
 
 export async function GET() {
   try {
-    const totalSessions = await prisma.countSession.count({ where: { isActive: true } });
-    const activeSessions = await prisma.countSession.count({ 
+    const totalSessions = await prisma.count_sessions.count({ where: { isActive: true } });
+    const activeSessions = await prisma.count_sessions.count({ 
       where: { 
         isActive: true,
         countTime: {

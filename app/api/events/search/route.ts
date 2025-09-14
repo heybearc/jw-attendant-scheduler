@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const events = await prisma.event.findMany({
+    const events = await prisma.events.findMany({
       where: {
         OR: [
           { name: { contains: query } },
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
         ],
         isActive: true
       },
-      orderBy: { eventDate: 'desc' }
+      orderBy: { startDate: 'desc' }
     });
     return NextResponse.json(events);
   } catch (error) {

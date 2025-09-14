@@ -131,7 +131,7 @@ class APITestAgent extends StagingTestAgent {
         const eventData = {
             name: 'Test Event',
             description: 'Test event description',
-            eventDate: new Date().toISOString(),
+            startDate: new Date().toISOString(),
             location: 'Test Location'
         };
         await this.testEndpoint('/api/events', 'POST', eventData);

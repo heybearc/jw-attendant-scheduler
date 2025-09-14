@@ -15,8 +15,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const event = await prisma.event.findUnique({
-      where: { id: parseInt(eventId) }
+    const event = await prisma.events.findUnique({
+      where: { id: eventId }
     });
     
     if (!event) {
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
     let counter = 1;
     
     // Check for existing sessions and increment counter if needed
-    while (await prisma.countSession.findFirst({ where: { sessionName } })) {
+    while (await prisma.count_sessions.findFirst({ where: { sessionName } })) {
       sessionName = `${baseSessionName} (${counter})`;
       counter++;
     }

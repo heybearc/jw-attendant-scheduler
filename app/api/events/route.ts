@@ -6,8 +6,8 @@ const prisma = new PrismaClient();
 
 export async function GET() {
   try {
-    const events = await prisma.event.findMany({
-      orderBy: { eventDate: 'desc' }
+    const events = await prisma.events.findMany({
+      orderBy: { startDate: 'desc' }
     });
     return NextResponse.json(events);
   } catch (error) {
@@ -22,22 +22,25 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, description, eventDate, location } = body;
+    const { name, description, startDate, location } = body;
 
-    if (!name || !eventDate) {
+    if (!name || !startDate) {
       return NextResponse.json(
         { error: 'Name and event date are required' },
         { status: 400 }
       );
     }
 
-    const event = await prisma.event.create({
+    const event = await prisma.events.create({
       data: {
+        id: crypto.randomUUID(),
         name,
         description,
-        eventDate: new Date(eventDate),
+        startDate: new Date(startDate),
+        endDate: new Date(startDate),
         location,
-        isActive: true
+        isActive: true,
+        updatedAt: new Date()
       }
     });
 

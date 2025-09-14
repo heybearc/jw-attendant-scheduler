@@ -6,7 +6,7 @@ interface Event {
   id: number;
   name: string;
   description: string;
-  eventDate: string;
+  startDate: string;
   location: string;
   isActive: boolean;
   createdAt: string;
@@ -21,7 +21,7 @@ export default function EventsPage() {
   const [viewMode, setViewMode] = useState<'all' | 'upcoming' | 'past'>('upcoming');
   const [newEvent, setNewEvent] = useState({
     name: '',
-    eventDate: '',
+    startDate: '',
     location: '',
     description: ''
   });
@@ -75,12 +75,12 @@ export default function EventsPage() {
         },
         body: JSON.stringify({
           ...newEvent,
-          eventDate: new Date(newEvent.eventDate).toISOString()
+          startDate: new Date(newEvent.startDate).toISOString()
         }),
       });
 
       if (response.ok) {
-        setNewEvent({ name: '', eventDate: '', location: '', description: '' });
+        setNewEvent({ name: '', startDate: '', location: '', description: '' });
         setShowCreateForm(false);
         loadEvents();
       }
@@ -203,8 +203,8 @@ export default function EventsPage() {
                 <input
                   type="datetime-local"
                   required
-                  value={newEvent.eventDate}
-                  onChange={(e) => setNewEvent({...newEvent, eventDate: e.target.value})}
+                  value={newEvent.startDate}
+                  onChange={(e) => setNewEvent({...newEvent, startDate: e.target.value})}
                   className="w-full px-3 py-2 border rounded"
                 />
               </div>
@@ -266,7 +266,7 @@ export default function EventsPage() {
                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    {formatDate(event.eventDate.toString())}
+                    {formatDate(event.startDate.toString())}
                   </div>
                   {event.location && (
                     <div className="flex items-center text-gray-600 mb-2">

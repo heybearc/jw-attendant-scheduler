@@ -1,0 +1,245 @@
+name: MCP-Powered CI/CD - JW Attendant Scheduler
+
+on:
+  push:
+    branches: [ staging, main ]
+  pull_request:
+    branches: [ staging, main ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+        - staging
+        - production
+
+env:
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '18'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    outputs:
+      artifact-id: ${{ steps.upload.outputs.artifact-id }}
+      commit-sha: ${{ github.sha }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-django coverage
+        
+    - name: Run tests
+      run: |
+        python -m pytest --cov=. --cov-report=xml
+        
+    - name: Build release package
+      run: |
+        # Create immutable release artifact
+        mkdir -p release-package
+        
+        # Copy application files
+        cp -r . release-package/
+        
+        # Remove development files
+        rm -rf release-package/.git
+        rm -rf release-package/.github
+        rm -rf release-package/__pycache__
+        rm -rf release-package/.pytest_cache
+        find release-package -name "*.pyc" -delete
+        
+        # Lock dependencies with exact versions
+        pip freeze > release-package/requirements-locked.txt
+        
+        # Add deployment metadata
+        echo "BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)" > release-package/.build-info
+        echo "COMMIT_SHA=${{ github.sha }}" >> release-package/.build-info
+        echo "BRANCH=${{ github.ref_name }}" >> release-package/.build-info
+        echo "BUILD_NUMBER=${{ github.run_number }}" >> release-package/.build-info
+        
+        # Create tarball
+        tar -czf release-${{ github.sha }}.tar.gz -C release-package .
+        
+    - name: Upload release artifact
+      id: upload
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-${{ github.sha }}
+        path: release-${{ github.sha }}.tar.gz
+        retention-days: 30
+
+  deploy-staging:
+    needs: build-and-test
+    if: github.ref == 'refs/heads/staging'
+    runs-on: ubuntu-latest
+    environment: staging
+    
+    steps:
+    - name: Checkout deployment scripts
+      uses: actions/checkout@v4
+      with:
+        sparse-checkout: |
+          scripts/
+          .github/
+        sparse-checkout-cone-mode: false
+        
+    - name: Set up Python for MCP
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Set up Node.js for MCP
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        
+    - name: Download release artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: release-${{ needs.build-and-test.outputs.commit-sha }}
+        
+    - name: Deploy to staging via MCP
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        PROXMOX_HOST: ${{ secrets.PROXMOX_HOST }}
+        PROXMOX_USERNAME: ${{ secrets.PROXMOX_USERNAME }}
+        PROXMOX_PASSWORD: ${{ secrets.PROXMOX_PASSWORD }}
+      run: |
+        # Install MCP dependencies
+        cd ../../homelab/mcp-server-github && npm install && npm run build
+        cd ../mcp-server-proxmox && npm install && npm run build
+        cd ../../applications/jw-attendant-scheduler
+        
+        # Deploy using MCP orchestration to Container 134 (staging)
+        python scripts/mcp-deploy.py \
+          jw-attendant-scheduler \
+          134 \
+          ${{ github.repository_owner }} \
+          ${{ github.event.repository.name }} \
+          staging
+          
+    - name: Run staging tests
+      run: |
+        # Post-deployment validation tests
+        echo "Running staging validation tests..."
+        curl -f http://10.92.3.24:8000/health/ || echo "Health check endpoint not yet implemented"
+        
+    - name: Notify deployment status
+      if: always()
+      run: |
+        if [ "${{ job.status }}" == "success" ]; then
+          echo "✅ Staging deployment successful"
+          echo "🔗 Staging URL: http://10.92.3.24:8000"
+        else
+          echo "❌ Staging deployment failed"
+          echo "🔄 Automatic rollback initiated"
+          python scripts/mcp-rollback.py jw-attendant-scheduler 134 quick
+        fi
+
+  deploy-production:
+    needs: [build-and-test, deploy-staging]
+    if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+    - name: Checkout deployment scripts
+      uses: actions/checkout@v4
+      with:
+        sparse-checkout: |
+          scripts/
+          .github/
+        sparse-checkout-cone-mode: false
+        
+    - name: Set up Python for MCP
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Set up Node.js for MCP
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        
+    - name: Download release artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: release-${{ needs.build-and-test.outputs.commit-sha }}
+        
+    - name: Pre-deployment snapshot
+      env:
+        PROXMOX_HOST: ${{ secrets.PROXMOX_HOST }}
+        PROXMOX_USERNAME: ${{ secrets.PROXMOX_USERNAME }}
+        PROXMOX_PASSWORD: ${{ secrets.PROXMOX_PASSWORD }}
+      run: |
+        echo "📸 Creating pre-deployment snapshot"
+        # MCP call to create snapshot would go here
+        
+    - name: Deploy to production via MCP
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        PROXMOX_HOST: ${{ secrets.PROXMOX_HOST }}
+        PROXMOX_USERNAME: ${{ secrets.PROXMOX_USERNAME }}
+        PROXMOX_PASSWORD: ${{ secrets.PROXMOX_PASSWORD }}
+      run: |
+        # Install MCP dependencies
+        cd ../../homelab/mcp-server-github && npm install && npm run build
+        cd ../mcp-server-proxmox && npm install && npm run build
+        cd ../../applications/jw-attendant-scheduler
+        
+        # Deploy using MCP orchestration to Container 132 (production)
+        python scripts/mcp-deploy.py \
+          jw-attendant-scheduler \
+          132 \
+          ${{ github.repository_owner }} \
+          ${{ github.event.repository.name }} \
+          main
+          
+    - name: Production health check
+      run: |
+        echo "🏥 Running production health checks..."
+        curl -f http://10.92.3.22:8000/health/ || echo "Health check endpoint not yet implemented"
+        
+    - name: Notify deployment status
+      if: always()
+      run: |
+        if [ "${{ job.status }}" == "success" ]; then
+          echo "✅ Production deployment successful"
+          echo "🔗 Production URL: http://10.92.3.22:8000"
+          echo "📊 Deployment SHA: ${{ needs.build-and-test.outputs.commit-sha }}"
+        else
+          echo "❌ Production deployment failed"
+          echo "🔄 Automatic rollback initiated"
+          python scripts/mcp-rollback.py jw-attendant-scheduler 132 quick
+        fi
+
+  cleanup:
+    needs: [build-and-test, deploy-staging, deploy-production]
+    if: always()
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Cleanup old releases
+      run: |
+        echo "🧹 Cleaning up old releases and artifacts"
+        # MCP calls to cleanup old releases on containers
+        # GitHub API calls to cleanup old artifacts

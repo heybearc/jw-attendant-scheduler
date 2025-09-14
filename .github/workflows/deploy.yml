@@ -41,10 +41,7 @@ jobs:
     - name: Create deployment package
       run: |
         mkdir -p deploy-package
-        cp -r . deploy-package/
-        rm -rf deploy-package/.git
-        rm -rf deploy-package/.github
-        rm -rf deploy-package/node_modules
+        cp -r .next package.json package-lock.json prisma app public deploy-package/
         echo "BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)" > deploy-package/.build-info
         echo "COMMIT_SHA=${{ github.sha }}" >> deploy-package/.build-info
         tar -czf jw-attendant-scheduler-${{ github.sha }}.tar.gz -C deploy-package .

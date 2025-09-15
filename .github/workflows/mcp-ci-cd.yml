@@ -63,7 +63,6 @@ jobs:
         rm -rf release-package/.git
         rm -rf release-package/.github
         rm -rf release-package/node_modules
-        rm -rf release-package/.next
         
         # Lock dependencies with exact versions
         cp package-lock.json release-package/package-lock.json

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth/next'
+import { AuthService } from '../../../utils/auth'
 import { PrismaClient } from '@prisma/client'
 import crypto from 'crypto'
 
@@ -7,7 +7,7 @@ const prisma = new PrismaClient()
 
 export async function GET() {
   try {
-    const session = await getServerSession()
+    const user = await AuthService.getCurrentUser()
     
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -27,7 +27,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession()
+    const user = await AuthService.getCurrentUser()
     
     if (!session || !['ADMIN', 'OVERSEER'].includes(session.user.role)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

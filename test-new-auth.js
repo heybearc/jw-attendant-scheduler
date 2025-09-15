@@ -1,7 +1,7 @@
-const https = require('https');
+const http = require('http');
 
 // Configuration
-const BASE_URL = 'https://10.92.3.24:3001';
+const BASE_URL = 'http://10.92.3.24:3001';
 const ADMIN_EMAIL = 'admin@jwattendant.com';
 const ADMIN_PASSWORD = 'admin123';
 
@@ -32,7 +32,7 @@ async function makeRequest(path, method = 'GET', data = null, cookies = '') {
       options.headers['Content-Length'] = Buffer.byteLength(jsonData);
     }
 
-    const req = https.request(options, (res) => {
+    const req = http.request(options, (res) => {
       let body = '';
       
       res.on('data', (chunk) => {

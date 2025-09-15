@@ -94,11 +94,6 @@ jobs:
     steps:
     - name: Checkout deployment scripts
       uses: actions/checkout@v4
-      with:
-        sparse-checkout: |
-          scripts/
-          homelab/
-        sparse-checkout-cone-mode: false
         
     - name: Set up Node.js for MCP
       uses: actions/setup-node@v4
@@ -117,17 +112,21 @@ jobs:
         PROXMOX_USERNAME: ${{ secrets.PROXMOX_USERNAME }}
         PROXMOX_PASSWORD: ${{ secrets.PROXMOX_PASSWORD }}
       run: |
-        # Install MCP dependencies
-        cd homelab/mcp-server-github && npm install && npm run build
-        cd ../mcp-server-proxmox && npm install && npm run build
-        cd ../../
+        # Check if MCP directories exist
+        if [ -d "homelab/mcp-server-github" ]; then
+          cd homelab/mcp-server-github && npm install && npm run build
+          cd ../mcp-server-proxmox && npm install && npm run build
+          cd ../../
+        else
+          echo "MCP servers not found in repository, using external MCP deployment"
+        fi
         
         # Deploy using MCP orchestration to Container 134 (staging)
         python3 scripts/mcp-deploy.py \
           jw-attendant-scheduler \
           134 \
           ${{ github.repository_owner }} \
-          ${{ github.event.repository.name }} \
+          jw-attendant-scheduler \
           staging
           
     - name: Run staging tests

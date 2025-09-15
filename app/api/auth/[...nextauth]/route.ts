@@ -76,14 +76,18 @@ const handler = NextAuth({
   },
   callbacks: {
     async jwt({ token, user }) {
+      console.log('🔍 JWT Callback - User:', user ? 'Present' : 'None', 'Token:', token ? 'Present' : 'None')
       if (user) {
+        console.log('✅ JWT: Adding user data to token', { id: user.id, role: user.role })
         token.role = user.role
         token.userId = user.id
       }
       return token
     },
     async session({ session, token }) {
-      if (token) {
+      console.log('🔍 Session Callback - Token:', token ? 'Present' : 'None', 'Session:', session ? 'Present' : 'None')
+      if (token && session.user) {
+        console.log('✅ Session: Adding token data to session', { userId: token.userId, role: token.role })
         session.user.id = token.userId as string
         session.user.role = token.role as string
       }
@@ -94,7 +98,7 @@ const handler = NextAuth({
     signIn: '/auth/signin',
     error: '/auth/error'
   },
-  debug: process.env.NODE_ENV === 'development',
+  debug: true, // Enable debug logging for staging
   cookies: {
     sessionToken: {
       name: `next-auth.session-token`,

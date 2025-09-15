@@ -148,7 +148,7 @@ jobs:
         fi
 
   deploy-production:
-    needs: [build, deploy-staging]
+    needs: [build-and-test, deploy-staging]
     if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
     runs-on: self-hosted
     environment: production
@@ -157,7 +157,7 @@ jobs:
     - name: Download deployment artifact
       uses: actions/download-artifact@v4
       with:
-        name: deployment-${{ needs.build.outputs.commit-sha }}
+        name: release-${{ needs.build-and-test.outputs.commit-sha }}
         
     - name: Setup SSH
       run: |
@@ -169,7 +169,7 @@ jobs:
     - name: Deploy to production
       run: |
         # Upload and extract
-        scp jw-attendant-scheduler-${{ needs.build.outputs.commit-sha }}.tar.gz root@${{ secrets.PRODUCTION_HOST }}:/tmp/
+        scp jw-attendant-scheduler-${{ needs.build-and-test.outputs.commit-sha }}.tar.gz root@${{ secrets.PRODUCTION_HOST }}:/tmp/
         
         # Deploy via SSH
         ssh root@${{ secrets.PRODUCTION_HOST }} << 'EOF'
@@ -179,11 +179,11 @@ jobs:
           pkill -f "next" || true
           
           # Create deployment directory
-          mkdir -p /opt/jw-attendant-scheduler/releases/${{ needs.build.outputs.commit-sha }}
+          mkdir -p /opt/jw-attendant-scheduler/releases/${{ needs.build-and-test.outputs.commit-sha }}
           
           # Extract new release
-          cd /opt/jw-attendant-scheduler/releases/${{ needs.build.outputs.commit-sha }}
-          tar -xzf /tmp/jw-attendant-scheduler-${{ needs.build.outputs.commit-sha }}.tar.gz
+          cd /opt/jw-attendant-scheduler/releases/${{ needs.build-and-test.outputs.commit-sha }}
+          tar -xzf /tmp/jw-attendant-scheduler-${{ needs.build-and-test.outputs.commit-sha }}.tar.gz
           
           # Install dependencies and build
           npm ci
@@ -197,7 +197,7 @@ jobs:
         ENVEOF
           
           # Update symlink atomically
-          ln -sfn /opt/jw-attendant-scheduler/releases/${{ needs.build.outputs.commit-sha }} /opt/jw-attendant-scheduler/current
+          ln -sfn /opt/jw-attendant-scheduler/releases/${{ needs.build-and-test.outputs.commit-sha }} /opt/jw-attendant-scheduler/current
           
           # Start application
           cd /opt/jw-attendant-scheduler/current
@@ -208,7 +208,7 @@ jobs:
           ls -t | tail -n +4 | xargs rm -rf
           
           # Cleanup temp file
-          rm -f /tmp/jw-attendant-scheduler-${{ needs.build.outputs.commit-sha }}.tar.gz
+          rm -f /tmp/jw-attendant-scheduler-${{ needs.build-and-test.outputs.commit-sha }}.tar.gz
         EOF
         
     - name: Health check
@@ -222,7 +222,7 @@ jobs:
         echo "🔗 Production URL: http://${{ secrets.PRODUCTION_HOST }}:3001"
 
   cleanup:
-    needs: [build, deploy-staging, deploy-production]
+    needs: [build-and-test, deploy-staging, deploy-production]
     if: always()
     runs-on: ubuntu-latest
     

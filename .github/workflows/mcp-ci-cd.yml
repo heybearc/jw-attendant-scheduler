@@ -119,32 +119,32 @@ jobs:
         RELEASE_FILE="release-${COMMIT_SHA}.tar.gz"
         
         # Stop existing application
-        pkill -f "next.*3001" || true
+        sudo pkill -f "next.*3001" || true
         
         # Create release directory
-        mkdir -p /opt/jw-attendant-scheduler/releases/${COMMIT_SHA}
+        sudo mkdir -p /opt/jw-attendant-scheduler/releases/${COMMIT_SHA}
         
         # Extract release
         cd /opt/jw-attendant-scheduler/releases/${COMMIT_SHA}
-        tar -xzf /home/github-runner/actions-runner/_work/jw-attendant-scheduler/jw-attendant-scheduler/${RELEASE_FILE}
+        sudo tar -xzf /opt/github-runner/_work/jw-attendant-scheduler/jw-attendant-scheduler/${RELEASE_FILE}
         
         # Install dependencies
-        npm ci
-        npx prisma generate
+        sudo npm ci
+        sudo npx prisma generate
         
         # Create environment file
-        cat > .env.local << 'ENVEOF'
+        sudo tee .env.local > /dev/null << 'ENVEOF'
         DATABASE_URL=postgresql://postgres:Cl0udy!!(@)@10.92.3.21:5432/jw_attendant_scheduler_staging
         NEXTAUTH_SECRET=staging-secret-key
         NEXTAUTH_URL=http://10.92.3.24:3001
         ENVEOF
         
         # Update current symlink atomically
-        ln -sfn /opt/jw-attendant-scheduler/releases/${COMMIT_SHA} /opt/jw-attendant-scheduler/current
+        sudo ln -sfn /opt/jw-attendant-scheduler/releases/${COMMIT_SHA} /opt/jw-attendant-scheduler/current
         
         # Start application
         cd /opt/jw-attendant-scheduler/current
-        nohup npm start -- -p 3001 > /var/log/jw-attendant-scheduler.log 2>&1 &
+        sudo nohup npm start -- -p 3001 > /var/log/jw-attendant-scheduler.log 2>&1 &
         
         echo "✅ Deployment completed successfully"
           

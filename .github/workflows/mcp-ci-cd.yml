@@ -121,15 +121,18 @@ jobs:
         chmod 600 ~/.ssh/id_rsa
         ssh-keyscan -H 10.92.3.24 >> ~/.ssh/known_hosts
         
+        # Test SSH connection
+        ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no root@10.92.3.24 "echo 'SSH connection verified'"
+        
         # Deploy release artifact to staging server
         COMMIT_SHA="${{ github.sha }}"
         RELEASE_FILE="release-${COMMIT_SHA}.tar.gz"
         
         # Upload release artifact
-        scp "${RELEASE_FILE}" root@10.92.3.24:/tmp/
+        scp -o ConnectTimeout=10 -o StrictHostKeyChecking=no "${RELEASE_FILE}" root@10.92.3.24:/tmp/
         
         # Execute deployment on staging server
-        ssh root@10.92.3.24 << EOF
+        ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no root@10.92.3.24 << EOF
           set -e
           
           # Stop existing application

@@ -5,14 +5,14 @@ const prisma = new PrismaClient();
 
 export async function GET() {
   try {
-    const events = await prisma.event.findMany({
+    const events = await prisma.events.findMany({
       where: {
-        eventDate: {
+        startDate: {
           lt: new Date()
         },
         isActive: true
       },
-      orderBy: { eventDate: 'desc' }
+      orderBy: { startDate: 'desc' }
     });
     return NextResponse.json(events);
   } catch (error) {

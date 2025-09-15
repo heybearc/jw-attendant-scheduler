@@ -141,14 +141,14 @@ jobs:
       run: |
         # Post-deployment validation tests
         echo "Running staging validation tests..."
-        curl -f http://10.92.3.24:8000/health/ || echo "Health check endpoint not yet implemented"
+        curl -f http://10.92.3.24:3001/health/ || echo "Health check endpoint not yet implemented"
         
     - name: Notify deployment status
       if: always()
       run: |
         if [ "${{ job.status }}" == "success" ]; then
           echo "✅ Staging deployment successful"
-          echo "🔗 Staging URL: http://10.92.3.24:8000"
+          echo "🔗 Staging URL: http://10.92.3.24:3001"
         else
           echo "❌ Staging deployment failed"
           echo "🔄 Automatic rollback initiated"
@@ -217,14 +217,14 @@ jobs:
     - name: Production health check
       run: |
         echo "🏥 Running production health checks..."
-        curl -f http://10.92.3.22:8000/health/ || echo "Health check endpoint not yet implemented"
+        curl -f http://10.92.3.22:3001/health/ || echo "Health check endpoint not yet implemented"
         
     - name: Notify deployment status
       if: always()
       run: |
         if [ "${{ job.status }}" == "success" ]; then
           echo "✅ Production deployment successful"
-          echo "🔗 Production URL: http://10.92.3.22:8000"
+          echo "🔗 Production URL: http://10.92.3.22:3001"
           echo "📊 Deployment SHA: ${{ needs.build-and-test.outputs.commit-sha }}"
         else
           echo "❌ Production deployment failed"

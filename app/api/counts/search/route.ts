@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const countSessions = await prisma.countSession.findMany({
+    const countSessions = await prisma.count_sessions.findMany({
       where: {
         OR: [
           { sessionName: { contains: query } },
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
         isActive: true
       },
       include: {
-        event: true
+        events: true
       },
       orderBy: { countTime: 'desc' }
     });

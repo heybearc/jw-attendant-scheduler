@@ -5,9 +5,9 @@ const prisma = new PrismaClient();
 
 export async function GET() {
   try {
-    const countSessions = await prisma.countSession.findMany({
+    const countSessions = await prisma.count_sessions.findMany({
       include: {
-        event: true
+        events: true
       },
       orderBy: { countTime: 'desc' }
     });
@@ -33,16 +33,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const countSession = await prisma.countSession.create({
+    const countSession = await prisma.count_sessions.create({
       data: {
+        id: crypto.randomUUID(),
         sessionName,
-        eventId: parseInt(eventId),
+        eventId: eventId,
         countTime: new Date(countTime),
         notes,
-        isActive: true
+        isActive: true,
+        updatedAt: new Date()
       },
       include: {
-        event: true
+        events: true
       }
     });
 

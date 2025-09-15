@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 
 export async function GET() {
   try {
-    const attendants = await prisma.attendant.findMany({
+    const attendants = await prisma.attendants.findMany({
       orderBy: { lastName: 'asc' }
     });
     return NextResponse.json(attendants);
@@ -25,13 +25,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'First name and last name are required' }, { status: 400 });
     }
 
-    const attendant = await prisma.attendant.create({
+    const attendant = await prisma.attendants.create({
       data: {
+        id: crypto.randomUUID(),
         firstName,
         lastName,
         email,
         phone,
-        isActive: true
+        isAvailable: true,
+        updatedAt: new Date()
       }
     });
 

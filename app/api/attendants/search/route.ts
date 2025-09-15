@@ -15,14 +15,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const attendants = await prisma.attendant.findMany({
+    const attendants = await prisma.attendants.findMany({
       where: {
         OR: [
           { firstName: { contains: query } },
           { lastName: { contains: query } },
           { email: { contains: query } }
         ],
-        isActive: true
+        isAvailable: true
       },
       orderBy: { lastName: 'asc' }
     });

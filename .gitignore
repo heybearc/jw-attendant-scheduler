@@ -55,3 +55,4 @@ data/exports/
 # Test coverage
 .coverage
 htmlcov/
+node_modules

@@ -6,7 +6,7 @@ import bcrypt from 'bcryptjs'
 const prisma = new PrismaClient()
 
 const handler = NextAuth({
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET || 'fallback-secret-for-staging',
   providers: [
     CredentialsProvider({
       name: 'credentials',

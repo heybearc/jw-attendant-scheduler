@@ -141,8 +141,12 @@ jobs:
         # Update current symlink atomically
         ln -sfn /opt/jw-attendant-scheduler/releases/${COMMIT_SHA} /opt/jw-attendant-scheduler/current
         
-        # Start application
+        # Seed admin user if needed
         cd /opt/jw-attendant-scheduler/current
+        echo "🌱 Seeding admin user..."
+        node scripts/seed-admin.js || echo "Admin user already exists or seeding failed"
+        
+        # Start application
         nohup npm start -- -p 3001 > /var/log/jw-attendant-scheduler.log 2>&1 &
         
         echo "✅ Deployment completed successfully"

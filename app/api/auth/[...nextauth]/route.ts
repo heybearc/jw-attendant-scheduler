@@ -15,8 +15,11 @@ const handler = NextAuth({
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
+          console.log('❌ Auth: Missing credentials')
           return null
         }
+
+        console.log('🔍 Auth: Looking for user:', credentials.email)
 
         const user = await prisma.users.findUnique({
           where: {
@@ -24,18 +27,28 @@ const handler = NextAuth({
           }
         })
 
-        if (!user || !user.passwordHash) {
+        if (!user) {
+          console.log('❌ Auth: User not found:', credentials.email)
           return null
         }
 
+        if (!user.passwordHash) {
+          console.log('❌ Auth: User has no password hash:', credentials.email)
+          return null
+        }
+
+        console.log('🔍 Auth: Comparing password for user:', credentials.email)
         const isPasswordValid = await bcrypt.compare(
           credentials.password,
           user.passwordHash
         )
 
         if (!isPasswordValid) {
+          console.log('❌ Auth: Invalid password for user:', credentials.email)
           return null
         }
+
+        console.log('✅ Auth: Login successful for user:', credentials.email)
 
         // Update last login
         await prisma.users.update({

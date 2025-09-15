@@ -88,7 +88,7 @@ jobs:
   deploy-staging:
     needs: build-and-test
     if: github.ref == 'refs/heads/staging' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     environment: staging
     
     steps:
@@ -112,60 +112,41 @@ jobs:
         PROXMOX_USERNAME: ${{ secrets.PROXMOX_USERNAME }}
         PROXMOX_PASSWORD: ${{ secrets.PROXMOX_PASSWORD }}
       run: |
-        # Use SSH deployment instead of MCP for GitHub Actions environment
-        echo "🚀 Deploying to staging container 134 via SSH"
+        # Use local deployment since we're on self-hosted runner
+        echo "🚀 Deploying to staging container 134 locally"
         
-        # Setup SSH key for staging deployment
-        mkdir -p ~/.ssh
-        echo "${{ secrets.STAGING_SSH_KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H 10.92.3.24 >> ~/.ssh/known_hosts
-        
-        # Test SSH connection
-        ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no root@10.92.3.24 "echo 'SSH connection verified'"
-        
-        # Deploy release artifact to staging server
         COMMIT_SHA="${{ github.sha }}"
         RELEASE_FILE="release-${COMMIT_SHA}.tar.gz"
         
-        # Upload release artifact
-        scp -o ConnectTimeout=10 -o StrictHostKeyChecking=no "${RELEASE_FILE}" root@10.92.3.24:/tmp/
+        # Stop existing application
+        pkill -f "next.*3001" || true
         
-        # Execute deployment on staging server
-        ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no root@10.92.3.24 << EOF
-          set -e
-          
-          # Stop existing application
-          pkill -f "next.*3001" || true
-          
-          # Create release directory
-          mkdir -p /opt/jw-attendant-scheduler/releases/\${COMMIT_SHA}
-          
-          # Extract release
-          cd /opt/jw-attendant-scheduler/releases/\${COMMIT_SHA}
-          tar -xzf /tmp/\${RELEASE_FILE}
-          
-          # Install dependencies
-          npm ci
-          npx prisma generate
-          
-          # Create environment file
-          cat > .env.local << 'ENVEOF'
+        # Create release directory
+        mkdir -p /opt/jw-attendant-scheduler/releases/${COMMIT_SHA}
+        
+        # Extract release
+        cd /opt/jw-attendant-scheduler/releases/${COMMIT_SHA}
+        tar -xzf /home/github-runner/actions-runner/_work/jw-attendant-scheduler/jw-attendant-scheduler/${RELEASE_FILE}
+        
+        # Install dependencies
+        npm ci
+        npx prisma generate
+        
+        # Create environment file
+        cat > .env.local << 'ENVEOF'
         DATABASE_URL=postgresql://postgres:Cl0udy!!(@)@10.92.3.21:5432/jw_attendant_scheduler_staging
         NEXTAUTH_SECRET=staging-secret-key
         NEXTAUTH_URL=http://10.92.3.24:3001
         ENVEOF
-          
-          # Update current symlink atomically
-          ln -sfn /opt/jw-attendant-scheduler/releases/\${COMMIT_SHA} /opt/jw-attendant-scheduler/current
-          
-          # Start application
-          cd /opt/jw-attendant-scheduler/current
-          nohup npm start -- -p 3001 > /var/log/jw-attendant-scheduler.log 2>&1 &
-          
-          # Cleanup temp file
-          rm -f /tmp/\${RELEASE_FILE}
-        EOF
+        
+        # Update current symlink atomically
+        ln -sfn /opt/jw-attendant-scheduler/releases/${COMMIT_SHA} /opt/jw-attendant-scheduler/current
+        
+        # Start application
+        cd /opt/jw-attendant-scheduler/current
+        nohup npm start -- -p 3001 > /var/log/jw-attendant-scheduler.log 2>&1 &
+        
+        echo "✅ Deployment completed successfully"
           
     - name: Run staging tests
       run: |

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { AuthService } from '../../../utils/auth'
+import { AuthService } from '../../../../utils/auth'
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
+import crypto from 'crypto'
 
 const prisma = new PrismaClient()
 
@@ -9,7 +10,7 @@ export async function GET() {
   try {
     const user = await AuthService.getCurrentUser()
     
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!user || user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
   try {
     const user = await AuthService.getCurrentUser()
     
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!user || user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -63,7 +64,7 @@ export async function POST(request: NextRequest) {
     // Hash password
     const passwordHash = await bcrypt.hash(password, 12)
 
-    const user = await prisma.users.create({
+    const newUser = await prisma.users.create({
       data: {
         id: crypto.randomUUID(),
         email,
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
         isActive: true,
         createdAt: new Date(),
         updatedAt: new Date(),
-        createdBy: session.user.id
+        createdBy: user.id
       },
       select: {
         id: true,
@@ -87,7 +88,7 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    return NextResponse.json(user, { status: 201 })
+    return NextResponse.json(newUser, { status: 201 })
   } catch (error) {
     console.error('Failed to create user:', error)
     return NextResponse.json({ error: 'Failed to create user' }, { status: 500 })

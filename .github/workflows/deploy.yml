@@ -98,7 +98,7 @@ jobs:
           
           # Create environment file
           cat > .env.local << 'ENVEOF'
-        DATABASE_URL=${{ secrets.DATABASE_URL }}
+        DATABASE_URL=postgresql://postgres:Cl0udy!!(@)@10.92.3.21:5432/jw_attendant_scheduler_staging
         NEXTAUTH_SECRET=staging-secret-key
         NEXTAUTH_URL=http://${{ secrets.STAGING_HOST }}:3001
         ENVEOF

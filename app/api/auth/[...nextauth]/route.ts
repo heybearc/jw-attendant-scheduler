@@ -72,6 +72,7 @@ const handler = NextAuth({
   },
   jwt: {
     maxAge: 30 * 24 * 60 * 60, // 30 days
+    secret: process.env.NEXTAUTH_SECRET,
   },
   callbacks: {
     async jwt({ token, user }) {
@@ -101,7 +102,8 @@ const handler = NextAuth({
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: false // Set to true in production with HTTPS
+        secure: process.env.NODE_ENV === 'production' && process.env.NEXTAUTH_URL?.startsWith('https'),
+        domain: process.env.NODE_ENV === 'production' ? undefined : undefined
       }
     }
   }

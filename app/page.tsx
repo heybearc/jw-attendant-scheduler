@@ -1,14 +1,34 @@
 'use client';
 
-import React from 'react';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import Link from 'next/link';
 
-export default function HomePage() {
+export default function Home() {
+  const { data: session, status } = useSession();
   const router = useRouter();
 
-  const handleManageEvents = () => {
-    router.push('/events');
-  };
+  useEffect(() => {
+    if (status === 'loading') return;
+    
+    if (session) {
+      // Redirect authenticated users to dashboard
+      router.push('/dashboard');
+    }
+  }, [session, status, router]);
+
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">Loading...</div>
+      </div>
+    );
+  }
+
+  if (session) {
+    return null; // Will redirect to dashboard
+  }
 
   return (
     <main className="min-h-screen bg-gray-50 py-8">
@@ -16,22 +36,23 @@ export default function HomePage() {
         <div className="bg-white rounded-lg shadow p-6">
           <h1 className="text-3xl font-bold mb-2">JW Attendant Scheduler</h1>
           <p className="text-gray-600 mb-8">Manage events and attendant assignments</p>
-
+          
           <div className="grid grid-cols-1 gap-6">
-            {/* Events Management - Primary Focus */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-8">
               <h2 className="text-2xl font-semibold text-blue-900 mb-4">Event Management</h2>
-              <p className="text-blue-700 mb-6">Create and manage events, positions, and attendant assignments. All attendant management is done within specific events.</p>
-              <button
-                onClick={handleManageEvents}
-                className="bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors text-lg font-medium"
+              <p className="text-blue-700 mb-6">
+                Create and manage events, positions, and attendant assignments. 
+                All attendant management is done within specific events.
+              </p>
+              <Link
+                href="/auth/signin"
+                className="inline-block bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors text-lg font-medium"
               >
-                Manage Events & Attendants
-              </button>
+                Sign In to Get Started
+              </Link>
             </div>
           </div>
 
-          {/* Quick Stats */}
           <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-gray-100 rounded-lg p-4 text-center">
               <h3 className="text-lg font-semibold text-gray-700">Total Events</h3>

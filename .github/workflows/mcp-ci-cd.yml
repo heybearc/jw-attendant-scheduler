@@ -32,17 +32,6 @@ jobs:
       tests-failed: ${{ steps.test-results.outputs.failed }}
     
     steps:
-    - name: Token Budget Check - Build Phase
-      uses: ./.github/workflows/wmacs-token-budget.yml
-      with:
-        phase: 'build'
-        operation: 'ci-build'
-      secrets:
-        WMACS_BUILD_BUDGET: ${{ secrets.WMACS_BUILD_BUDGET }}
-        WMACS_DEPLOY_BUDGET: ${{ secrets.WMACS_DEPLOY_BUDGET }}
-        WMACS_TEST_BUDGET: ${{ secrets.WMACS_TEST_BUDGET }}
-        WMACS_ROLLBACK_BUDGET: ${{ secrets.WMACS_ROLLBACK_BUDGET }}
-    
     - name: Checkout code
       uses: actions/checkout@v4
       

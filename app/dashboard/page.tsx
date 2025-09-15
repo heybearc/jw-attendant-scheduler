@@ -1,6 +1,6 @@
 'use client'
 
-import { useSession, signOut } from 'next-auth/react'
+import { useAuth } from '../providers'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
@@ -13,7 +13,7 @@ interface DashboardStats {
 }
 
 export default function Dashboard() {
-  const { data: session, status } = useSession()
+  const { user, loading: authLoading, logout } = useAuth()
   const router = useRouter()
   const [stats, setStats] = useState<DashboardStats>({
     totalEvents: 0,
@@ -24,15 +24,15 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (status === 'loading') return
+    if (authLoading) return
     
-    if (!session) {
+    if (!user) {
       router.push('/auth/signin')
       return
     }
 
     fetchDashboardStats()
-  }, [session, status, router])
+  }, [user, authLoading, router])
 
   const fetchDashboardStats = async () => {
     try {
@@ -48,7 +48,7 @@ export default function Dashboard() {
     }
   }
 
-  if (status === 'loading' || loading) {
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-lg">Loading...</div>
@@ -63,10 +63,10 @@ export default function Dashboard() {
           <div className="flex justify-between items-center mb-6">
             <div>
               <h1 className="text-3xl font-bold">Dashboard</h1>
-              <p className="text-gray-600">Welcome back, {session?.user?.name}</p>
+              <p className="text-gray-600">Welcome back, {user?.name}</p>
             </div>
             <div className="space-x-4">
-              {session?.user?.role === 'ADMIN' && (
+              {user?.role === 'ADMIN' && (
                 <Link
                   href="/admin"
                   className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
@@ -75,7 +75,7 @@ export default function Dashboard() {
                 </Link>
               )}
               <button
-                onClick={() => signOut({ callbackUrl: '/auth/signin' })}
+                onClick={() => logout().then(() => router.push('/auth/signin'))}
                 className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
               >
                 Sign Out
@@ -127,7 +127,7 @@ export default function Dashboard() {
               <p className="text-purple-700">Track attendance counts and generate reports</p>
             </Link>
 
-            {['ADMIN', 'OVERSEER'].includes(session?.user?.role || '') && (
+            {['ADMIN', 'OVERSEER'].includes(user?.role || '') && (
               <Link
                 href="/oversight"
                 className="bg-red-100 border border-red-200 rounded-lg p-6 hover:bg-red-200 transition-colors"

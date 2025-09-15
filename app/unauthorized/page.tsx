@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useSession, signOut } from 'next-auth/react'
+import { useAuth } from '../providers'
 
 export default function Unauthorized() {
   const { data: session } = useSession()

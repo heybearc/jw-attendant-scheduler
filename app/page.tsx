@@ -1,24 +1,27 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
+import { useAuth } from './providers';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Link from 'next/link';
 
 export default function Home() {
-  const { data: session, status } = useSession();
+  const { user, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (status === 'loading') return;
+    if (loading) return
     
-    if (session) {
-      // Redirect authenticated users to dashboard
-      router.push('/dashboard');
+    if (user) {
+      if (user.role === 'ADMIN') {
+        router.push('/admin')
+      } else {
+        router.push('/dashboard')
+      }
     }
-  }, [session, status, router]);
+  }, [user, loading, router]);
 
-  if (status === 'loading') {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-lg">Loading...</div>
@@ -26,7 +29,7 @@ export default function Home() {
     );
   }
 
-  if (session) {
+  if (user) {
     return null; // Will redirect to dashboard
   }
 

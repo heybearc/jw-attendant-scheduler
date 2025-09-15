@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '../providers'
 import Link from 'next/link'
 
 export default function CreateAttendant() {

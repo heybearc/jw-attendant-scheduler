@@ -1,6 +1,6 @@
 'use client'
 
-import { useSession } from 'next-auth/react'
+import { useAuth } from '../providers'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
@@ -17,21 +17,21 @@ interface User {
 }
 
 export default function AdminDashboard() {
-  const { data: session, status } = useSession()
+  const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (status === 'loading') return
+    if (authLoading) return
     
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!user || user.role !== 'ADMIN') {
       router.push('/unauthorized')
       return
     }
 
     fetchUsers()
-  }, [session, status, router])
+  }, [user, authLoading, router])
 
   const fetchUsers = async () => {
     try {

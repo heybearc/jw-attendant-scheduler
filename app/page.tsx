@@ -8,7 +8,7 @@ export default function Home() {
           JW Attendant Scheduler
         </h1>
         <p className="text-xl text-gray-600 mb-8">
-          Next.js SDD Implementation with Multi-Agent Architecture
+          Manage attendants, events, and count tracking for Jehovah's Witness conventions
         </p>
       </div>
 
@@ -18,7 +18,7 @@ export default function Home() {
             Attendant Management
           </h2>
           <p className="text-gray-600 mb-4">
-            Manage attendants, schedules, and assignments with the SDD attendant-management library.
+            Manage attendant profiles, availability, and assignments for convention events.
           </p>
           <a
             href="/attendants"
@@ -33,7 +33,7 @@ export default function Home() {
             Event Management
           </h2>
           <p className="text-gray-600 mb-4">
-            Create and manage events with the SDD event-management library.
+            Create and manage convention events, schedules, and position assignments.
           </p>
           <a
             href="/events"
@@ -48,7 +48,7 @@ export default function Home() {
             Count Tracking
           </h2>
           <p className="text-gray-600 mb-4">
-            Track attendance counts with analytics using the SDD count-tracking library.
+            Track attendance counts and generate analytics for convention sessions.
           </p>
           <a
             href="/counts"
@@ -61,17 +61,17 @@ export default function Home() {
 
       <div className="bg-gray-50 p-6 rounded-lg">
         <h3 className="text-xl font-semibold text-gray-900 mb-4">
-          SDD Architecture Features
+          Application Features
         </h3>
         <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 text-gray-600">
-          <li>✅ TypeScript with Prisma ORM</li>
-          <li>✅ Multi-Agent Development Workflow</li>
-          <li>✅ Modern React with Hooks</li>
-          <li>✅ Tailwind CSS Styling</li>
-          <li>✅ API Routes with Error Handling</li>
-          <li>✅ Search and Analytics</li>
+          <li>✅ Attendant Profile Management</li>
+          <li>✅ Event Scheduling System</li>
+          <li>✅ Position Assignment Tracking</li>
+          <li>✅ Count Session Analytics</li>
+          <li>✅ Real-time Data Updates</li>
           <li>✅ Responsive Design</li>
-          <li>✅ Staging-Only Development</li>
+          <li>✅ Database Integration</li>
+          <li>✅ Production Ready</li>
         </ul>
       </div>
     </div>

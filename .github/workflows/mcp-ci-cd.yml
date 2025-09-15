@@ -133,9 +133,10 @@ jobs:
         
         # Create environment file
         cat > .env.local << 'ENVEOF'
-        DATABASE_URL=postgresql://postgres:Cl0udy!!(@)@10.92.3.21:5432/jw_attendant_scheduler_staging
+        DATABASE_URL=postgresql://postgres:Cl0udy%21%21%28%40%29@10.92.3.21:5432/jw_attendant_scheduler_staging
         NEXTAUTH_SECRET=staging-secret-key
         NEXTAUTH_URL=http://10.92.3.24:3001
+        EMAIL_ENCRYPTION_KEY=staging-email-encryption-key-32chars
         ENVEOF
         
         # Update current symlink atomically

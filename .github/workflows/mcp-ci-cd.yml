@@ -56,8 +56,8 @@ jobs:
         # Create immutable release artifact
         mkdir -p release-package
         
-        # Copy application files
-        cp -r . release-package/
+        # Copy application files (exclude release-package to avoid recursive copy)
+        find . -maxdepth 1 -not -name '.' -not -name 'release-package' -exec cp -r {} release-package/ \;
         
         # Remove development files
         rm -rf release-package/.git

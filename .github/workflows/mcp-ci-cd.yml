@@ -119,12 +119,18 @@ jobs:
         PROXMOX_USERNAME: ${{ secrets.PROXMOX_USERNAME }}
         PROXMOX_PASSWORD: ${{ secrets.PROXMOX_PASSWORD }}
       run: |
-        # Extract and deploy Next.js application
-        tar -xzf release-${{ needs.build-and-test.outputs.commit-sha }}.tar.gz
+        # Install MCP dependencies
+        cd ../../homelab/mcp-server-github && npm install && npm run build
+        cd ../mcp-server-proxmox && npm install && npm run build
+        cd ../../applications/jw-attendant-scheduler
         
-        # Deploy to Container 134 (staging) using simple deployment
-        echo "Deploying Next.js application to staging..."
-        echo "Target: Container 134 (10.92.3.24:3001)"
+        # Deploy using MCP orchestration to Container 134 (staging)
+        python3 ../../scripts/mcp-deploy.py \
+          jw-attendant-scheduler \
+          134 \
+          ${{ github.repository_owner }} \
+          ${{ github.event.repository.name }} \
+          staging
           
     - name: Run staging tests
       run: |
@@ -141,7 +147,7 @@ jobs:
         else
           echo "❌ Staging deployment failed"
           echo "🔄 Automatic rollback initiated"
-          python scripts/mcp-rollback.py jw-attendant-scheduler 134 quick
+          python3 ../../scripts/mcp-rollback.py jw-attendant-scheduler 134 quick
         fi
 
   deploy-production:
@@ -190,12 +196,18 @@ jobs:
         PROXMOX_USERNAME: ${{ secrets.PROXMOX_USERNAME }}
         PROXMOX_PASSWORD: ${{ secrets.PROXMOX_PASSWORD }}
       run: |
-        # Extract and deploy Next.js application
-        tar -xzf release-${{ needs.build-and-test.outputs.commit-sha }}.tar.gz
+        # Install MCP dependencies
+        cd ../../homelab/mcp-server-github && npm install && npm run build
+        cd ../mcp-server-proxmox && npm install && npm run build
+        cd ../../applications/jw-attendant-scheduler
         
-        # Deploy to Container 132 (production) using simple deployment
-        echo "Deploying Next.js application to production..."
-        echo "Target: Container 132 (10.92.3.22:3001)"
+        # Deploy using MCP orchestration to Container 132 (production)
+        python3 ../../scripts/mcp-deploy.py \
+          jw-attendant-scheduler \
+          132 \
+          ${{ github.repository_owner }} \
+          ${{ github.event.repository.name }} \
+          main
           
     - name: Production health check
       run: |
@@ -212,7 +224,7 @@ jobs:
         else
           echo "❌ Production deployment failed"
           echo "🔄 Automatic rollback initiated"
-          python scripts/mcp-rollback.py jw-attendant-scheduler 132 quick
+          python3 ../../scripts/mcp-rollback.py jw-attendant-scheduler 132 quick
         fi
 
   cleanup:

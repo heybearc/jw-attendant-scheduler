@@ -1,0 +1,39 @@
+{
+  "wmacs_credit_budget": {
+    "total_available": 1028,
+    "budget_profiles": {
+      "conservative": {
+        "description": "Maximum longevity - 270 deployment cycles",
+        "build": 2.0,
+        "deploy": 1.0,
+        "test": 0.5,
+        "rollback": 0.3,
+        "total_per_cycle": 3.8,
+        "estimated_cycles": 270
+      },
+      "balanced": {
+        "description": "Recommended - 158 deployment cycles",
+        "build": 3.0,
+        "deploy": 2.0,
+        "test": 1.0,
+        "rollback": 0.5,
+        "total_per_cycle": 6.5,
+        "estimated_cycles": 158
+      },
+      "generous": {
+        "description": "Maximum productivity - 93 deployment cycles",
+        "build": 5.0,
+        "deploy": 3.0,
+        "test": 2.0,
+        "rollback": 1.0,
+        "total_per_cycle": 11.0,
+        "estimated_cycles": 93
+      }
+    },
+    "active_profile": "balanced",
+    "recommended_profile": "balanced",
+    "current_session_cost": 0.47,
+    "remaining_credits": 1027.53,
+    "last_updated": "2025-09-15T21:33:54Z"
+  }
+}

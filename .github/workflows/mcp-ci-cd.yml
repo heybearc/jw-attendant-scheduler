@@ -25,8 +25,24 @@ jobs:
     outputs:
       artifact-id: ${{ steps.upload.outputs.artifact-id }}
       commit-sha: ${{ github.sha }}
+      build-time: ${{ steps.build-metrics.outputs.build-time }}
+      files-changed: ${{ steps.build-metrics.outputs.files-changed }}
+      bundle-size: ${{ steps.build-metrics.outputs.bundle-size }}
+      tests-passed: ${{ steps.test-results.outputs.passed }}
+      tests-failed: ${{ steps.test-results.outputs.failed }}
     
     steps:
+    - name: Token Budget Check - Build Phase
+      uses: ./.github/workflows/wmacs-token-budget.yml
+      with:
+        phase: 'build'
+        operation: 'ci-build'
+      secrets:
+        WMACS_BUILD_BUDGET: ${{ secrets.WMACS_BUILD_BUDGET }}
+        WMACS_DEPLOY_BUDGET: ${{ secrets.WMACS_DEPLOY_BUDGET }}
+        WMACS_TEST_BUDGET: ${{ secrets.WMACS_TEST_BUDGET }}
+        WMACS_ROLLBACK_BUDGET: ${{ secrets.WMACS_ROLLBACK_BUDGET }}
+    
     - name: Checkout code
       uses: actions/checkout@v4
       
@@ -237,6 +253,36 @@ jobs:
           rm -f /tmp/jw-attendant-scheduler-${{ needs.build-and-test.outputs.commit-sha }}.tar.gz
         EOF
         
+    - name: Generate deployment metrics
+      run: |
+        # Generate JSON artifacts for token-aware analysis
+        cat > deployment-metrics.json << 'METRICSEOF'
+        {
+          "deployment_id": "${{ needs.build-and-test.outputs.commit-sha }}",
+          "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+          "environment": "production",
+          "build_time": "${{ needs.build-and-test.outputs.build-time }}",
+          "files_changed": "${{ needs.build-and-test.outputs.files-changed }}",
+          "bundle_size": "${{ needs.build-and-test.outputs.bundle-size }}",
+          "test_results": {
+            "passed": "${{ needs.build-and-test.outputs.tests-passed }}",
+            "failed": "${{ needs.build-and-test.outputs.tests-failed }}"
+          },
+          "performance": {
+            "api_latency_ms": 0,
+            "memory_usage_mb": 0,
+            "startup_time_ms": 0
+          }
+        }
+        METRICSEOF
+        
+    - name: Upload deployment metrics
+      uses: actions/upload-artifact@v3
+      with:
+        name: wmacs-deployment-metrics-${{ needs.build-and-test.outputs.commit-sha }}
+        path: deployment-metrics.json
+        retention-days: 30
+
     - name: Health check
       run: |
         sleep 10

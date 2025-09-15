@@ -9,7 +9,7 @@ export async function GET() {
   try {
     const user = await AuthService.getCurrentUser()
     
-    if (!session) {
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
   try {
     const user = await AuthService.getCurrentUser()
     
-    if (!session || !['ADMIN', 'OVERSEER'].includes(session.user.role)) {
+    if (!user || !['ADMIN', 'OVERSEER'].includes(user.role)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

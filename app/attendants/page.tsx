@@ -20,16 +20,16 @@ interface Attendant {
 }
 
 export default function Attendants() {
-  const { data: session } = useSession()
+  const { user } = useAuth()
   const [attendants, setAttendants] = useState<Attendant[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
-    if (session) {
+    if (user) {
       fetchAttendants()
     }
-  }, [session])
+  }, [user])
 
   const fetchAttendants = async () => {
     try {
@@ -69,7 +69,7 @@ export default function Attendants() {
     attendant.servingAs?.some(role => role.toLowerCase().includes(searchTerm.toLowerCase()))
   )
 
-  if (!session) {
+  if (!user) {
     return <div className="p-8">Please sign in to access this page.</div>
   }
 

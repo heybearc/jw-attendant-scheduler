@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '../providers'
+import { useAuth } from "../providers"
 import Link from 'next/link'
 
 interface Event {
@@ -16,7 +16,7 @@ interface Event {
 }
 
 export default function EventsPage() {
-  const { data: session } = useSession()
+  const { user } = useAuth()
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -30,10 +30,10 @@ export default function EventsPage() {
   })
 
   useEffect(() => {
-    if (session) {
+    if (user) {
       loadEvents()
     }
-  }, [viewMode, session])
+  }, [viewMode, user])
 
   const loadEvents = async () => {
     try {
@@ -100,7 +100,7 @@ export default function EventsPage() {
     })
   }
 
-  if (!session) {
+  if (!user) {
     return <div className="p-8">Please sign in to access this page.</div>
   }
 
@@ -108,7 +108,7 @@ export default function EventsPage() {
     return <div className="p-8">Loading events...</div>
   }
 
-  const canCreateEvents = ['ADMIN', 'OVERSEER'].includes(session.user.role)
+  const canCreateEvents = ['ADMIN', 'OVERSEER'].includes(user.role)
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">

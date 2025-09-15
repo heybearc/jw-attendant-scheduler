@@ -2,11 +2,11 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '../providers'
+import { useAuth } from '../../providers'
 import Link from 'next/link'
 
 export default function CreateAttendant() {
-  const { data: session } = useSession()
+  const { user } = useAuth()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -74,7 +74,7 @@ export default function CreateAttendant() {
     }))
   }
 
-  if (!session) {
+  if (!user) {
     return <div>Please sign in to access this page.</div>
   }
 

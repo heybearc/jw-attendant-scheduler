@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { AuthService } from '../../../utils/auth'
+import { AuthService } from '../../../../utils/auth'
 import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
@@ -8,7 +8,7 @@ export async function GET() {
   try {
     const user = await AuthService.getCurrentUser()
     
-    if (!session) {
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -30,7 +30,7 @@ export async function GET() {
       }),
       prisma.assignments.count({
         where: {
-          userId: session.user.id,
+          userId: user.id,
           status: {
             in: ['ASSIGNED', 'CONFIRMED']
           }

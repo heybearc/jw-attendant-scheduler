@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useAuth } from '../providers'
 
 export default function Unauthorized() {
-  const { data: session } = useSession()
+  const { user } = useAuth()
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -16,9 +16,9 @@ export default function Unauthorized() {
           <div className="mt-4 bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded">
             You don't have permission to access this resource.
           </div>
-          {session && (
+          {user && (
             <div className="mt-4 text-center text-sm text-gray-600">
-              Signed in as: {session.user?.email} ({session.user?.role})
+              Signed in as: {user?.email} ({user?.role})
             </div>
           )}
           <div className="mt-6 space-y-4 text-center">
@@ -28,9 +28,9 @@ export default function Unauthorized() {
             >
               Return to Home
             </Link>
-            {session && (
+            {user && (
               <button
-                onClick={() => signOut({ callbackUrl: '/auth/signin' })}
+                onClick={() => {/* TODO: Implement logout */}}
                 className="block w-full text-red-600 hover:text-red-500 font-medium"
               >
                 Sign out and try different account

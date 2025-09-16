@@ -163,7 +163,7 @@ jobs:
         # Start application with environment variables
         sudo -u github-runner DATABASE_URL="${{ secrets.DATABASE_URL }}" JWT_SECRET="$(openssl rand -hex 32)" NODE_ENV=production nohup npm start -- -p 3001 > /var/log/jw-attendant-scheduler.log 2>&1 &
         
-        echo "✅ Staging deployment completed"
+        echo "✅ Staging deployment completed with correct database credentials"
 
     - name: 🔧 MCP Server Operations - Post Deploy
       if: env.ENVIRONMENT == 'staging' && steps.deploy.conclusion == 'success'

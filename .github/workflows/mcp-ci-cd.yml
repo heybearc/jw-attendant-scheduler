@@ -133,8 +133,11 @@ jobs:
         cd "$RELEASE_DIR"
         sudo tar -xzf /opt/github-runner/_work/jw-attendant-scheduler/jw-attendant-scheduler/${RELEASE_FILE}
         
-        # Install dependencies
-        sudo npm ci
+        # Set proper ownership for github-runner
+        sudo chown -R github-runner:github-runner "$RELEASE_DIR"
+        
+        # Install dependencies as github-runner
+        sudo -u github-runner npm ci
         
         # Update current symlink atomically
         sudo ln -sfn "$RELEASE_DIR" /opt/jw-attendant-scheduler/current

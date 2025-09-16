@@ -30,7 +30,8 @@ export function middleware(request: NextRequest) {
   }
 
   try {
-    const JWT_SECRET = process.env.JWT_SECRET || 'fallback-jwt-secret-for-development'
+    // Use a fixed JWT secret for staging consistency
+    const JWT_SECRET = process.env.JWT_SECRET || 'staging-jwt-secret-2024'
     console.log('[MIDDLEWARE] Checking token for path:', pathname)
     console.log('[MIDDLEWARE] Token exists:', !!token)
     console.log('[MIDDLEWARE] JWT_SECRET exists:', !!JWT_SECRET)

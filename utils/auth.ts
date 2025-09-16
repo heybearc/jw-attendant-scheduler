@@ -21,7 +21,7 @@ export interface JWTPayload {
   exp?: number;
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-jwt-secret-for-development';
+const JWT_SECRET = process.env.JWT_SECRET || 'staging-jwt-secret-2024';
 const JWT_EXPIRES_IN = '7d';
 
 export class AuthService {

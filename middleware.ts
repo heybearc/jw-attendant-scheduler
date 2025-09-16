@@ -31,7 +31,11 @@ export function middleware(request: NextRequest) {
 
   try {
     const JWT_SECRET = process.env.JWT_SECRET || 'fallback-jwt-secret-for-development'
+    console.log('[MIDDLEWARE] Checking token for path:', pathname)
+    console.log('[MIDDLEWARE] Token exists:', !!token)
+    console.log('[MIDDLEWARE] JWT_SECRET exists:', !!JWT_SECRET)
     const payload = jwt.verify(token, JWT_SECRET) as JWTPayload
+    console.log('[MIDDLEWARE] Token verified successfully for user:', payload.email)
 
     // Admin routes require ADMIN role
     if (pathname.startsWith('/admin') && payload.role !== 'ADMIN') {
@@ -47,6 +51,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   } catch (error) {
     // Invalid token, redirect to login
+    console.log('[MIDDLEWARE] Token verification failed:', error.message)
     return NextResponse.redirect(new URL('/auth/signin', request.url))
   }
 }

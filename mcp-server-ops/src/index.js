@@ -346,3 +346,5 @@ export class WMACSServerOps {
 
 const serverOps = new WMACSServerOps();
 serverOps.run().catch(console.error);
+
+// WMACSServerOps is already exported above as a class

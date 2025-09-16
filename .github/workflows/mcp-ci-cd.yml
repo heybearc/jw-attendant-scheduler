@@ -134,39 +134,51 @@ jobs:
         
         # Install dependencies
         sudo npm ci
-        sudo npx prisma generate
-        
-        # Create environment file
-        sudo tee .env.local << 'ENVEOF'
-        DATABASE_URL=postgresql://postgres:Cl0udy%21%21%28%40%29@10.92.3.21:5432/jw_attendant_scheduler_staging
-        JWT_SECRET=staging-jwt-secret-key-for-development-only
-        EMAIL_ENCRYPTION_KEY=staging-email-encryption-key-32chars
-        NODE_ENV=production
-        PORT=3001
-        ENVEOF
         
         # Update current symlink atomically
-        sudo ln -sfn /opt/jw-attendant-scheduler/releases/${COMMIT_SHA} /opt/jw-attendant-scheduler/current
+        sudo ln -sfn "$RELEASE_DIR" /opt/jw-attendant-scheduler/current
         
-        # Seed admin user if needed
+        # Install dependencies and build
         cd /opt/jw-attendant-scheduler/current
-        echo "🌱 Seeding admin user..."
-        if [ -f scripts/seed-admin.js ]; then
-          sudo node scripts/seed-admin.js || echo "Admin user already exists or seeding failed"
-        else
-          echo "Seed script not found, skipping admin user creation"
-        fi
+        sudo -u github-runner npm ci --production
+        sudo -u github-runner npm run build
         
         # Create log directory and set permissions
         sudo mkdir -p /var/log
         sudo touch /var/log/jw-attendant-scheduler.log
         sudo chmod 666 /var/log/jw-attendant-scheduler.log
         
-        # Start application
-        sudo nohup npm start -- -p 3001 > /var/log/jw-attendant-scheduler.log 2>&1 &
+        # Stop existing process
+        sudo pkill -f "next.*3001" || true
         
-        echo "✅ Deployment completed successfully"
-          
+        # Seed admin user if script exists
+        if [ -f "scripts/seed-admin.js" ]; then
+          sudo -u github-runner node scripts/seed-admin.js || echo "⚠️ Admin seeding failed or user already exists"
+        fi
+        
+        # Start application
+        sudo -u github-runner nohup npm start -- -p 3001 > /var/log/jw-attendant-scheduler.log 2>&1 &
+        
+        echo "✅ Staging deployment completed"
+
+    - name: 🔧 MCP Server Operations - Post Deploy
+      if: env.ENVIRONMENT == 'staging' && steps.deploy.conclusion == 'success'
+      run: |
+        echo "🔧 Executing MCP server operations..."
+        
+        # Install MCP server ops if not present
+        if [ ! -d "mcp-server-ops/node_modules" ]; then
+          cd mcp-server-ops
+          npm install
+          cd ..
+        fi
+        
+        # Execute post-deployment operations via MCP
+        echo '{"environment": "staging", "reason": "Post-deployment cache clear and restart", "clearCache": true}' | \
+        node mcp-server-ops/src/index.js restart_application || echo "⚠️ MCP operations completed with warnings"
+        
+        echo "✅ MCP server operations completed"
+
     - name: Run staging tests
       run: |
         # Post-deployment validation tests

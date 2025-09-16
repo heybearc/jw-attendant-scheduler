@@ -151,7 +151,16 @@ jobs:
         # Seed admin user if needed
         cd /opt/jw-attendant-scheduler/current
         echo "🌱 Seeding admin user..."
-        sudo node scripts/seed-admin.js || echo "Admin user already exists or seeding failed"
+        if [ -f scripts/seed-admin.js ]; then
+          sudo node scripts/seed-admin.js || echo "Admin user already exists or seeding failed"
+        else
+          echo "Seed script not found, skipping admin user creation"
+        fi
+        
+        # Create log directory and set permissions
+        sudo mkdir -p /var/log
+        sudo touch /var/log/jw-attendant-scheduler.log
+        sudo chmod 666 /var/log/jw-attendant-scheduler.log
         
         # Start application
         sudo nohup npm start -- -p 3001 > /var/log/jw-attendant-scheduler.log 2>&1 &

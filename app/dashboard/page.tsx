@@ -127,13 +127,13 @@ export default function Dashboard() {
               <p className="text-purple-700">Track attendance counts and generate reports</p>
             </Link>
 
-            {['ADMIN', 'OVERSEER'].includes(user?.role || '') && (
+            {user.role === 'ADMIN' && (
               <Link
-                href="/oversight"
-                className="bg-red-100 border border-red-200 rounded-lg p-6 hover:bg-red-200 transition-colors"
+                href="/admin"
+                className="bg-red-600 text-white p-6 rounded-lg shadow hover:bg-red-700 transition-colors"
               >
-                <h3 className="text-xl font-semibold text-red-900 mb-2">Oversight</h3>
-                <p className="text-red-700">Department oversight and management tools</p>
+                <h3 className="text-xl font-semibold mb-2">👥 Admin Panel</h3>
+                <p className="text-red-100">Manage users, email config, and system settings</p>
               </Link>
             )}
 

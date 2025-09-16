@@ -1,8 +1,33 @@
 # Admin Module Specification
-## JW Attendant Scheduler - User Management & Configuration
+## JW Attendant Scheduler - Administrative Control Center
 
 ### Overview
-The Admin Module provides comprehensive user management, role assignment, and system configuration capabilities. This module serves as the foundation for all other system functionality.
+The Admin Module is a comprehensive administrative control center that provides system-wide management capabilities through organized sub-modules. This centralized approach ensures efficient administration of users, system configuration, and operational settings.
+
+### Admin Module Architecture
+The Admin Module is organized into distinct sub-modules, each handling specific administrative functions:
+
+#### Core Sub-Modules
+1. **User Management** - Complete user lifecycle management
+2. **Email Configuration** - SMTP and email template management
+3. **Role Management** - Permission and access control
+4. **System Settings** - Application-wide configuration
+5. **Audit & Logging** - Activity tracking and compliance
+6. **Bulk Operations** - Mass data management tools
+
+### Navigation Structure
+```
+/admin                    # Main Admin Dashboard
+├── /users               # User Management Sub-Module
+│   ├── /new            # Create New User
+│   ├── /[id]/edit      # Edit User Profile
+│   └── /bulk           # Bulk User Operations
+├── /email-config        # Email Configuration Sub-Module
+├── /roles              # Role Management Sub-Module
+├── /settings           # System Settings Sub-Module
+├── /audit              # Audit & Logging Sub-Module
+└── /reports            # Administrative Reports
+```
 
 ### User Roles (From Prisma Schema)
 ```typescript
@@ -82,13 +107,28 @@ PUT    /api/admin/email/config       # Update email configuration
 POST   /api/admin/email/test         # Test email configuration
 ```
 
-#### UI Components
-- User list with search/filter capabilities
-- User creation/edit forms with role selection
+#### UI Components by Sub-Module
+
+**User Management Sub-Module**
+- User dashboard with statistics cards
+- User list table with search/filter capabilities
+- User creation form with role selection
+- User edit form with validation
 - Invitation management interface
-- Email configuration panel
-- Role management dashboard
-- Bulk operation tools
+- Bulk operation controls
+
+**Email Configuration Sub-Module**
+- SMTP configuration form
+- Current configuration display
+- Test email interface
+- Gmail setup instructions
+- Configuration validation feedback
+
+**Admin Dashboard (Main)**
+- Sub-module navigation cards
+- System status overview
+- Quick action buttons
+- Recent activity summary
 
 ### Email Configuration Requirements
 ```typescript
@@ -124,15 +164,57 @@ interface EmailConfig {
 4. **API-First**: Complete backend APIs before UI development
 5. **Email Testing**: Test with actual Gmail configuration
 
+### Implementation Status
+
+#### ✅ Completed Sub-Modules
+- [x] **User Management Sub-Module**
+  - [x] Complete user CRUD operations
+  - [x] User creation with automatic invitation
+  - [x] User editing with validation
+  - [x] User deactivation (soft delete)
+  - [x] Invitation resending capability
+  - [x] Professional UI with action buttons
+
+- [x] **Email Configuration Sub-Module**
+  - [x] Gmail SMTP configuration interface
+  - [x] Encrypted password storage
+  - [x] Test email functionality
+  - [x] Configuration validation
+  - [x] Gmail setup instructions
+
+- [x] **Bulk Operations Sub-Module**
+  - [x] Bulk user activation/deactivation
+  - [x] Bulk role changes
+  - [x] Bulk invitation sending
+  - [x] Error handling per operation
+
+#### 🚧 Planned Sub-Modules
+- [ ] **Role Management Sub-Module**
+  - [ ] Visual role hierarchy display
+  - [ ] Permission matrix interface
+  - [ ] Role change audit trail
+
+- [ ] **System Settings Sub-Module**
+  - [ ] Application configuration
+  - [ ] Feature toggles
+  - [ ] Maintenance mode controls
+
+- [ ] **Audit & Logging Sub-Module**
+  - [ ] User activity tracking
+  - [ ] Administrative action logs
+  - [ ] Security event monitoring
+
 ### Success Criteria
-- [ ] Complete user CRUD operations
-- [ ] Working invitation system with email delivery
+- [x] Complete user CRUD operations
+- [x] Working invitation system with email delivery
+- [x] Gmail integration with app passwords
+- [x] Bulk user operations
+- [x] Admin UI with modular navigation
+- [x] WMACS Guardian protection on all operations
+- [x] Comprehensive error handling and validation
 - [ ] Role management with proper permissions
-- [ ] Gmail integration with app passwords
-- [ ] Bulk user operations
-- [ ] Admin UI with all functionality
-- [ ] WMACS Guardian protection on all operations
-- [ ] Comprehensive error handling and validation
+- [ ] System settings management
+- [ ] Audit trail implementation
 
 ### Future Enhancements
 - SMS invitation capability (paid service integration)

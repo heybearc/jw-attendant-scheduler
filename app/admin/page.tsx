@@ -50,7 +50,7 @@ export default function AdminDashboard() {
   const toggleUserStatus = async (userId: string, isActive: boolean) => {
     try {
       const response = await fetch(`/api/admin/users/${userId}`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -62,6 +62,27 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       console.error('Failed to update user status:', error)
+    }
+  }
+
+  const resendInvitation = async (userId: string, email: string) => {
+    try {
+      const response = await fetch('/api/admin/users/invite', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId }),
+      })
+
+      if (response.ok) {
+        alert(`Invitation resent to ${email}`)
+      } else {
+        alert('Failed to resend invitation')
+      }
+    } catch (error) {
+      console.error('Failed to resend invitation:', error)
+      alert('Failed to resend invitation')
     }
   }
 
@@ -81,10 +102,16 @@ export default function AdminDashboard() {
             <h1 className="text-3xl font-bold">Admin Dashboard</h1>
             <div className="space-x-4">
               <Link
-                href="/"
+                href="/dashboard"
                 className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
               >
-                Back to Home
+                Back to Dashboard
+              </Link>
+              <Link
+                href="/admin/email-config"
+                className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
+              >
+                Email Config
               </Link>
               <Link
                 href="/admin/users/new"
@@ -153,16 +180,30 @@ export default function AdminDashboard() {
                       {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}
                     </td>
                     <td className="px-4 py-2">
-                      <button
-                        onClick={() => toggleUserStatus(user.id, user.isActive)}
-                        className={`px-3 py-1 rounded text-xs ${
-                          user.isActive 
-                            ? 'bg-red-500 text-white hover:bg-red-600' 
-                            : 'bg-green-500 text-white hover:bg-green-600'
-                        }`}
-                      >
-                        {user.isActive ? 'Deactivate' : 'Activate'}
-                      </button>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => toggleUserStatus(user.id, user.isActive)}
+                          className={`px-3 py-1 rounded text-xs ${
+                            user.isActive 
+                              ? 'bg-red-500 text-white hover:bg-red-600' 
+                              : 'bg-green-500 text-white hover:bg-green-600'
+                          }`}
+                        >
+                          {user.isActive ? 'Deactivate' : 'Activate'}
+                        </button>
+                        <button
+                          onClick={() => resendInvitation(user.id, user.email)}
+                          className="px-3 py-1 rounded text-xs bg-blue-500 text-white hover:bg-blue-600"
+                        >
+                          Resend Invite
+                        </button>
+                        <Link
+                          href={`/admin/users/${user.id}/edit`}
+                          className="px-3 py-1 rounded text-xs bg-gray-500 text-white hover:bg-gray-600"
+                        >
+                          Edit
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 ))}

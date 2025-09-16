@@ -16,7 +16,9 @@ export function middleware(request: NextRequest) {
       pathname.startsWith('/api/auth/') ||
       pathname === '/unauthorized' ||
       pathname.startsWith('/_next/') ||
-      pathname.startsWith('/favicon.ico')) {
+      pathname.startsWith('/favicon.ico') ||
+      pathname.endsWith('.html') ||
+      pathname.startsWith('/test-')) {
     return NextResponse.next()
   }
 

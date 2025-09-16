@@ -144,7 +144,7 @@ jobs:
         
         # Install dependencies and build
         cd /opt/jw-attendant-scheduler/current
-        sudo -u github-runner npm ci --production
+        sudo -u github-runner npm ci
         sudo -u github-runner npm run build
         
         # Create log directory and set permissions

@@ -36,7 +36,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   const checkAuth = async () => {
     try {
-      const response = await fetch('/api/auth/me')
+      const response = await fetch('/api/auth/me', {
+        credentials: 'include'
+      })
       if (response.ok) {
         const data = await response.json()
         setUser(data.user)
@@ -53,6 +55,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ email, password })
       })
 
@@ -70,7 +73,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' })
+      await fetch('/api/auth/logout', { 
+        method: 'POST',
+        credentials: 'include'
+      })
       setUser(null)
     } catch (error) {
       console.error('Logout failed:', error)

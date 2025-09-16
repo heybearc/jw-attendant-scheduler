@@ -157,11 +157,11 @@ jobs:
         
         # Seed admin user if script exists
         if [ -f "scripts/seed-admin.js" ]; then
-          sudo -u github-runner node scripts/seed-admin.js || echo "⚠️ Admin seeding failed or user already exists"
+          sudo -u github-runner DATABASE_URL="${{ secrets.DATABASE_URL }}" node scripts/seed-admin.js || echo "⚠️ Admin seeding failed or user already exists"
         fi
         
-        # Start application
-        sudo -u github-runner nohup npm start -- -p 3001 > /var/log/jw-attendant-scheduler.log 2>&1 &
+        # Start application with environment variables
+        sudo -u github-runner DATABASE_URL="${{ secrets.DATABASE_URL }}" JWT_SECRET="$(openssl rand -hex 32)" NODE_ENV=production nohup npm start -- -p 3001 > /var/log/jw-attendant-scheduler.log 2>&1 &
         
         echo "✅ Staging deployment completed"
 

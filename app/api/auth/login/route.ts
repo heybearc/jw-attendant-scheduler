@@ -33,14 +33,9 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Set HTTP-only cookie
-    response.cookies.set('auth-token', token, {
-      httpOnly: true,
-      secure: false, // Force non-secure for staging HTTP access
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-      path: '/'
-    });
+    // Set HTTP-only cookie directly via headers to bypass Next.js secure override
+    const cookieValue = `auth-token=${token}; Path=/; Max-Age=${60 * 60 * 24 * 7}; HttpOnly; SameSite=lax`;
+    response.headers.set('Set-Cookie', cookieValue);
 
     return response;
   } catch (error) {

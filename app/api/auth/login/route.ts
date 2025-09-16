@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     // Set HTTP-only cookie
     response.cookies.set('auth-token', token, {
       httpOnly: true,
-      secure: false, // Allow HTTP for staging environment
+      secure: false, // Force non-secure for staging HTTP access
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7, // 7 days
       path: '/'

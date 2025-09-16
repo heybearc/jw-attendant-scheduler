@@ -121,15 +121,16 @@ jobs:
         
         COMMIT_SHA="${{ github.sha }}"
         RELEASE_FILE="release-${COMMIT_SHA}.tar.gz"
+        RELEASE_DIR="/opt/jw-attendant-scheduler/releases/${COMMIT_SHA}"
         
         # Stop existing application
         sudo pkill -f "next.*3001" || true
         
         # Create release directory
-        sudo mkdir -p /opt/jw-attendant-scheduler/releases/${COMMIT_SHA}
+        sudo mkdir -p "$RELEASE_DIR"
         
         # Extract release
-        cd /opt/jw-attendant-scheduler/releases/${COMMIT_SHA}
+        cd "$RELEASE_DIR"
         sudo tar -xzf /opt/github-runner/_work/jw-attendant-scheduler/jw-attendant-scheduler/${RELEASE_FILE}
         
         # Install dependencies

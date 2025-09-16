@@ -125,5 +125,203 @@
     "completion_tokens": 30,
     "total_tokens": 75,
     "estimated_credits": 0.075
+  },
+  {
+    "timestamp": "2025-09-15T21:57:36.182346",
+    "phase": "deploy",
+    "operation": "wmacs-pipeline-trigger",
+    "branch": "staging",
+    "commit_sha": "e459f7b9",
+    "prompt_tokens": 20,
+    "completion_tokens": 15,
+    "total_tokens": 35,
+    "estimated_credits": 0.035
+  },
+  {
+    "timestamp": "2025-09-15T22:57:29.370210",
+    "phase": "deploy",
+    "operation": "deployment-status-check",
+    "branch": "staging",
+    "commit_sha": "e459f7b9",
+    "prompt_tokens": 15,
+    "completion_tokens": 10,
+    "total_tokens": 25,
+    "estimated_credits": 0.025
+  },
+  {
+    "timestamp": "2025-09-15T22:58:21.016080",
+    "phase": "deploy",
+    "operation": "workflow-diagnosis",
+    "branch": "staging",
+    "commit_sha": "e459f7b9",
+    "prompt_tokens": 20,
+    "completion_tokens": 15,
+    "total_tokens": 35,
+    "estimated_credits": 0.035
+  },
+  {
+    "timestamp": "2025-09-15T23:01:17.273592",
+    "phase": "deploy",
+    "operation": "admin-page-error-fix",
+    "branch": "staging",
+    "commit_sha": "3def44c3",
+    "prompt_tokens": 25,
+    "completion_tokens": 20,
+    "total_tokens": 45,
+    "estimated_credits": 0.045
+  },
+  {
+    "timestamp": "2025-09-15T23:02:45.312081",
+    "phase": "deploy",
+    "operation": "final-deployment-push",
+    "branch": "staging",
+    "commit_sha": "80530555",
+    "prompt_tokens": 15,
+    "completion_tokens": 10,
+    "total_tokens": 25,
+    "estimated_credits": 0.025
+  },
+  {
+    "timestamp": "2025-09-15T23:05:41.467781",
+    "phase": "deploy",
+    "operation": "permission-issue-diagnosis",
+    "branch": "staging",
+    "commit_sha": "80530555",
+    "prompt_tokens": 20,
+    "completion_tokens": 15,
+    "total_tokens": 35,
+    "estimated_credits": 0.035
+  },
+  {
+    "timestamp": "2025-09-15T23:29:55.049017",
+    "phase": "deploy",
+    "operation": "permission-analysis",
+    "branch": "staging",
+    "commit_sha": "80530555",
+    "prompt_tokens": 10,
+    "completion_tokens": 8,
+    "total_tokens": 18,
+    "estimated_credits": 0.018
+  },
+  {
+    "timestamp": "2025-09-15T23:46:21.630478",
+    "phase": "deploy",
+    "operation": "cleanup-retry-deployment",
+    "branch": "staging",
+    "commit_sha": "80530555",
+    "prompt_tokens": 15,
+    "completion_tokens": 10,
+    "total_tokens": 25,
+    "estimated_credits": 0.025
+  },
+  {
+    "timestamp": "2025-09-15T23:51:50.815175",
+    "phase": "deploy",
+    "operation": "permission-denied-diagnosis",
+    "branch": "staging",
+    "commit_sha": "80530555",
+    "prompt_tokens": 10,
+    "completion_tokens": 8,
+    "total_tokens": 18,
+    "estimated_credits": 0.018
+  },
+  {
+    "timestamp": "2025-09-15T23:58:18.809207",
+    "phase": "deploy",
+    "operation": "sudo-config-fix",
+    "branch": "staging",
+    "commit_sha": "b3bd4693",
+    "prompt_tokens": 5,
+    "completion_tokens": 3,
+    "total_tokens": 8,
+    "estimated_credits": 0.008
+  },
+  {
+    "timestamp": "2025-09-16T00:06:59.715427",
+    "phase": "deploy",
+    "operation": "startup-diagnosis",
+    "branch": "staging",
+    "commit_sha": "ea1bb3fc",
+    "prompt_tokens": 5,
+    "completion_tokens": 3,
+    "total_tokens": 8,
+    "estimated_credits": 0.008
+  },
+  {
+    "timestamp": "2025-09-16T00:08:07.207434",
+    "phase": "deploy",
+    "operation": "symlink-fix",
+    "branch": "staging",
+    "commit_sha": "ea1bb3fc",
+    "prompt_tokens": 3,
+    "completion_tokens": 2,
+    "total_tokens": 5,
+    "estimated_credits": 0.005
+  },
+  {
+    "timestamp": "2025-09-16T00:09:28.096515",
+    "phase": "deploy",
+    "operation": "staging-success",
+    "branch": "staging",
+    "commit_sha": "ea1bb3fc",
+    "prompt_tokens": 2,
+    "completion_tokens": 1,
+    "total_tokens": 3,
+    "estimated_credits": 0.003
+  },
+  {
+    "timestamp": "2025-09-16T00:20:41.967907",
+    "phase": "deploy",
+    "operation": "restart-pending",
+    "branch": "staging",
+    "commit_sha": "8c2be161",
+    "prompt_tokens": 2,
+    "completion_tokens": 1,
+    "total_tokens": 3,
+    "estimated_credits": 0.003
+  },
+  {
+    "timestamp": "2025-09-16T00:24:12.901257",
+    "phase": "deploy",
+    "operation": "symlink-update-needed",
+    "branch": "staging",
+    "commit_sha": "8c2be161",
+    "prompt_tokens": 3,
+    "completion_tokens": 2,
+    "total_tokens": 5,
+    "estimated_credits": 0.005
+  },
+  {
+    "timestamp": "2025-09-16T00:27:33.509278",
+    "phase": "deploy",
+    "operation": "process-restart-needed",
+    "branch": "staging",
+    "commit_sha": "8c2be161",
+    "prompt_tokens": 2,
+    "completion_tokens": 1,
+    "total_tokens": 3,
+    "estimated_credits": 0.003
+  },
+  {
+    "timestamp": "2025-09-16T00:35:03.081135",
+    "phase": "deploy",
+    "operation": "cache-clear-needed",
+    "branch": "staging",
+    "commit_sha": "8c2be161",
+    "prompt_tokens": 1,
+    "completion_tokens": 0,
+    "total_tokens": 1,
+    "estimated_credits": 0.001
+  },
+  {
+    "timestamp": "2025-09-16T00:41:19.089388",
+    "phase": "deploy",
+    "operation": "mcp-server-ops-integration",
+    "branch": "staging",
+    "commit_sha": "8c2be161",
+    "prompt_tokens": 8,
+    "completion_tokens": 5,
+    "total_tokens": 13,
+    "estimated_credits": 0.013
   }
 ]

@@ -71,8 +71,16 @@ export class AuthService {
 
   static verifyToken(token: string): JWTPayload | null {
     try {
-      return jwt.verify(token, JWT_SECRET) as JWTPayload;
+      console.log('[AUTH_SERVICE] Verifying JWT token, length:', token.length);
+      console.log('[AUTH_SERVICE] JWT_SECRET available:', !!JWT_SECRET);
+      console.log('[AUTH_SERVICE] JWT_SECRET length:', JWT_SECRET.length);
+      
+      const payload = jwt.verify(token, JWT_SECRET) as JWTPayload;
+      console.log('[AUTH_SERVICE] JWT verification successful, payload:', { userId: payload.userId, email: payload.email, role: payload.role });
+      return payload;
     } catch (error) {
+      console.error('[AUTH_SERVICE] JWT verification failed:', error);
+      console.log('[AUTH_SERVICE] Token that failed:', token.substring(0, 50) + '...');
       return null;
     }
   }

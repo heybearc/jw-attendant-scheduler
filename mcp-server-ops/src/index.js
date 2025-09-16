@@ -19,7 +19,7 @@ const logger = winston.createLogger({
   ]
 });
 
-class WMACSServerOps {
+export class WMACSServerOps {
   constructor() {
     this.server = new Server(
       {
@@ -205,7 +205,7 @@ class WMACSServerOps {
       await ssh.connect({
         host,
         username: 'root',
-        privateKey: process.env.SSH_PRIVATE_KEY || '/root/.ssh/id_rsa'
+        privateKeyPath: process.env.SSH_PRIVATE_KEY || process.env.HOME + '/.ssh/jw_staging'
       });
 
       logger.info('Executing SSH command', { host, command, reason });

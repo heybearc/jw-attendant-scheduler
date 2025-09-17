@@ -1,33 +1,76 @@
 'use client'
 
-import { useAuth } from '../../../providers'
+export const dynamic = 'force-dynamic'
+
+import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 
 export default function NewUserPage() {
-  const { user, loading: authLoading } = useAuth()
+  const { data: session, status } = useSession()
   const router = useRouter()
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [formData, setFormData] = useState({
     email: '',
     firstName: '',
     lastName: '',
     phone: '',
     role: 'ATTENDANT',
+    password: '',
+    confirmPassword: ''
   })
 
   useEffect(() => {
-    if (authLoading) return
+    if (status === 'loading') return
     
-    if (!user || user.role !== 'ADMIN') {
+    if (!session?.user || session.user.role !== 'ADMIN') {
       router.push('/unauthorized')
       return
     }
-  }, [user, authLoading, router])
+  }, [session, status, router])
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+  }
+
+  const validateForm = () => {
+    if (!formData.email || !formData.firstName || !formData.lastName) {
+      setError('Email, first name, and last name are required')
+      return false
+    }
+    
+    if (!formData.email.includes('@')) {
+      setError('Please enter a valid email address')
+      return false
+    }
+    
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match')
+      return false
+    }
+    
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters long')
+      return false
+    }
+    
+    return true
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError('')
+    setSuccess('')
+    
+    if (!validateForm()) return
+    
     setSaving(true)
 
     try {
@@ -40,21 +83,30 @@ export default function NewUserPage() {
       })
 
       if (response.ok) {
-        alert('User created and invitation sent successfully!')
-        router.push('/admin')
+        setSuccess('User created successfully!')
+        setFormData({
+          email: '',
+          firstName: '',
+          lastName: '',
+          phone: '',
+          role: 'ATTENDANT',
+          password: '',
+          confirmPassword: ''
+        })
+        setTimeout(() => router.push('/admin/users'), 2000)
       } else {
-        const error = await response.json()
-        alert(`Failed to create user: ${error.error}`)
+        const errorData = await response.json()
+        setError(errorData.error || 'Failed to create user')
       }
     } catch (error) {
       console.error('Failed to create user:', error)
-      alert('Failed to create user')
+      setError('Failed to create user. Please try again.')
     } finally {
       setSaving(false)
     }
   }
 
-  if (authLoading) {
+  if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-lg">Loading...</div>
@@ -84,8 +136,9 @@ export default function NewUserPage() {
                 </label>
                 <input
                   type="text"
+                  name="firstName"
                   value={formData.firstName}
-                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                  onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
@@ -97,8 +150,9 @@ export default function NewUserPage() {
                 </label>
                 <input
                   type="text"
+                  name="lastName"
                   value={formData.lastName}
-                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                  onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
@@ -111,8 +165,9 @@ export default function NewUserPage() {
               </label>
               <input
                 type="email"
+                name="email"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
@@ -124,11 +179,58 @@ export default function NewUserPage() {
               </label>
               <input
                 type="tel"
+                name="phone"
                 value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="(555) 123-4567"
               />
+            </div>
+
+            {/* Error and Success Messages */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-md p-4">
+                <div className="text-red-800 text-sm">{error}</div>
+              </div>
+            )}
+
+            {success && (
+              <div className="bg-green-50 border border-green-200 rounded-md p-4">
+                <div className="text-green-800 text-sm">{success}</div>
+              </div>
+            )}
+
+            {/* Password Fields */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Password *
+                </label>
+                <input
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                  minLength={8}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Confirm Password *
+                </label>
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                  minLength={8}
+                />
+              </div>
             </div>
 
             <div>
@@ -136,8 +238,9 @@ export default function NewUserPage() {
                 Role *
               </label>
               <select
+                name="role"
                 value={formData.role}
-                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               >

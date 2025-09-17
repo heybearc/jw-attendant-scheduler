@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { AuthService } from '../../../../utils/auth'
+import { getSession } from '../../../../auth'
 import { PrismaClient } from '@prisma/client'
+// Using Node.js built-in crypto for password hashing (bcrypt not available)
+// In production, consider using bcrypt or similar
 import crypto from 'crypto'
 
 const prisma = new PrismaClient()
@@ -78,11 +80,17 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Check authentication
+    const session = await getSession()
+    if (!session?.user || session.user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const body = await request.json()
-    const { email, firstName, lastName, role, phone, sendInvite = true } = body
+    const { email, firstName, lastName, role, phone, password } = body
 
     // Validate required fields
-    if (!email || !firstName || !lastName || !role) {
+    if (!email || !firstName || !lastName || !role || !password) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
@@ -98,6 +106,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid email format' }, { status: 400 })
     }
 
+    // Validate password
+    if (password.length < 8) {
+      return NextResponse.json({ error: 'Password must be at least 8 characters long' }, { status: 400 })
+    }
+
     // Check if user already exists
     const existingUser = await prisma.users.findUnique({
       where: { email }
@@ -107,14 +120,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User already exists' }, { status: 400 })
     }
 
-    // Generate invitation token if sending invite
-    let inviteToken = null
-    let inviteExpiry = null
-    
-    if (sendInvite) {
-      inviteToken = crypto.randomBytes(32).toString('hex')
-      inviteExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
-    }
+    // Hash password using crypto (simple implementation)
+    const passwordHash = crypto.createHash('sha256').update(password).digest('hex')
 
     const newUser = await prisma.users.create({
       data: {
@@ -124,10 +131,10 @@ export async function POST(request: NextRequest) {
         lastName,
         phone: phone || null,
         role,
-        passwordHash: null, // Will be set when user accepts invitation
+        passwordHash,
         isActive: true,
-        inviteToken,
-        inviteExpiry,
+        inviteToken: null,
+        inviteExpiry: null,
         createdAt: new Date(),
         updatedAt: new Date()
       },
@@ -139,28 +146,16 @@ export async function POST(request: NextRequest) {
         phone: true,
         role: true,
         isActive: true,
-        inviteToken: true,
-        inviteExpiry: true,
         createdAt: true,
       }
     })
 
-    // Send invitation email
-    const { EmailService } = await import('../../../../utils/email')
-    const emailSent = await EmailService.sendInvitationEmail(
-      email,
-      `${firstName} ${lastName}`,
-      inviteToken
-    )
+    console.log(`[USER_CREATION] User created successfully: ${email}`)
 
-    if (!emailSent) {
-      console.warn(`[USER_CREATION] Failed to send invitation email to ${email}`)
-    }
-
-    console.log(`[USER_CREATION] Invitation token generated: ${inviteToken}`)
-    console.log(`[USER_CREATION] Invitation URL: ${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3001'}/auth/accept-invite?token=${inviteToken}`)
-
-    return NextResponse.json(newUser, { status: 201 })
+    return NextResponse.json({
+      ...newUser,
+      message: 'User created successfully'
+    }, { status: 201 })
   } catch (error) {
     console.error('Failed to create user:', error)
     return NextResponse.json({ error: 'Failed to create user' }, { status: 500 })

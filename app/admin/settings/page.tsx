@@ -1,420 +1,240 @@
-'use client'
-
-import { useAuth } from '../../providers'
-import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { getServerSession } from 'next-auth/next'
+import { authConfig } from '../../../auth.config'
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
 
-interface SystemSettings {
-  maintenanceMode: boolean
-  allowRegistration: boolean
-  requireEmailVerification: boolean
-  sessionTimeout: number
-  maxLoginAttempts: number
-  passwordMinLength: number
-  enableAuditLogging: boolean
-  autoBackupEnabled: boolean
-  backupRetentionDays: number
-  systemName: string
-  organizationName: string
-  supportEmail: string
-  defaultUserRole: string
+interface SystemSetting {
+  id: string
+  category: string
+  name: string
+  value: string
+  description: string
+  type: 'text' | 'number' | 'boolean' | 'select'
+  options?: string[]
 }
 
-export default function SystemSettingsPage() {
-  const { user, loading: authLoading } = useAuth()
-  const router = useRouter()
-  const [settings, setSettings] = useState<SystemSettings>({
-    maintenanceMode: false,
-    allowRegistration: false,
-    requireEmailVerification: true,
-    sessionTimeout: 480, // 8 hours in minutes
-    maxLoginAttempts: 5,
-    passwordMinLength: 8,
-    enableAuditLogging: true,
-    autoBackupEnabled: false,
-    backupRetentionDays: 30,
-    systemName: 'JW Attendant Scheduler',
-    organizationName: 'Congregation',
-    supportEmail: 'support@congregation.org',
-    defaultUserRole: 'ATTENDANT'
-  })
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [activeTab, setActiveTab] = useState('general')
+export default async function SystemSettingsPage() {
+  // Server-side authentication check
+  const session = await getServerSession(authConfig)
 
-  useEffect(() => {
-    if (authLoading) return
-    
-    if (!user || user.role !== 'ADMIN') {
-      router.push('/unauthorized')
-      return
-    }
-
-    // TODO: Fetch actual settings from API
-    setLoading(false)
-  }, [user, authLoading, router])
-
-  const handleSave = async () => {
-    setSaving(true)
-    
-    try {
-      // TODO: Implement settings API
-      console.log('Saving settings:', settings)
-      await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate API call
-      alert('Settings saved successfully!')
-    } catch (error) {
-      console.error('Failed to save settings:', error)
-      alert('Failed to save settings')
-    } finally {
-      setSaving(false)
-    }
+  if (!session || !session.user) {
+    redirect('/auth/signin')
   }
 
-  const toggleMaintenanceMode = () => {
-    if (!settings.maintenanceMode) {
-      if (confirm('Enable maintenance mode? This will prevent all users except admins from accessing the system.')) {
-        setSettings({ ...settings, maintenanceMode: true })
-      }
-    } else {
-      setSettings({ ...settings, maintenanceMode: false })
+  if (session.user.role !== 'ADMIN') {
+    redirect('/unauthorized')
+  }
+
+  // Mock settings data
+  const settings: SystemSetting[] = [
+    {
+      id: '1',
+      category: 'General',
+      name: 'Organization Name',
+      value: 'JW Attendant Scheduler',
+      description: 'The name of your organization displayed throughout the system',
+      type: 'text'
+    },
+    {
+      id: '2',
+      category: 'General',
+      name: 'Time Zone',
+      value: 'America/New_York',
+      description: 'Default time zone for the application',
+      type: 'select',
+      options: ['America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles']
+    },
+    {
+      id: '3',
+      category: 'Security',
+      name: 'Session Timeout',
+      value: '30',
+      description: 'Session timeout in minutes',
+      type: 'number'
+    },
+    {
+      id: '4',
+      category: 'Security',
+      name: 'Require Two-Factor Auth',
+      value: 'false',
+      description: 'Require two-factor authentication for all users',
+      type: 'boolean'
+    },
+    {
+      id: '5',
+      category: 'Notifications',
+      name: 'Email Notifications',
+      value: 'true',
+      description: 'Enable email notifications for system events',
+      type: 'boolean'
+    },
+    {
+      id: '6',
+      category: 'Notifications',
+      name: 'SMTP Server',
+      value: 'smtp.gmail.com',
+      description: 'SMTP server for sending emails',
+      type: 'text'
+    },
+    {
+      id: '7',
+      category: 'Backup',
+      name: 'Auto Backup',
+      value: 'true',
+      description: 'Automatically backup database daily',
+      type: 'boolean'
+    },
+    {
+      id: '8',
+      category: 'Backup',
+      name: 'Backup Retention Days',
+      value: '30',
+      description: 'Number of days to keep backup files',
+      type: 'number'
     }
-  }
-
-  if (authLoading || loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading...</div>
-      </div>
-    )
-  }
-
-  const tabs = [
-    { id: 'general', name: 'General', icon: '⚙️' },
-    { id: 'security', name: 'Security', icon: '🔒' },
-    { id: 'email', name: 'Email & Notifications', icon: '📧' },
-    { id: 'backup', name: 'Backup & Maintenance', icon: '💾' }
   ]
+
+  // Group settings by category
+  const settingsByCategory = settings.reduce((acc, setting) => {
+    if (!acc[setting.category]) {
+      acc[setting.category] = []
+    }
+    acc[setting.category].push(setting)
+    return acc
+  }, {} as Record<string, SystemSetting[]>)
+
+  const renderSettingInput = (setting: SystemSetting) => {
+    switch (setting.type) {
+      case 'boolean':
+        return (
+          <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="true" selected={setting.value === 'true'}>Enabled</option>
+            <option value="false" selected={setting.value === 'false'}>Disabled</option>
+          </select>
+        )
+      case 'number':
+        return (
+          <input
+            type="number"
+            defaultValue={setting.value}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        )
+      case 'select':
+        return (
+          <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            {setting.options?.map((option) => (
+              <option key={option} value={option} selected={setting.value === option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        )
+      default:
+        return (
+          <input
+            type="text"
+            defaultValue={setting.value}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        )
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container mx-auto px-4 max-w-4xl">
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold">System Settings</h1>
-            <Link
-              href="/admin"
-              className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-            >
-              Back to Admin
-            </Link>
-          </div>
-
-          {settings.maintenanceMode && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded">
-              <h3 className="font-semibold text-red-800">🚨 Maintenance Mode Active</h3>
-              <p className="text-red-700">
-                The system is currently in maintenance mode. Only administrators can access the application.
-              </p>
-            </div>
-          )}
-
-          {/* Tab Navigation */}
-          <div className="border-b border-gray-200 mb-6">
-            <nav className="-mb-px flex space-x-8">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  {tab.icon} {tab.name}
-                </button>
-              ))}
-            </nav>
-          </div>
-
-          {/* General Settings */}
-          {activeTab === 'general' && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    System Name
-                  </label>
-                  <input
-                    type="text"
-                    value={settings.systemName}
-                    onChange={(e) => setSettings({ ...settings, systemName: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Organization Name
-                  </label>
-                  <input
-                    type="text"
-                    value={settings.organizationName}
-                    onChange={(e) => setSettings({ ...settings, organizationName: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Support Email
-                  </label>
-                  <input
-                    type="email"
-                    value={settings.supportEmail}
-                    onChange={(e) => setSettings({ ...settings, supportEmail: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Default User Role
-                  </label>
-                  <select
-                    value={settings.defaultUserRole}
-                    onChange={(e) => setSettings({ ...settings, defaultUserRole: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="ATTENDANT">Attendant</option>
-                    <option value="KEYMAN">Keyman</option>
-                    <option value="ASSISTANT_OVERSEER">Assistant Overseer</option>
-                    <option value="OVERSEER">Overseer</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={settings.allowRegistration}
-                    onChange={(e) => setSettings({ ...settings, allowRegistration: e.target.checked })}
-                    className="mr-3"
-                  />
-                  <span className="text-sm font-medium text-gray-700">Allow user self-registration</span>
-                </label>
-
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={settings.requireEmailVerification}
-                    onChange={(e) => setSettings({ ...settings, requireEmailVerification: e.target.checked })}
-                    className="mr-3"
-                  />
-                  <span className="text-sm font-medium text-gray-700">Require email verification for new accounts</span>
-                </label>
-              </div>
-            </div>
-          )}
-
-          {/* Security Settings */}
-          {activeTab === 'security' && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Session Timeout (minutes)
-                  </label>
-                  <input
-                    type="number"
-                    value={settings.sessionTimeout}
-                    onChange={(e) => setSettings({ ...settings, sessionTimeout: parseInt(e.target.value) })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    min="30"
-                    max="1440"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">30 minutes to 24 hours</p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Max Login Attempts
-                  </label>
-                  <input
-                    type="number"
-                    value={settings.maxLoginAttempts}
-                    onChange={(e) => setSettings({ ...settings, maxLoginAttempts: parseInt(e.target.value) })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    min="3"
-                    max="10"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">3 to 10 attempts before lockout</p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Minimum Password Length
-                  </label>
-                  <input
-                    type="number"
-                    value={settings.passwordMinLength}
-                    onChange={(e) => setSettings({ ...settings, passwordMinLength: parseInt(e.target.value) })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    min="6"
-                    max="20"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">6 to 20 characters</p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={settings.enableAuditLogging}
-                    onChange={(e) => setSettings({ ...settings, enableAuditLogging: e.target.checked })}
-                    className="mr-3"
-                  />
-                  <span className="text-sm font-medium text-gray-700">Enable audit logging</span>
-                </label>
-              </div>
-            </div>
-          )}
-
-          {/* Email & Notifications */}
-          {activeTab === 'email' && (
-            <div className="space-y-6">
-              <div className="p-4 bg-blue-50 border border-blue-200 rounded">
-                <h3 className="font-semibold text-blue-800">Email Configuration</h3>
-                <p className="text-blue-700 text-sm">
-                  Email settings are managed in the Email Configuration module.
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-white shadow rounded-lg">
+          <div className="px-4 py-5 sm:p-6">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">System Configuration</h1>
+                <p className="mt-2 text-sm text-gray-600">
+                  Configure system settings and preferences
                 </p>
-                <Link
-                  href="/admin/email-config"
-                  className="inline-block mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm"
-                >
-                  Configure Email Settings
-                </Link>
               </div>
+              <div className="flex space-x-3">
+                <Link
+                  href="/admin"
+                  className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+                >
+                  Back to Admin
+                </Link>
+                <button className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
+                  Save All Changes
+                </button>
+              </div>
+            </div>
 
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Notification Preferences (Coming Soon)</h3>
-                <div className="text-gray-500">
-                  <p>Future notification settings will include:</p>
-                  <ul className="list-disc list-inside mt-2 space-y-1">
-                    <li>Assignment reminder emails</li>
-                    <li>Event notification preferences</li>
-                    <li>System maintenance alerts</li>
-                    <li>User activity notifications</li>
-                  </ul>
+            {/* Settings Categories */}
+            <div className="space-y-8">
+              {Object.entries(settingsByCategory).map(([category, categorySettings]) => (
+                <div key={category} className="border border-gray-200 rounded-lg">
+                  <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                    <h2 className="text-lg font-semibold text-gray-900">{category} Settings</h2>
+                  </div>
+                  <div className="p-6 space-y-6">
+                    {categorySettings.map((setting) => (
+                      <div key={setting.id} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            {setting.name}
+                          </label>
+                          <p className="text-xs text-gray-500">{setting.description}</p>
+                        </div>
+                        <div className="md:col-span-2">
+                          {renderSettingInput(setting)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* System Information */}
+            <div className="mt-8 border-t pt-8">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">System Information</h2>
+              <div className="bg-gray-50 p-6 rounded-lg">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-700 mb-2">Application Version</h3>
+                    <p className="text-sm text-gray-900">v1.0.0-nextauth</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-700 mb-2">Database Version</h3>
+                    <p className="text-sm text-gray-900">PostgreSQL 15.4</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-700 mb-2">Last Backup</h3>
+                    <p className="text-sm text-gray-900">{new Date().toLocaleDateString()}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-700 mb-2">System Status</h3>
+                    <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                      Operational
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          )}
 
-          {/* Backup & Maintenance */}
-          {activeTab === 'backup' && (
-            <div className="space-y-6">
-              <div className="bg-red-50 border border-red-200 rounded p-4">
-                <div className="flex items-center justify-between">
+            {/* Danger Zone */}
+            <div className="mt-8 border-t pt-8">
+              <h2 className="text-xl font-semibold text-red-900 mb-4">Danger Zone</h2>
+              <div className="bg-red-50 border border-red-200 p-6 rounded-lg">
+                <div className="flex justify-between items-center">
                   <div>
-                    <h3 className="font-semibold text-red-800">Maintenance Mode</h3>
-                    <p className="text-red-700 text-sm">
-                      {settings.maintenanceMode 
-                        ? 'System is currently in maintenance mode'
-                        : 'System is available to all users'
-                      }
+                    <h3 className="text-sm font-medium text-red-900">Reset System Settings</h3>
+                    <p className="text-sm text-red-700 mt-1">
+                      This will reset all system settings to their default values. This action cannot be undone.
                     </p>
                   </div>
-                  <button
-                    onClick={toggleMaintenanceMode}
-                    className={`px-4 py-2 rounded text-sm font-medium ${
-                      settings.maintenanceMode
-                        ? 'bg-green-600 text-white hover:bg-green-700'
-                        : 'bg-red-600 text-white hover:bg-red-700'
-                    }`}
-                  >
-                    {settings.maintenanceMode ? 'Disable Maintenance' : 'Enable Maintenance'}
+                  <button className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors">
+                    Reset Settings
                   </button>
                 </div>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Backup Retention (days)
-                  </label>
-                  <input
-                    type="number"
-                    value={settings.backupRetentionDays}
-                    onChange={(e) => setSettings({ ...settings, backupRetentionDays: parseInt(e.target.value) })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    min="7"
-                    max="365"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">7 to 365 days</p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={settings.autoBackupEnabled}
-                    onChange={(e) => setSettings({ ...settings, autoBackupEnabled: e.target.checked })}
-                    className="mr-3"
-                  />
-                  <span className="text-sm font-medium text-gray-700">Enable automatic backups</span>
-                </label>
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">System Actions (Coming Soon)</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <button
-                    disabled
-                    className="bg-gray-300 text-gray-500 px-4 py-2 rounded cursor-not-allowed"
-                  >
-                    Create Manual Backup
-                  </button>
-                  <button
-                    disabled
-                    className="bg-gray-300 text-gray-500 px-4 py-2 rounded cursor-not-allowed"
-                  >
-                    Clear System Cache
-                  </button>
-                  <button
-                    disabled
-                    className="bg-gray-300 text-gray-500 px-4 py-2 rounded cursor-not-allowed"
-                  >
-                    Export System Data
-                  </button>
-                  <button
-                    disabled
-                    className="bg-gray-300 text-gray-500 px-4 py-2 rounded cursor-not-allowed"
-                  >
-                    View System Logs
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Save Button */}
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <div className="flex justify-between items-center">
-              <div className="text-sm text-gray-500">
-                Changes will take effect immediately after saving.
-              </div>
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
-              >
-                {saving ? 'Saving...' : 'Save Settings'}
-              </button>
             </div>
           </div>
         </div>

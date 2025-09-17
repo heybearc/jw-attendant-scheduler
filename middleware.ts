@@ -8,13 +8,14 @@ interface CustomJWTPayload {
   role: string;
 }
 
-// Simple base64url decode for Edge Runtime
-function base64urlDecode(str: string): string {
-  str = str.replace(/-/g, '+').replace(/_/g, '/');
+// Simple base64 decode for Edge Runtime
+function base64Decode(str: string): string {
+  // Add padding if needed
   while (str.length % 4) {
     str += '=';
   }
-  return atob(str);
+  // Use Buffer for Node.js compatibility
+  return Buffer.from(str, 'base64').toString();
 }
 
 // Simple JWT verification for Edge Runtime (basic validation only)
@@ -23,7 +24,7 @@ function verifyJWTBasic(token: string): CustomJWTPayload | null {
     const parts = token.split('.');
     if (parts.length !== 3) return null;
     
-    const payload = JSON.parse(base64urlDecode(parts[1]));
+    const payload = JSON.parse(base64Decode(parts[1]));
     
     // Basic expiration check
     if (payload.exp && Date.now() >= payload.exp * 1000) {

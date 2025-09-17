@@ -68,10 +68,10 @@ export class AuthService {
       exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) // 7 days
     };
 
-    // Simple JWT creation without crypto dependencies
+    // Simple JWT creation using Buffer (Node.js compatible)
     const header = { alg: 'none', typ: 'JWT' };
-    const encodedHeader = btoa(JSON.stringify(header)).replace(/=/g, '');
-    const encodedPayload = btoa(JSON.stringify(payload)).replace(/=/g, '');
+    const encodedHeader = Buffer.from(JSON.stringify(header)).toString('base64').replace(/=/g, '');
+    const encodedPayload = Buffer.from(JSON.stringify(payload)).toString('base64').replace(/=/g, '');
     
     return `${encodedHeader}.${encodedPayload}.signature`;
   }
@@ -83,7 +83,8 @@ export class AuthService {
       const parts = token.split('.');
       if (parts.length !== 3) return null;
       
-      const payload = JSON.parse(atob(parts[1]));
+      // Use Buffer instead of atob for Node.js compatibility
+      const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
       
       // Basic expiration check
       if (payload.exp && Date.now() >= payload.exp * 1000) {

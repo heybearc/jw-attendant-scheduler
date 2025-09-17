@@ -1,6 +1,6 @@
 'use client'
 
-import { SessionProvider } from 'next-auth/react'
+import { SessionProvider, useSession } from 'next-auth/react'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -10,7 +10,19 @@ export function Providers({ children }: { children: React.ReactNode }) {
   )
 }
 
-// Legacy auth hook for backward compatibility - will be removed
+// Legacy auth hook for backward compatibility
 export function useAuth() {
-  throw new Error('useAuth is deprecated. Use useSession from next-auth/react instead.')
+  const { data: session, status } = useSession()
+  
+  return {
+    user: session?.user ? {
+      id: session.user.id || '',
+      email: session.user.email || '',
+      name: session.user.name || '',
+      role: session.user.role || 'USER'
+    } : null,
+    loading: status === 'loading',
+    login: async () => false, // Deprecated
+    logout: async () => {} // Deprecated
+  }
 }

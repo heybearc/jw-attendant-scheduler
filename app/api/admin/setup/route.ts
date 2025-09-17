@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 const prisma = new PrismaClient();
 
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
         updatedAt: new Date()
       },
       create: {
-        id: uuidv4(),
+        id: randomUUID(),
         email: 'admin@jwscheduler.local',
         firstName: 'System',
         lastName: 'Administrator',

@@ -114,11 +114,152 @@ export default function AdminDashboard() {
                 Email Config
               </Link>
               <Link
+                href="/admin/users/import"
+                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+              >
+                Import Users
+              </Link>
+              <Link
                 href="/admin/users/new"
                 className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
               >
                 Add User
               </Link>
+            </div>
+          </div>
+
+          {/* Admin Sub-Modules */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            {/* User Management */}
+            <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+              <div className="flex items-center mb-4">
+                <div className="bg-blue-100 p-3 rounded-lg mr-4">
+                  <span className="text-2xl">👥</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800">User Management</h3>
+                  <p className="text-sm text-gray-600">Manage users, roles, and permissions</p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Link
+                  href="/admin/users"
+                  className="block w-full text-left px-4 py-2 bg-blue-50 text-blue-700 rounded hover:bg-blue-100 transition-colors"
+                >
+                  View All Users
+                </Link>
+                <Link
+                  href="/admin/users/import"
+                  className="block w-full text-left px-4 py-2 bg-green-50 text-green-700 rounded hover:bg-green-100 transition-colors"
+                >
+                  Import Users
+                </Link>
+              </div>
+            </div>
+
+            {/* Email Configuration */}
+            <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+              <div className="flex items-center mb-4">
+                <div className="bg-green-100 p-3 rounded-lg mr-4">
+                  <span className="text-2xl">📧</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800">Email Configuration</h3>
+                  <p className="text-sm text-gray-600">Configure SMTP and email templates</p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Link
+                  href="/admin/email-config"
+                  className="block w-full text-left px-4 py-2 bg-green-50 text-green-700 rounded hover:bg-green-100 transition-colors"
+                >
+                  Email Settings
+                </Link>
+              </div>
+            </div>
+
+            {/* Role Management */}
+            <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+              <div className="flex items-center mb-4">
+                <div className="bg-purple-100 p-3 rounded-lg mr-4">
+                  <span className="text-2xl">🔐</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800">Role Management</h3>
+                  <p className="text-sm text-gray-600">Manage user roles and permissions</p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Link
+                  href="/admin/roles"
+                  className="block w-full text-left px-4 py-2 bg-purple-50 text-purple-700 rounded hover:bg-purple-100 transition-colors"
+                >
+                  View Roles
+                </Link>
+              </div>
+            </div>
+
+            {/* System Settings */}
+            <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+              <div className="flex items-center mb-4">
+                <div className="bg-orange-100 p-3 rounded-lg mr-4">
+                  <span className="text-2xl">⚙️</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800">System Settings</h3>
+                  <p className="text-sm text-gray-600">Configure system-wide settings</p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Link
+                  href="/admin/settings"
+                  className="block w-full text-left px-4 py-2 bg-orange-50 text-orange-700 rounded hover:bg-orange-100 transition-colors"
+                >
+                  System Configuration
+                </Link>
+              </div>
+            </div>
+
+            {/* Audit & Logging */}
+            <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+              <div className="flex items-center mb-4">
+                <div className="bg-red-100 p-3 rounded-lg mr-4">
+                  <span className="text-2xl">🔍</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800">Audit & Logging</h3>
+                  <p className="text-sm text-gray-600">View security logs and audit trails</p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Link
+                  href="/admin/audit"
+                  className="block w-full text-left px-4 py-2 bg-red-50 text-red-700 rounded hover:bg-red-100 transition-colors"
+                >
+                  Security Logs
+                </Link>
+              </div>
+            </div>
+
+            {/* Administrative Reports */}
+            <div className="bg-white p-6 rounded-lg shadow border border-gray-200">
+              <div className="flex items-center mb-4">
+                <div className="bg-indigo-100 p-3 rounded-lg mr-4">
+                  <span className="text-2xl">📊</span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800">Administrative Reports</h3>
+                  <p className="text-sm text-gray-600">Generate system and user reports</p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Link
+                  href="/admin/reports"
+                  className="block w-full text-left px-4 py-2 bg-indigo-50 text-indigo-700 rounded hover:bg-indigo-100 transition-colors"
+                >
+                  View Reports
+                </Link>
+              </div>
             </div>
           </div>
 

@@ -1,27 +1,33 @@
 'use client';
 
-import { useAuth } from "./providers";
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Link from 'next/link';
 
 export default function Home() {
-  const { user, loading } = useAuth();
+  const { data: session, status } = useSession();
   const router = useRouter();
 
   useEffect(() => {
-    if (loading) return
+    console.log('NextAuth Status:', status, 'Session:', session);
     
-    if (user) {
-      if (user.role === 'ADMIN') {
-        router.push('/admin')
+    if (status === 'loading') return;
+    
+    if (session?.user) {
+      console.log('User found, redirecting based on role:', session.user.role);
+      if (session.user.role === 'ADMIN') {
+        router.push('/admin');
       } else {
-        router.push('/dashboard')
+        router.push('/dashboard');
       }
+    } else {
+      console.log('No session found, showing landing page');
     }
-  }, [user, loading, router]);
+  }, [session, status, router]);
 
-  if (loading) {
+  // Show loading only for a brief moment during NextAuth initialization
+  if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-lg">Loading...</div>
@@ -29,7 +35,7 @@ export default function Home() {
     );
   }
 
-  if (user) {
+  if (session?.user) {
     return null; // Will redirect to dashboard
   }
 

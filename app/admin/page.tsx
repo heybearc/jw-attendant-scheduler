@@ -5,6 +5,39 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 
+// Error boundary component
+function ErrorBoundary({ children }: { children: React.ReactNode }) {
+  const [hasError, setHasError] = useState(false)
+
+  useEffect(() => {
+    const handleError = (error: ErrorEvent) => {
+      console.error('Client error caught:', error)
+      setHasError(true)
+    }
+
+    window.addEventListener('error', handleError)
+    return () => window.removeEventListener('error', handleError)
+  }, [])
+
+  if (hasError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Something went wrong</h1>
+          <button 
+            onClick={() => setHasError(false)}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return <>{children}</>
+}
+
 interface User {
   id: string
   email: string
@@ -16,11 +49,38 @@ interface User {
   createdAt: string
 }
 
-export default function AdminDashboard() {
-  const { user, loading: authLoading } = useAuth()
+function AdminDashboardContent() {
+  const [authError, setAuthError] = useState<string | null>(null)
+  const [user, setUser] = useState<any>(null)
+  const [authLoading, setAuthLoading] = useState(true)
   const router = useRouter()
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
+
+  // Manual auth check instead of useAuth hook
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/auth/me', {
+          credentials: 'include'
+        })
+        if (response.ok) {
+          const data = await response.json()
+          setUser(data.user)
+        } else {
+          router.push('/auth/signin')
+          return
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error)
+        setAuthError('Authentication failed')
+      } finally {
+        setAuthLoading(false)
+      }
+    }
+
+    checkAuth()
+  }, [router])
 
   useEffect(() => {
     if (authLoading) return
@@ -84,6 +144,22 @@ export default function AdminDashboard() {
       console.error('Failed to resend invitation:', error)
       alert('Failed to resend invitation')
     }
+  }
+
+  if (authError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-lg text-red-600 mb-4">{authError}</div>
+          <button 
+            onClick={() => router.push('/auth/signin')}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Go to Login
+          </button>
+        </div>
+      </div>
+    )
   }
 
   if (authLoading || loading) {
@@ -354,5 +430,13 @@ export default function AdminDashboard() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function AdminDashboard() {
+  return (
+    <ErrorBoundary>
+      <AdminDashboardContent />
+    </ErrorBoundary>
   )
 }

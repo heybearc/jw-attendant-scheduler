@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { signIn, getSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 
 export default function SignIn() {
@@ -13,7 +14,13 @@ export default function SignIn() {
 
   useEffect(() => {
     setMounted(true)
-  }, [])
+    // Check if already signed in
+    getSession().then((session) => {
+      if (session) {
+        router.push('/admin')
+      }
+    })
+  }, [router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -21,20 +28,17 @@ export default function SignIn() {
     setError('')
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email, password })
+      const result = await signIn('credentials', {
+        email,
+        password,
+        redirect: false
       })
 
-      const data = await response.json()
-      
-      if (response.ok && data.success) {
-        // Force page reload to trigger middleware auth check
-        window.location.href = '/dashboard'
-      } else {
-        setError(data.error || 'Invalid email or password')
+      if (result?.error) {
+        setError('Invalid email or password')
+      } else if (result?.ok) {
+        // Successful login, redirect to admin
+        router.push('/admin')
       }
     } catch (error) {
       setError('An error occurred during sign in')

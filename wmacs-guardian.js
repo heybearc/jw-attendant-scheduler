@@ -21,6 +21,21 @@ class WMACSGuardian {
     
     this.attempts = new Map();
     this.lastSuccess = new Map();
+    
+    // Initialize Research Advisor for informed decision making
+    this.researchAdvisor = this.initializeResearchAdvisor();
+  }
+
+  initializeResearchAdvisor() {
+    try {
+      const WMACSResearchAdvisor = require('./wmacs-research-advisor.js');
+      const advisor = new WMACSResearchAdvisor();
+      advisor.loadKnowledgeBase();
+      return advisor;
+    } catch (error) {
+      console.log('⚠️  Research Advisor not available:', error.message);
+      return null;
+    }
   }
 
   async detectDeadlock(operation, target) {
@@ -206,32 +221,56 @@ class WMACSGuardian {
 
   // Immutable guardian methods that are always available
   async guardedApplicationStart(container, port = 3001) {
+    console.log(`🛡️ WMACS Guardian: Starting guarded application on container ${container}:${port}`);
+    
     return this.executeWithGuardian('app-start', container, async () => {
-      const containerIP = this.getContainerIP(container);
+      // Stop any existing processes
+      await this.executeCommand(`ssh root@10.92.3.${container} "pkill -f 'npm start' || true"`);
       
-      // Pre-flight checks
-      await this.recoverPortConflict(container);
+      // Wait for clean shutdown
+      await this.timeout(2000);
       
-      // Start application with proper environment
-      const startCmd = `ssh root@${containerIP} "cd /opt/jw-attendant-scheduler/current && \\
-JWT_SECRET='staging-jwt-secret-2024' \\
-DATABASE_URL='postgresql://jw_scheduler_staging:Cloudy_92!@10.92.3.21:5432/jw_attendant_scheduler_staging' \\
-NODE_ENV=production \\
-npm start -- -p ${port} > /var/log/jw-attendant-scheduler.log 2>&1 &"`;
+      // Start application
+      const startCommand = `cd /opt/jw-attendant-scheduler/current && nohup npm start -- -p ${port} > /var/log/jw-attendant-scheduler.log 2>&1 &`;
+      await this.executeCommand(`ssh root@10.92.3.${container} "${startCommand}"`);
       
-      await execAsync(startCmd);
+      // Wait for startup
+      await this.timeout(5000);
       
-      // Verify startup
-      await new Promise(resolve => setTimeout(resolve, 10000));
-      const healthCheck = await execAsync(`curl -s -o /dev/null -w "%{http_code}" http://${containerIP}:${port}/auth/signin`);
+      // Verify it's running
+      const healthCheck = await this.executeCommand(`curl -f http://10.92.3.${container}:${port}/api/health || echo "HEALTH_CHECK_FAILED"`);
       
-      if (healthCheck.stdout.trim() !== '200') {
-        throw new Error(`Application failed to start properly: HTTP ${healthCheck.stdout.trim()}`);
+      if (healthCheck.includes('HEALTH_CHECK_FAILED')) {
+        throw new Error('Application failed to start properly');
       }
       
-      console.log(`✅ Application started successfully on ${containerIP}:${port}`);
-      return { containerIP, port, status: 'running' };
+      console.log(`✅ Application started successfully on container ${container}:${port}`);
+      return true;
     });
+  }
+
+  /**
+   * Analyzes suggestions with research-backed pushback
+   */
+  async analyzeSuggestion(suggestion, context = {}) {
+    if (!this.researchAdvisor) {
+      console.log('⚠️  Research Advisor not available - proceeding without analysis');
+      return { decision: 'PROCEED_WITH_CAUTION', reasoning: ['No research advisor available'] };
+    }
+
+    console.log('🔍 WMACS Guardian: Analyzing suggestion with research advisor...');
+    return await this.researchAdvisor.analyzeSuggestion(suggestion, context);
+  }
+
+  /**
+   * Records mistakes for learning
+   */
+  recordMistake(mistake, impact, lesson) {
+    if (this.researchAdvisor) {
+      this.researchAdvisor.recordMistake(mistake, impact, lesson);
+    } else {
+      console.log('📝 Mistake noted (Research Advisor unavailable):', mistake);
+    }
   }
 
   async guardedLoginTest(container, port = 3001) {

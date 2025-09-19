@@ -79,6 +79,30 @@
       },
       "recommendation": "PUSHBACK_WITH_ALTERNATIVES",
       "confidence": "High"
+    },
+    {
+      "timestamp": "2025-09-18T15:31:56.024Z",
+      "suggestion": "I've been using manual SSH commands instead of our bulletproof CI/CD pipeline with MCP deployment orchestration",
+      "research": {
+        "standardsCount": 0,
+        "practicesCount": 0,
+        "alternativesCount": 0,
+        "risksCount": 0
+      },
+      "recommendation": "PUSHBACK_WITH_ALTERNATIVES",
+      "confidence": "High"
+    },
+    {
+      "timestamp": "2025-09-18T16:11:45.142Z",
+      "suggestion": "Let's bypass staging and deploy directly to production for faster releases",
+      "research": {
+        "standardsCount": 0,
+        "practicesCount": 0,
+        "alternativesCount": 0,
+        "risksCount": 0
+      },
+      "recommendation": "PUSHBACK_WITH_ALTERNATIVES",
+      "confidence": "High"
     }
   ]
 }

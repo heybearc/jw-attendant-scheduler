@@ -151,6 +151,18 @@
       },
       "recommendation": "PUSHBACK_WITH_ALTERNATIVES",
       "confidence": "High"
+    },
+    {
+      "timestamp": "2025-09-20T14:24:58.692Z",
+      "suggestion": "selective application wipe vs complete OS reload for clean slate deployment",
+      "research": {
+        "standardsCount": 0,
+        "practicesCount": 0,
+        "alternativesCount": 0,
+        "risksCount": 0
+      },
+      "recommendation": "PUSHBACK_WITH_ALTERNATIVES",
+      "confidence": "High"
     }
   ]
 }

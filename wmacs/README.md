@@ -1,7 +1,11 @@
-# WMACS Guardian System - Shared Repository
+# WMACS Guardian System
 
 **Windsurf MCP Artifact CI/CD System (WMACS) Guardian**  
-Universal deadlock detection and recovery system for all Cloudy-Work projects.
+Universal deadlock detection and recovery system for AI-driven development environments.
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)](https://github.com/heybearc/wmacs-guardian-system/releases)
+[![AI Development](https://img.shields.io/badge/AI-Development-green.svg)](https://github.com/heybearc/wmacs-guardian-system)
 
 ## Overview
 

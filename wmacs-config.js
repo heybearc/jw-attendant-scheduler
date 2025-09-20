@@ -1,106 +1,36 @@
-// WMACS Guardian Configuration Template
-// Copy this file to your project root as 'wmacs-config.js' and customize
-
 module.exports = {
-  // Project identification
-  projectName: 'jw-attendant-scheduler',
-  projectType: 'django', // Helps with recovery strategies
-  
-  // Environment configuration
-  environments: {
-    staging: {
-      container: '134',
-      ip: '10.92.3.24',
-      ports: {
-        frontend: 3001,
-        backend: 8000,
-        database: 5432
-      }
-    },
-    production: {
-      container: '132',
-      ip: '10.92.3.22',
-      ports: {
-        frontend: 3001,
-        backend: 8000,
-        database: 5432
-      }
-    }
+  project: {
+    name: 'jw-attendant-scheduler',
+    framework: 'nextjs',
+    version: '2.0.0-clean-slate',
+    description: 'JW Attendant Scheduler - Clean Next.js Implementation'
   },
   
-  // Container management
-  containers: ['132', '134'], // Production, Staging
-  proxmoxHost: '10.92.0.5',
-  
-  // Process management
-  processes: {
-    frontend: {
-      name: 'npm start|python manage.py runserver',
-      healthCheck: 'curl -f http://localhost:3001/',
-      logFile: '/var/log/frontend.log'
-    },
-    backend: {
-      name: 'uvicorn|gunicorn',
-      healthCheck: 'curl -f http://localhost:8000/health',
-      logFile: '/var/log/backend.log'
-    }
+  deployment: {
+    host: '10.92.3.24',
+    port: 3001,
+    path: '/opt/jw-attendant-scheduler',
+    user: 'root',
+    sshKey: '~/.ssh/id_rsa'
   },
   
-  // Recovery strategies
-  recovery: {
-    maxRetries: 3,
-    timeoutMs: 30000,
-    forceRecoveryAfter: 120000, // 2 minutes
-    
-    // Custom recovery functions
-    customStrategies: {
-      // Example: Custom database connection recovery
-      databaseRecovery: async function(container) {
-        // Custom implementation
-      },
-      
-      // Example: Custom cache clearing
-      cacheRecovery: async function(container) {
-        // Custom implementation
-      }
-    }
+  database: {
+    host: '10.92.3.21',
+    port: 5432,
+    name: 'jw_attendant_scheduler_staging',
+    user: 'jw_scheduler_staging'
   },
   
-  // Research Advisor configuration
-  researchAdvisor: {
-    knowledgeBasePath: '.wmacs/knowledge-base.json',
-    autoAnalysis: true,
-    pushbackThreshold: 'medium', // low|medium|high
-    
-    // Project-specific patterns
-    positivePatterns: [
-      'proper ci/cd implementation',
-      'battle-tested deployment',
-      'staging first development'
-    ],
-    
-    riskPatterns: [
-      'bypass staging',
-      'manual production deployment',
-      'skip testing'
-    ]
-  },
-  
-  // Monitoring configuration
   monitoring: {
-    healthCheckInterval: 5000,
-    alertThresholds: {
-      responseTime: 5000,
-      errorRate: 0.05,
-      memoryUsage: 0.85
-    }
+    healthCheckUrl: 'http://10.92.3.24:3001',
+    logPath: '/var/log/nextjs-production.log',
+    pidFile: 'nextjs.pid'
   },
   
-  // Project-specific compliance requirements
-  compliance: {
-    // Example: USLDC-2829-E for LDC Construction Tools
-    standards: [],
-    requiredTests: [],
-    documentationRequirements: []
+  wmacs: {
+    guardian: true,
+    qosAgent: true,
+    researchAdvisor: true,
+    terminalStabilization: true
   }
 };

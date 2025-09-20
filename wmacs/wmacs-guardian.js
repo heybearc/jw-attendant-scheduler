@@ -66,13 +66,20 @@ class WMACSGuardian {
     };
   }
 
-  async executeCommand(host, command, reason = '') {
-    console.log(`🔧 WMACS: ${reason || 'Executing command'}`);
+  async executeCommand(command, host = 'localhost') {
+    console.log(`🔧 WMACS: Executing command`);
     console.log(`   Host: ${host}`);
     console.log(`   Command: ${command}`);
     
     try {
-      const result = await execAsync(`ssh root@${host} "${command}"`);
+      let fullCommand;
+      if (host === 'localhost') {
+        fullCommand = command;
+      } else {
+        fullCommand = `ssh -i ~/.ssh/id_rsa root@${host} "${command}"`;
+      }
+      
+      const result = await execAsync(fullCommand);
       console.log(`✅ Command successful`);
       if (result.stdout.trim()) {
         console.log(`   Output: ${result.stdout.trim()}`);
@@ -232,10 +239,11 @@ class WMACSGuardian {
   // Container IP mapping
   getContainerIP(container) {
     const mapping = {
-      '134': '10.92.3.24', // staging
-      '135': '10.92.3.25', // if needed
-      '133': '10.92.3.22', // production
-      '132': '10.92.3.23'  // LDC tools
+      '131': '10.92.3.21', // database
+      '134': '10.92.3.24', // JW staging
+      '135': '10.92.3.25', // LDC staging
+      '132': '10.92.3.22', // JW production
+      '133': '10.92.3.23'  // LDC production
     };
     return mapping[container] || `10.92.3.${container}`;
   }
@@ -245,15 +253,17 @@ class WMACSGuardian {
     console.log(`🛡️ WMACS Guardian: Starting guarded application on container ${container}:${port}`);
     
     return this.executeWithGuardian('app-start', container, async () => {
+      const containerIP = this.getContainerIP(container);
+      
       // Stop any existing processes
-      await this.executeCommand(`ssh root@10.92.3.${container} "pkill -f 'npm start' || true"`);
+      await this.executeCommand(`pkill -f 'npm start' || true`, containerIP);
       
       // Wait for clean shutdown
       await this.timeout(2000);
       
       // Start application
-      const startCommand = `cd /opt/jw-attendant-scheduler/current && nohup npm start -- -p ${port} > /var/log/jw-attendant-scheduler.log 2>&1 &`;
-      await this.executeCommand(`ssh root@10.92.3.${container} "${startCommand}"`);
+      const startCommand = `cd /opt/jw-attendant-scheduler && nohup npm start > /var/log/jw-attendant-scheduler.log 2>&1 &`;
+      await this.executeCommand(startCommand, containerIP);
       
       // Wait for startup
       await this.timeout(5000);

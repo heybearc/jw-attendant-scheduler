@@ -2,9 +2,11 @@ import { GetServerSideProps } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../api/auth/[...nextauth]'
 import EventLayout from '../../components/EventLayout'
+import CustomFieldsRenderer from '../../components/CustomFieldsRenderer'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
+import { CustomField } from '../../types/departmentTemplate'
 
 interface EventFormData {
   name: string
@@ -27,6 +29,9 @@ interface DepartmentTemplate {
   name: string
   icon: string | null
   parentId: string | null
+  moduleConfig?: {
+    customFields?: CustomField[]
+  }
 }
 
 interface Event {
@@ -60,6 +65,9 @@ export default function CreateEventPage() {
     departmentTemplateId: '',
     parentEventId: ''
   })
+
+  const [customFieldValues, setCustomFieldValues] = useState<Record<string, any>>({})
+  const [customFieldErrors, setCustomFieldErrors] = useState<Record<string, string>>({})
 
   // Fetch department templates and events
   useEffect(() => {
@@ -208,6 +216,13 @@ export default function CreateEventPage() {
       const parentId = formData.parentEventId?.trim()
       if (parentId && parentId !== '') {
         submitData.parentEventId = parentId
+      }
+
+      // Add custom field values to settings
+      if (Object.keys(customFieldValues).length > 0) {
+        submitData.settings = {
+          customFields: customFieldValues
+        }
       }
 
       console.log('Submitting data:', JSON.stringify(submitData, null, 2))
@@ -573,6 +588,29 @@ export default function CreateEventPage() {
               </div>
             </div>
           </div>
+
+          {/* Custom Fields - Rendered dynamically based on selected department template */}
+          {formData.departmentTemplateId && (() => {
+            const selectedTemplate = departmentTemplates.find(t => t.id === formData.departmentTemplateId)
+            const customFields = selectedTemplate?.moduleConfig?.customFields || []
+            
+            if (customFields.length > 0) {
+              return (
+                <CustomFieldsRenderer
+                  fields={customFields}
+                  values={customFieldValues}
+                  onChange={(fieldName, value) => {
+                    setCustomFieldValues(prev => ({
+                      ...prev,
+                      [fieldName]: value
+                    }))
+                  }}
+                  errors={customFieldErrors}
+                />
+              )
+            }
+            return null
+          })()}
 
           {/* Submit Buttons */}
           <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">

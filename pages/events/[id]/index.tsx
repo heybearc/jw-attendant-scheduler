@@ -5,11 +5,12 @@ import EventLayout from '../../../components/EventLayout'
 import EventNavigation from '../../../components/EventNavigation'
 import { TemplateProvider } from '../../../contexts/TemplateContext'
 import { VolunteerText } from '../../../components/DynamicText'
+import { CustomFieldsDisplay } from '../../../components/CustomFieldsRenderer'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { format, parseISO } from 'date-fns'
-import { ModuleConfig, Terminology, PositionTemplate } from '../../../types/departmentTemplate'
+import { ModuleConfig, Terminology, PositionTemplate, CustomField } from '../../../types/departmentTemplate'
 
 interface Event {
   id: string
@@ -28,6 +29,9 @@ interface Event {
   updatedAt: string
   parentEventId?: string | null
   departmentTemplateId?: string | null
+  settings?: {
+    customFields?: Record<string, any>
+  } | null
   // APEX GUARDIAN: Oversight Management Fields (database field names)
   circuitoverseername?: string
   circuitoverseerphone?: string
@@ -586,6 +590,20 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
                 </div>
               </div>
             )}
+
+            {/* Custom Fields Display */}
+            {event.departmentTemplate?.moduleConfig && event.settings?.customFields && (() => {
+              const customFields = (event.departmentTemplate.moduleConfig as any)?.customFields as CustomField[] || []
+              if (customFields.length > 0) {
+                return (
+                  <CustomFieldsDisplay
+                    fields={customFields}
+                    values={event.settings.customFields}
+                  />
+                )
+              }
+              return null
+            })()}
 
             {/* Child Events Section */}
             {event.childEvents && event.childEvents.length > 0 && (

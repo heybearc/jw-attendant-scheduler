@@ -35,6 +35,24 @@ export default function HelpPage({ userRole }: HelpPageProps) {
       roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN']
     },
     {
+      id: 'filter-presets',
+      title: '⭐ Saved Filter Presets',
+      description: 'Save and reuse your favorite filter combinations',
+      roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN']
+    },
+    {
+      id: 'department-templates',
+      title: '🎯 Department Templates',
+      description: 'Understanding and using department templates',
+      roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN']
+    },
+    {
+      id: 'position-templates',
+      title: '📋 Position Templates',
+      description: 'Create multiple positions instantly using templates',
+      roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN']
+    },
+    {
       id: 'assignments',
       title: '📋 Managing Assignments',
       description: 'How to assign attendants to positions and manage schedules',

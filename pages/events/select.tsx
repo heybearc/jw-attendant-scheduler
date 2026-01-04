@@ -234,7 +234,7 @@ export default function EventSelectPage({ events, userLastSeenVersion }: EventSe
 
                     {/* Event Stats */}
                     <div className="flex justify-between text-sm text-gray-500 mb-4">
-                      <span>👥 {event.attendantsCount} attendants</span>
+                      <span>👥 {event.attendantsCount} volunteers</span>
                       <span>📋 {event.positionsCount} positions</span>
                     </div>
 

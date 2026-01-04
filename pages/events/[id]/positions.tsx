@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react'
 import Head from 'next/head'
 import Link from 'next/link'
 import BulkPositionCreator from '../../../components/BulkPositionCreator'
+import PositionTemplateModal from '../../../components/PositionTemplateModal'
 import { GetServerSideProps } from 'next'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../../api/auth/[...nextauth]'
@@ -90,6 +91,17 @@ interface Event {
   startDate: string
   endDate: string
   status: string
+  departmentTemplate?: {
+    id: string
+    name: string
+    positionTemplates?: Array<{
+      id: string
+      name: string
+      description?: string
+      capacity?: number
+      sortOrder: number
+    }>
+  } | null
 }
 
 interface Stats {
@@ -1951,6 +1963,15 @@ export default function EventPositionsPage({ eventId, event, positions, attendan
                 
                 {canManageContent && (
                   <>
+                    {event.departmentTemplate?.positionTemplates && 
+                     (event.departmentTemplate.positionTemplates as any[]).length > 0 && (
+                      <button
+                        onClick={() => setShowTemplateModal(true)}
+                        className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                      >
+                        📋 Create from Template
+                      </button>
+                    )}
                     <button
                       onClick={() => setShowBulkCreator(true)}
                       className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
@@ -2583,6 +2604,18 @@ export default function EventPositionsPage({ eventId, event, positions, attendan
             )}
           </div>
         </div>
+
+        {/* Position Template Modal */}
+        {showTemplateModal && event.departmentTemplate?.positionTemplates && (
+          <PositionTemplateModal
+            isOpen={showTemplateModal}
+            onClose={() => setShowTemplateModal(false)}
+            templates={event.departmentTemplate.positionTemplates as any[]}
+            departmentName={event.departmentTemplate.name}
+            eventId={eventId}
+            onSuccess={() => router.reload()}
+          />
+        )}
 
         {/* Bulk Position Creator Modal */}
         {showBulkCreator && (
@@ -3637,6 +3670,13 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     const eventData = await prisma.events.findUnique({
       where: { id: id as string },
       include: {
+        departmentTemplate: {
+          select: {
+            id: true,
+            name: true,
+            positionTemplates: true
+          }
+        },
         positions: {
           include: {
             assignments: {

@@ -2,6 +2,7 @@ import { GetServerSideProps } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../api/auth/[...nextauth]'
 import EventLayout from '../../../components/EventLayout'
+import FilterPresets from '../../../components/FilterPresets'
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 
@@ -847,6 +848,13 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
         {/* Filters */}
         <div className="bg-white shadow rounded-lg p-4 sm:p-6 mb-6">
           <h3 className="text-lg font-semibold mb-4">Filters</h3>
+          
+          {/* Filter Presets */}
+          <FilterPresets
+            currentFilters={filters}
+            onApplyPreset={(newFilters) => setFilters(newFilters)}
+            eventId={eventId}
+          />
           
           {/* Active Filter Chips */}
           {(filters.search || filters.congregation || filters.isActive !== 'true' || filters.overseerId || filters.keymanId || filters.formsOfService.length > 0) && (

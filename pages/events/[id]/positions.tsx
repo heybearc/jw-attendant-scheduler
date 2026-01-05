@@ -9,6 +9,9 @@ import PositionGridView from '../../../components/PositionGridView'
 import { AutoAssignmentEngine } from '../../../lib/autoAssignmentEngine'
 import { createPositionService } from '../../../lib/positionService'
 import { exportService } from '../../../lib/exportService'
+import { usePositions } from '../../../hooks/usePositions'
+import { useAssignments } from '../../../hooks/useAssignments'
+import { useBulkOperations } from '../../../hooks/useBulkOperations'
 import { GetServerSideProps } from 'next'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../../api/auth/[...nextauth]'
@@ -151,13 +154,22 @@ interface EventPositionsProps {
   canManageContent: boolean
 }
 
-export default function EventPositionsPage({ eventId, event, positions, attendants, stats, canManageContent }: EventPositionsProps) {
+export default function EventPositionsPage({ eventId, event, positions: initialPositions, attendants, stats, canManageContent }: EventPositionsProps) {
   const router = useRouter()
   
   // Initialize services
   const positionService = React.useMemo(() => createPositionService(eventId), [eventId])
   
-  // Attendants data loaded via SSR
+  // Custom hooks for state management
+  const positionsHook = usePositions({ eventId, initialPositions })
+  const assignmentsHook = useAssignments({ eventId })
+  const bulkOpsHook = useBulkOperations({ 
+    eventId, 
+    selectedPositions: positionsHook.selectedPositions,
+    positions: positionsHook.positions 
+  })
+  
+  // Remaining local state
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -165,9 +177,6 @@ export default function EventPositionsPage({ eventId, event, positions, attendan
   const [showShiftModal, setShowShiftModal] = useState(false)
   const [showOverseerModal, setShowOverseerModal] = useState(false)
   const [showBulkCreator, setShowBulkCreator] = useState(false)
-  const [showAssignAttendantModal, setShowAssignAttendantModal] = useState(false)
-  const [showBulkEditModal, setShowBulkEditModal] = useState(false)
-  const [showTemplateModal, setShowTemplateModal] = useState(false)
   const [showProgressModal, setShowProgressModal] = useState(false)
   const [assignmentProgress, setAssignmentProgress] = useState({
     phase: '',
@@ -176,18 +185,57 @@ export default function EventPositionsPage({ eventId, event, positions, attendan
     message: '',
     assignments: [] as Array<{attendant: string, position: string, shift: string}>
   })
-  const [selectedPosition, setSelectedPosition] = useState<Position | null>(null)
-  const [selectedShift, setSelectedShift] = useState<any | null>(null)
-  const [editingPosition, setEditingPosition] = useState<Position | null>(null)
   const [bulkCreateResults, setBulkCreateResults] = useState<any>(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState('')
-  const [selectedPositions, setSelectedPositions] = useState<Set<string>>(new Set())
-  const [showInactive, setShowInactive] = useState(false)
   const [showAvailableAttendants, setShowAvailableAttendants] = useState(false)
   const [selectedOverseer, setSelectedOverseer] = useState<string>('all')
   const [isExporting, setIsExporting] = useState(false)
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
+  
+  // Destructure hook values for easier access
+  const { 
+    positions,
+    selectedPosition, 
+    setSelectedPosition,
+    editingPosition,
+    setEditingPosition,
+    showInactive, 
+    setShowInactive,
+    selectedPositions,
+    setSelectedPositions,
+    isSubmitting,
+    handleDelete,
+    handleActivate,
+    handleDeactivate,
+    handleHardDelete,
+    handleBulkDelete,
+    togglePositionSelection,
+    selectAllPositions,
+    clearSelection,
+    getFilteredPositions
+  } = positionsHook
+  
+  const {
+    showAssignAttendantModal,
+    setShowAssignAttendantModal,
+    selectedShift,
+    setSelectedShift,
+    handleCreateAssignment,
+    handleRemoveAssignment,
+    handleClearAllAssignments
+  } = assignmentsHook
+  
+  const {
+    showBulkEditModal,
+    setShowBulkEditModal,
+    showTemplateModal,
+    setShowTemplateModal,
+    handleBulkEdit,
+    handleApplyTemplate,
+    handleBulkShiftCreate,
+    handleBulkOversight,
+    handleClearAllShifts
+  } = bulkOpsHook
 
   // Utility function to format 24-hour time to 12-hour format
   const formatTime12Hour = (time24: string) => {
@@ -306,26 +354,7 @@ export default function EventPositionsPage({ eventId, event, positions, attendan
     setShowCreateModal(true)
   }
 
-  const handleDelete = async (positionId: string) => {
-    if (!confirm(`Are you sure you want to deactivate this position? It can be reactivated later.`)) {
-      return
-    }
-
-    try {
-      setIsSubmitting(true)
-      const success = await positionService.deletePosition(positionId)
-
-      if (success) {
-        router.reload()
-      } else {
-        alert('Failed to delete position')
-      }
-    } catch (error) {
-      alert('Failed to deactivate position')
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
+  // handleDelete is now provided by usePositions hook
 
   const closeModal = () => {
     setShowCreateModal(false)
@@ -409,7 +438,6 @@ export default function EventPositionsPage({ eventId, event, positions, attendan
   // Handle bulk position updates (area, status)
   const handleBulkPositionUpdate = async () => {
     try {
-      setIsSubmitting(true)
       const area = (document.getElementById('bulk-area') as HTMLInputElement)?.value
       const isActive = (document.getElementById('bulk-status') as HTMLSelectElement)?.value
       
@@ -438,15 +466,12 @@ export default function EventPositionsPage({ eventId, event, positions, attendan
     } catch (error) {
       console.error('Bulk position update error:', error)
       alert('Failed to update positions')
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
   // Handle bulk template application
   const handleBulkTemplateApplication = async () => {
     try {
-      setIsSubmitting(true)
       const templateType = (document.getElementById('bulk-template') as HTMLSelectElement)?.value
       
       if (!templateType) {
@@ -486,15 +511,12 @@ export default function EventPositionsPage({ eventId, event, positions, attendan
     } catch (error) {
       console.error('Template application error:', error)
       alert('Failed to apply template')
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
   // Handle bulk custom shift creation
   const handleBulkCustomShiftCreation = async () => {
     try {
-      setIsSubmitting(true)
       const shiftName = (document.getElementById('bulk-shift-name') as HTMLInputElement)?.value
       const shiftStart = (document.getElementById('bulk-shift-start') as HTMLInputElement)?.value
       const shiftEnd = (document.getElementById('bulk-shift-end') as HTMLInputElement)?.value
@@ -549,15 +571,12 @@ export default function EventPositionsPage({ eventId, event, positions, attendan
     } catch (error) {
       console.error('Custom shift creation error:', error)
       alert('Failed to create shifts')
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
   // Handle bulk oversight assignment using new API
   const handleBulkOversightAssignment = async () => {
     try {
-      setIsSubmitting(true)
       const overseerId = (document.getElementById('bulk-overseer') as HTMLSelectElement)?.value
       const keymanId = (document.getElementById('bulk-keyman') as HTMLSelectElement)?.value
       
@@ -581,8 +600,6 @@ export default function EventPositionsPage({ eventId, event, positions, attendan
     } catch (error) {
       console.error('Bulk oversight assignment error:', error)
       alert('Failed to assign oversight')
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
@@ -607,72 +624,33 @@ export default function EventPositionsPage({ eventId, event, positions, attendan
     }
   }
 
-  // Handle bulk delete
-  const handleBulkDelete = async () => {
-    if (!confirm(`Delete ${selectedPositions.size} selected positions? This action cannot be undone.`)) {
-      return
-    }
+  // handleBulkDelete is now provided by usePositions hook
 
-    try {
-      setIsSubmitting(true)
-      let successCount = 0
-      let errorCount = 0
-
-      for (const positionId of selectedPositions) {
-        try {
-          const success = await positionService.deletePosition(positionId)
-
-          if (success) {
-            successCount++
-          } else {
-            errorCount++
-            console.error(`Failed to delete position ${positionId}`)
-          }
-        } catch (error) {
-          errorCount++
-          console.error(`Error deleting position ${positionId}:`, error)
-        }
-      }
-
-      if (successCount > 0) {
-        alert(`Successfully deleted ${successCount} position(s)${errorCount > 0 ? `. ${errorCount} failed.` : ''}`)
-        setSelectedPositions(new Set())
-        router.reload()
-      } else {
-        alert('Failed to delete positions')
-      }
-    } catch (error) {
-      console.error('Bulk delete error:', error)
-      alert('Failed to delete positions')
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  // Handle removing an assignment
-  const handleRemoveAssignment = async (assignmentId: string) => {
-    if (!confirm('Are you sure you want to remove this assignment?')) return
-    
-    try {
-      const success = await positionService.deleteAssignment(assignmentId)
-      
-      if (success) {
-        // Refetch data without page reload - scroll position preserved automatically!
-        router.reload()
-      } else {
-        alert('Failed to remove assignment')
-      }
-    } catch (error) {
-      console.error('Error removing assignment:', error)
-      alert('Failed to remove assignment')
-    }
-  }
+  // handleRemoveAssignment is now provided by useAssignments hook
 
   // Export handlers - Using ExportService
+  const handleExportCSV = async () => {
+    setIsExporting(true)
+    try {
+      const filtered = getFilteredPositionsWithOverseer()
+      await exportService.exportAndDownloadCSV({
+        eventId,
+        eventName: event.name,
+        positions: filtered,
+        overseerFilter: selectedOverseer !== 'all' ? selectedOverseer : null
+      })
+    } catch (error) {
+      console.error('Export error:', error)
+      alert('Failed to export CSV')
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   const handleExportPDF = async () => {
     setIsExporting(true)
     try {
-      const filtered = getFilteredPositions()
+      const filtered = getFilteredPositionsWithOverseer()
       await exportService.exportAndDownloadPDF({
         eventId,
         eventName: event.name,
@@ -776,14 +754,17 @@ export default function EventPositionsPage({ eventId, event, positions, attendan
     }
   }
 
-  // Filter positions by selected overseer
-  const getFilteredPositions = () => {
+  // Apply overseer filter on top of hook's filtered positions
+  const getFilteredPositionsWithOverseer = () => {
+    const filtered = getFilteredPositions()
+    
     if (selectedOverseer === 'all') {
-      return positions
+      return filtered
     }
-    return positions.filter(position => {
-      const oversight = position.oversight && position.oversight.length > 0 ? position.oversight[0] : null
-      return oversight?.overseer?.id === selectedOverseer
+    
+    return filtered.filter(position => {
+      const oversight = position.positionOversight?.[0]
+      return oversight?.overseerId === selectedOverseer || oversight?.keymanId === selectedOverseer
     })
   }
 

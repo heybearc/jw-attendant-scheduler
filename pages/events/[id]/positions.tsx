@@ -7,6 +7,8 @@ import BulkPositionCreator from '../../../components/BulkPositionCreator'
 import PositionTemplateModal from '../../../components/PositionTemplateModal'
 import PositionGridView from '../../../components/PositionGridView'
 import { AutoAssignmentEngine } from '../../../lib/autoAssignmentEngine'
+import { createPositionService } from '../../../lib/positionService'
+import { exportService } from '../../../lib/exportService'
 import { GetServerSideProps } from 'next'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../../api/auth/[...nextauth]'
@@ -717,35 +719,17 @@ export default function EventPositionsPage({ eventId, event, positions, attendan
     }
   }
 
-  // Export handlers
+  // Export handlers - Using ExportService
   const handleExportPDF = async () => {
     setIsExporting(true)
     try {
       const filtered = getFilteredPositions()
-      const response = await fetch('/api/export/positions-pdf', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          eventId,
-          eventName: event.name,
-          positions: filtered,
-          overseerFilter: selectedOverseer !== 'all' ? selectedOverseer : null
-        })
+      await exportService.exportAndDownloadPDF({
+        eventId,
+        eventName: event.name,
+        positions: filtered,
+        overseerFilter: selectedOverseer !== 'all' ? selectedOverseer : null
       })
-      
-      if (response.ok) {
-        const blob = await response.blob()
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `positions-${event.name.replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.pdf`
-        document.body.appendChild(a)
-        a.click()
-        window.URL.revokeObjectURL(url)
-        document.body.removeChild(a)
-      } else {
-        alert('Failed to export PDF')
-      }
     } catch (error) {
       console.error('Export error:', error)
       alert('Failed to export PDF')
@@ -758,30 +742,12 @@ export default function EventPositionsPage({ eventId, event, positions, attendan
     setIsExporting(true)
     try {
       const filtered = getFilteredPositions()
-      const response = await fetch('/api/export/positions-excel', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          eventId,
-          eventName: event.name,
-          positions: filtered,
-          overseerFilter: selectedOverseer !== 'all' ? selectedOverseer : null
-        })
+      await exportService.exportAndDownloadExcel({
+        eventId,
+        eventName: event.name,
+        positions: filtered,
+        overseerFilter: selectedOverseer !== 'all' ? selectedOverseer : null
       })
-      
-      if (response.ok) {
-        const blob = await response.blob()
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `positions-${event.name.replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.xlsx`
-        document.body.appendChild(a)
-        a.click()
-        window.URL.revokeObjectURL(url)
-        document.body.removeChild(a)
-      } else {
-        alert('Failed to export Excel')
-      }
     } catch (error) {
       console.error('Export error:', error)
       alert('Failed to export Excel')

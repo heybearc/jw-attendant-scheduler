@@ -154,6 +154,9 @@ interface EventPositionsProps {
 export default function EventPositionsPage({ eventId, event, positions, attendants, stats, canManageContent }: EventPositionsProps) {
   const router = useRouter()
   
+  // Initialize services
+  const positionService = React.useMemo(() => createPositionService(eventId), [eventId])
+  
   // Attendants data loaded via SSR
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -310,15 +313,12 @@ export default function EventPositionsPage({ eventId, event, positions, attendan
 
     try {
       setIsSubmitting(true)
-      const response = await fetch(`/api/events/${eventId}/positions/${positionId}`, {
-        method: 'DELETE'
-      })
+      const success = await positionService.deletePosition(positionId)
 
-      if (response.ok) {
+      if (success) {
         router.reload()
       } else {
-        const error = await response.json()
-        alert(`Failed to deactivate position: ${error.error}`)
+        alert('Failed to delete position')
       }
     } catch (error) {
       alert('Failed to deactivate position')
@@ -352,29 +352,20 @@ export default function EventPositionsPage({ eventId, event, positions, attendan
     }
     
     try {
-      const response = await fetch(`/api/events/${eventId}/positions/${selectedPosition.id}/shifts`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          name: shiftFormData.name || null,
-          startTime: shiftFormData.startTime,
-          endTime: shiftFormData.endTime,
-          isAllDay: shiftFormData.isAllDay,
-          positionId: selectedPosition.id
-        }),
+      const success = await positionService.createShift(selectedPosition.id, {
+        name: shiftFormData.name || '',
+        startTime: shiftFormData.startTime,
+        endTime: shiftFormData.endTime,
+        isAllDay: shiftFormData.isAllDay,
       })
 
-      if (response.ok) {
+      if (success) {
         alert('✅ Shift added successfully')
         setShowShiftModal(false)
         setShiftFormData({ name: '', startTime: '', endTime: '', isAllDay: false })
         router.reload()
       } else {
-        const error = await response.json()
-        alert(`Failed to add shift: ${error.error || 'Unknown error'}`)
+        alert('Failed to add shift')
       }
     } catch (error) {
       console.error('Error adding shift:', error)
@@ -388,28 +379,18 @@ export default function EventPositionsPage({ eventId, event, positions, attendan
     if (!selectedPosition) return
     
     try {
-      const response = await fetch(`/api/events/${eventId}/positions/${selectedPosition.id}/position-oversight`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          overseerId: overseerFormData.overseerId,
-          keymanId: overseerFormData.keymanId || null,
-          responsibilities: overseerFormData.responsibilities,
-          positionId: selectedPosition.id
-        }),
+      const success = await positionService.assignOversight(selectedPosition.id, {
+        overseerId: overseerFormData.overseerId,
+        keymanId: overseerFormData.keymanId || undefined,
       })
 
-      if (response.ok) {
+      if (success) {
         alert('Overseer assigned successfully')
         setShowOverseerModal(false)
         setOverseerFormData({ overseerId: '', keymanId: '', responsibilities: '' })
         router.reload()
       } else {
-        const error = await response.json()
-        alert(`Failed to assign overseer: ${error.error || 'Unknown error'}`)
+        alert('Failed to assign overseer')
       }
     } catch (error) {
       console.error('Error assigning overseer:', error)
@@ -443,13 +424,9 @@ export default function EventPositionsPage({ eventId, event, positions, attendan
         if (area) updateData.area = area
         if (isActive !== '') updateData.isActive = isActive === 'true'
         
-        const response = await fetch(`/api/events/${eventId}/positions/${positionId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(updateData)
-        })
+        const success = await positionService.updatePosition(positionId, updateData)
         
-        if (response.ok) {
+        if (success) {
           successCount++
         } else {
           console.error(`Failed to update position ${positionId}`)
@@ -495,25 +472,16 @@ export default function EventPositionsPage({ eventId, event, positions, attendan
         }
       }
       
-      const response = await fetch(`/api/events/${eventId}/positions/apply-shift-template`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          positionIds: Array.from(selectedPositions),
-          templateType: templateType
-        })
+      const success = await positionService.applyShiftTemplate({
+        positionIds: Array.from(selectedPositions),
+        shiftTemplateId: templateType
       })
-
-      if (response.ok) {
-        const result = await response.json()
-        alert(`✅ Template Applied Successfully!\n\n` +
-              `• Positions: ${result.data.positionsProcessed}\n` +
-              `• Shifts Created: ${result.data.totalShiftsCreated}\n` +
-              `• Template: ${result.data.templateType}`)
+      
+      if (success) {
+        alert(`✅ Template Applied Successfully!`)
         router.reload()
       } else {
-        const error = await response.json()
-        alert(`Failed to apply template: ${error.error || 'Unknown error'}`)
+        alert('Failed to apply template')
       }
     } catch (error) {
       console.error('Template application error:', error)
@@ -562,18 +530,14 @@ export default function EventPositionsPage({ eventId, event, positions, attendan
       
       let successCount = 0
       for (const positionId of selectedPositions) {
-        const response = await fetch(`/api/events/${eventId}/positions/${positionId}/shifts`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: shiftName,
-            startTime: isAllDay ? null : shiftStart,
-            endTime: isAllDay ? null : shiftEnd,
-            isAllDay: isAllDay
-          })
+        const success = await positionService.createShift(positionId, {
+          name: shiftName,
+          startTime: isAllDay ? null : shiftStart,
+          endTime: isAllDay ? null : shiftEnd,
+          isAllDay: isAllDay
         })
         
-        if (response.ok) {
+        if (success) {
           successCount++
         } else {
           console.error(`Failed to create shift for position ${positionId}`)
@@ -602,25 +566,17 @@ export default function EventPositionsPage({ eventId, event, positions, attendan
         return
       }
       
-      const response = await fetch(`/api/events/${eventId}/positions/bulk-oversight`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          positionIds: Array.from(selectedPositions),
-          overseerId: overseerId || undefined,
-          keymanId: keymanId || undefined
-        })
+      const success = await positionService.bulkAssignOversight({
+        positionIds: Array.from(selectedPositions),
+        overseerId: overseerId || undefined,
+        keymanId: keymanId || undefined
       })
-
-      if (response.ok) {
-        const result = await response.json()
-        alert(`✅ Oversight Assigned Successfully!\n\n` +
-              `• Positions: ${result.data.summary.positionsProcessed}\n` +
-              `• No shift dependency required`)
+      
+      if (success) {
+        alert(`✅ Oversight Assigned Successfully!`)
         router.reload()
       } else {
-        const error = await response.json()
-        alert(`Failed to assign oversight: ${error.error || 'Unknown error'}`)
+        alert('Failed to assign oversight')
       }
     } catch (error) {
       console.error('Bulk oversight assignment error:', error)
@@ -637,16 +593,13 @@ export default function EventPositionsPage({ eventId, event, positions, attendan
     }
 
     try {
-      const response = await fetch(`/api/events/${eventId}/positions/${positionId}/shifts/${shiftId}`, {
-        method: 'DELETE'
-      })
+      const success = await positionService.deleteShift(positionId, shiftId)
 
-      if (response.ok) {
+      if (success) {
         // Don't show alert - just reload to preserve scroll position
         router.reload()
       } else {
-        const error = await response.json()
-        alert(`Failed to delete shift: ${error.error || 'Unknown error'}`)
+        alert('Failed to delete shift')
       }
     } catch (error) {
       console.error('Delete shift error:', error)
@@ -667,11 +620,9 @@ export default function EventPositionsPage({ eventId, event, positions, attendan
 
       for (const positionId of selectedPositions) {
         try {
-          const response = await fetch(`/api/events/${eventId}/positions/${positionId}`, {
-            method: 'DELETE',
-          })
+          const success = await positionService.deletePosition(positionId)
 
-          if (response.ok) {
+          if (success) {
             successCount++
           } else {
             errorCount++
@@ -703,11 +654,9 @@ export default function EventPositionsPage({ eventId, event, positions, attendan
     if (!confirm('Are you sure you want to remove this assignment?')) return
     
     try {
-      const response = await fetch(`/api/events/${eventId}/assignments/${assignmentId}`, {
-        method: 'DELETE'
-      })
+      const success = await positionService.deleteAssignment(assignmentId)
       
-      if (response.ok) {
+      if (success) {
         // Refetch data without page reload - scroll position preserved automatically!
         router.reload()
       } else {
@@ -1159,13 +1108,9 @@ export default function EventPositionsPage({ eventId, event, positions, attendan
                         return
                       }
                       try {
-                        const response = await fetch(`/api/events/${eventId}/positions/clear-assignments`, {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' }
-                        })
-                        if (response.ok) {
-                          const result = await response.json()
-                          alert(`✅ Cleared ${result.deletedCount} assignments`)
+                        const success = await positionService.clearAllAssignments()
+                      if (success) {
+                          alert('✅ Cleared all assignments')
                           router.reload()
                         } else {
                           alert('Failed to clear assignments')
@@ -1189,13 +1134,9 @@ export default function EventPositionsPage({ eventId, event, positions, attendan
                         return
                       }
                       try {
-                        const response = await fetch(`/api/events/${eventId}/positions/clear-shifts`, {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' }
-                        })
-                      if (response.ok) {
-                        const result = await response.json()
-                        alert(`✅ Cleared ${result.deletedShifts} shifts and ${result.deletedAssignments} assignments`)
+                        const success = await positionService.clearAllShifts()
+                      if (success) {
+                        alert('✅ Cleared all shifts and assignments')
                         router.reload()
                       } else {
                         alert('Failed to clear shifts')
@@ -1329,17 +1270,13 @@ export default function EventPositionsPage({ eventId, event, positions, attendan
               eventId={eventId}
               onAssign={async (positionId, shiftId, attendantId) => {
                 try {
-                  const response = await fetch(`/api/events/${eventId}/assignments`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      positionId,
-                      attendantId,
-                      shiftId,
-                      role: 'ATTENDANT'
-                    })
+                  const success = await positionService.createAssignment({
+                    positionId,
+                    attendantId,
+                    shiftId,
+                    role: 'ATTENDANT'
                   })
-                  if (response.ok) {
+                  if (success) {
                     router.reload()
                   } else {
                     alert('Failed to create assignment')
@@ -1351,10 +1288,8 @@ export default function EventPositionsPage({ eventId, event, positions, attendan
               }}
               onUnassign={async (assignmentId) => {
                 try {
-                  const response = await fetch(`/api/events/${eventId}/assignments/${assignmentId}`, {
-                    method: 'DELETE'
-                  })
-                  if (response.ok) {
+                  const success = await positionService.deleteAssignment(assignmentId)
+                  if (success) {
                     router.reload()
                   } else {
                     alert('Failed to remove assignment')
@@ -1748,12 +1683,8 @@ export default function EventPositionsPage({ eventId, event, positions, attendan
                               return
                             }
                             try {
-                              const response = await fetch(`/api/events/${eventId}/positions/${position.id}`, {
-                                method: 'PUT',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ isActive: false }),
-                              })
-                              if (response.ok) {
+                              const success = await positionService.deactivatePosition(position.id)
+                              if (success) {
                                 router.reload()
                               } else {
                                 alert('Failed to deactivate position')
@@ -1770,12 +1701,8 @@ export default function EventPositionsPage({ eventId, event, positions, attendan
                         <button
                           onClick={async () => {
                             try {
-                              const response = await fetch(`/api/events/${eventId}/positions/${position.id}`, {
-                                method: 'PUT',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ isActive: true }),
-                              })
-                              if (response.ok) {
+                              const success = await positionService.activatePosition(position.id)
+                              if (success) {
                                 router.reload()
                               } else {
                                 alert('Failed to activate position')
@@ -1860,21 +1787,15 @@ export default function EventPositionsPage({ eventId, event, positions, attendan
                               if (!confirmed) return
 
                               try {
-                                const response = await fetch(`/api/events/${eventId}/positions/${position.id}?hardDelete=true`, {
-                                  method: 'DELETE'
-                                })
-                                const result = await response.json()
+                                const result = await positionService.hardDeletePosition(position.id)
                                 
-                                if (response.ok) {
+                                if (result.success) {
                                   alert(`Position "${position.name}" permanently deleted.`)
                                   router.reload()
                                 } else {
-                                  if (result.dependencies) {
+                                  if (result.error) {
                                     alert(
-                                      `Cannot delete - has dependencies:\n` +
-                                      `• ${result.dependencies.assignments} assignments\n` +
-                                      `• ${result.dependencies.shifts} shifts\n\n` +
-                                      `Remove dependencies first.`
+                                      `Cannot delete position:\n${result.error}`
                                     )
                                   } else {
                                     alert(`Failed: ${result.error}`)
@@ -2687,31 +2608,21 @@ export default function EventPositionsPage({ eventId, event, positions, attendan
                     alert('Please select a template')
                     return
                   }
-
+                  
                   try {
                     setIsSubmitting(true)
                     
-                    const response = await fetch(`/api/events/${eventId}/positions/apply-shift-template`, {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        positionIds: Array.from(selectedPositions),
-                        templateType: templateType
-                      })
+                    const success = await positionService.applyShiftTemplate({
+                      positionIds: Array.from(selectedPositions),
+                      shiftTemplateId: templateType
                     })
-
-                    if (response.ok) {
-                      const result = await response.json()
-                      alert(`✅ Template Applied Successfully!\n\n` +
-                            `• Positions: ${result.data.positionsProcessed}\n` +
-                            `• Shifts Created: ${result.data.totalShiftsCreated}\n` +
-                            `• Template: ${result.data.templateType}`)
+                    
+                    if (success) {
                       setShowTemplateModal(false)
                       setSelectedPositions(new Set())
                       router.reload()
                     } else {
-                      const error = await response.json()
-                      alert(`Failed to apply template: ${error.error || 'Unknown error'}`)
+                      alert('Failed to apply template')
                     }
                   } catch (error) {
                     console.error('Error applying template:', error)

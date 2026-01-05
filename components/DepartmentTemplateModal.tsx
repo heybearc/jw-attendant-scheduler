@@ -219,7 +219,7 @@ export default function DepartmentTemplateModal({ isOpen, onClose, onSave, depar
         </div>
 
         {/* Content */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto">
           <div className="p-6">
             {error && (
               <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded">
@@ -319,7 +319,11 @@ export default function DepartmentTemplateModal({ isOpen, onClose, onSave, depar
                 </button>
               ) : (
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    handleSubmit(e as any)
+                  }}
                   disabled={saving || !name}
                   className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -328,7 +332,7 @@ export default function DepartmentTemplateModal({ isOpen, onClose, onSave, depar
               )}
             </div>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   )

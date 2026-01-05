@@ -42,9 +42,14 @@ lib/
 - ✅ Type-safe interfaces
 
 **Next Steps:**
-- Update positions.tsx to use the new AutoAssignmentEngine
-- Add unit tests for the engine
-- Continue with service layer extraction
+- **Step 2:** Integrate AutoAssignmentEngine into positions.tsx (replace inline algorithm)
+  - This will remove the remaining ~795 lines from positions.tsx
+  - Clean replacement of handleAutoAssignOversightAware function
+  - Test thoroughly to ensure no regressions
+- **Step 3:** Add unit tests for the engine
+- **Step 4:** Continue with service layer extraction
+
+**Note:** Extraction complete, integration deferred to next session to avoid breaking changes during complex file manipulation.
 
 ---
 

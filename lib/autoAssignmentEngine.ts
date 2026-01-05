@@ -87,7 +87,7 @@ export interface AssignmentProgress {
   current: number
   total: number
   message: string
-  assignments: string[]
+  assignments: Array<{attendant: string, position: string, shift: string}> | string[]
 }
 
 export interface AutoAssignmentResult {

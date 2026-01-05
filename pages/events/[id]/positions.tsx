@@ -1321,9 +1321,53 @@ export default function EventPositionsPage({ eventId, event, positions, attendan
             </div>
           </div>
 
-          {/* Positions Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {getFilteredPositions().filter(p => p.isActive).length === 0 ? (
+          {/* Conditional View: Grid or List */}
+          {viewMode === 'grid' ? (
+            <PositionGridView
+              positions={getFilteredPositions().filter(p => showInactive ? true : p.isActive)}
+              attendants={attendants}
+              eventId={eventId}
+              onAssign={async (positionId, shiftId, attendantId) => {
+                try {
+                  const response = await fetch(`/api/events/${eventId}/assignments`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      positionId,
+                      attendantId,
+                      shiftId,
+                      role: 'ATTENDANT'
+                    })
+                  })
+                  if (response.ok) {
+                    router.reload()
+                  } else {
+                    alert('Failed to create assignment')
+                  }
+                } catch (error) {
+                  console.error('Assignment error:', error)
+                  alert('Failed to create assignment')
+                }
+              }}
+              onUnassign={async (assignmentId) => {
+                try {
+                  const response = await fetch(`/api/events/${eventId}/assignments/${assignmentId}`, {
+                    method: 'DELETE'
+                  })
+                  if (response.ok) {
+                    router.reload()
+                  } else {
+                    alert('Failed to remove assignment')
+                  }
+                } catch (error) {
+                  console.error('Error removing assignment:', error)
+                  alert('Failed to remove assignment')
+                }
+              }}
+            />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {getFilteredPositions().filter(p => p.isActive).length === 0 ? (
               <div className="col-span-full bg-white rounded-lg shadow p-12 text-center">
                 <span className="text-6xl mb-4 block">📋</span>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No positions created</h3>
@@ -1853,7 +1897,8 @@ export default function EventPositionsPage({ eventId, event, positions, attendan
                 )
               })
             )}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Position Template Modal */}

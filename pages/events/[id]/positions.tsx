@@ -12,6 +12,9 @@ import { exportService } from '../../../lib/exportService'
 import { usePositions } from '../../../hooks/usePositions'
 import { useAssignments } from '../../../hooks/useAssignments'
 import { useBulkOperations } from '../../../hooks/useBulkOperations'
+import { useShifts } from '../../../hooks/useShifts'
+import { useOversight } from '../../../hooks/useOversight'
+import { useExport } from '../../../hooks/useExport'
 import CreatePositionModal from '../../../components/CreatePositionModal'
 import ShiftModal from '../../../components/ShiftModal'
 import OverseerModal from '../../../components/OverseerModal'
@@ -171,14 +174,20 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
     selectedPositions: positionsHook.selectedPositions,
     positions: positionsHook.positions 
   })
+  const shiftsHook = useShifts({ eventId })
+  const oversightHook = useOversight({ eventId })
+  const exportHook = useExport({
+    eventId,
+    eventName: event.name,
+    positions: getFilteredPositionsWithOverseer(),
+    overseerFilter: selectedOverseer
+  })
   
-  // Remaining local state
+  // Remaining local state (not yet extracted to hooks)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
-  const [showShiftModal, setShowShiftModal] = useState(false)
-  const [showOverseerModal, setShowOverseerModal] = useState(false)
   const [showBulkCreator, setShowBulkCreator] = useState(false)
   const [showProgressModal, setShowProgressModal] = useState(false)
   const [assignmentProgress, setAssignmentProgress] = useState({
@@ -192,7 +201,6 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
   const [message, setMessage] = useState('')
   const [showAvailableAttendants, setShowAvailableAttendants] = useState(false)
   const [selectedOverseer, setSelectedOverseer] = useState<string>('all')
-  const [isExporting, setIsExporting] = useState(false)
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
   
   // Destructure hook values for easier access
@@ -239,6 +247,29 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
     handleBulkOversight,
     handleClearAllShifts
   } = bulkOpsHook
+  
+  const {
+    showShiftModal,
+    setShowShiftModal,
+    shiftFormData,
+    setShiftFormData,
+    handleShiftSubmit: handleShiftSubmitHook,
+    handleDeleteShift
+  } = shiftsHook
+  
+  const {
+    showOverseerModal,
+    setShowOverseerModal,
+    overseerFormData,
+    setOverseerFormData,
+    handleOverseerSubmit: handleOverseerSubmitHook
+  } = oversightHook
+  
+  const {
+    isExporting,
+    handleExportPDF,
+    handleExportExcel
+  } = exportHook
 
   // Utility function to format 24-hour time to 12-hour format
   const formatTime12Hour = (time24: string) => {
@@ -287,17 +318,6 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
       }
     }
   }, [eventId])
-  const [shiftFormData, setShiftFormData] = useState({
-    name: '',
-    startTime: '',
-    endTime: '',
-    isAllDay: false
-  })
-  const [overseerFormData, setOverseerFormData] = useState({
-    overseerId: '',
-    keymanId: '',
-    responsibilities: ''
-  })
   const [formData, setFormData] = useState({
     positionNumber: 1,
     name: '',
@@ -365,70 +385,11 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
     setFormData({ positionNumber: 1, name: '', area: '', description: '' })
   }
 
-  const handleShiftSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!selectedPosition) return
-    
-    // APEX GUARDIAN: Bidirectional shift logic validation
-    if (shiftFormData.isAllDay && selectedPosition.shifts && selectedPosition.shifts.length > 0) {
-      const hasPartialShifts = selectedPosition.shifts.some(shift => !shift.isAllDay)
-      if (hasPartialShifts) {
-        alert(
-          '❌ Cannot add All Day shift\n\n' +
-          'This position already has partial shifts. An All Day shift covers the entire 24-hour period and conflicts with existing partial shifts.\n\n' +
-          'Please delete existing partial shifts first, then add the All Day shift.'
-        )
-        return
-      }
-    }
-    
-    try {
-      const success = await positionService.createShift(selectedPosition.id, {
-        name: shiftFormData.name || '',
-        startTime: shiftFormData.startTime,
-        endTime: shiftFormData.endTime,
-        isAllDay: shiftFormData.isAllDay,
-      })
+  // handleShiftSubmit is now provided by useShifts hook
+  const handleShiftSubmit = (e: React.FormEvent) => handleShiftSubmitHook(e, selectedPosition)
 
-      if (success) {
-        alert('✅ Shift added successfully')
-        setShowShiftModal(false)
-        setShiftFormData({ name: '', startTime: '', endTime: '', isAllDay: false })
-        router.reload()
-      } else {
-        alert('Failed to add shift')
-      }
-    } catch (error) {
-      console.error('Error adding shift:', error)
-      alert('Failed to add shift')
-    }
-  }
-
-  const handleOverseerSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!selectedPosition) return
-    
-    try {
-      const success = await positionService.assignOversight(selectedPosition.id, {
-        overseerId: overseerFormData.overseerId,
-        keymanId: overseerFormData.keymanId || undefined,
-      })
-
-      if (success) {
-        alert('Overseer assigned successfully')
-        setShowOverseerModal(false)
-        setOverseerFormData({ overseerId: '', keymanId: '', responsibilities: '' })
-        router.reload()
-      } else {
-        alert('Failed to assign overseer')
-      }
-    } catch (error) {
-      console.error('Error assigning overseer:', error)
-      alert('Failed to assign overseer')
-    }
-  }
+  // handleOverseerSubmit is now provided by useOversight hook
+  const handleOverseerSubmit = (e: React.FormEvent) => handleOverseerSubmitHook(e, selectedPosition)
 
   const handleBulkCreateSuccess = async (result: any) => {
     alert(`Successfully created ${result.created} positions`)
@@ -606,85 +567,13 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
     }
   }
 
-  // APEX GUARDIAN: Handle individual shift deletion
-  const handleDeleteShift = async (positionId: string, shiftId: string, shiftName: string) => {
-    if (!confirm(`Delete "${shiftName}" shift? This will also remove any attendant assignments to this shift.`)) {
-      return
-    }
-
-    try {
-      const success = await positionService.deleteShift(positionId, shiftId)
-
-      if (success) {
-        // Don't show alert - just reload to preserve scroll position
-        router.reload()
-      } else {
-        alert('Failed to delete shift')
-      }
-    } catch (error) {
-      console.error('Delete shift error:', error)
-      alert('Failed to delete shift')
-    }
-  }
+  // handleDeleteShift is now provided by useShifts hook
 
   // handleBulkDelete is now provided by usePositions hook
 
   // handleRemoveAssignment is now provided by useAssignments hook
 
-  // Export handlers - Using ExportService
-  const handleExportCSV = async () => {
-    setIsExporting(true)
-    try {
-      const filtered = getFilteredPositionsWithOverseer()
-      await exportService.exportAndDownloadCSV({
-        eventId,
-        eventName: event.name,
-        positions: filtered,
-        overseerFilter: selectedOverseer !== 'all' ? selectedOverseer : null
-      })
-    } catch (error) {
-      console.error('Export error:', error)
-      alert('Failed to export CSV')
-    } finally {
-      setIsExporting(false)
-    }
-  }
-
-  const handleExportPDF = async () => {
-    setIsExporting(true)
-    try {
-      const filtered = getFilteredPositionsWithOverseer()
-      await exportService.exportAndDownloadPDF({
-        eventId,
-        eventName: event.name,
-        positions: filtered,
-        overseerFilter: selectedOverseer !== 'all' ? selectedOverseer : null
-      })
-    } catch (error) {
-      console.error('Export error:', error)
-      alert('Failed to export PDF')
-    } finally {
-      setIsExporting(false)
-    }
-  }
-
-  const handleExportExcel = async () => {
-    setIsExporting(true)
-    try {
-      const filtered = getFilteredPositions()
-      await exportService.exportAndDownloadExcel({
-        eventId,
-        eventName: event.name,
-        positions: filtered,
-        overseerFilter: selectedOverseer !== 'all' ? selectedOverseer : null
-      })
-    } catch (error) {
-      console.error('Export error:', error)
-      alert('Failed to export Excel')
-    } finally {
-      setIsExporting(false)
-    }
-  }
+  // Export handlers are now provided by useExport hook
 
   // Auto-assign algorithm - APEX GUARDIAN OVERSIGHT-AWARE VERSION v3.0
   // Refactored to use extracted AutoAssignmentEngine (Week 1, Step 2)

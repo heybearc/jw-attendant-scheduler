@@ -5,6 +5,7 @@ import Head from 'next/head'
 import Link from 'next/link'
 import BulkPositionCreator from '../../../components/BulkPositionCreator'
 import PositionTemplateModal from '../../../components/PositionTemplateModal'
+import PositionGridView from '../../../components/PositionGridView'
 import { GetServerSideProps } from 'next'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../../api/auth/[...nextauth]'
@@ -180,6 +181,7 @@ export default function EventPositionsPage({ eventId, event, positions, attendan
   const [showAvailableAttendants, setShowAvailableAttendants] = useState(false)
   const [selectedOverseer, setSelectedOverseer] = useState<string>('all')
   const [isExporting, setIsExporting] = useState(false)
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
 
   // Utility function to format 24-hour time to 12-hour format
   const formatTime12Hour = (time24: string) => {
@@ -1873,6 +1875,14 @@ export default function EventPositionsPage({ eventId, event, positions, attendan
                     </div>
                   </button>
                 )}
+                
+                <button
+                  onClick={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                  title={viewMode === 'list' ? 'Switch to Grid View' : 'Switch to List View'}
+                >
+                  {viewMode === 'list' ? '📊 Grid View' : '📋 List View'}
+                </button>
                 
                 <button
                   onClick={() => {

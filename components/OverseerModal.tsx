@@ -1,0 +1,123 @@
+import React from 'react'
+
+interface Position {
+  id: string
+  name: string
+}
+
+interface Attendant {
+  id: string
+  firstName: string
+  lastName: string
+  formsOfService?: string | string[]
+}
+
+interface OverseerFormData {
+  overseerId: string
+  keymanId: string
+}
+
+interface OverseerModalProps {
+  isOpen: boolean
+  position: Position | null
+  attendants: Attendant[]
+  formData: OverseerFormData
+  onClose: () => void
+  onSubmit: (e: React.FormEvent) => void
+  onFormDataChange: (data: OverseerFormData) => void
+}
+
+export default function OverseerModal({
+  isOpen,
+  position,
+  attendants,
+  formData,
+  onClose,
+  onSubmit,
+  onFormDataChange
+}: OverseerModalProps) {
+  if (!isOpen || !position) return null
+
+  const overseers = attendants?.filter(att => {
+    const formsOfService = Array.isArray(att.formsOfService) 
+      ? att.formsOfService 
+      : (typeof att.formsOfService === 'string' ? att.formsOfService.split(',').map(s => s.trim()) : [])
+    return formsOfService.some(form => form.toLowerCase() === 'overseer')
+  }) || []
+
+  const keymen = attendants?.filter(att => {
+    const formsOfService = Array.isArray(att.formsOfService) 
+      ? att.formsOfService 
+      : (typeof att.formsOfService === 'string' ? att.formsOfService.split(',').map(s => s.trim()) : [])
+    return formsOfService.some(form => form.toLowerCase() === 'keyman')
+  }) || []
+
+  return (
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+      <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="mt-3">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">
+            Assign Overseer to {position.name}
+          </h3>
+          
+          <form onSubmit={onSubmit}>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Select Overseer
+                </label>
+                <select 
+                  value={formData.overseerId}
+                  onChange={(e) => onFormDataChange({ ...formData, overseerId: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="">Select an overseer...</option>
+                  {overseers.map(attendant => (
+                    <option key={attendant.id} value={attendant.id}>
+                      {attendant.firstName} {attendant.lastName} (Elder)
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Select Keyman (Optional)
+                </label>
+                <select 
+                  value={formData.keymanId}
+                  onChange={(e) => onFormDataChange({ ...formData, keymanId: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select a keyman...</option>
+                  {keymen.map(attendant => (
+                    <option key={attendant.id} value={attendant.id}>
+                      {attendant.firstName} {attendant.lastName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
+              >
+                Assign Overseer
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  )
+}

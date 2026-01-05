@@ -12,6 +12,9 @@ import { exportService } from '../../../lib/exportService'
 import { usePositions } from '../../../hooks/usePositions'
 import { useAssignments } from '../../../hooks/useAssignments'
 import { useBulkOperations } from '../../../hooks/useBulkOperations'
+import CreatePositionModal from '../../../components/CreatePositionModal'
+import ShiftModal from '../../../components/ShiftModal'
+import OverseerModal from '../../../components/OverseerModal'
 import { GetServerSideProps } from 'next'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../../api/auth/[...nextauth]'
@@ -1825,318 +1828,35 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
         )}
 
         {/* Create/Edit Position Modal */}
-        {showCreateModal && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
-              <form onSubmit={handleSubmit}>
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-medium text-gray-900">
-                    {editingPosition ? 'Edit Position' : 'Create New Position'}
-                  </h3>
-                  <button
-                    type="button"
-                    onClick={closeModal}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    <span className="sr-only">Close</span>
-                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <label htmlFor="positionNumber" className="block text-sm font-medium text-gray-700 mb-1">
-                      Position Number *
-                    </label>
-                    <input
-                      type="number"
-                      id="positionNumber"
-                      value={formData.positionNumber}
-                      onChange={(e) => setFormData({ ...formData, positionNumber: parseInt(e.target.value) || 1 })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      min="1"
-                      max="1000"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                      Position Name *
-                    </label>
-                    <input
-                      type="text"
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="e.g., Sound Operator, Parking Attendant"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="area" className="block text-sm font-medium text-gray-700 mb-1">
-                      Area
-                    </label>
-                    <input
-                      type="text"
-                      id="area"
-                      value={formData.area}
-                      onChange={(e) => setFormData({ ...formData, area: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="e.g., Main Hall, Parking Lot A"
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-                      Description
-                    </label>
-                    <textarea
-                      id="description"
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Brief description of the position..."
-                    />
-                  </div>
-                </div>
-
-                <div className="flex justify-end space-x-3 mt-6">
-                  <button
-                    type="button"
-                    onClick={closeModal}
-                    className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                  >
-                    {editingPosition ? 'Update Position' : 'Create Position'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
+        <CreatePositionModal
+          isOpen={showCreateModal}
+          editingPosition={editingPosition}
+          formData={formData}
+          onClose={closeModal}
+          onSubmit={handleSubmit}
+          onFormDataChange={setFormData}
+        />
 
         {/* Shift Creation Modal */}
-        {showShiftModal && selectedPosition && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-              <div className="mt-3">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  Add Shift to {selectedPosition.name}
-                </h3>
-                
-                <form onSubmit={handleShiftSubmit}>
-                  <div className="space-y-4">
-                    
-                    {/* Template Option */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Quick Templates
-                      </label>
-                      <select 
-                        onChange={(e) => {
-                          const template = e.target.value
-                          if (template === 'morning') {
-                            setShiftFormData({ ...shiftFormData, name: 'Morning', startTime: '07:50', endTime: '10:00', isAllDay: false })
-                          } else if (template === 'midday') {
-                            setShiftFormData({ ...shiftFormData, name: 'Midday', startTime: '10:00', endTime: '12:00', isAllDay: false })
-                          } else if (template === 'afternoon') {
-                            setShiftFormData({ ...shiftFormData, name: 'Afternoon', startTime: '12:00', endTime: '14:00', isAllDay: false })
-                          } else if (template === 'evening') {
-                            setShiftFormData({ ...shiftFormData, name: 'Evening', startTime: '14:00', endTime: '17:00', isAllDay: false })
-                          } else if (template === 'allday') {
-                            setShiftFormData({ ...shiftFormData, name: 'All Day', startTime: '', endTime: '', isAllDay: true })
-                          }
-                        }}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="">Select a template or create custom...</option>
-                        <option value="morning">Morning (7:50 - 10:00)</option>
-                        <option value="midday">Midday (10:00 - 12:00)</option>
-                        <option value="afternoon">Afternoon (12:00 - 14:00)</option>
-                        <option value="evening">Evening (14:00 - 17:00)</option>
-                        <option value="allday">All Day</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Shift Name (Optional)
-                      </label>
-                      <input
-                        type="text"
-                        value={shiftFormData.name}
-                        onChange={(e) => setShiftFormData({ ...shiftFormData, name: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="e.g., Morning, Evening, All Day"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Start Time
-                        </label>
-                        <input
-                          type="time"
-                          value={shiftFormData.startTime}
-                          onChange={(e) => setShiftFormData({ ...shiftFormData, startTime: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          disabled={shiftFormData.isAllDay}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          End Time
-                        </label>
-                        <input
-                          type="time"
-                          value={shiftFormData.endTime}
-                          onChange={(e) => setShiftFormData({ ...shiftFormData, endTime: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          disabled={shiftFormData.isAllDay}
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="flex items-center">
-                        <input 
-                          type="checkbox" 
-                          checked={shiftFormData.isAllDay}
-                          onChange={(e) => setShiftFormData({ ...shiftFormData, isAllDay: e.target.checked })}
-                          className="mr-2" 
-                        />
-                        <span className="text-sm text-gray-700">All Day Shift</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end space-x-3 mt-6">
-                    <button
-                      type="button"
-                      onClick={() => setShowShiftModal(false)}
-                      className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
-                    >
-                      Add Shift
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-        )}
+        <ShiftModal
+          isOpen={showShiftModal}
+          position={selectedPosition}
+          formData={shiftFormData}
+          onClose={() => setShowShiftModal(false)}
+          onSubmit={handleShiftSubmit}
+          onFormDataChange={setShiftFormData}
+        />
 
         {/* Overseer Assignment Modal */}
-        {showOverseerModal && selectedPosition && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-              <div className="mt-3">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  Assign Overseer to {selectedPosition.name}
-                </h3>
-                
-                <form onSubmit={handleOverseerSubmit}>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Select Overseer
-                      </label>
-                      <select 
-                        value={overseerFormData.overseerId}
-                        onChange={(e) => setOverseerFormData({ ...overseerFormData, overseerId: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                      >
-                        <option value="">Select an overseer...</option>
-                        {attendants?.filter(att => {
-                          const formsOfService = Array.isArray(att.formsOfService) ? att.formsOfService : 
-                            (typeof att.formsOfService === 'string' ? att.formsOfService.split(',').map(s => s.trim()) : [])
-                          return formsOfService.some(form => 
-                            form.toLowerCase() === 'overseer'
-                          )
-                        }).map(attendant => (
-                          <option key={attendant.id} value={attendant.id}>
-                            {attendant.firstName} {attendant.lastName} (Elder)
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Select Keyman (Optional)
-                      </label>
-                      <select 
-                        value={overseerFormData.keymanId}
-                        onChange={(e) => setOverseerFormData({ ...overseerFormData, keymanId: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="">Select a keyman...</option>
-                        {attendants?.filter(att => {
-                          const formsOfService = Array.isArray(att.formsOfService) ? att.formsOfService : 
-                            (typeof att.formsOfService === 'string' ? att.formsOfService.split(',').map(s => s.trim()) : [])
-                          return formsOfService.some(form => 
-                            form.toLowerCase() === 'keyman'
-                          )
-                        }).map(attendant => (
-                          <option key={attendant.id} value={attendant.id}>
-                            {attendant.firstName} {attendant.lastName} (MS)
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Responsibilities
-                      </label>
-                      <textarea
-                        rows={3}
-                        value={overseerFormData.responsibilities}
-                        onChange={(e) => setOverseerFormData({ ...overseerFormData, responsibilities: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Special instructions or responsibilities..."
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end space-x-3 mt-6">
-                    <button
-                      type="button"
-                      onClick={() => setShowOverseerModal(false)}
-                      className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md"
-                    >
-                      Assign Overseer
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-        )}
+        <OverseerModal
+          isOpen={showOverseerModal}
+          position={selectedPosition}
+          attendants={attendants}
+          formData={overseerFormData}
+          onClose={() => setShowOverseerModal(false)}
+          onSubmit={handleOverseerSubmit}
+          onFormDataChange={setOverseerFormData}
+        />
 
         {/* Assign Attendant Modal */}
         {showAssignAttendantModal && selectedPosition && (

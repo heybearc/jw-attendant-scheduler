@@ -1,0 +1,141 @@
+import { renderHook, act } from '@testing-library/react-hooks'
+import { useShifts } from '../../hooks/useShifts'
+import { createPositionService } from '../../lib/positionService'
+
+jest.mock('../../lib/positionService')
+jest.mock('next/router', () => ({
+  useRouter: () => ({
+    reload: jest.fn(),
+    push: jest.fn(),
+  }),
+}))
+
+const mockPositionService = {
+  createShift: jest.fn(),
+  deleteShift: jest.fn(),
+}
+
+;(createPositionService as jest.Mock).mockReturnValue(mockPositionService)
+
+describe('useShifts', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    global.alert = jest.fn()
+  })
+
+  it('should initialize with default state', () => {
+    const { result } = renderHook(() => useShifts({ eventId: 'event-1' }))
+
+    expect(result.current.showShiftModal).toBe(false)
+    expect(result.current.shiftFormData).toEqual({
+      name: '',
+      startTime: '',
+      endTime: '',
+      isAllDay: false,
+    })
+  })
+
+  it('should update shift form data', () => {
+    const { result } = renderHook(() => useShifts({ eventId: 'event-1' }))
+
+    act(() => {
+      result.current.setShiftFormData({
+        name: 'Morning',
+        startTime: '08:00',
+        endTime: '12:00',
+        isAllDay: false,
+      })
+    })
+
+    expect(result.current.shiftFormData.name).toBe('Morning')
+    expect(result.current.shiftFormData.startTime).toBe('08:00')
+  })
+
+  it('should handle shift submit successfully', async () => {
+    mockPositionService.createShift.mockResolvedValue(true)
+
+    const { result } = renderHook(() => useShifts({ eventId: 'event-1' }))
+
+    const mockEvent = { preventDefault: jest.fn() } as any
+    const mockPosition = {
+      id: 'position-1',
+      name: 'Test Position',
+      shifts: [],
+    }
+
+    act(() => {
+      result.current.setShiftFormData({
+        name: 'Morning',
+        startTime: '08:00',
+        endTime: '12:00',
+        isAllDay: false,
+      })
+    })
+
+    await act(async () => {
+      await result.current.handleShiftSubmit(mockEvent, mockPosition)
+    })
+
+    expect(mockPositionService.createShift).toHaveBeenCalledWith('position-1', {
+      name: 'Morning',
+      startTime: '08:00',
+      endTime: '12:00',
+      isAllDay: false,
+    })
+    expect(global.alert).toHaveBeenCalledWith('✅ Shift added successfully')
+  })
+
+  it('should prevent all-day shift when partial shifts exist', async () => {
+    const { result } = renderHook(() => useShifts({ eventId: 'event-1' }))
+
+    const mockEvent = { preventDefault: jest.fn() } as any
+    const mockPosition = {
+      id: 'position-1',
+      name: 'Test Position',
+      shifts: [
+        { id: 'shift-1', name: 'Morning', isAllDay: false, startTime: '08:00', endTime: '12:00' },
+      ],
+    }
+
+    act(() => {
+      result.current.setShiftFormData({
+        name: 'All Day',
+        startTime: '',
+        endTime: '',
+        isAllDay: true,
+      })
+    })
+
+    await act(async () => {
+      await result.current.handleShiftSubmit(mockEvent, mockPosition)
+    })
+
+    expect(mockPositionService.createShift).not.toHaveBeenCalled()
+    expect(global.alert).toHaveBeenCalledWith(expect.stringContaining('Cannot add All Day shift'))
+  })
+
+  it('should handle delete shift', async () => {
+    mockPositionService.deleteShift.mockResolvedValue(true)
+    global.confirm = jest.fn(() => true)
+
+    const { result } = renderHook(() => useShifts({ eventId: 'event-1' }))
+
+    await act(async () => {
+      await result.current.handleDeleteShift('position-1', 'shift-1', 'Morning')
+    })
+
+    expect(mockPositionService.deleteShift).toHaveBeenCalledWith('position-1', 'shift-1')
+  })
+
+  it('should not delete shift when user cancels', async () => {
+    global.confirm = jest.fn(() => false)
+
+    const { result } = renderHook(() => useShifts({ eventId: 'event-1' }))
+
+    await act(async () => {
+      await result.current.handleDeleteShift('position-1', 'shift-1', 'Morning')
+    })
+
+    expect(mockPositionService.deleteShift).not.toHaveBeenCalled()
+  })
+})

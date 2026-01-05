@@ -135,6 +135,18 @@ export default function DepartmentTemplateModal({ isOpen, onClose, onSave, depar
     setSaving(true)
 
     try {
+      console.log('Saving department template with data:', {
+        name,
+        description,
+        parentId: parentId || null,
+        icon,
+        sortOrder,
+        isActive,
+        moduleConfig,
+        terminology,
+        positionTemplates
+      })
+      
       await onSave({
         name,
         description,
@@ -146,9 +158,12 @@ export default function DepartmentTemplateModal({ isOpen, onClose, onSave, depar
         terminology,
         positionTemplates
       })
+      
+      console.log('Save successful, resetting form and closing modal')
       resetForm()
       onClose()
     } catch (err: any) {
+      console.error('Save error:', err)
       setError(err.message || 'Failed to save department template')
     } finally {
       setSaving(false)

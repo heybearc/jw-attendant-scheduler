@@ -87,6 +87,8 @@ export default function DepartmentTemplatesPage() {
     
     const method = editingDept ? 'PUT' : 'POST'
 
+    console.log('handleSave called with:', { url, method, data })
+
     const response = await fetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
@@ -94,13 +96,16 @@ export default function DepartmentTemplatesPage() {
     })
 
     const result = await response.json()
+    console.log('API response:', result)
 
     if (!result.success) {
       throw new Error(result.error || 'Failed to save department')
     }
 
     setSuccess(editingDept ? 'Department updated successfully' : 'Department created successfully')
+    console.log('Fetching updated departments list...')
     await fetchDepartments()
+    console.log('Departments refreshed')
   }
 
   const handleDelete = async (id: string) => {

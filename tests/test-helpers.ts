@@ -28,3 +28,42 @@ export async function takeScreenshotOnFailure(page: Page, testName: string) {
     fullPage: true 
   });
 }
+
+export async function navigateTo(page: Page, path: string) {
+  await page.goto(path);
+  await page.waitForLoadState('networkidle');
+  await page.waitForTimeout(500);
+}
+
+export async function waitForDataLoad(page: Page) {
+  const loadingSelectors = ['text=Loading...', '[data-loading="true"]', '.loading'];
+  for (const selector of loadingSelectors) {
+    try {
+      await page.waitForSelector(selector, { state: 'hidden', timeout: 2000 });
+    } catch {
+      // Continue
+    }
+  }
+  await page.waitForTimeout(500);
+}
+
+export async function isVisible(page: Page, selector: string): Promise<boolean> {
+  try {
+    await page.waitForSelector(selector, { state: 'visible', timeout: 3000 });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function selectEvent(page: Page, eventName?: string) {
+  await navigateToEvents(page);
+  const eventCard = eventName 
+    ? page.locator(`text=${eventName}`).first()
+    : page.locator('[class*="card"], [class*="Card"]').first();
+  
+  if (await eventCard.isVisible()) {
+    await eventCard.click();
+    await page.waitForTimeout(1000);
+  }
+}

@@ -9,6 +9,10 @@
     "lint": "eslint",
     "validate-config": "node scripts/validate-config.js",
     "prebuild": "npm run validate-config",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:unit": "jest __tests__/lib",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
@@ -41,6 +45,9 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.1",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20",
     "@types/pdfkit": "^0.13.5",
     "@types/react": "^18",
@@ -48,10 +55,13 @@
     "autoprefixer": "^10.4.21",
     "eslint": "^8",
     "eslint-config-next": "14.2.33",
+    "jest": "^30.2.0",
+    "jest-environment-jsdom": "^30.2.0",
     "playwright": "^1.57.0",
     "postcss": "^8.5.6",
     "prisma": "^5.19.1",
     "tailwindcss": "^3.4.17",
+    "ts-jest": "^29.4.6",
     "typescript": "^5"
   }
 }

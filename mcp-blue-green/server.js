@@ -11,6 +11,7 @@ const { CallToolRequestSchema, ListToolsRequestSchema } = require('@modelcontext
 const { exec } = require('child_process');
 const { promisify } = require('util');
 const fs = require('fs').promises;
+const testRunner = require('./test-runner');
 
 const execAsync = promisify(exec);
 
@@ -340,13 +341,26 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
       steps.push('✅ Health check passed');
 
+      // Step 8: Run automated tests
+      steps.push('Running automated smoke tests...');
+      const baseUrl = `http://${standbyIp}:3001`;
+      const testResults = await testRunner.runSmokeTests(app, baseUrl);
+      
+      if (!testResults.success) {
+        steps.push(`❌ Tests failed: ${testResults.failed}/${testResults.total}`);
+        steps.push('\n⚠️ DEPLOYMENT WARNING: Tests failed on STANDBY');
+        steps.push('Review test results before switching traffic.');
+      } else {
+        steps.push(`✅ Tests passed: ${testResults.passed}/${testResults.total} in ${testResults.duration.toFixed(1)}s`);
+      }
+
       return {
         content: [
           {
             type: 'text',
-            text: `✅ Deployment to ${standbyName.toUpperCase()} (${standbyIp}) completed successfully!\n\n` +
+            text: `${testResults.success ? '✅' : '⚠️'} Deployment to ${standbyName.toUpperCase()} (${standbyIp}) completed!\n\n` +
                   steps.join('\n') +
-                  `\n\n✅ STANDBY is ready for traffic switch\n` +
+                  `\n\n${testResults.success ? '✅ STANDBY is ready for traffic switch' : '⚠️ STANDBY deployed but tests failed - review before switching'}\n` +
                   `\nAccess: http://${standbyIp}:3001`,
           },
         ],
@@ -388,6 +402,28 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         ],
         isError: true,
       };
+    }
+
+    // Run tests on STANDBY before switching (unless emergency mode)
+    if (!args.emergency) {
+      const baseUrl = `http://${standbyIp}:3001`;
+      const testResults = await testRunner.runSmokeTests(app, baseUrl);
+      
+      if (!testResults.success) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `❌ Cannot switch traffic: Tests failed on STANDBY!\n\n` +
+                    `${testResults.passed}/${testResults.total} tests passed\n` +
+                    `${testResults.failed} tests failed\n\n` +
+                    `Fix test failures before switching traffic.\n` +
+                    `Use emergency=true to bypass tests (not recommended).`,
+            },
+          ],
+          isError: true,
+        };
+      }
     }
 
     if (args.requireApproval && !args.emergency) {

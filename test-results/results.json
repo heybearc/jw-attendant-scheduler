@@ -2,7 +2,7 @@
   "config": {
     "configFile": "/Users/cory/Documents/Cloudy-Work/applications/theoshift/playwright.config.ts",
     "rootDir": "/Users/cory/Documents/Cloudy-Work/applications/theoshift/tests",
-    "forbidOnly": false,
+    "forbidOnly": true,
     "fullyParallel": true,
     "globalSetup": null,
     "globalTeardown": null,
@@ -41,7 +41,7 @@
       {
         "outputDir": "/Users/cory/Documents/Cloudy-Work/applications/theoshift/test-results",
         "repeatEach": 1,
-        "retries": 0,
+        "retries": 2,
         "metadata": {
           "actualWorkers": 1
         },
@@ -61,12 +61,7 @@
     "updateSourceMethod": "patch",
     "version": "1.57.0",
     "workers": 1,
-    "webServer": {
-      "command": "npm run dev",
-      "url": "http://localhost:3001",
-      "reuseExistingServer": true,
-      "timeout": 120000
-    }
+    "webServer": null
   },
   "suites": [
     {
@@ -98,12 +93,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2302,
+                      "duration": 2443,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-05T20:02:23.395Z",
+                      "startTime": "2026-01-06T18:35:11.065Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -132,12 +127,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2035,
+                      "duration": 2047,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-05T20:02:26.336Z",
+                      "startTime": "2026-01-06T18:35:13.963Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -166,12 +161,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3984,
+                      "duration": 4122,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-05T20:02:28.377Z",
+                      "startTime": "2026-01-06T18:35:16.016Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -200,12 +195,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3169,
+                      "duration": 3076,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-01-05T20:02:32.367Z",
+                      "startTime": "2026-01-06T18:35:20.146Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -225,8 +220,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-01-05T20:02:22.927Z",
-    "duration": 12655.347,
+    "startTime": "2026-01-06T18:35:10.737Z",
+    "duration": 12521.242,
     "expected": 4,
     "skipped": 0,
     "unexpected": 0,

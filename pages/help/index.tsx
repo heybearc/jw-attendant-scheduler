@@ -83,6 +83,12 @@ export default function HelpPage({ userRole }: HelpPageProps) {
       roles: ['ADMIN']
     },
     {
+      id: 'assignment-notifications',
+      title: '📧 Assignment Notifications',
+      description: 'Automatic email notifications for assignments',
+      roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN', 'ATTENDANT']
+    },
+    {
       id: 'troubleshooting',
       title: '🔧 Troubleshooting',
       description: 'Common issues and how to resolve them',

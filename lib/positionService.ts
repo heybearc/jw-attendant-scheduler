@@ -275,13 +275,78 @@ export class PositionService {
   /**
    * Create an assignment (assign attendant to position/shift)
    */
-  async createAssignment(data: CreateAssignmentData): Promise<boolean> {
-    const response = await fetch(`/api/events/${this.eventId}/assignments`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    })
-    return response.ok
+  async createAssignment(data: {
+    positionId: string
+    attendantId: string
+    shiftId?: string
+    shiftStart?: Date
+    shiftEnd?: Date
+    notes?: string
+    sendNotification?: boolean
+  }): Promise<boolean> {
+    try {
+      const response = await fetch(`/api/event-assignments/${this.eventId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to create assignment')
+      }
+
+      const result = await response.json()
+
+      // Send notification if requested and assignment was created
+      if (data.sendNotification !== false && result.assignment?.id) {
+        try {
+          await this.sendAssignmentNotification('created', result.assignment.id)
+        } catch (notifyError) {
+          console.warn('Failed to send assignment notification:', notifyError)
+          // Don't fail the assignment creation if notification fails
+        }
+      }
+
+      return true
+    } catch (error) {
+      console.error('Create assignment error:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Send assignment notification email
+   */
+  async sendAssignmentNotification(
+    type: 'created' | 'updated' | 'cancelled' | 'reminder',
+    assignmentId: string,
+    options?: {
+      changes?: string[]
+      reason?: string
+    }
+  ): Promise<void> {
+    try {
+      const response = await fetch('/api/assignments/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type,
+          assignmentId,
+          eventId: this.eventId,
+          changes: options?.changes,
+          reason: options?.reason
+        })
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.message || 'Failed to send notification')
+      }
+    } catch (error) {
+      console.error('Send notification error:', error)
+      throw error
+    }
   }
 
   /**

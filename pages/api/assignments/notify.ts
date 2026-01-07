@@ -51,7 +51,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const assignment = await prisma.position_assignments.findUnique({
       where: { id: assignmentId },
       include: {
-        position: {
+        positions: {
           include: {
             events: {
               select: {
@@ -64,7 +64,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }
           }
         },
-        attendant: {
+        event_attendants_position_assignments_attendantIdToevent_attendants: {
           include: {
             users: {
               select: {
@@ -76,7 +76,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }
           }
         },
-        overseer: {
+        event_attendants_position_assignments_overseerIdToevent_attendants: {
           include: {
             users: {
               select: {
@@ -95,13 +95,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ error: 'Assignment not found' })
     }
 
-    if (!assignment.attendant?.users) {
+    const attendant = assignment.event_attendants_position_assignments_attendantIdToevent_attendants
+    if (!attendant?.users) {
       return res.status(400).json({ error: 'Assignment has no associated user' })
     }
 
-    const volunteer = assignment.attendant.users
-    const event = assignment.position.events
-    const overseer = assignment.overseer?.users
+    const volunteer = attendant.users
+    const event = assignment.positions.events
+    const overseer = assignment.event_attendants_position_assignments_overseerIdToevent_attendants?.users
 
     // Format dates
     const eventDate = new Date(event.startDate).toLocaleDateString('en-US', {
@@ -111,21 +112,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       day: 'numeric'
     })
 
-    const shiftStart = assignment.shiftStart 
-      ? new Date(assignment.shiftStart).toLocaleTimeString('en-US', { 
-          hour: 'numeric', 
-          minute: '2-digit',
-          hour12: true 
-        })
-      : 'Not specified'
-
-    const shiftEnd = assignment.shiftEnd
-      ? new Date(assignment.shiftEnd).toLocaleTimeString('en-US', { 
-          hour: 'numeric', 
-          minute: '2-digit',
-          hour12: true 
-        })
-      : 'Not specified'
+    // Get shift times from the shift if available
+    let shiftStart = 'Not specified'
+    let shiftEnd = 'Not specified'
+    
+    if (assignment.shiftId) {
+      const shift = await prisma.position_shifts.findUnique({
+        where: { id: assignment.shiftId }
+      })
+      if (shift) {
+        shiftStart = shift.startTime || 'Not specified'
+        shiftEnd = shift.endTime || 'Not specified'
+      }
+    }
 
     const eventUrl = `${process.env.NEXTAUTH_URL}/events/${event.id}/positions`
 

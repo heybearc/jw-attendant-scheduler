@@ -1,8 +1,33 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import os from 'os';
 import { promises as fs } from 'fs';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 
-const STATE_FILE_PATH = '/opt/theoshift/deployment-state.json';
+const execAsync = promisify(exec);
+const STATE_FILE = '/opt/theoshift/deployment-state.json';
+
+// Query HAProxy config to determine which backend is active
+async function queryHAProxyConfig(): Promise<'BLUE' | 'GREEN' | null> {
+  try {
+    // SSH to HAProxy and read the config file to see which backend is configured
+    // Look for the main routing line: "use_backend theoshift-X if is_theoshift" (not is_theoshift_blue/is_theoshift_green)
+    const { stdout } = await execAsync(
+      'ssh -o ConnectTimeout=2 -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa root@10.92.3.26 "grep \'use_backend theoshift.*if is_theoshift$\' /etc/haproxy/haproxy.cfg"',
+      { timeout: 3000 }
+    );
+    
+    // Parse the line: "use_backend theoshift-green if is_theoshift" or "use_backend theoshift-blue if is_theoshift"
+    if (stdout.includes('theoshift-green')) {
+      return 'GREEN';
+    } else if (stdout.includes('theoshift-blue')) {
+      return 'BLUE';
+    }
+  } catch (error) {
+    console.error('HAProxy config query failed:', error);
+  }
+  return null;
+}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -10,50 +35,57 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // Get the server's hostname to determine which server we're on
-    const hostname = os.hostname();
-    
-    // Determine server based on hostname or environment
-    // Container 134 (BLUE) = 10.92.3.24 - hostname: blue-theoshift
-    // Container 132 (GREEN) = 10.92.3.22 - hostname: green-theoshift
-    
+    // Determine which server we're on by checking local IP
     let server: 'BLUE' | 'GREEN' = 'BLUE';
     let container = 134;
     let ip = '10.92.3.24';
     
-    // Check if we can determine from hostname or environment
-    if (hostname.includes('green') || hostname.includes('132') || process.env.SERVER_NAME === 'GREEN') {
-      server = 'GREEN';
-      container = 132;
-      ip = '10.92.3.22';
-    } else if (hostname.includes('blue') || hostname.includes('134') || process.env.SERVER_NAME === 'BLUE') {
-      server = 'BLUE';
-      container = 134;
-      ip = '10.92.3.24';
-    }
-    
-    // Determine if this is LIVE or STANDBY by reading local deployment state file
-    let status: 'LIVE' | 'STANDBY' = 'STANDBY';
-    
     try {
-      // Try to read the local deployment state file
-      const stateData = await fs.readFile(STATE_FILE_PATH, 'utf-8');
-      const state = JSON.parse(stateData);
+      const { stdout } = await execAsync('hostname -I 2>/dev/null || hostname -i 2>/dev/null');
+      const localIp = stdout.trim().split(' ')[0];
       
-      // Check which server is currently LIVE
-      const liveServer = state.live || state.prod || 'green';
-      if (liveServer.toLowerCase() === server.toLowerCase()) {
-        status = 'LIVE';
-      } else {
-        status = 'STANDBY';
+      if (localIp.includes('10.92.3.22')) {
+        server = 'GREEN';
+        container = 132;
+        ip = '10.92.3.22';
+      } else if (localIp.includes('10.92.3.24')) {
+        server = 'BLUE';
+        container = 134;
+        ip = '10.92.3.24';
       }
     } catch (error) {
-      // If state file doesn't exist or can't be read, use environment variable
-      if (process.env.SERVER_STATUS) {
-        status = process.env.SERVER_STATUS as 'LIVE' | 'STANDBY';
-      } else {
-        // Default fallback: GREEN is LIVE (matches HAProxy default)
-        status = server === 'GREEN' ? 'LIVE' : 'STANDBY';
+      // Fallback to environment variable if IP detection fails
+      if (process.env.SERVER_NAME === 'GREEN') {
+        server = 'GREEN';
+        container = 132;
+        ip = '10.92.3.22';
+      }
+    }
+    
+    // Determine LIVE/STANDBY status - HAProxy config is source of truth
+    let status: 'LIVE' | 'STANDBY' = 'STANDBY';
+    let statusSource = 'default';
+    
+    // Primary: Query HAProxy config file (actual routing configuration)
+    const haproxyLiveServer = await queryHAProxyConfig();
+    if (haproxyLiveServer) {
+      status = haproxyLiveServer === server ? 'LIVE' : 'STANDBY';
+      statusSource = 'haproxy-config';
+    } else {
+      // Fallback: Read state file (updated by MCP tool alongside HAProxy)
+      try {
+        const stateData = await fs.readFile(STATE_FILE, 'utf-8');
+        const state = JSON.parse(stateData);
+        
+        status = state.liveServer === server ? 'LIVE' : 'STANDBY';
+        statusSource = 'statefile-fallback';
+      } catch (error) {
+        // Last resort: Environment variable
+        if (process.env.SERVER_STATUS) {
+          status = process.env.SERVER_STATUS as 'LIVE' | 'STANDBY';
+          statusSource = 'env';
+        }
+        console.error('Failed to determine status:', error);
       }
     }
     
@@ -62,7 +94,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       status,
       ip,
       container,
-      hostname
+      hostname: os.hostname(),
+      statusSource // For debugging
     });
   } catch (error) {
     console.error('Error getting server info:', error);

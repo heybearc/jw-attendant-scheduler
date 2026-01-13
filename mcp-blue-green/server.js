@@ -331,7 +331,23 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       await execAsync(`ssh ${standbyShortcut} "cd ${appConfig.path} && pm2 restart ${pmName}"`);
       steps.push('✅ Server restarted');
 
-      // Step 7: Health check
+      // Step 7: Update deployment state files on both containers
+      steps.push('Updating deployment state files...');
+      const currentState = await getDeploymentState(app);
+      const stateJson = JSON.stringify({
+        liveServer: actualLive.toUpperCase(),
+        standbyServer: actualStandby.toUpperCase(),
+        lastSwitch: currentState.lastSwitch
+      });
+      
+      // Update state file on both BLUE and GREEN containers
+      const blueShortcut = appConfig.sshBlue;
+      const greenShortcut = appConfig.sshGreen;
+      await execAsync(`ssh ${blueShortcut} "echo '${stateJson}' > ${appConfig.path.replace('/frontend', '')}/deployment-state.json"`);
+      await execAsync(`ssh ${greenShortcut} "echo '${stateJson}' > ${appConfig.path.replace('/frontend', '')}/deployment-state.json"`);
+      steps.push('✅ State files updated');
+
+      // Step 8: Health check
       steps.push('Running health checks...');
       await new Promise(resolve => setTimeout(resolve, 5000)); // Wait for startup
       const healthy = await checkHealth(standbyIp, app);
@@ -341,7 +357,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
       steps.push('✅ Health check passed');
 
-      // Step 8: Run automated tests
+      // Step 9: Run automated tests
       steps.push('Running automated smoke tests...');
       const baseUrl = `http://${standbyIp}:3001`;
       const testResults = await testRunner.runSmokeTests(app, baseUrl);
@@ -465,6 +481,17 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         switchCount: state.switchCount + 1,
       };
       await saveDeploymentState(newState, app);
+
+      // Update state files on both containers
+      const stateJson = JSON.stringify({
+        liveServer: newLive.toUpperCase(),
+        standbyServer: newStandby.toUpperCase(),
+        lastSwitch: newState.lastSwitch
+      });
+      const blueShortcut = appConfig.sshBlue;
+      const greenShortcut = appConfig.sshGreen;
+      await execAsync(`ssh ${blueShortcut} "echo '${stateJson}' > ${appConfig.path.replace('/frontend', '')}/deployment-state.json"`);
+      await execAsync(`ssh ${greenShortcut} "echo '${stateJson}' > ${appConfig.path.replace('/frontend', '')}/deployment-state.json"`);
 
       return {
         content: [

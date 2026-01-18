@@ -11,16 +11,16 @@ const STATE_FILE = '/opt/theoshift/deployment-state.json';
 async function queryHAProxyConfig(): Promise<'BLUE' | 'GREEN' | null> {
   try {
     // SSH to HAProxy and read the config file to see which backend is configured
-    // Look for the main routing line: "use_backend theoshift-X if is_theoshift" (not is_theoshift_blue/is_theoshift_green)
+    // Look for the main routing line: "use_backend theoshift.*if is_theoshift$" (not is_theoshift_blue/is_theoshift_green)
     const { stdout } = await execAsync(
-      'ssh -o ConnectTimeout=2 -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa root@10.92.3.26 "grep \'use_backend theoshift.*if is_theoshift$\' /etc/haproxy/haproxy.cfg"',
+      'ssh -o ConnectTimeout=2 -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 root@10.92.3.26 "grep \'use_backend theoshift.*if is_theoshift$\' /etc/haproxy/haproxy.cfg"',
       { timeout: 3000 }
     );
     
-    // Parse the line: "use_backend theoshift-green if is_theoshift" or "use_backend theoshift-blue if is_theoshift"
-    if (stdout.includes('theoshift-green')) {
+    // Parse the line: "use_backend theoshift_green if is_theoshift" or "use_backend theoshift_blue if is_theoshift"
+    if (stdout.includes('theoshift_green')) {
       return 'GREEN';
-    } else if (stdout.includes('theoshift-blue')) {
+    } else if (stdout.includes('theoshift_blue')) {
       return 'BLUE';
     }
   } catch (error) {

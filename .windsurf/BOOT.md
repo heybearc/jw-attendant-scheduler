@@ -1,0 +1,122 @@
+# TheoShift Session Boot
+
+**Load this file at the start of each Windsurf session for full context.**
+
+---
+
+## 1. Load Shared Context (from Cloudy-Work)
+
+Read these files from the `.cloudy-work/` submodule:
+
+```
+.cloudy-work/_cloudy-ops/context/CURRENT-STATE.md
+.cloudy-work/_cloudy-ops/context/APP-MAP.md
+.cloudy-work/_cloudy-ops/context/DECISIONS.md
+.cloudy-work/_cloudy-ops/context/RUNBOOK-SHORT.md
+```
+
+**Why:** Shared operational truth, app inventory, architectural decisions, quick commands
+
+---
+
+## 2. Load TheoShift Local Context
+
+Read these files from the TheoShift repo root:
+
+```
+TASK-STATE.md
+DECISIONS.md
+```
+
+**Why:** Current work state, TheoShift-specific decisions
+
+---
+
+## 3. TheoShift App Info
+
+**Canonical Path:** `/opt/theoshift`  
+**Port:** 3001 (standard)  
+**Targets:**
+- STANDBY: blue-theoshift (Container 134, 10.92.3.24)
+- LIVE: green-theoshift (Container 132, 10.92.3.22)
+
+**Tech Stack:**
+- Framework: Next.js 15
+- Language: TypeScript
+- Database: PostgreSQL (Container 131, 10.92.3.21)
+- ORM: Prisma
+- Testing: Playwright
+- Process Manager: PM2
+
+**Key Directories:**
+- `/app` - Next.js app directory
+- `/components` - React components
+- `/lib` - Utilities and helpers
+- `/prisma` - Database schema and migrations
+- `/tests` - Playwright E2E tests
+
+---
+
+## 4. TheoShift Rules
+
+**Container-First Development:**
+- All development happens on containers (STANDBY or LIVE)
+- SSH to container before any commands
+- No local Mac builds or tests
+
+**Testing:**
+- Run tests on STANDBY before release
+- Test user: admin@theoshift.local
+- .env.test is container-local (chmod 600)
+
+**Deployment:**
+- /bump → deploy to STANDBY
+- /test-release → run tests on STANDBY
+- /release → switch traffic (STANDBY becomes LIVE)
+- /sync → sync STANDBY with LIVE code
+
+---
+
+## 5. Quick Commands
+
+**SSH:**
+```bash
+ssh blue-theoshift   # STANDBY
+ssh green-theoshift  # LIVE
+```
+
+**Testing:**
+```bash
+ssh blue-theoshift 'cd /opt/theoshift && npm run test:smoke:quick'
+ssh blue-theoshift 'cd /opt/theoshift && npm run test:e2e'
+```
+
+**Deployment:**
+```bash
+/bump theoshift
+/test-release theoshift
+/release theoshift
+/sync theoshift
+```
+
+**Database:**
+```bash
+ssh blue-theoshift 'cd /opt/theoshift && npx prisma studio'
+ssh blue-theoshift 'cd /opt/theoshift && npx prisma migrate dev'
+```
+
+---
+
+## 6. Context Hygiene
+
+**Daily:**
+- Update TASK-STATE.md at end of day
+- Run preflight before commits (if in control plane)
+
+**Weekly:**
+- Review DECISIONS.md
+- Prune old content from TASK-STATE.md
+
+---
+
+**Session Ready:** You now have full context for TheoShift work.

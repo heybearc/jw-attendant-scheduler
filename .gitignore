@@ -67,3 +67,11 @@ ecosystem.config.js
 deployment-state.json
 frontend/data/
 frontend/test-env.js
+
+# Playwright artifacts
+playwright-report/
+test-results/
+
+# Backup files
+*.bak
+tests/*.bak.*

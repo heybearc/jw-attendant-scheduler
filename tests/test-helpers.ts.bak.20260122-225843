@@ -5,8 +5,8 @@ import { Page } from '@playwright/test';
  */
 
 export async function login(page: Page, email?: string, password?: string) {
-  const testEmail = email || process.env.TEST_USER_EMAIL ;
-  const testPassword = password || process.env.TEST_USER_PASSWORD ;
+  const testEmail = email || process.env.TEST_USER_EMAIL || 'admin@test.com';
+  const testPassword = password || process.env.TEST_USER_PASSWORD || 'admin123';
   
   await page.goto('/login');
   await page.fill('input[name="email"]', testEmail);

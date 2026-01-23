@@ -6,8 +6,8 @@ import { test, expect } from '@playwright/test';
  */
 
 const TEST_USER = {
-  email: process.env.TEST_USER_EMAIL ,
-  password: process.env.TEST_USER_PASSWORD ,
+  email: process.env.TEST_USER_EMAIL || 'admin@theoshift.local',
+  password: process.env.TEST_USER_PASSWORD || 'AdminPass123!',
 };
 
 test.describe('Refactoring Validation - Position Management', () => {

@@ -6,8 +6,8 @@ import { test, expect } from '@playwright/test';
  */
 
 const TEST_USER = {
-  email: process.env.TEST_USER_EMAIL ,
-  password: process.env.TEST_USER_PASSWORD ,
+  email: process.env.TEST_USER_EMAIL || 'admin@test.com',
+  password: process.env.TEST_USER_PASSWORD || 'admin123',
 };
 
 test.describe('TheoShift - Quick Smoke Tests', () => {

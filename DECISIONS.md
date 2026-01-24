@@ -48,6 +48,36 @@
 - Clear separation between active and historical documentation
 - Archive includes README for context
 
+### D-TS-005: Standardize Admin Credentials
+**Date:** 2026-01-24  
+**Context:** Admin password was inconsistent between documentation (admin123) and production standard (AdminPass123!)  
+**Decision:** Standardize all admin credentials to admin@theoshift.local / AdminPass123! across all environments and documentation  
+**Consequences:**
+- Updated database passwords on both blue and green containers
+- Updated all seeding scripts and test documentation
+- Updated .env.test files on both containers
+- Tests now pass with consistent credentials
+
+### D-TS-006: Skip apex Comment Cleanup
+**Date:** 2026-01-24  
+**Context:** Found 417 "apex" references in codebase during Batch 6 cleanup  
+**Decision:** Keep all apex references as they are documentation comments only (e.g., "// APEX GUARDIAN: ..."), not functional code  
+**Consequences:**
+- No code changes needed for Batch 6
+- Historical context preserved in comments
+- Zero functional impact from keeping comments
+- No imports, function calls, or dependencies to remove
+
+### D-TS-007: Infrastructure Already Migrated
+**Date:** 2026-01-24  
+**Context:** Discovered during Batch 7 that database and HAProxy had already been migrated from jw_attendant to theoshift naming  
+**Decision:** Update code files to align with already-migrated infrastructure rather than performing new infrastructure migration  
+**Consequences:**
+- Database already renamed: theoshift_scheduler / theoshift_user
+- HAProxy backends already renamed: theoshift_blue / theoshift_green
+- Updated .env.postgresql, backup scripts, and MCP health checks to match
+- Legacy ACLs (is_jw_attendant) preserved until Feb 1, 2026 for domain migration
+
 ---
 
 ## Shared Decisions

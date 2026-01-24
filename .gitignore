@@ -85,3 +85,4 @@ tests/*.bak.*
 .windsurf/workflows/release.md
 .windsurf/workflows/sync.md
 .windsurf/workflows/container-dev.md
+.env.test

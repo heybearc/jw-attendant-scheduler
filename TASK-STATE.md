@@ -1,31 +1,38 @@
 # TheoShift Task State
 
-**Last updated:** 2026-01-24  
+**Last updated:** 2026-01-24 (mid-day)  
 **Current branch:** main  
-**Working on:** Phase 8.0 Context Management - Operational
+**Working on:** Repository Cleanup - Batches 1-3 Complete
 
 ---
 
 ## Current Task
-**Phase 8.0 context management system validated and operational**
+**Comprehensive repository cleanup and legacy code removal**
 
 ### What I'm doing right now
-Context management system is deployed and working. Ready for normal development work.
+Executing systematic cleanup of TheoShift repository. Completed Batches 1-3 (safe removals, documentation archival, legacy directories). Paused before Batches 4-7 which require STANDBY testing.
 
-### Recent completions
+### Recent completions (Today)
+- ✅ Branch cleanup: Deleted 27 stale remote branches
+- ✅ Batch 1: Removed 27 files/directories (backups, empty files, legacy tool dirs)
+- ✅ Batch 2: Archived 20 historical documents to docs/archive/
+- ✅ Batch 3: Removed 3 legacy directories (agents, nextjs-agents, mcp-server-ops)
+- ✅ Created BRANCH_AUDIT.md and LEGACY_CODE_AUDIT.md
+- ✅ Updated DECISIONS.md with cleanup decisions (D-TS-003, D-TS-004)
+
+### Previous completions
 - ✅ Cloudy-Work submodule added (.cloudy-work/)
 - ✅ Context templates deployed and validated
 - ✅ Workflow symlinks created (8 shared workflows)
 - ✅ LIVE/STANDBY verification system established (HAProxy-based)
-- ✅ Both environments synchronized on commit af4793f7
-- ✅ /start-day, /test-release, /release, /sync workflows validated
-- ✅ Local clone configured with workflow symlinks
+- ✅ Both environments synchronized
 
 ### Next steps
-1. Continue normal development work
-2. Use /start-day at session start
-3. Use /end-day to update context
-4. Follow container-first development model
+1. **Batches 4-7:** Code cleanup (wmacs, jw_scheduler, apex, jw_attendant references)
+   - Requires testing on STANDBY
+   - Full Playwright test suite validation
+   - Deploy and test one batch at a time
+2. Continue normal development work after cleanup complete
 
 ---
 
@@ -35,4 +42,4 @@ None currently
 ---
 
 ## Exact Next Command
-Ready for new work. Use /start-day to load context at beginning of each session.
+Batches 4-7 require STANDBY deployment and testing. Review LEGACY_CODE_AUDIT.md for detailed plan.

@@ -27,6 +27,27 @@
 - Clear separation between shared and local context
 - Requires submodule management in workflow
 
+### D-TS-003: Comprehensive Repository Cleanup
+**Date:** 2026-01-24  
+**Context:** Repository had 30+ stale branches, legacy tool directories, and outdated documentation cluttering the codebase  
+**Decision:** Execute systematic cleanup in batches: branches first, then files/directories, then code references  
+**Consequences:**
+- Deleted 27 remote branches (keeping only main + 2 safety branches)
+- Removed 47 files/directories (backups, empty files, legacy tools)
+- Archived 20 historical documents to docs/archive/
+- Established branch hygiene policy (delete after merge, 30-day safety branch retention)
+- Created BRANCH_AUDIT.md and LEGACY_CODE_AUDIT.md for tracking
+
+### D-TS-004: Archive Over Delete for Historical Documentation
+**Date:** 2026-01-24  
+**Context:** Need to clean up root directory but preserve historical context  
+**Decision:** Archive completed phase/refactoring docs to docs/archive/ instead of deletion  
+**Consequences:**
+- Historical context preserved for reference
+- Root directory decluttered
+- Clear separation between active and historical documentation
+- Archive includes README for context
+
 ---
 
 ## Shared Decisions

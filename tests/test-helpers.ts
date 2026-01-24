@@ -9,8 +9,8 @@ export async function login(page: Page, email?: string, password?: string) {
   const testPassword = password || process.env.TEST_USER_PASSWORD ;
   
   await page.goto('/auth/signin');
-  await page.fill('input[name="email"]', testEmail);
-  await page.fill('input[name="password"]', testPassword);
+  await page.fill('#email', testEmail);
+  await page.fill('#password', testPassword);
   await page.click('button[type="submit"]');
   await page.waitForURL(/\/(dashboard|events)/, { timeout: 10000 });
 }

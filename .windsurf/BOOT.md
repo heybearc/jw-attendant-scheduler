@@ -35,10 +35,25 @@ DECISIONS.md
 ## 3. TheoShift App Info
 
 **Canonical Path:** `/opt/theoshift`  
-**Port:** 3001 (standard)  
-**Targets:**
-- STANDBY: blue-theoshift (Container 134, 10.92.3.24)
-- LIVE: green-theoshift (Container 132, 10.92.3.22)
+**Port:** 3001 (standard)
+
+**⚠️ LIVE/STANDBY Status (Dynamic - Verify Before Deployment):**
+
+Blue-green roles swap during releases. Always verify current status via HAProxy:
+
+```bash
+# Verify which environment is LIVE vs STANDBY
+ssh prox "pct exec 136 -- grep 'use_backend.*if is_theoshift' /etc/haproxy/haproxy.cfg"
+
+# Or use helper script from Cloudy-Work
+.cloudy-work/_cloudy-ops/scripts/verify-live-standby.sh theoshift
+```
+
+**Environment Details:**
+- **blue-theoshift:** Container 134, IP 10.92.3.24
+- **green-theoshift:** Container 132, IP 10.92.3.22
+
+**Current roles determined by HAProxy configuration, not static assignments.**
 
 **Tech Stack:**
 - Framework: Next.js 15
@@ -60,7 +75,7 @@ DECISIONS.md
 ## 4. TheoShift Rules
 
 **Container-First Development:**
-- All development happens on containers (STANDBY or LIVE)
+- All development happens on containers (verify STANDBY first)
 - SSH to container before any commands
 - No local Mac builds or tests
 
@@ -73,22 +88,28 @@ DECISIONS.md
 - /bump → deploy to STANDBY
 - /test-release → run tests on STANDBY
 - /release → switch traffic (STANDBY becomes LIVE)
-- /sync → sync STANDBY with LIVE code
+- /sync → sync new STANDBY with LIVE code
 
 ---
 
 ## 5. Quick Commands
 
-**SSH:**
+**Verify Current Roles:**
 ```bash
-ssh blue-theoshift   # STANDBY
-ssh green-theoshift  # LIVE
+.cloudy-work/_cloudy-ops/scripts/verify-live-standby.sh theoshift
+```
+
+**SSH (verify role first):**
+```bash
+ssh blue-theoshift
+ssh green-theoshift
 ```
 
 **Testing:**
 ```bash
-ssh blue-theoshift 'cd /opt/theoshift && npm run test:smoke:quick'
-ssh blue-theoshift 'cd /opt/theoshift && npm run test:e2e'
+# Run on STANDBY (verify which one first)
+ssh <standby-host> 'cd /opt/theoshift && npm run test:smoke:quick'
+ssh <standby-host> 'cd /opt/theoshift && npm run test:e2e'
 ```
 
 **Deployment:**
@@ -101,8 +122,8 @@ ssh blue-theoshift 'cd /opt/theoshift && npm run test:e2e'
 
 **Database:**
 ```bash
-ssh blue-theoshift 'cd /opt/theoshift && npx prisma studio'
-ssh blue-theoshift 'cd /opt/theoshift && npx prisma migrate dev'
+ssh <current-host> 'cd /opt/theoshift && npx prisma studio'
+ssh <current-host> 'cd /opt/theoshift && npx prisma migrate dev'
 ```
 
 ---
@@ -111,7 +132,7 @@ ssh blue-theoshift 'cd /opt/theoshift && npx prisma migrate dev'
 
 **Daily:**
 - Update TASK-STATE.md at end of day
-- Run preflight before commits (if in control plane)
+- Verify LIVE/STANDBY status before deployments
 
 **Weekly:**
 - Review DECISIONS.md

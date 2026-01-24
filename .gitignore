@@ -86,3 +86,4 @@ tests/*.bak.*
 .windsurf/workflows/sync.md
 .windsurf/workflows/container-dev.md
 .env.test
+tsconfig.tsbuildinfo

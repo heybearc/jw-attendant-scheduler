@@ -8,7 +8,7 @@ async function createAdminUser() {
   console.log('====================================')
   
   try {
-    const email = 'admin@jwscheduler.local'
+    const email = 'admin@theoshift.local'
     const password = 'admin123'
     
     // Check if admin user already exists

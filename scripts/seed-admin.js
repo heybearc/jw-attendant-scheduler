@@ -17,7 +17,7 @@ async function seedAdmin() {
     }
 
     // Create admin user
-    const adminEmail = 'admin@jwscheduler.local'
+    const adminEmail = 'admin@theoshift.local'
     const adminPassword = 'AdminPass123!'
     const passwordHash = await bcrypt.hash(adminPassword, 12)
 

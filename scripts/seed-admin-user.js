@@ -18,7 +18,7 @@ async function seedAdminUser() {
 
     // Check if admin user already exists
     const adminUser = await prisma.users.findUnique({
-      where: { email: 'admin@jwscheduler.local' }
+      where: { email: 'admin@theoshift.local' }
     })
 
     if (adminUser) {
@@ -32,7 +32,7 @@ async function seedAdminUser() {
     const newAdmin = await prisma.users.create({
       data: {
         id: `admin_${Date.now()}`,
-        email: 'admin@jwscheduler.local',
+        email: 'admin@theoshift.local',
         firstName: 'System',
         lastName: 'Administrator',
         role: 'ADMIN',
@@ -49,7 +49,7 @@ async function seedAdminUser() {
     console.log(`   ID: ${newAdmin.id}`)
     console.log('')
     console.log('🔑 You can now sign in with:')
-    console.log('   Email: admin@jwscheduler.local')
+    console.log('   Email: admin@theoshift.local')
     console.log('   Password: admin123')
 
   } catch (error) {

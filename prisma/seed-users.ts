@@ -7,7 +7,7 @@ async function seedUsers() {
   console.log('🌱 Seeding default users...')
 
   // Create default admin user
-  const adminEmail = 'admin@jwscheduler.local'
+  const adminEmail = 'admin@theoshift.local'
   const adminPassword = 'admin123'
   
   const existingAdmin = await prisma.users.findUnique({

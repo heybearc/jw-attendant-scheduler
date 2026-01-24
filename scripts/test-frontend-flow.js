@@ -14,7 +14,7 @@ async function testFrontendFlow() {
     
     // Check if admin user exists and password is correct
     const adminUser = await prisma.users.findUnique({
-      where: { email: 'admin@jwscheduler.local' },
+      where: { email: 'admin@theoshift.local' },
       include: {
         accounts: true
       }

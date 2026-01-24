@@ -27,7 +27,7 @@ export const authOptions: AuthOptions = {
         email: { 
           label: "Email", 
           type: "email", 
-          placeholder: "admin@jwscheduler.local" 
+          placeholder: "admin@theoshift.local" 
         },
         password: { 
           label: "Password", 

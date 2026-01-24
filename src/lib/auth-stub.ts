@@ -28,7 +28,7 @@ export const useSession = (): UseSessionReturn => {
     data: {
       user: {
         id: '1',
-        email: 'admin@jwscheduler.local',
+        email: 'admin@theoshift.local',
         name: 'Admin User',
         role: 'ADMIN'
       },
@@ -45,7 +45,7 @@ export const getServerSession = async (): Promise<AuthSession | null> => {
   return {
     user: {
       id: '1',
-      email: 'admin@jwscheduler.local', 
+      email: 'admin@theoshift.local', 
       name: 'Admin User',
       role: 'ADMIN'
     },

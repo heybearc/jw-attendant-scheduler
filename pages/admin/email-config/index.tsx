@@ -290,7 +290,7 @@ export default function EmailConfigPage() {
               <label className="block text-sm font-medium text-gray-700 mb-2">From Email *</label>
               <input
                 type="email"
-                placeholder="noreply@jwscheduler.local"
+                placeholder="noreply@theoshift.local"
                 value={config.fromEmail}
                 onChange={(e) => setConfig({...config, fromEmail: e.target.value})}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -312,7 +312,7 @@ export default function EmailConfigPage() {
               <label className="block text-sm font-medium text-gray-700 mb-2">Reply-To Email</label>
               <input
                 type="email"
-                placeholder="admin@jwscheduler.local (optional)"
+                placeholder="admin@theoshift.local (optional)"
                 value={config.replyToEmail}
                 onChange={(e) => setConfig({...config, replyToEmail: e.target.value})}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"

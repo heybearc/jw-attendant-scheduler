@@ -10,7 +10,7 @@ async function testLoginFlow() {
   try {
     console.log('\n1. TESTING AUTHENTICATION LOGIC:')
     
-    const testEmail = 'admin@jwscheduler.local'
+    const testEmail = 'admin@theoshift.local'
     const testPassword = 'admin123'
     
     // Simulate the exact logic from NextAuth

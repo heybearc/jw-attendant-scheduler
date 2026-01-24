@@ -27,7 +27,7 @@ async function fixAuthentication() {
     console.log('\n2. VERIFYING USER ACCOUNT:')
     
     const adminUser = await prisma.users.findUnique({
-      where: { email: 'admin@jwscheduler.local' },
+      where: { email: 'admin@theoshift.local' },
       include: {
         accounts: true
       }
@@ -100,7 +100,7 @@ async function fixAuthentication() {
     console.log('NEXT STEPS:')
     console.log('1. Clear your browser cache and cookies for blue.theoshift.com')
     console.log('2. Go to: https://blue.theoshift.com/auth/signin')
-    console.log('3. Log in with: admin@jwscheduler.local / admin123')
+    console.log('3. Log in with: admin@theoshift.local / admin123')
     console.log('4. Try accessing events again')
     
   } catch (error) {

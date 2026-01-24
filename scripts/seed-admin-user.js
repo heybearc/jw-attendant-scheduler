@@ -37,7 +37,7 @@ async function seedAdminUser() {
         lastName: 'Administrator',
         role: 'ADMIN',
         isActive: true,
-        passwordHash: await bcrypt.hash('admin123', 12), // Default password
+        passwordHash: await bcrypt.hash('AdminPass123!', 12), // Default password
         updatedAt: new Date(),
         createdAt: new Date()
       }
@@ -50,7 +50,7 @@ async function seedAdminUser() {
     console.log('')
     console.log('🔑 You can now sign in with:')
     console.log('   Email: admin@theoshift.local')
-    console.log('   Password: admin123')
+    console.log('   Password: AdminPass123!')
 
   } catch (error) {
     console.error('❌ Error seeding admin user:', error)

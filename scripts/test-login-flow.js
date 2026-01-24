@@ -11,7 +11,7 @@ async function testLoginFlow() {
     console.log('\n1. TESTING AUTHENTICATION LOGIC:')
     
     const testEmail = 'admin@theoshift.local'
-    const testPassword = 'admin123'
+    const testPassword = 'AdminPass123!'
     
     // Simulate the exact logic from NextAuth
     const user = await prisma.users.findUnique({

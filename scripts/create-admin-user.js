@@ -9,7 +9,7 @@ async function createAdminUser() {
   
   try {
     const email = 'admin@theoshift.local'
-    const password = 'admin123'
+    const password = 'AdminPass123!'
     
     // Check if admin user already exists
     const existingUser = await prisma.users.findUnique({

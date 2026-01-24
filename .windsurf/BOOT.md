@@ -35,25 +35,12 @@ DECISIONS.md
 ## 3. TheoShift App Info
 
 **Canonical Path:** `/opt/theoshift`  
-**Port:** 3001 (standard)
+**Port:** 3001 (standard)  
+**Containers:**
+- blue-theoshift (Container 134, 10.92.3.24)
+- green-theoshift (Container 132, 10.92.3.22)
 
-**⚠️ LIVE/STANDBY Status (Dynamic - Verify Before Deployment):**
-
-Blue-green roles swap during releases. Always verify current status via HAProxy:
-
-```bash
-# Verify which environment is LIVE vs STANDBY
-ssh prox "pct exec 136 -- grep 'use_backend.*if is_theoshift' /etc/haproxy/haproxy.cfg"
-
-# Or use helper script from Cloudy-Work
-.cloudy-work/_cloudy-ops/scripts/verify-live-standby.sh theoshift
-```
-
-**Environment Details:**
-- **blue-theoshift:** Container 134, IP 10.92.3.24
-- **green-theoshift:** Container 132, IP 10.92.3.22
-
-**Current roles determined by HAProxy configuration, not static assignments.**
+**LIVE/STANDBY Status:** Dynamic - verify via HAProxy before deployments
 
 **Tech Stack:**
 - Framework: Next.js 15

@@ -37,7 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Get database sizes
     const { stdout: dbSizes } = await execAsync(
-      'ssh root@10.92.3.21 "sudo -u postgres psql -t -c \\"SELECT pg_database.datname, pg_size_pretty(pg_database_size(pg_database.datname)) FROM pg_database WHERE datname LIKE \'jw_attendant%\' ORDER BY datname;\\""'
+      'ssh root@10.92.3.21 "sudo -u postgres psql -t -c \\"SELECT pg_database.datname, pg_size_pretty(pg_database_size(pg_database.datname)) FROM pg_database WHERE datname LIKE \'theoshift%\' ORDER BY datname;\\""'
     )
 
     const databases = dbSizes.trim().split('\n').map(line => {

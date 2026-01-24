@@ -11,7 +11,7 @@ const fs = require('fs');
 class CorrectedMCPHealth {
     constructor() {
         this.serverHost = 'jws';
-        this.sshConfig = '-F /Users/cory/Documents/Cloudy-Work/ssh_config_jw_attendant';
+        this.sshConfig = '-F /Users/cory/Documents/Cloudy-Work/ssh_config_theoshift';
         this.projectPath = '/opt/theoshift';
         this.healthData = {};
     }
@@ -201,7 +201,7 @@ class CorrectedMCPHealth {
         const db = this.healthData.database;
         const admin = this.healthData.admin;
 
-        console.log('✅ CORRECTED JW Attendant Health Check\n');
+        console.log('✅ TheoShift Health Check\n');
         
         console.log('🏗️  Technology Stack:');
         console.log(`   Framework: ${tech.framework} ${tech.version || ''}`);

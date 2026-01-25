@@ -84,6 +84,14 @@ export default function AdminDashboard({ user, stats, userLastSeenVersion }: Adm
       icon: '🏢',
       color: 'bg-cyan-50 hover:bg-cyan-100 border-cyan-200',
       iconColor: 'text-cyan-600'
+    },
+    {
+      title: 'Assignment Templates',
+      description: 'Create and manage reusable assignment templates',
+      href: '/admin/assignment-templates',
+      icon: '📋',
+      color: 'bg-teal-50 hover:bg-teal-100 border-teal-200',
+      iconColor: 'text-teal-600'
     }
   ]
 

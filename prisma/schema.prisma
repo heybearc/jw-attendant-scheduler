@@ -165,6 +165,7 @@ model department_templates {
   children         department_templates[] @relation("DepartmentHierarchy")
   event_departments event_departments[]
   events           events[]
+  assignment_templates assignment_templates[]
 
   @@index([parentId])
 }

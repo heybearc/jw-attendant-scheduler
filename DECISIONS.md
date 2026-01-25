@@ -78,6 +78,18 @@
 - Updated .env.postgresql, backup scripts, and MCP health checks to match
 - Legacy ACLs (is_jw_attendant) preserved until Feb 1, 2026 for domain migration
 
+### D-TS-008: Phase 4C Scope Revision - Focus on Notifications and Confirmations
+**Date:** 2026-01-25  
+**Context:** Evaluated Phase 4C features against actual needs. Clone event feature already handles event metadata but not positions/assignments.  
+**Decision:** Approved 3 of 4 features - Assignment notifications, Assignment templates (complements clone), and enhanced Volunteer confirmation system (with bulk availability requests). Deferred assignment history/analytics to Phase 6.  
+**Consequences:**
+- Reduced timeline from 3-4 weeks to 2-3 weeks
+- Focus on high-value coordination features (notifications and confirmations)
+- Bulk availability requests added per user request
+- Assignment templates still needed (clone doesn't copy positions)
+- History/analytics deferred to Phase 6 (Reporting)
+- Detailed plan created: `/docs/PHASE_4C_REVISED_PLAN.md`
+
 ---
 
 ## Shared Decisions

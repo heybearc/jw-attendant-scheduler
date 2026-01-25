@@ -1028,9 +1028,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       where: { 
         eventId: id as string,
         isActive: true
-      },
-      include: {
-        shifts: true
       }
     })
     const positionIds = eventPositions.map(p => p.id)
@@ -1040,10 +1037,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       }
     })
     
-    // Calculate total shifts needed (positions with shifts = sum of shifts, positions without = 1 per position)
-    const totalShiftsNeeded = eventPositions.reduce((total, position) => {
-      return total + (position.shifts.length > 0 ? position.shifts.length : 1)
-    }, 0)
+    // Calculate total shifts needed (1 per position since shifts are not tracked on event_positions)
+    const totalShiftsNeeded = eventPositions.length
     
     console.log('🔍 FILL RATE DEBUG:', {
       totalPositions: eventPositions.length,

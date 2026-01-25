@@ -1000,7 +1000,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
             name: true
           }
         },
-        departmentTemplate: {
+        department_templates: {
           select: {
             id: true,
             name: true,
@@ -1106,7 +1106,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         endDate: child.endDate ? format(child.endDate, 'yyyy-MM-dd') : null
       })) || [],
       parentEvent: (event as any).other_events || null,
-      departmentTemplate: (event as any).departmentTemplate || null,
+      departmentTemplate: (event as any).department_templates || null,
       _count: {
         event_attendants: event.event_attendants?.length || 0,
         assignments: totalAssignments,

@@ -19,8 +19,8 @@ ALTER TABLE events ADD COLUMN IF NOT EXISTS notification_settings JSONB DEFAULT 
 
 -- Track sent notifications (audit log)
 CREATE TABLE IF NOT EXISTS assignment_notifications (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  assignment_id UUID NOT NULL,
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  assignment_id TEXT NOT NULL,
   notification_type VARCHAR(50) NOT NULL CHECK (notification_type IN ('CREATED', 'UPDATED', 'CANCELLED', 'REMINDER')),
   recipient_email VARCHAR(255) NOT NULL,
   sent_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
@@ -42,12 +42,12 @@ CREATE INDEX IF NOT EXISTS idx_assignment_notifications_sent_at ON assignment_no
 
 -- Store reusable position structures
 CREATE TABLE IF NOT EXISTS assignment_templates (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   name VARCHAR(255) NOT NULL,
   description TEXT,
-  department_template_id UUID REFERENCES department_templates(id) ON DELETE SET NULL,
+  department_template_id TEXT REFERENCES department_templates(id) ON DELETE SET NULL,
   event_type VARCHAR(100),
-  created_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_by TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   usage_count INTEGER DEFAULT 0,
@@ -88,9 +88,9 @@ CREATE INDEX IF NOT EXISTS idx_assignment_templates_usage ON assignment_template
 
 -- Track volunteer availability for events (bulk availability requests)
 CREATE TABLE IF NOT EXISTS volunteer_availability (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  event_id UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  event_id TEXT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   status VARCHAR(20) NOT NULL CHECK (status IN ('AVAILABLE', 'NOT_AVAILABLE', 'PARTIAL')),
   notes TEXT,
   available_dates JSONB, -- For partial availability: ["2026-02-15", "2026-02-16"]

@@ -107,6 +107,47 @@
 - Navigation updates required for all new pages
 - Hidden pages must be justified in code comments or documentation
 
+### D-TS-010: Database and Code Naming Convention Standard
+**Date:** 2026-01-25  
+**Context:** Inconsistent naming between database (snake_case) and code (camelCase) caused confusion and bugs during Phase 4C deployment. Need clear standard for all new features.  
+**Decision:** Adopt industry-standard PostgreSQL naming conventions with Prisma @map directives:
+- **Database layer:** snake_case for tables/columns (e.g., `assignment_templates`, `notification_settings`)
+- **Code layer:** PascalCase for models, camelCase for fields (e.g., `AssignmentTemplate`, `notificationSettings`)
+- **Bridge:** Use Prisma `@map` and `@@map` directives to connect the two
+- **API layer:** kebab-case for endpoints, camelCase for JSON
+
+**Rationale:**
+- PostgreSQL automatically lowercases unquoted identifiers, making snake_case natural
+- Avoids double-quote requirements in SQL queries
+- Maintains idiomatic TypeScript/JavaScript conventions in code
+- Industry standard approach recommended by Prisma and PostgreSQL community
+
+**Consequences:**
+- All new tables/columns must use snake_case in database
+- All new Prisma models must include @map directives
+- Created comprehensive documentation: `/docs/NAMING-CONVENTIONS.md`
+- Migration checklist added for new features
+- Reduces confusion and prevents schema mismatch bugs
+
+### D-TS-011: Configurable Debug Logging System
+**Date:** 2026-01-25  
+**Context:** Troubleshooting issues required code changes and manual log statements. Need better way to enable detailed logging without modifying code.  
+**Decision:** Implement environment-variable-controlled debug logging system with multiple contexts and levels  
+**Features:**
+- **Contexts:** API, DATABASE, AUTH, EMAIL, EVENTS, ASSIGNMENTS, PRISMA, GENERAL
+- **Levels:** ERROR, WARN, INFO, DEBUG, TRACE
+- **Configuration:** Via environment variables (DEBUG_ENABLED, DEBUG_LEVEL, DEBUG_CONTEXTS, etc.)
+- **Output:** Console and optional file logging
+- **Convenience methods:** `debug.prismaQuery()`, `debug.apiRequest()`, `debug.dbOperation()`
+
+**Consequences:**
+- Can enable detailed logging on STANDBY without code changes
+- Faster troubleshooting and debugging
+- Configurable verbosity and context filtering
+- Created debug utility: `/src/lib/debug.ts`
+- Created documentation: `/docs/DEBUG-MODE.md`
+- Can be enabled/disabled per environment via .env
+
 ---
 
 ## Shared Decisions

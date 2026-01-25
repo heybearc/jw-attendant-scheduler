@@ -90,6 +90,23 @@
 - History/analytics deferred to Phase 6 (Reporting)
 - Detailed plan created: `/docs/PHASE_4C_REVISED_PLAN.md`
 
+### D-TS-009: Navigation Consistency Requirement
+**Date:** 2026-01-25  
+**Context:** Created Assignment Templates feature but only added to admin dashboard, not sidebar menu  
+**Decision:** All new pages MUST have navigation in ALL relevant menus (dashboard cards AND sidebar)  
+**Requirements:**
+- **Admin pages:** Must appear in both admin dashboard cards AND AdminLayout sidebar
+- **User pages:** Must appear in relevant user navigation menus
+- **Hidden pages:** Must be explicitly documented as intentionally hidden (e.g., token-based pages, API endpoints)
+- **Documentation:** Navigation locations must be noted in commit messages
+
+**Consequences:**
+- Improved discoverability of features
+- Consistent user experience
+- Prevents orphaned pages
+- Navigation updates required for all new pages
+- Hidden pages must be justified in code comments or documentation
+
 ---
 
 ## Shared Decisions

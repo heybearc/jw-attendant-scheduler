@@ -26,9 +26,10 @@ export default function AdminLayout({ children, title, breadcrumbs = [], userLas
     { label: 'Dashboard', href: '/admin', icon: '🏠' },
     { label: 'User Management', href: '/admin/users', icon: '👥' },
     { label: 'Department Templates', href: '/admin/departments', icon: '🏢' },
+    { label: 'Assignment Templates', href: '/admin/assignment-templates', icon: '📋' },
     { label: 'Health Monitor', href: '/admin/health', icon: '💚' },
     { label: 'API Status', href: '/admin/api-status', icon: '📊' },
-    { label: 'Audit Logs', href: '/admin/audit-logs', icon: '📋' },
+    { label: 'Audit Logs', href: '/admin/audit-logs', icon: '📝' },
     { label: 'System Operations', href: '/admin/system-ops', icon: '⚡' },
     { label: 'Email Configuration', href: '/admin/email-config', icon: '📧' },
   ]

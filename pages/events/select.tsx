@@ -338,7 +338,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           _count: {
             select: {
               event_attendants: true,
-              event_positions: true
+              positions: true
             }
           }
         }
@@ -347,7 +347,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       return {
         ...event,
         attendantsCount: counts?._count.event_attendants || 0,
-        positionsCount: counts?._count.event_positions || 0
+        positionsCount: counts?._count.positions || 0
       }
     })
   )

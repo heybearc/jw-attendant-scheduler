@@ -45,7 +45,6 @@ export default function AssignmentTemplatesPage() {
     search: '',
     isActive: 'true'
   })
-  const [showCreateModal, setShowCreateModal] = useState(false)
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null)
 
   useEffect(() => {
@@ -110,7 +109,7 @@ export default function AssignmentTemplatesPage() {
               </h1>
             </div>
             <button
-              onClick={() => setShowCreateModal(true)}
+              onClick={() => router.push('/admin/assignment-templates/create')}
               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
             >
               + Create Template
@@ -181,7 +180,7 @@ export default function AssignmentTemplatesPage() {
           <div className="bg-white rounded-lg shadow-sm p-12 text-center">
             <p className="text-gray-600 mb-4">No templates found</p>
             <button
-              onClick={() => setShowCreateModal(true)}
+              onClick={() => router.push('/admin/assignment-templates/create')}
               className="text-blue-600 hover:text-blue-800"
             >
               Create your first template
@@ -351,23 +350,6 @@ export default function AssignmentTemplatesPage() {
         </div>
       )}
 
-      {/* Create Modal Placeholder */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-2xl w-full p-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Create New Template</h2>
-            <p className="text-gray-600 mb-6">
-              Template creation form will be implemented in the next iteration.
-            </p>
-            <button
-              onClick={() => setShowCreateModal(false)}
-              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

@@ -21,6 +21,7 @@ interface AssignmentEmailData {
   overseerPhone?: string
   notes?: string
   eventUrl: string
+  confirmationToken?: string
 }
 
 interface AssignmentUpdateData extends AssignmentEmailData {
@@ -417,6 +418,27 @@ export function generateAssignmentReminderEmail(data: AssignmentReminderData): s
               </tr>
             </table>
           </div>
+
+          ${data.confirmationToken ? `
+          <!-- Confirmation Buttons -->
+          <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 20px; margin: 20px 0;">
+            <h3 style="color: #92400e; margin: 0 0 15px 0;">⚡ Please Confirm Your Availability</h3>
+            <p style="color: #92400e; margin: 0 0 20px 0;">
+              Let us know if you can serve at this assignment. Your confirmation helps us plan more effectively.
+            </p>
+            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+              <a href="${process.env.NEXTAUTH_URL}/assignments/confirm/${data.confirmationToken}?action=confirm" style="display: inline-block; background-color: #10b981; color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; font-size: 14px;">
+                ✅ Confirm
+              </a>
+              <a href="${process.env.NEXTAUTH_URL}/assignments/confirm/${data.confirmationToken}?action=tentative" style="display: inline-block; background-color: #f59e0b; color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; font-size: 14px;">
+                ⏳ Tentative
+              </a>
+              <a href="${process.env.NEXTAUTH_URL}/assignments/confirm/${data.confirmationToken}?action=decline" style="display: inline-block; background-color: #ef4444; color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; font-size: 14px;">
+                ❌ Decline
+              </a>
+            </div>
+          </div>
+          ` : ''}
 
           <!-- Action Button -->
           <div style="text-align: center; margin: 30px 0;">

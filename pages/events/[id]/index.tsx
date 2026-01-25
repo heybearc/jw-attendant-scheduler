@@ -983,8 +983,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
             users: true
           }
         },
-        event_positions: true,
-        events: {
+        positions: true,
+        childEvents: {
           select: {
             id: true,
             name: true,
@@ -992,15 +992,18 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
             startDate: true,
             endDate: true,
             status: true
+          },
+          orderBy: {
+            startDate: 'asc'
           }
         },
-        other_events: {
+        parentEvent: {
           select: {
             id: true,
             name: true
           }
         },
-        department_templates: {
+        departmentTemplate: {
           select: {
             id: true,
             name: true,
@@ -1024,10 +1027,13 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     // Get total position assignments for this event
     // Query through positions first to avoid relation name issues
     // ONLY count active positions for fill rate calculation
-    const eventPositions = await prisma.event_positions.findMany({
+    const eventPositions = await prisma.positions.findMany({
       where: { 
         eventId: id as string,
         isActive: true
+      },
+      include: {
+        shifts: true
       }
     })
     const positionIds = eventPositions.map(p => p.id)
@@ -1037,8 +1043,10 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       }
     })
     
-    // Calculate total shifts needed (1 per position since shifts are not tracked on event_positions)
-    const totalShiftsNeeded = eventPositions.length
+    // Calculate total shifts needed (positions with shifts = sum of shifts, positions without = 1 per position)
+    const totalShiftsNeeded = eventPositions.reduce((total, position) => {
+      return total + (position.shifts.length > 0 ? position.shifts.length : 1)
+    }, 0)
     
     console.log('🔍 FILL RATE DEBUG:', {
       totalPositions: eventPositions.length,
@@ -1095,17 +1103,17 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       createdAt: event.createdAt?.toISOString() || null,
       updatedAt: event.updatedAt?.toISOString() || null,
       totalShiftsNeeded,
-      childEvents: (event as any).events?.map((child: any) => ({
+      childEvents: (event as any).childEvents?.map((child: any) => ({
         ...child,
         startDate: child.startDate ? format(child.startDate, 'yyyy-MM-dd') : null,
         endDate: child.endDate ? format(child.endDate, 'yyyy-MM-dd') : null
       })) || [],
-      parentEvent: (event as any).other_events || null,
-      departmentTemplate: (event as any).department_templates || null,
+      parentEvent: (event as any).parentEvent || null,
+      departmentTemplate: (event as any).departmentTemplate || null,
       _count: {
         event_attendants: event.event_attendants?.length || 0,
         assignments: totalAssignments,
-        positions: event.event_positions?.length || 0
+        positions: event.positions?.length || 0
       },
       countStats: {
         peakAttendance,

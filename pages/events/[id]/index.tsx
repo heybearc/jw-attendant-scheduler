@@ -992,9 +992,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
             startDate: true,
             endDate: true,
             status: true
-          },
-          orderBy: {
-            startDate: 'asc'
           }
         },
         other_events: {

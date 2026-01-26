@@ -984,7 +984,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           }
         },
         positions: true,
-        events: {
+        childEvents: {
           select: {
             id: true,
             name: true,
@@ -997,13 +997,13 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
             startDate: 'asc'
           }
         },
-        other_events: {
+        parentEvent: {
           select: {
             id: true,
             name: true
           }
         },
-        department_templates: {
+        departmentTemplate: {
           select: {
             id: true,
             name: true,
@@ -1103,13 +1103,13 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       createdAt: event.createdAt?.toISOString() || null,
       updatedAt: event.updatedAt?.toISOString() || null,
       totalShiftsNeeded,
-      childEvents: (event as any).events?.map((child: any) => ({
+      childEvents: (event as any).childEvents?.map((child: any) => ({
         ...child,
         startDate: child.startDate ? format(child.startDate, 'yyyy-MM-dd') : null,
         endDate: child.endDate ? format(child.endDate, 'yyyy-MM-dd') : null
       })) || [],
-      parentEvent: (event as any).other_events || null,
-      departmentTemplate: (event as any).department_templates || null,
+      parentEvent: (event as any).parentEvent || null,
+      departmentTemplate: (event as any).departmentTemplate || null,
       _count: {
         event_attendants: event.event_attendants?.length || 0,
         assignments: totalAssignments,

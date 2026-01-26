@@ -131,18 +131,36 @@
 
 ### D-TS-011: Configurable Debug Logging System
 **Date:** 2026-01-25  
-**Context:** Troubleshooting issues required code changes and manual log statements. Need better way to enable detailed logging without modifying code.  
-**Decision:** Implement environment-variable-controlled debug logging system with multiple contexts and levels  
-**Features:**
-- **Contexts:** API, DATABASE, AUTH, EMAIL, EVENTS, ASSIGNMENTS, PRISMA, GENERAL
-- **Levels:** ERROR, WARN, INFO, DEBUG, TRACE
-- **Configuration:** Via environment variables (DEBUG_ENABLED, DEBUG_LEVEL, DEBUG_CONTEXTS, etc.)
-- **Output:** Console and optional file logging
-- **Convenience methods:** `debug.prismaQuery()`, `debug.apiRequest()`, `debug.dbOperation()`
+**Context:** Need better visibility into application behavior without cluttering production logs  
+**Decision:** Implement environment-variable controlled debug logging system with configurable contexts and levels  
+**Consequences:**
+- Created `src/lib/debug.ts` utility with DEBUG_LEVEL and DEBUG_CONTEXTS support
+- Documentation in `docs/DEBUG-MODE.md`
+- Can enable/disable debug output per context (auth, api, db, etc.)
+- Helps troubleshoot issues without modifying code
+
+### D-TS-012: Navigation Consistency Requirement
+**Date:** 2026-01-25  
+**Context:** Created Assignment Templates feature but only added to admin dashboard, not sidebar menu  
+**Decision:** All new pages MUST have navigation in ALL relevant menus (dashboard cards AND sidebar)  
+**Requirements:**
+- **Admin pages:** Must appear in both admin dashboard cards AND AdminLayout sidebar
+- **User pages:** Must appear in relevant user navigation menus
+- **Hidden pages:** Must be explicitly documented as intentionally hidden (e.g., token-based pages, API endpoints)
+- **Documentation:** Navigation locations must be noted in commit messages
 
 **Consequences:**
-- Can enable detailed logging on STANDBY without code changes
-- Faster troubleshooting and debugging
+- Improved discoverability of features
+- Consistent user experience
+- Prevents orphaned pages
+- Navigation updates required for all new pages
+- Hidden pages must be justified in code comments or documentation
+
+### D-TS-013: Database Naming Convention Exceptions
+**Date:** 2026-01-25  
+**Context:** During Phase 4C deployment, discovered that `count_sessions` and `position_counts` tables use camelCase column names (eventId, sessionName, countSessionId) instead of snake_case like other tables. This caused Prisma query errors when incorrect @map directives were added.  
+**Decision:** Accept that not all tables follow snake_case convention. Only add @map directives to tables that actually use snake_case in the database. Verify actual database schema before adding mappings.  
+**Consequences:** Must check actual database column names (via `\d table_name`) before assuming naming convention. D-TS-010 naming standard applies to new tables, but legacy tables may vary.
 - Configurable verbosity and context filtering
 - Created debug utility: `/src/lib/debug.ts`
 - Created documentation: `/docs/DEBUG-MODE.md`

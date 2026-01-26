@@ -49,9 +49,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             oversight: true
           }
         },
-        lanyards: {
+        lanyard_settings: {
           include: {
-            lanyard_settings: true
+            lanyards: true
           }
         },
         count_sessions: {
@@ -251,20 +251,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
     }
 
-    // Clone lanyards
-    for (const lanyard of originalEvent.lanyards) {
-      await prisma.lanyards.create({
+    // Clone lanyards (if lanyard settings exist)
+    if (originalEvent.lanyard_settings) {
+      // First create lanyard_settings for the new event
+      const newLanyardSettingsId = uuidv4()
+      await prisma.lanyard_settings.create({
         data: {
-          id: uuidv4(),
-          lanyardSettingId: lanyard.lanyardSettingId,
-          badgeNumber: lanyard.badgeNumber,
-          attendantId: lanyard.attendantId,
+          id: newLanyardSettingsId,
           eventId: newEventId,
-          status: lanyard.status,
-          printedAt: null, // Reset printed status for new event
-          notes: lanyard.notes
+          totalLanyards: originalEvent.lanyard_settings.totalLanyards,
+          availableLanyards: originalEvent.lanyard_settings.availableLanyards,
+          isActive: originalEvent.lanyard_settings.isActive,
+          updatedAt: new Date()
         }
       })
+
+      // Then clone individual lanyards
+      for (const lanyard of originalEvent.lanyard_settings.lanyards) {
+        await prisma.lanyards.create({
+          data: {
+            id: uuidv4(),
+            lanyardSettingId: newLanyardSettingsId,
+            badgeNumber: lanyard.badgeNumber,
+            attendantId: lanyard.attendantId,
+            eventId: newEventId,
+            status: lanyard.status,
+            printedAt: null, // Reset printed status for new event
+            notes: lanyard.notes
+          }
+        })
+      }
     }
 
     // Note: We intentionally do NOT clone count_sessions as those are event-specific
@@ -272,13 +288,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const positionCount = useOldSystem ? originalEvent.event_positions.length : originalEvent.positions.length
     const systemUsed = useOldSystem ? 'old' : 'new'
+    const lanyardCount = originalEvent.lanyard_settings?.lanyards.length || 0
     
     return res.status(200).json({ 
       success: true, 
       data: { 
         id: newEventId,
         name: clonedEvent.name,
-        message: `Event cloned successfully with ${positionCount} positions (${systemUsed} system), ${originalEvent.event_attendants.length} volunteers, and ${originalEvent.lanyards.length} lanyards`
+        message: `Event cloned successfully with ${positionCount} positions (${systemUsed} system), ${originalEvent.event_attendants.length} volunteers, and ${lanyardCount} lanyards`
       }
     })
 

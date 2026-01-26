@@ -59,8 +59,17 @@ export function VolunteerBadges({
   }
 
   const getAvailabilityBadge = () => {
+    // Always show a clickable badge - default to placeholder if no status
     if (!availabilityStatus) {
-      return null // No availability request sent yet
+      return (
+        <span 
+          className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-600 cursor-pointer hover:bg-gray-200 border border-dashed border-gray-400"
+          onClick={onAvailabilityClick}
+          title="Click to set availability status"
+        >
+          📋 Set Status
+        </span>
+      )
     }
 
     const badges = {

@@ -96,11 +96,11 @@ model assignments {
   assignedAt          DateTime         @default(now())
   createdAt           DateTime         @default(now())
   updatedAt           DateTime
-  confirmationStatus  String?          @default("PENDING")
-  confirmationToken   String?          @unique
-  confirmedAt         DateTime?
-  confirmationNotes   String?
-  declinedReason      String?
+  confirmationStatus  String?          @default("PENDING") @map("confirmation_status")
+  confirmationToken   String?          @unique @map("confirmation_token")
+  confirmedAt         DateTime?        @map("confirmed_at")
+  confirmationNotes   String?          @map("confirmation_notes")
+  declinedReason      String?          @map("declined_reason")
   events              events           @relation(fields: [eventId], references: [id], onDelete: Cascade)
   event_positions     event_positions  @relation(fields: [positionId], references: [id], onDelete: Cascade)
   users               users            @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -712,15 +712,15 @@ model users {
 
 model assignment_notifications {
   id              String    @id @default(uuid())
-  assignmentId    String
-  notificationType String
-  recipientEmail  String
-  sentAt          DateTime  @default(now())
+  assignmentId    String    @map("assignment_id")
+  notificationType String   @map("notification_type")
+  recipientEmail  String    @map("recipient_email")
+  sentAt          DateTime  @default(now()) @map("sent_at")
   status          String    @default("sent")
-  errorMessage    String?
-  emailSubject    String?
-  emailBody       String?
-  createdAt       DateTime  @default(now())
+  errorMessage    String?   @map("error_message")
+  emailSubject    String?   @map("email_subject")
+  emailBody       String?   @map("email_body")
+  createdAt       DateTime  @default(now()) @map("created_at")
   assignment      assignments @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
 
   @@index([assignmentId])
@@ -733,13 +733,13 @@ model assignment_templates {
   id                   String                @id @default(uuid())
   name                 String
   description          String?
-  departmentTemplateId String?
-  eventType            String?
-  createdBy            String
-  createdAt            DateTime              @default(now())
-  updatedAt            DateTime              @updatedAt
-  usageCount           Int                   @default(0)
-  lastUsedAt           DateTime?
+  departmentTemplateId String?               @map("department_template_id")
+  eventType            String?               @map("event_type")
+  createdBy            String                @map("created_by")
+  createdAt            DateTime              @default(now()) @map("created_at")
+  updatedAt            DateTime              @updatedAt @map("updated_at")
+  usageCount           Int                   @default(0) @map("usage_count")
+  lastUsedAt           DateTime?             @map("last_used_at")
   positions            Json
   departmentTemplate   department_templates? @relation(fields: [departmentTemplateId], references: [id], onDelete: SetNull)
   creator              users                 @relation(fields: [createdBy], references: [id], onDelete: Cascade)
@@ -753,17 +753,17 @@ model assignment_templates {
 
 model volunteer_availability {
   id             String    @id @default(uuid())
-  eventId        String
-  userId         String
+  eventId        String    @map("event_id")
+  userId         String    @map("user_id")
   status         String
   notes          String?
-  availableDates Json?
-  availableTimes Json?
-  requestedAt    DateTime  @default(now())
-  respondedAt    DateTime?
-  reminderSentAt DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  availableDates Json?     @map("available_dates")
+  availableTimes Json?     @map("available_times")
+  requestedAt    DateTime  @default(now()) @map("requested_at")
+  respondedAt    DateTime? @map("responded_at")
+  reminderSentAt DateTime? @map("reminder_sent_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
   event          events    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   user           users     @relation(fields: [userId], references: [id], onDelete: Cascade)
 

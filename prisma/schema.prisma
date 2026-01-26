@@ -701,7 +701,6 @@ model users {
   position_oversight_assignments position_oversight_assignments[]
   shift_templates                shift_templates[]
   volunteer                      volunteers?
-  volunteer_availability         volunteer_availability[]
   assignment_templates           assignment_templates[]
 }
 

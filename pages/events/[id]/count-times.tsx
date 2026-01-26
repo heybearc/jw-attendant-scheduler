@@ -8,6 +8,23 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 
+// Client-side only date formatter to avoid hydration errors
+function ClientDate({ isoString }: { isoString: string }) {
+  const [formatted, setFormatted] = useState('')
+  
+  useEffect(() => {
+    const date = new Date(isoString)
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    setFormatted(`${month}/${day}/${year} ${hours}:${minutes}`)
+  }, [isoString])
+  
+  return <>{formatted || 'Loading...'}</>
+}
+
 interface CountSession {
   id: string
   sessionName: string
@@ -221,15 +238,7 @@ export default function EventCountTimesPage({ eventId, event, countSessions, can
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900">{session.sessionName}</h3>
                       <p className="text-sm text-gray-600">
-                        Count Time: {(() => {
-                          const date = new Date(session.countTime)
-                          const year = date.getFullYear()
-                          const month = String(date.getMonth() + 1).padStart(2, '0')
-                          const day = String(date.getDate()).padStart(2, '0')
-                          const hours = String(date.getHours()).padStart(2, '0')
-                          const minutes = String(date.getMinutes()).padStart(2, '0')
-                          return `${month}/${day}/${year} ${hours}:${minutes}`
-                        })()}
+                        Count Time: <ClientDate isoString={session.countTime} />
                       </p>
                     </div>
                     <div className="flex items-center space-x-2 flex-wrap gap-2">

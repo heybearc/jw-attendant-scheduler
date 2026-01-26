@@ -6,6 +6,7 @@ import EventNavigation from '../../../components/EventNavigation'
 import { TemplateProvider } from '../../../contexts/TemplateContext'
 import { VolunteerText } from '../../../components/DynamicText'
 import { CustomFieldsDisplay } from '../../../components/CustomFieldsRenderer'
+import { SafeDate } from '../../../components/SafeDate'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
@@ -134,57 +135,7 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
   const [loading] = useState(false)
   const [error] = useState('')
 
-  const formatDate = (dateString: string) => {
-    if (!dateString) return 'No date'
-    try {
-      // Extract date parts to avoid timezone issues
-      const dateOnly = dateString.split('T')[0]
-      const [year, month, day] = dateOnly.split('-')
-      const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
-      
-      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-      const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
-      
-      return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`
-    } catch (error) {
-      console.error('Date formatting error:', error, dateString)
-      return 'Invalid date'
-    }
-  }
-
-  const formatTime = (timeString: string) => {
-    try {
-      // Use simple string manipulation to avoid hydration issues
-      const [hours, minutes] = timeString.split(':')
-      const hour = parseInt(hours)
-      const min = minutes || '00'
-      const ampm = hour >= 12 ? 'PM' : 'AM'
-      const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
-      return `${displayHour}:${min} ${ampm}`
-    } catch (error) {
-      return timeString
-    }
-  }
-
-  const formatDateTime = (dateString: string) => {
-    if (!dateString) return 'No date'
-    try {
-      // Parse ISO string manually to avoid timezone issues
-      const date = new Date(dateString)
-      const month = String(date.getMonth() + 1).padStart(2, '0')
-      const day = String(date.getDate()).padStart(2, '0')
-      const year = date.getFullYear()
-      let hours = date.getHours()
-      const minutes = String(date.getMinutes()).padStart(2, '0')
-      const ampm = hours >= 12 ? 'PM' : 'AM'
-      hours = hours % 12 || 12
-      
-      return `${month}/${day}/${year}, ${hours}:${minutes} ${ampm}`
-    } catch (error) {
-      console.error('DateTime formatting error:', error, dateString)
-      return 'Invalid date'
-    }
-  }
+  // Date formatting now handled by SafeDate component to prevent hydration errors
 
   const getStatusBadge = (status: string) => {
     const statusColors = {
@@ -319,8 +270,8 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
       ['Name', event.name],
       ['Type', event.eventType],
       ['Status', event.status],
-      ['Start Date', formatDate(event.startDate)],
-      ['End Date', formatDate(event.endDate)],
+      ['Start Date', event.startDate],
+      ['End Date', event.endDate],
       ['Location', event.location || 'Not specified'],
       [''],
       ['Statistics'],
@@ -413,7 +364,7 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
                 </span>
               </div>
               <p className="mt-2 text-sm text-gray-600">
-                {getEventTypeLabel(event.eventType)} • {formatDate(event.startDate)}
+                {getEventTypeLabel(event.eventType)} • <SafeDate dateString={event.startDate} format="full" />
               </p>
             </div>
             <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3">
@@ -516,20 +467,20 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-500">Start Date</label>
-                  <p className="mt-1 text-sm font-semibold text-gray-900">{formatDate(event.startDate)}</p>
+                  <p className="mt-1 text-sm font-semibold text-gray-900"><SafeDate dateString={event.startDate} format="full" /></p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-500">End Date</label>
-                  <p className="mt-1 text-sm font-semibold text-gray-900">{formatDate(event.endDate)}</p>
+                  <p className="mt-1 text-sm font-semibold text-gray-900"><SafeDate dateString={event.endDate} format="full" /></p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-500">Start Time</label>
-                  <p className="mt-1 text-sm font-semibold text-gray-900">{formatTime(event.startTime)}</p>
+                  <p className="mt-1 text-sm font-semibold text-gray-900"><SafeDate dateString={event.startTime} format="time" /></p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-500">End Time</label>
                   <p className="mt-1 text-sm font-semibold text-gray-900">
-                    {event.endTime ? formatTime(event.endTime) : 'Not specified'}
+                    {event.endTime ? <SafeDate dateString={event.endTime} format="time" /> : 'Not specified'}
                   </p>
                 </div>
                 <div className="md:col-span-2">
@@ -631,7 +582,7 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
                             </span>
                             <span className="flex items-center">
                               <span className="mr-1">📅</span>
-                              {formatDate(childEvent.startDate)} - {formatDate(childEvent.endDate)}
+                              <SafeDate dateString={childEvent.startDate} format="full" /> - <SafeDate dateString={childEvent.endDate} format="full" />
                             </span>
                             <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusBadge(childEvent.status)}`}>
                               {childEvent.status}
@@ -771,7 +722,7 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
                         <div className="flex-1">
                           <div className="font-medium text-gray-900">{session.sessionName}</div>
                           <div className="text-xs text-gray-500">
-                            {formatDateTime(session.countTime)} • {session.positionsReported} positions
+                            <SafeDate dateString={session.countTime} format="datetime" /> • {session.positionsReported} positions
                           </div>
                         </div>
                         <div className="text-right">
@@ -867,21 +818,21 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
                   <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
                   <div>
                     <div className="font-medium">Event Created</div>
-                    <div className="text-gray-500">{formatDate(event.createdAt)}</div>
+                    <div className="text-gray-500"><SafeDate dateString={event.createdAt} format="full" /></div>
                   </div>
                 </div>
                 <div className="flex items-center text-sm">
                   <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
                   <div>
                     <div className="font-medium">Last Updated</div>
-                    <div className="text-gray-500">{formatDate(event.updatedAt)}</div>
+                    <div className="text-gray-500"><SafeDate dateString={event.updatedAt} format="full" /></div>
                   </div>
                 </div>
                 <div className="flex items-center text-sm">
                   <div className="w-2 h-2 bg-yellow-500 rounded-full mr-3"></div>
                   <div>
                     <div className="font-medium">Event Date</div>
-                    <div className="text-gray-500">{formatDate(event.startDate)}</div>
+                    <div className="text-gray-500"><SafeDate dateString={event.startDate} format="full" /></div>
                   </div>
                 </div>
               </div>

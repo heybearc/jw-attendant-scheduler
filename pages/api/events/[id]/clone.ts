@@ -1,0 +1,230 @@
+import { NextApiRequest, NextApiResponse } from "next"
+import { getServerSession } from "next-auth"
+import { authOptions } from "../../auth/[...nextauth]"
+import { prisma } from "../../../../src/lib/prisma"
+import { v4 as uuidv4 } from 'uuid'
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: "Method not allowed" })
+  }
+
+  const session = await getServerSession(req, res, authOptions)
+  
+  if (!session) {
+    return res.status(401).json({ error: "Unauthorized" })
+  }
+
+  const { id } = req.query
+  const { name } = req.body
+
+  if (!id || typeof id !== "string") {
+    return res.status(400).json({ error: "Event ID is required" })
+  }
+
+  if (!name || typeof name !== "string") {
+    return res.status(400).json({ error: "Event name is required" })
+  }
+
+  try {
+    // Fetch the original event with all related data
+    const originalEvent = await prisma.events.findUnique({
+      where: { id },
+      include: {
+        event_attendants: {
+          include: {
+            attendant: true
+          }
+        },
+        positions: {
+          include: {
+            shifts: true,
+            assignments: true,
+            oversight: true
+          }
+        },
+        lanyards: {
+          include: {
+            lanyard_settings: true
+          }
+        },
+        count_sessions: {
+          include: {
+            position_counts: true
+          }
+        }
+      }
+    })
+
+    if (!originalEvent) {
+      return res.status(404).json({ error: "Event not found" })
+    }
+
+    // Get current user
+    const user = await prisma.users.findUnique({
+      where: { email: session.user.email }
+    })
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" })
+    }
+
+    // Create the cloned event
+    const newEventId = uuidv4()
+    const clonedEvent = await prisma.events.create({
+      data: {
+        id: newEventId,
+        name: name,
+        description: originalEvent.description,
+        eventType: originalEvent.eventType,
+        startDate: originalEvent.startDate,
+        endDate: originalEvent.endDate,
+        startTime: originalEvent.startTime,
+        endTime: originalEvent.endTime,
+        location: originalEvent.location,
+        capacity: originalEvent.capacity,
+        attendantsNeeded: originalEvent.attendantsNeeded,
+        status: 'UPCOMING',
+        createdBy: user.id,
+        departmentTemplateId: originalEvent.departmentTemplateId,
+        // Clone oversight details
+        circuitoverseername: originalEvent.circuitoverseername,
+        circuitoverseerphone: originalEvent.circuitoverseerphone,
+        circuitoverseeremail: originalEvent.circuitoverseeremail,
+        assemblyoverseername: originalEvent.assemblyoverseername,
+        assemblyoverseerphone: originalEvent.assemblyoverseerphone,
+        assemblyoverseeremail: originalEvent.assemblyoverseeremail,
+        attendantoverseername: originalEvent.attendantoverseername,
+        attendantoverseerphone: originalEvent.attendantoverseerphone,
+        attendantoverseeremail: originalEvent.attendantoverseeremail,
+        attendantoverseerassistants: originalEvent.attendantoverseerassistants,
+        settings: originalEvent.settings
+      }
+    })
+
+    // Clone event_attendants (volunteers)
+    const attendantMapping = new Map<string, string>()
+    for (const eventAttendant of originalEvent.event_attendants) {
+      const newAttendantId = uuidv4()
+      attendantMapping.set(eventAttendant.id, newAttendantId)
+      
+      await prisma.event_attendants.create({
+        data: {
+          id: newAttendantId,
+          eventId: newEventId,
+          userId: eventAttendant.userId,
+          attendantId: eventAttendant.attendantId,
+          role: eventAttendant.role,
+          isActive: eventAttendant.isActive,
+          assignedDepartments: eventAttendant.assignedDepartments,
+          assignedStationRanges: eventAttendant.assignedStationRanges,
+          keymanId: eventAttendant.keymanId,
+          overseerId: eventAttendant.overseerId
+        }
+      })
+    }
+
+    // Clone positions with shifts and assignments
+    const positionMapping = new Map<string, string>()
+    for (const position of originalEvent.positions) {
+      const newPositionId = uuidv4()
+      positionMapping.set(position.id, newPositionId)
+      
+      await prisma.positions.create({
+        data: {
+          id: newPositionId,
+          eventId: newEventId,
+          positionNumber: position.positionNumber,
+          name: position.name,
+          description: position.description,
+          area: position.area,
+          sequence: position.sequence,
+          isActive: position.isActive
+        }
+      })
+
+      // Clone shifts for this position
+      const shiftMapping = new Map<string, string>()
+      for (const shift of position.shifts) {
+        const newShiftId = uuidv4()
+        shiftMapping.set(shift.id, newShiftId)
+        
+        await prisma.position_shifts.create({
+          data: {
+            id: newShiftId,
+            positionId: newPositionId,
+            name: shift.name,
+            sequence: shift.sequence,
+            isAllDay: shift.isAllDay,
+            startTime: shift.startTime,
+            endTime: shift.endTime
+          }
+        })
+      }
+
+      // Clone assignments for this position
+      for (const assignment of position.assignments) {
+        const newShiftId = assignment.shiftId ? shiftMapping.get(assignment.shiftId) : null
+        
+        await prisma.position_assignments.create({
+          data: {
+            id: uuidv4(),
+            positionId: newPositionId,
+            attendantId: assignment.attendantId,
+            shiftId: newShiftId,
+            assignedBy: user.id,
+            notes: assignment.notes
+          }
+        })
+      }
+
+      // Clone oversight assignments for this position
+      for (const oversight of position.oversight) {
+        await prisma.position_oversight_assignments.create({
+          data: {
+            id: uuidv4(),
+            positionId: newPositionId,
+            attendantId: oversight.attendantId,
+            role: oversight.role,
+            assignedBy: user.id
+          }
+        })
+      }
+    }
+
+    // Clone lanyards
+    for (const lanyard of originalEvent.lanyards) {
+      await prisma.lanyards.create({
+        data: {
+          id: uuidv4(),
+          lanyardSettingId: lanyard.lanyardSettingId,
+          badgeNumber: lanyard.badgeNumber,
+          attendantId: lanyard.attendantId,
+          eventId: newEventId,
+          status: lanyard.status,
+          printedAt: null, // Reset printed status for new event
+          notes: lanyard.notes
+        }
+      })
+    }
+
+    // Note: We intentionally do NOT clone count_sessions as those are event-specific
+    // and should start fresh for each event
+
+    return res.status(200).json({ 
+      success: true, 
+      data: { 
+        id: newEventId,
+        name: clonedEvent.name,
+        message: `Event cloned successfully with ${originalEvent.positions.length} positions, ${originalEvent.event_attendants.length} volunteers, and ${originalEvent.lanyards.length} lanyards`
+      }
+    })
+
+  } catch (error) {
+    console.error("Event clone error:", error)
+    return res.status(500).json({ 
+      error: "Failed to clone event",
+      details: error instanceof Error ? error.message : "Unknown error"
+    })
+  }
+}

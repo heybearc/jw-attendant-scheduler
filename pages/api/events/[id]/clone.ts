@@ -290,11 +290,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // and should start fresh for each event
 
     // Clone event permissions
+    console.log(`[CLONE] Fetching permissions for original event: ${id}`)
     const originalPermissions = await prisma.event_permissions.findMany({
       where: { eventId: id }
     })
+    console.log(`[CLONE] Found ${originalPermissions.length} permissions to clone`)
 
     for (const permission of originalPermissions) {
+      console.log(`[CLONE] Cloning permission for user ${permission.userId} with role ${permission.role}`)
       await prisma.event_permissions.create({
         data: {
           id: uuidv4(),
@@ -308,6 +311,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       })
     }
+    console.log(`[CLONE] Successfully cloned ${originalPermissions.length} permissions to new event: ${newEventId}`)
 
     const positionCount = useOldSystem ? originalEvent.event_positions.length : originalEvent.positions.length
     const systemUsed = useOldSystem ? 'old' : 'new'

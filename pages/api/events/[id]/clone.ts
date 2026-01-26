@@ -282,7 +282,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             eventId: newEventId,
             status: lanyard.status,
             printedAt: null, // Reset printed status for new event
-            notes: lanyard.notes
+            notes: lanyard.notes,
+            updatedAt: new Date()
           }
         })
       }

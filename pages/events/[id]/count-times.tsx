@@ -326,8 +326,8 @@ export default function EventCountTimesPage({ eventId, event, countSessions, can
           </div>
         )}
 
-        {/* Create Count Session Modal */}
-        {canManageContent && (
+        {/* Create Count Session Modal - Only render on client side */}
+        {typeof window !== 'undefined' && canManageContent && (
           <CreateCountSessionModal
             isOpen={showCreateModal}
             onClose={() => setShowCreateModal(false)}
@@ -335,8 +335,8 @@ export default function EventCountTimesPage({ eventId, event, countSessions, can
           />
         )}
 
-        {/* Edit Count Session Modal */}
-        {editingSession && (
+        {/* Edit Count Session Modal - Only render on client side */}
+        {typeof window !== 'undefined' && editingSession && (
           <EditCountSessionModal
             session={editingSession}
             eventId={eventId}

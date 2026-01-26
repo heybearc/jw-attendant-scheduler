@@ -176,12 +176,6 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
   })
   const shiftsHook = useShifts({ eventId })
   const oversightHook = useOversight({ eventId })
-  const exportHook = useExport({
-    eventId,
-    eventName: event.name,
-    positions: getFilteredPositionsWithOverseer(),
-    overseerFilter: selectedOverseer
-  })
   
   // Remaining local state (not yet extracted to hooks)
   const [loading, setLoading] = useState(false)
@@ -202,6 +196,26 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
   const [showAvailableAttendants, setShowAvailableAttendants] = useState(false)
   const [selectedOverseer, setSelectedOverseer] = useState<string>('all')
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
+  
+  // Define getFilteredPositionsWithOverseer before using it in exportHook
+  const getFilteredPositionsWithOverseer = () => {
+    const filtered = positionsHook.getFilteredPositions()
+    
+    if (selectedOverseer === 'all') {
+      return filtered
+    }
+    
+    return filtered.filter(position => 
+      position.oversight?.some(o => o.overseer?.id === selectedOverseer)
+    )
+  }
+  
+  const exportHook = useExport({
+    eventId,
+    eventName: event.name,
+    positions: getFilteredPositionsWithOverseer(),
+    overseerFilter: selectedOverseer
+  })
   
   // Destructure hook values for easier access
   const { 
@@ -646,19 +660,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
     }
   }
 
-  // Apply overseer filter on top of hook's filtered positions
-  const getFilteredPositionsWithOverseer = () => {
-    const filtered = getFilteredPositions()
-    
-    if (selectedOverseer === 'all') {
-      return filtered
-    }
-    
-    return filtered.filter(position => {
-      const oversight = position.positionOversight?.[0]
-      return oversight?.overseerId === selectedOverseer || oversight?.keymanId === selectedOverseer
-    })
-  }
+  // getFilteredPositionsWithOverseer is now defined earlier in the component
 
   // Get unassigned attendants count (excluding leadership roles)
   const getUnassignedCount = () => {

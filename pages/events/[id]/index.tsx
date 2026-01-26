@@ -148,10 +148,13 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
 
   const formatTime = (timeString: string) => {
     try {
-      // Use date-fns for consistent time formatting
+      // Use simple string manipulation to avoid hydration issues
       const [hours, minutes] = timeString.split(':')
-      const date = new Date(2000, 0, 1, parseInt(hours), parseInt(minutes))
-      return format(date, 'h:mm a')
+      const hour = parseInt(hours)
+      const min = minutes || '00'
+      const ampm = hour >= 12 ? 'PM' : 'AM'
+      const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
+      return `${displayHour}:${min} ${ampm}`
     } catch (error) {
       return timeString
     }

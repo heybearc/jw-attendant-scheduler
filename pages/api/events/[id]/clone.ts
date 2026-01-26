@@ -93,6 +93,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         status: 'UPCOMING',
         createdBy: user.id,
         departmentTemplateId: originalEvent.departmentTemplateId,
+        updatedAt: new Date(),
         // Clone oversight details
         circuitoverseername: originalEvent.circuitoverseername,
         circuitoverseerphone: originalEvent.circuitoverseerphone,

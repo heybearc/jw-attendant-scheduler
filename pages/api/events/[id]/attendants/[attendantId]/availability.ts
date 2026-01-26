@@ -25,21 +25,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(403).json({ error: 'Insufficient permissions' })
   }
 
-  // Get the attendant's userId (volunteer_availability.user_id references users table)
-  const attendant = await prisma.attendants.findUnique({
-    where: { id: attendantId },
-    select: { userId: true }
-  })
-
-  if (!attendant?.userId) {
-    return res.status(404).json({ error: 'Attendant not found or has no linked user account' })
-  }
-
-  // Update availability for the attendant's user (not the caller)
+  // Update availability for the attendant (volunteer_availability references attendants table)
   if (req.method === 'GET') {
-    return handleGet(eventId, attendant.userId, res)
+    return handleGet(eventId, attendantId, res)
   } else if (req.method === 'PUT') {
-    return handleUpdate(eventId, attendant.userId, req.body, res)
+    return handleUpdate(eventId, attendantId, req.body, res)
   } else {
     return res.status(405).json({ error: 'Method not allowed' })
   }
@@ -49,9 +39,9 @@ async function handleGet(eventId: string, attendantId: string, res: NextApiRespo
   try {
     const availability = await prisma.volunteer_availability.findUnique({
       where: {
-        eventId_userId: {
+        eventId_attendantId: {
           eventId,
-          userId: attendantId
+          attendantId
         }
       }
     })
@@ -83,9 +73,9 @@ async function handleUpdate(
 
     const availability = await prisma.volunteer_availability.upsert({
       where: {
-        eventId_userId: {
+        eventId_attendantId: {
           eventId,
-          userId: attendantId
+          attendantId
         }
       },
       update: {
@@ -97,7 +87,7 @@ async function handleUpdate(
       create: {
         id: crypto.randomUUID(),
         eventId,
-        userId: attendantId,
+        attendantId,
         status,
         notes: notes || null,
         requestedAt: new Date(),

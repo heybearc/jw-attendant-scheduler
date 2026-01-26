@@ -751,24 +751,24 @@ model assignment_templates {
 }
 
 model volunteer_availability {
-  id             String    @id @default(uuid())
-  eventId        String    @map("event_id")
-  userId         String    @map("user_id")
+  id             String     @id @default(uuid())
+  eventId        String     @map("event_id")
+  attendantId    String     @map("attendant_id")
   status         String
   notes          String?
-  availableDates Json?     @map("available_dates")
-  availableTimes Json?     @map("available_times")
-  requestedAt    DateTime  @default(now()) @map("requested_at")
-  respondedAt    DateTime? @map("responded_at")
-  reminderSentAt DateTime? @map("reminder_sent_at")
-  createdAt      DateTime  @default(now()) @map("created_at")
-  updatedAt      DateTime  @updatedAt @map("updated_at")
-  event          events    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  user           users     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  availableDates Json?      @map("available_dates")
+  availableTimes Json?      @map("available_times")
+  requestedAt    DateTime   @default(now()) @map("requested_at")
+  respondedAt    DateTime?  @map("responded_at")
+  reminderSentAt DateTime?  @map("reminder_sent_at")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+  event          events     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  attendant      attendants @relation(fields: [attendantId], references: [id], onDelete: Cascade)
 
-  @@unique([eventId, userId])
+  @@unique([eventId, attendantId])
   @@index([eventId])
-  @@index([userId])
+  @@index([attendantId])
   @@index([status])
   @@index([respondedAt])
 }

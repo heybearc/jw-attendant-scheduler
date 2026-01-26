@@ -278,10 +278,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             id: uuidv4(),
             lanyardSettingId: newLanyardSettingsId,
             badgeNumber: lanyard.badgeNumber,
-            attendantId: lanyard.attendantId,
-            eventId: newEventId,
             status: lanyard.status,
-            printedAt: null, // Reset printed status for new event
             notes: lanyard.notes,
             updatedAt: new Date()
           }

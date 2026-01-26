@@ -16,8 +16,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: 'Invalid event or attendant ID' })
   }
 
-  // Check if user has permission to manage this event
-  // Only ADMIN, OVERSEER, ASSISTANT_OVERSEER, KEYMAN can access
+  // Check if caller has permission to manage events
+  // Similar to verification - only checking caller's role, not the attendant being updated
   const isAdmin = session.user.role === 'ADMIN'
   const isOverseer = ['OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN'].includes(session.user.role || '')
 
@@ -25,7 +25,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(403).json({ error: 'Insufficient permissions' })
   }
 
-  // attendantId IS the userId for volunteer_availability
+  // Update availability for the attendant (not the caller)
   if (req.method === 'GET') {
     return handleGet(eventId, attendantId, res)
   } else if (req.method === 'PUT') {

@@ -1315,21 +1315,6 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                         <p className="text-xs font-medium text-gray-500 mb-2">🕐 Shift Assignments</p>
                         <div className="space-y-2">
                           {position.shifts.map(shift => {
-                            // DEBUG: Log data for Station 2
-                            if (position.name.includes('Station 2')) {
-                                positionName: position.name,
-                                shiftId: shift.id,
-                                shiftName: shift.name,
-                                totalAssignments: position.assignments?.length || 0,
-                                assignments: position.assignments?.map(a => ({
-                                  role: a.role,
-                                  attendant: a.attendant ? `${a.attendant.firstName} ${a.attendant.lastName}` : 'null',
-                                  shiftId: a.shift?.id || 'null',
-                                  hasShift: !!a.shift
-                                }))
-                              });
-                            }
-                            
                             // Find assignments for this specific shift
                             const shiftSpecificAssignments = position.assignments?.filter(assignment => 
                               assignment.shift?.id === shift.id
@@ -1600,9 +1585,6 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                     )}
 
                     {/* APEX GUARDIAN: Oversight Assignments Display */}
-                    {(() => {
-                      return null
-                    })()}
                     {position.oversight && position.oversight.length > 0 && (
                       <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
                         <h4 className="text-sm font-medium text-green-800 mb-2">👥 Position Oversight</h4>
@@ -1872,19 +1854,6 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                           })
                           
                           
-                          // Log which attendants are shown
-                          if (filteredAttendants.length > 0) {
-                            filteredAttendants.forEach(attendant => {
-                              const attendantOverseerName = attendant.overseer ? `${attendant.overseer.firstName} ${attendant.overseer.lastName}` : 'None'
-                              const attendantKeymanName = attendant.keyman ? `${attendant.keyman.firstName} ${attendant.keyman.lastName}` : 'None'
-                              console.log(`   ✅ ${attendant.firstName} ${attendant.lastName}:`)
-                              console.log(`      - Attendant Overseer: ${attendantOverseerName} (${attendant.overseerId || 'null'})`)
-                              console.log(`      - Attendant Keyman: ${attendantKeymanName} (${attendant.keymanId || 'null'})`)
-                            })
-                          } else {
-                            console.log(`   ❌ NO ATTENDANTS MATCH THIS POSITION'S OVERSIGHT!`)
-                          }
-                        } else {
                         }
                         
                         return filteredAttendants.map(attendant => (

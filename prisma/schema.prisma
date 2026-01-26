@@ -428,7 +428,7 @@ model events {
   circuitoverseerphone           String?
   parentEventId                  String?                          @map("parenteventid")
   departmentTemplateId           String?                          @map("departmenttemplateid")
-  notificationSettings           Json?
+  notificationSettings           Json?                            @map("notification_settings")
   announcements                  announcements[]
   assignments                    assignments[]
   count_sessions                 count_sessions[]

@@ -103,15 +103,9 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse, eventId: str
 }
 
 async function handlePut(req: NextApiRequest, res: NextApiResponse, eventId: string, sessionId: string) {
-  console.log('🔍 COUNT SESSION UPDATE:', {
-    sessionId,
-    requestBody: req.body
-  })
-  
   // Validate request body
   const validation = updateCountSessionSchema.safeParse(req.body)
   if (!validation.success) {
-    console.log('❌ VALIDATION FAILED:', validation.error.errors)
     return res.status(400).json({
       error: 'Validation failed',
       details: validation.error.errors
@@ -119,7 +113,6 @@ async function handlePut(req: NextApiRequest, res: NextApiResponse, eventId: str
   }
 
   const data = validation.data
-  console.log('✅ VALIDATED DATA:', data)
 
   // Check if count session exists and belongs to event
   const existingSession = await prisma.count_sessions.findUnique({
@@ -145,8 +138,6 @@ async function handlePut(req: NextApiRequest, res: NextApiResponse, eventId: str
   if (data.notes !== undefined) updateData.notes = data.notes
   if (data.status) updateData.status = data.status
   if (data.isActive !== undefined) updateData.isActive = data.isActive
-  
-  console.log('📝 UPDATE DATA:', updateData)
   
   // Update count session
   const updatedSession = await prisma.count_sessions.update({

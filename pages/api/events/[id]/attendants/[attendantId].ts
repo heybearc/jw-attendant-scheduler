@@ -216,7 +216,7 @@ async function handleDeleteAttendant(req: NextApiRequest, res: NextApiResponse, 
     await prisma.position_assignments.deleteMany({
       where: {
         attendantId,
-        position: {
+        positions: {
           eventId
         }
       }

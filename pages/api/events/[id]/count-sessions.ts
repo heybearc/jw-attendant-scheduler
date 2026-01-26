@@ -140,7 +140,7 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse, eventId: st
       sessionName: data.sessionName,
       countTime: new Date(data.countTime),
       notes: data.notes,
-      createdBy: userId,
+      uploadedBy: userId,
       updatedAt: new Date()
     },
     include: {

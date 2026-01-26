@@ -287,45 +287,27 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
     if (!eventName) return
 
     try {
-      // Format dates properly for the API
-      const startDate = typeof event.startDate === 'string' 
-        ? event.startDate.split('T')[0]
-        : new Date(event.startDate).toISOString().split('T')[0]
-      const endDate = typeof event.endDate === 'string' 
-        ? event.endDate.split('T')[0]
-        : new Date(event.endDate).toISOString().split('T')[0]
-
-      const response = await fetch('/api/events', {
+      const response = await fetch(`/api/events/${event.id}/clone`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          name: eventName,
-          description: event.description || '',
-          eventType: event.eventType,
-          startDate: startDate,
-          endDate: endDate,
-          startTime: event.startTime || '09:00',
-          endTime: event.endTime || '17:00',
-          location: event.location,
-          capacity: event.capacity || 100,
-          attendantsNeeded: event.attendantsNeeded || 10,
-          status: 'UPCOMING'
+          name: eventName
         })
       })
 
-      if (response.ok) {
-        const data = await response.json()
-        alert('Event cloned successfully!')
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        alert(data.data.message || 'Event cloned successfully!')
         router.push(`/events/${data.data.id}`)
       } else {
-        const errorData = await response.json()
-        console.error('Clone event error:', errorData)
-        alert(`Failed to clone event: ${errorData.error || 'Unknown error'}`)
+        console.error('Clone event error:', data)
+        alert(`Failed to clone event: ${data.error || 'Unknown error'}`)
       }
     } catch (error) {
       console.error('Error cloning event:', error)
-      alert('Error cloning event. Please try again.')
+      alert('Error cloning event')
     }
   }
 

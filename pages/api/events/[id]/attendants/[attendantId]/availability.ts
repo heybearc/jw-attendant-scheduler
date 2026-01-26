@@ -25,11 +25,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(403).json({ error: 'Insufficient permissions' })
   }
 
-  // Update availability for the attendant (not the caller)
+  // Get the attendant's userId (volunteer_availability.user_id references users table)
+  const attendant = await prisma.attendants.findUnique({
+    where: { id: attendantId },
+    select: { userId: true }
+  })
+
+  if (!attendant?.userId) {
+    return res.status(404).json({ error: 'Attendant not found or has no linked user account' })
+  }
+
+  // Update availability for the attendant's user (not the caller)
   if (req.method === 'GET') {
-    return handleGet(eventId, attendantId, res)
+    return handleGet(eventId, attendant.userId, res)
   } else if (req.method === 'PUT') {
-    return handleUpdate(eventId, attendantId, req.body, res)
+    return handleUpdate(eventId, attendant.userId, req.body, res)
   } else {
     return res.status(405).json({ error: 'Method not allowed' })
   }

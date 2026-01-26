@@ -144,6 +144,7 @@ model attendants {
   position_assignments_position_assignments_overseerIdToattendants                      position_assignments[]           @relation("position_assignments_overseerIdToattendants")
   position_oversight_assignments_position_oversight_assignments_keyman_idToattendants   position_oversight_assignments[] @relation("position_oversight_assignments_keyman_idToattendants")
   position_oversight_assignments_position_oversight_assignments_overseer_idToattendants position_oversight_assignments[] @relation("position_oversight_assignments_overseer_idToattendants")
+  volunteer_availability                                                                volunteer_availability[]
 }
 
 // NEW: Department system models (backward compatible - coexists with attendants)

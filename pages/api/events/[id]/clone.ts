@@ -126,7 +126,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           assignedDepartments: eventAttendant.assignedDepartments,
           assignedStationRanges: eventAttendant.assignedStationRanges,
           keymanId: eventAttendant.keymanId,
-          overseerId: eventAttendant.overseerId
+          overseerId: eventAttendant.overseerId,
+          updatedAt: new Date()
         }
       })
     }

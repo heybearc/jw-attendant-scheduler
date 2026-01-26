@@ -264,7 +264,7 @@ model count_sessions {
   sessionName     String
   countTime       DateTime?
   notes           String?
-  status          String             @default("ACTIVE")
+  status          CountSessionStatus @default(ACTIVE)
   isActive        Boolean            @default(true)
   createdAt       DateTime           @default(now())
   updatedAt       DateTime

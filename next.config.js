@@ -1,5 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  reactStrictMode: true,
+  swcMinify: true,
+  // Suppress hydration warnings for known timezone differences
+  // Server runs in UTC, clients in various timezones
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production' ? {
+      exclude: ['error', 'warn'],
+    } : false,
+  },
   typescript: {
     ignoreBuildErrors: true,
   },

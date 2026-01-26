@@ -947,9 +947,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   // APEX GUARDIAN: Fetch event data server-side to eliminate client-side API issues
   
   try {
-    const fs = require('fs')
-    fs.appendFileSync('/tmp/event-debug.log', `\n🔍 EVENT PAGE: Fetching event: ${id} at ${new Date().toISOString()}\n`)
-    
     const { prisma } = await import('../../../src/lib/prisma')
     
     const event = await prisma.events.findUnique({
@@ -998,9 +995,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       }
     })
 
-    console.log('🔍 EVENT PAGE: Event found?', !!event)
     if (!event) {
-      console.log('🔍 EVENT PAGE: Event not found, returning 404')
       return {
         notFound: true,
       }
@@ -1030,12 +1025,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       return total + (position.shifts.length > 0 ? position.shifts.length : 1)
     }, 0)
     
-    console.log('🔍 FILL RATE DEBUG:', {
-      totalPositions: eventPositions.length,
-      totalAssignments,
-      totalShiftsNeeded,
-      fillRate: totalShiftsNeeded > 0 ? Math.round((totalAssignments / totalShiftsNeeded) * 100) : 0
-    })
+    // Calculate fill rate
+    const fillRate = totalShiftsNeeded > 0 ? Math.round((totalAssignments / totalShiftsNeeded) * 100) : 0
 
     // Get count statistics
     const countSessions = await prisma.count_sessions.findMany({
@@ -1108,12 +1099,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     // Check event-specific permissions
     const { canManageEvent, canDeleteEvent, canManageAttendants } = await import('../../../src/lib/eventAccess')
     const userId = session.user?.id || ''
-    console.log('🔍 EVENT PERMISSIONS CHECK:', {
-      userId,
-      userEmail: session.user?.email,
-      eventId: id,
-      eventName: event.name
-    })
     
     // MANAGER or OWNER can edit event settings
     const canEdit = await canManageEvent(userId, id as string)
@@ -1123,8 +1108,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     
     // OWNER, MANAGER, or OVERSEER (no scope) can create positions/attendants/count sessions
     const canManageContent = await canManageAttendants(userId, id as string)
-    
-    console.log('🔍 PERMISSIONS RESULT:', { canEdit, canDelete, canManageContent })
 
     return {
       props: {
@@ -1135,10 +1118,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       },
     }
   } catch (error) {
-    const fs = require('fs')
-    const errorMsg = error instanceof Error ? error.message : 'Unknown'
-    const errorStack = error instanceof Error ? error.stack : 'No stack'
-    fs.appendFileSync('/tmp/event-debug.log', `\n🔍 EVENT PAGE ERROR: ${errorMsg}\nStack: ${errorStack}\n`)
+    console.error('Event page error:', error)
     return {
       notFound: true,
     }

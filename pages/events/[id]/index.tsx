@@ -1048,23 +1048,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       }
     })
     
-    // Calculate count statistics
-    const allCounts = countSessions.flatMap(session => 
-      session.position_counts.map(count => count.attendeeCount || 0)
-    )
-    const peakAttendance = allCounts.length > 0 ? Math.max(...allCounts) : null
-    const averageCount = allCounts.length > 0 
-      ? Math.round(allCounts.reduce((a, b) => a + b, 0) / allCounts.length)
-      : null
-    const sessionsTracked = countSessions.length
-    
-    // Get current session tally (most recent active session)
-    const currentSession = countSessions.find(s => s.status === 'ACTIVE' && s.isActive)
-    const currentSessionTally = currentSession
-      ? currentSession.position_counts.reduce((sum, count) => sum + (count.attendeeCount || 0), 0)
-      : null
-    
-    // Calculate session breakdown and event total
+    // Calculate session breakdown first
     const sessionBreakdown = countSessions.map(session => ({
       id: session.id,
       sessionName: session.sessionName,
@@ -1073,6 +1057,20 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       positionsReported: session.position_counts.length,
       status: session.status
     }))
+    
+    // Calculate count statistics - peak attendance is the highest session total
+    const sessionTotals = sessionBreakdown.map(s => s.totalCount)
+    const peakAttendance = sessionTotals.length > 0 ? Math.max(...sessionTotals) : null
+    const averageCount = sessionTotals.length > 0 
+      ? Math.round(sessionTotals.reduce((a, b) => a + b, 0) / sessionTotals.length)
+      : null
+    const sessionsTracked = countSessions.length
+    
+    // Get current session tally (most recent active session)
+    const currentSession = countSessions.find(s => s.status === 'ACTIVE' && s.isActive)
+    const currentSessionTally = currentSession
+      ? currentSession.position_counts.reduce((sum, count) => sum + (count.attendeeCount || 0), 0)
+      : null
     
     // Calculate event total (sum of all session totals)
     const eventTotal = sessionBreakdown.reduce((sum, session) => sum + session.totalCount, 0)

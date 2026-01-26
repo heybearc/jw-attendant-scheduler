@@ -4,8 +4,11 @@ import Link from 'next/link'
 export default function RebrandingBanner() {
   const [isVisible, setIsVisible] = useState(false)
   const [isDismissed, setIsDismissed] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
+    setIsMounted(true)
+    
     // Check if user has dismissed the banner
     const dismissed = localStorage.getItem('rebrandingBannerDismissed')
     const dismissedDate = dismissed ? new Date(dismissed) : null
@@ -25,7 +28,8 @@ export default function RebrandingBanner() {
     setIsDismissed(true)
   }
 
-  if (!isVisible || isDismissed) {
+  // Don't render anything during SSR to avoid hydration mismatch
+  if (!isMounted || !isVisible || isDismissed) {
     return null
   }
 

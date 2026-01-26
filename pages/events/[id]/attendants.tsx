@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../../api/auth/[...nextauth]'
 import EventLayout from '../../../components/EventLayout'
 import FilterPresets from '../../../components/FilterPresets'
+import { VolunteerBadges } from '../../../components/VolunteerBadges'
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 
@@ -40,6 +41,11 @@ interface Attendant {
     firstName: string
     lastName: string
   } | null
+  availability?: {
+    status: 'AVAILABLE' | 'NOT_AVAILABLE' | 'PARTIAL' | 'PENDING'
+    notes: string | null
+    respondedAt: string | null
+  } | null
 }
 
 interface AttendantStats {
@@ -75,6 +81,9 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
   })
   const [openDropdowns, setOpenDropdowns] = useState<Set<string>>(new Set())
   const [sortField, setSortField] = useState<string>('lastName')
+  const [availabilityModalAttendant, setAvailabilityModalAttendant] = useState<string | null>(null)
+  const [availabilityStatus, setAvailabilityStatus] = useState<string>('')
+  const [availabilityNotes, setAvailabilityNotes] = useState<string>('')
   
   // Helper functions for dropdown management
   const toggleDropdown = (attendantId: string) => {
@@ -407,6 +416,50 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
       }
     } catch (error) {
       alert('Failed to set verification requirement. Please try again.')
+    }
+  }
+
+  // Availability Click Handler
+  const handleAvailabilityClick = (attendantId: string) => {
+    const attendant = attendants.find(a => a.id === attendantId)
+    if (!attendant) return
+    
+    setAvailabilityModalAttendant(attendantId)
+    setAvailabilityStatus(attendant.availability?.status || 'PENDING')
+    setAvailabilityNotes(attendant.availability?.notes || '')
+  }
+
+  // Save Availability Handler
+  const handleSaveAvailability = async () => {
+    if (!availabilityModalAttendant) return
+
+    if (availabilityStatus === 'PARTIAL' && !availabilityNotes.trim()) {
+      alert('Please provide notes for partial availability')
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/events/${eventId}/attendants/${availabilityModalAttendant}/availability`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: availabilityStatus,
+          notes: availabilityNotes.trim() || null
+        })
+      })
+
+      if (response.ok) {
+        setAvailabilityModalAttendant(null)
+        setAvailabilityStatus('')
+        setAvailabilityNotes('')
+        preserveStateAndReload()
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Failed to update availability')
+      }
+    } catch (error) {
+      console.error('Error updating availability:', error)
+      alert('Failed to update availability')
     }
   }
 
@@ -1190,34 +1243,22 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                             className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                           />
                         </td>
-                        <td className="px-3 py-3 whitespace-nowrap">
+                        <td className="px-3 py-3">
                           <div className="text-sm font-medium text-gray-900">
                             {attendant.firstName} {attendant.lastName}
                           </div>
                           <div className="text-xs text-gray-500 sm:hidden">
                             {attendant.email}
                           </div>
-                          <div className="text-xs text-gray-500 lg:hidden">
-                            {(Array.isArray(attendant.formsOfService) 
-                              ? attendant.formsOfService 
-                              : (attendant.formsOfService || '').toString().split(', ').filter(s => s.trim())
-                            ).map((service, index) => (
-                              <span 
-                                key={index}
-                                className={`inline-block mr-1 mb-1 px-2 py-1 text-xs rounded-full ${
-                                  service === 'Overseer' ? 'bg-purple-100 text-purple-800' :
-                                  service === 'Keyman' ? 'bg-blue-100 text-blue-800' :
-                                  service === 'Elder' ? 'bg-yellow-100 text-yellow-800' :
-                                  service === 'Ministerial Servant' ? 'bg-green-100 text-green-800' :
-                                  service === 'Exemplary' ? 'bg-teal-100 text-teal-800' :
-                                  service === 'Regular Pioneer' ? 'bg-pink-100 text-pink-800' :
-                                  'bg-gray-100 text-gray-800'
-                                }`}
-                              >
-                                {service}
-                              </span>
-                            ))}
-                          </div>
+                          <VolunteerBadges
+                            isActive={attendant.isActive}
+                            profileVerificationRequired={attendant.profileVerificationRequired}
+                            profileVerifiedAt={attendant.profileVerifiedAt}
+                            availabilityStatus={attendant.availability?.status as any}
+                            availabilityNotes={attendant.availability?.notes}
+                            formsOfService={attendant.formsOfService}
+                            onAvailabilityClick={() => handleAvailabilityClick(attendant.id)}
+                          />
                         </td>
                         <td className="px-3 py-3 whitespace-nowrap hidden lg:table-cell">
                           <div className="text-sm text-gray-900 truncate">{attendant.email}</div>
@@ -1882,6 +1923,114 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
             </div>
           </div>
         )}
+
+        {/* Availability Status Modal */}
+        {availabilityModalAttendant && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
+            <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full">
+              <div className="p-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">
+                  Update Availability Status
+                </h3>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Availability Status
+                    </label>
+                    <div className="space-y-2">
+                      <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                        <input
+                          type="radio"
+                          name="availability"
+                          value="AVAILABLE"
+                          checked={availabilityStatus === 'AVAILABLE'}
+                          onChange={(e) => setAvailabilityStatus(e.target.value)}
+                          className="h-4 w-4 text-green-600 focus:ring-green-500"
+                        />
+                        <span className="ml-3 text-sm font-medium text-gray-900">✅ Available</span>
+                      </label>
+                      
+                      <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                        <input
+                          type="radio"
+                          name="availability"
+                          value="NOT_AVAILABLE"
+                          checked={availabilityStatus === 'NOT_AVAILABLE'}
+                          onChange={(e) => setAvailabilityStatus(e.target.value)}
+                          className="h-4 w-4 text-red-600 focus:ring-red-500"
+                        />
+                        <span className="ml-3 text-sm font-medium text-gray-900">❌ Not Available</span>
+                      </label>
+                      
+                      <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                        <input
+                          type="radio"
+                          name="availability"
+                          value="PARTIAL"
+                          checked={availabilityStatus === 'PARTIAL'}
+                          onChange={(e) => setAvailabilityStatus(e.target.value)}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="ml-3 text-sm font-medium text-gray-900">💬 Partial Availability</span>
+                      </label>
+                      
+                      <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                        <input
+                          type="radio"
+                          name="availability"
+                          value="PENDING"
+                          checked={availabilityStatus === 'PENDING'}
+                          onChange={(e) => setAvailabilityStatus(e.target.value)}
+                          className="h-4 w-4 text-gray-600 focus:ring-gray-500"
+                        />
+                        <span className="ml-3 text-sm font-medium text-gray-900">⏳ Pending Response</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Notes {availabilityStatus === 'PARTIAL' && <span className="text-red-600">*</span>}
+                    </label>
+                    <textarea
+                      value={availabilityNotes}
+                      onChange={(e) => setAvailabilityNotes(e.target.value)}
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder={availabilityStatus === 'PARTIAL' ? 'Please explain your partial availability (required)' : 'Optional notes or comments'}
+                    />
+                    {availabilityStatus === 'PARTIAL' && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        Example: "Available Friday only" or "Can help morning shift but not evening"
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAvailabilityModalAttendant(null)
+                      setAvailabilityStatus('')
+                      setAvailabilityNotes('')
+                    }}
+                    className="px-4 py-3 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 min-h-[44px] touch-manipulation order-2 sm:order-1"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveAvailability}
+                    className="px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-md min-h-[44px] touch-manipulation order-1 sm:order-2"
+                  >
+                    Save Status
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </EventLayout>
   )
@@ -2031,6 +2180,30 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       ]
     });
 
+    // Get volunteer availability for this event
+    const availabilityRecords = await prisma.volunteer_availability.findMany({
+      where: {
+        eventId: id as string,
+        userId: { in: attendantIds }
+      },
+      select: {
+        userId: true,
+        status: true,
+        notes: true,
+        respondedAt: true
+      }
+    });
+
+    // Create availability map for quick lookup
+    const availabilityMap = new Map();
+    availabilityRecords.forEach(record => {
+      availabilityMap.set(record.userId, {
+        status: record.status,
+        notes: record.notes,
+        respondedAt: record.respondedAt?.toISOString() || null
+      });
+    });
+
     // Get event-attendant associations for oversight assignments
     const eventAssociations = await prisma.event_attendants.findMany({
       where: {
@@ -2069,6 +2242,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     allAttendants.forEach(attendant => {
       const association = associationMap.get(attendant.id);
       
+      const availability = availabilityMap.get(attendant.id);
+      
       attendantMap.set(attendant.id, {
         id: attendant.id,
         firstName: attendant.firstName,
@@ -2086,6 +2261,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         keyman: association?.keyman || null,
         profileVerificationRequired: attendant.profileVerificationRequired || false,
         profileVerifiedAt: attendant.profileVerifiedAt?.toISOString() || null,
+        availability: availability || null,
         assignments: []
       });
     });

@@ -91,7 +91,7 @@ CREATE TABLE IF NOT EXISTS volunteer_availability (
   id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   event_id TEXT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  status VARCHAR(20) NOT NULL CHECK (status IN ('AVAILABLE', 'NOT_AVAILABLE', 'PARTIAL')),
+  status VARCHAR(20) NOT NULL CHECK (status IN ('AVAILABLE', 'NOT_AVAILABLE', 'PARTIAL', 'PENDING')),
   notes TEXT,
   available_dates JSONB, -- For partial availability: ["2026-02-15", "2026-02-16"]
   available_times JSONB, -- For partial availability: {"2026-02-15": ["09:00-12:00", "15:00-18:00"]}

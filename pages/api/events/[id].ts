@@ -148,6 +148,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Note: Database has ON DELETE CASCADE for most relations
       await prisma.event_attendants.deleteMany({ where: { eventId: id } })
       
+      // Delete count sessions (with their position_counts via cascade)
+      await prisma.count_sessions.deleteMany({ where: { eventId: id } })
+      
       // Delete permissions if table exists
       try {
         await prisma.$executeRawUnsafe(`DELETE FROM event_permissions WHERE "eventId" = $1`, id)

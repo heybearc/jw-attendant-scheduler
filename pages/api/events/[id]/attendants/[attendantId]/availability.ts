@@ -17,35 +17,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   // Check if user has permission to manage this event
-  const hasPermission = await prisma.event_permissions.findFirst({
-    where: {
-      eventId,
-      userId: session.user.id,
-      role: { in: ['OWNER', 'MANAGER', 'OVERSEER'] }
-    }
-  })
-
+  // Only ADMIN, OVERSEER, ASSISTANT_OVERSEER, KEYMAN can access
   const isAdmin = session.user.role === 'ADMIN'
   const isOverseer = ['OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN'].includes(session.user.role || '')
 
-  if (!hasPermission && !isAdmin && !isOverseer) {
+  if (!isAdmin && !isOverseer) {
     return res.status(403).json({ error: 'Insufficient permissions' })
   }
 
-  // Get the attendant to find their userId
-  const attendant = await prisma.attendants.findUnique({
-    where: { id: attendantId },
-    select: { userId: true }
-  })
-
-  if (!attendant || !attendant.userId) {
-    return res.status(404).json({ error: 'Attendant not found or has no user account' })
-  }
-
+  // attendantId IS the userId for volunteer_availability
   if (req.method === 'GET') {
-    return handleGet(eventId, attendant.userId, res)
+    return handleGet(eventId, attendantId, res)
   } else if (req.method === 'PUT') {
-    return handleUpdate(eventId, attendant.userId, req.body, res)
+    return handleUpdate(eventId, attendantId, req.body, res)
   } else {
     return res.status(405).json({ error: 'Method not allowed' })
   }

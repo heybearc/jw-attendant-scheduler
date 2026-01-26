@@ -16,20 +16,22 @@ interface EditCountSessionModalProps {
 
 export default function EditCountSessionModal({ session, eventId, onClose, onSuccess }: EditCountSessionModalProps) {
   const [sessionName, setSessionName] = useState(session.sessionName)
-  const [countTime, setCountTime] = useState(() => {
-    // Convert ISO string to datetime-local format
+  const [countTime, setCountTime] = useState('')
+  const [notes, setNotes] = useState(session.notes || '')
+  const [isActive, setIsActive] = useState(session.isActive)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  // Set countTime on client side only to avoid hydration errors
+  useEffect(() => {
     const date = new Date(session.countTime)
     const year = date.getFullYear()
     const month = String(date.getMonth() + 1).padStart(2, '0')
     const day = String(date.getDate()).padStart(2, '0')
     const hours = String(date.getHours()).padStart(2, '0')
     const minutes = String(date.getMinutes()).padStart(2, '0')
-    return `${year}-${month}-${day}T${hours}:${minutes}`
-  })
-  const [notes, setNotes] = useState(session.notes || '')
-  const [isActive, setIsActive] = useState(session.isActive)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+    setCountTime(`${year}-${month}-${day}T${hours}:${minutes}`)
+  }, [session.countTime])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

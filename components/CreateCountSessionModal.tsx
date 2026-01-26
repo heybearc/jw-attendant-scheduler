@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 
 interface CreateCountSessionModalProps {
   isOpen: boolean
@@ -13,18 +13,20 @@ export default function CreateCountSessionModal({ isOpen, onClose, onSubmit }: C
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
-  if (!isOpen) return null
+  // Set default time on client side only when modal opens
+  React.useEffect(() => {
+    if (isOpen && countTime === '') {
+      const now = new Date()
+      const year = now.getFullYear()
+      const month = String(now.getMonth() + 1).padStart(2, '0')
+      const day = String(now.getDate()).padStart(2, '0')
+      const hours = String(now.getHours()).padStart(2, '0')
+      const minutes = String(now.getMinutes()).padStart(2, '0')
+      setCountTime(`${year}-${month}-${day}T${hours}:${minutes}`)
+    }
+  }, [isOpen, countTime])
 
-  // Set default time on client side only, after modal opens
-  if (countTime === '' && isOpen) {
-    const now = new Date()
-    const year = now.getFullYear()
-    const month = String(now.getMonth() + 1).padStart(2, '0')
-    const day = String(now.getDate()).padStart(2, '0')
-    const hours = String(now.getHours()).padStart(2, '0')
-    const minutes = String(now.getMinutes()).padStart(2, '0')
-    setCountTime(`${year}-${month}-${day}T${hours}:${minutes}`)
-  }
+  if (!isOpen) return null
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

@@ -78,6 +78,27 @@ export default function EventCountTimesPage({ eventId, event, countSessions, can
     }
   }
 
+  const deleteCountSession = async (sessionId: string, sessionName: string) => {
+    if (!confirm(`Are you sure you want to delete "${sessionName}"? This action cannot be undone.`)) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/events/${eventId}/count-sessions/${sessionId}`, {
+        method: 'DELETE'
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to delete count session')
+      }
+      
+      router.reload()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred')
+    }
+  }
+
   const createCountSession = async (data: { sessionName: string; countTime: string; notes?: string }) => {
     const response = await fetch(`/api/events/${eventId}/count-sessions`, {
       method: 'POST',
@@ -244,6 +265,13 @@ export default function EventCountTimesPage({ eventId, event, countSessions, can
                           >
                             📝 Enter Counts
                           </Link>
+                          <button
+                            onClick={() => deleteCountSession(session.id, session.sessionName)}
+                            className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm transition-colors"
+                            title="Delete count session"
+                          >
+                            🗑️ Delete
+                          </button>
                         </>
                       )}
                       <Link

@@ -368,7 +368,15 @@ export default function CountSessionDetailPage() {
         pc.event_positions.department,
         pc.attendeeCount ?? 'Not counted',
         pc.notes || '',
-        pc.attendeeCount !== null ? new Date(pc.countedAt).toLocaleString() : ''
+        pc.attendeeCount !== null ? (() => {
+          const date = new Date(pc.countedAt)
+          const year = date.getFullYear()
+          const month = String(date.getMonth() + 1).padStart(2, '0')
+          const day = String(date.getDate()).padStart(2, '0')
+          const hours = String(date.getHours()).padStart(2, '0')
+          const minutes = String(date.getMinutes()).padStart(2, '0')
+          return `${month}/${day}/${year} ${hours}:${minutes}`
+        })() : ''
       ])
     
     return [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n')

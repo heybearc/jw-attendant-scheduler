@@ -7,6 +7,7 @@ interface EventNavigationProps {
   canDelete?: boolean
   onStatusChange?: (status: string) => void
   onDelete?: () => void
+  onClone?: () => void
   onExport?: () => void
   currentStatus?: string
 }
@@ -17,6 +18,7 @@ export default function EventNavigation({
   canDelete = false,
   onStatusChange,
   onDelete,
+  onClone,
   onExport,
   currentStatus
 }: EventNavigationProps) {
@@ -105,6 +107,15 @@ export default function EventNavigation({
         >
           📢 Announcements
         </Link>
+        
+        {onClone && (
+          <button
+            onClick={onClone}
+            className="w-full flex items-center justify-center px-4 py-2 border border-blue-300 bg-blue-50 rounded-lg text-sm font-medium text-blue-700 hover:bg-blue-100 transition-colors"
+          >
+            📋 Clone Event
+          </button>
+        )}
         
         {onExport && (
           <button

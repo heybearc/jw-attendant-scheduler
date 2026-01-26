@@ -857,6 +857,7 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
               canDelete={canDelete}
               onStatusChange={handleStatusChange}
               onDelete={handleDeleteEvent}
+              onClone={handleCloneEvent}
               onExport={handleExportData}
               currentStatus={event.status}
             />

@@ -39,7 +39,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center max-w-md mx-auto p-6">
             <h2 className="text-2xl font-bold text-red-900 mb-4">
-              🛡️ APEX GUARDIAN Error Boundary
+              🛡️ Error Boundary
             </h2>
             <p className="text-red-600 mb-4">
               A React error was caught and contained:

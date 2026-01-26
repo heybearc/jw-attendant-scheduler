@@ -1317,7 +1317,6 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                           {position.shifts.map(shift => {
                             // DEBUG: Log data for Station 2
                             if (position.name.includes('Station 2')) {
-                              console.log('🔍 Station 2 Debug:', {
                                 positionName: position.name,
                                 shiftId: shift.id,
                                 shiftName: shift.name,
@@ -1602,8 +1601,6 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
 
                     {/* APEX GUARDIAN: Oversight Assignments Display */}
                     {(() => {
-                      console.log(`🔍 Position ${position.positionNumber} oversight data:`, position.oversight)
-                      console.log(`🔍 Position ${position.positionNumber} has oversight:`, position.oversight && position.oversight.length > 0)
                       return null
                     })()}
                     {position.oversight && position.oversight.length > 0 && (
@@ -1853,9 +1850,6 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                         let filteredAttendants = attendants?.filter(att => att.isActive) || []
                         
                         // APEX GUARDIAN: Debug attendant data first
-                        console.log(`🔍 DEBUGGING ATTENDANT DATA:`)
-                        console.log(`   📊 Total attendants: ${attendants?.length || 0}`)
-                        console.log(`   📊 Active attendants: ${filteredAttendants.length}`)
                         
                         // Log first few attendants to see their structure
                         filteredAttendants.slice(0, 5).forEach(attendant => {
@@ -1877,12 +1871,6 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                             return matchesOverseer || matchesKeyman
                           })
                           
-                          console.log(`🔍 Position oversight filtering (EXACT MATCH):`)
-                          console.log(`   📍 Position: ${selectedPosition.name}`)
-                          console.log(`   👥 Position Overseer: ${positionOverseer ? `${positionOverseer.firstName} ${positionOverseer.lastName} (${positionOverseer.id})` : 'None'}`)
-                          console.log(`   👥 Position Keyman: ${positionKeyman ? `${positionKeyman.firstName} ${positionKeyman.lastName} (${positionKeyman.id})` : 'None'}`)
-                          console.log(`   📊 Before filter: ${beforeFilter} attendants`)
-                          console.log(`   📊 After exact match filter: ${filteredAttendants.length} attendants`)
                           
                           // Log which attendants are shown
                           if (filteredAttendants.length > 0) {
@@ -1895,10 +1883,8 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                             })
                           } else {
                             console.log(`   ❌ NO ATTENDANTS MATCH THIS POSITION'S OVERSIGHT!`)
-                            console.log(`   💡 No attendants are assigned to ${positionOverseer ? positionOverseer.firstName + ' ' + positionOverseer.lastName : 'this overseer'} in the attendants page`)
                           }
                         } else {
-                          console.log(`🔍 Position "${selectedPosition.name}" has no oversight - showing all active attendants`)
                         }
                         
                         return filteredAttendants.map(attendant => (
@@ -2411,31 +2397,20 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
   const timestamp = new Date().toISOString()
-  console.log('🔍 ============================================')
-  console.log('🔍 POSITIONS PAGE: getServerSideProps called at', timestamp)
-  console.log('🔍 URL:', context.req.url)
-  console.log('🔍 Params:', JSON.stringify(context.params))
-  console.log('🔍 ============================================')
   
   try {
-    console.log('🔍 Step 1: Getting session...')
     const session = await getServerSession(context.req, context.res, authOptions)
-    console.log('🔍 Step 1a: Session exists?', !!session)
-    console.log('🔍 Step 1b: Session user:', session?.user?.email || 'NO USER')
   
     if (!session) {
-      console.log('🔍 Step 1c: NO SESSION - Redirecting to signin')
       return {
         redirect: {
           destination: '/auth/signin',
         },
       }
     }
-    console.log('🔍 Step 1d: Session validated, continuing...')
 
     // CRITICAL: Block attendants from accessing admin pages
     if (session.user?.role === 'ATTENDANT') {
-      console.log('🔍 Step 1e: ATTENDANT ROLE - Redirecting to attendant dashboard')
       return {
         redirect: {
           destination: '/attendant/dashboard',
@@ -2446,7 +2421,6 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
 
     // Only ADMIN, OVERSEER, ASSISTANT_OVERSEER, KEYMAN can access
     if (!['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN'].includes(session.user?.role || '')) {
-      console.log('🔍 Step 1f: INVALID ROLE - Redirecting to signin')
       return {
         redirect: {
           destination: '/auth/signin',
@@ -2456,16 +2430,11 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     }
 
     // APEX GUARDIAN: Full SSR data fetching for positions tab
-    console.log('🔍 Step 2: Getting event ID from params...')
     const { id } = context.params!
-    console.log('🔍 Step 3: Event ID:', id)
     
-    console.log('🔍 Step 4: Importing Prisma...')
     const { prisma } = await import('../../../src/lib/prisma')
-    console.log('🔍 Step 5: Prisma imported successfully')
     
     // Fetch event with positions data
-    console.log('🔍 Step 6: Fetching event data...')
     const eventData = await prisma.events.findUnique({
       where: { id: id as string },
       include: {
@@ -2520,11 +2489,9 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
         }
       }
     })
-    console.log('🔍 Step 7: Event data fetched successfully, positions count:', eventData?.positions?.length || 0)
 
     // Fetch attendants for overseer assignment from attendants table
     // APEX GUARDIAN: Manually fetch oversight data since relation has TypeScript issues
-    console.log('🔍 Step 8: Fetching oversight data separately...')
     const oversightData = await (prisma as any).position_oversight_assignments.findMany({
       where: { eventId: id as string },
       include: {
@@ -2544,7 +2511,6 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
         }
       }
     })
-    console.log('🔍 Step 9: Oversight data fetched, count:', oversightData.length)
 
     // Attach oversight data to positions and rename position_assignments to assignments for client compatibility
     const positionsWithOversight = (eventData as any)!.positions.map((position: any) => {
@@ -2562,9 +2528,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
         oversight: positionOversight
       }
     })
-    console.log('🔍 Step 10: Positions with oversight attached')
 
-    console.log('🔍 Step 11: Fetching attendants data with event-specific oversight...')
     
     // Get all active attendants with their user role
     const allAttendants = await prisma.attendants.findMany({
@@ -2633,11 +2597,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
       }
     })
 
-    console.log('🔍 Step 11b: Event-specific attendant oversight loaded')
-    console.log(`   📊 Total attendants: ${attendantsData.length}`)
-    console.log(`   📊 Event associations: ${eventAssociations.length}`)
     const attendantsWithOversight = attendantsData.filter(att => att.overseerId)
-    console.log(`   📊 Attendants with overseers: ${attendantsWithOversight.length}`)
     
     if (!eventData) {
       return { notFound: true }
@@ -2657,11 +2617,8 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     // This code was causing crashes because eventData.positions typing issue
 
     // APEX GUARDIAN: Debug positions data loading
-    console.log('🔍 Step 12: Final positions with oversight count:', positionsWithOversight.length)
     const positionsWithOversightData = positionsWithOversight.filter((p: any) => p.oversight && p.oversight.length > 0)
-    console.log('🔍 Step 13: Positions that have oversight data:', positionsWithOversightData.length)
     positionsWithOversightData.forEach((p: any) => {
-      console.log(`🔍 Position ${p.positionNumber} oversight:`, p.oversight)
     })
 
     // Check event-specific permissions

@@ -302,6 +302,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           userId: permission.userId,
           role: permission.role,
           scopeType: permission.scopeType,
+          scopeIds: permission.scopeIds,
           createdAt: new Date(),
           updatedAt: new Date()
         }

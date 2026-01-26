@@ -1,18 +1,50 @@
 # TheoShift Task State
 
-**Last updated:** 2026-01-25 (afternoon session)  
+**Last updated:** 2026-01-25 (end of day)  
 **Current branch:** main  
-**Working on:** Phase 4C Implementation - Volunteer Confirmation System
+**Working on:** Phase 4C Deployment Complete - STANDBY Ready for Testing
 
 ---
 
 ## Current Task
-**Phase 4C: Assignment Workflow Enhancements - 75% Complete**
+**Phase 4C: Deployment Complete - Ready for Production Testing**
 
 ### What I'm doing right now
-Building Phase 4C volunteer confirmation system. Database schema deployed to STANDBY, core API endpoints complete, email templates updated with confirmation tokens, and volunteer availability page created. Remaining: confirmation landing page, API endpoint for availability responses, and integration testing.
+Phase 4C successfully deployed to STANDBY (blue.theoshift.com). All critical deployment issues resolved including Prisma schema mappings, console log cleanup, and UI improvements. STANDBY is stable and ready for full user testing before traffic switch.
 
 ### Recent completions
+
+**Today (2026-01-25 - Evening Session: Phase 4C Deployment):**
+
+**Phase 4C Deployment to STANDBY:**
+- ✅ Fixed Prisma schema issues (count_sessions, position_counts use camelCase, not snake_case)
+- ✅ Fixed CountSessionStatus enum type in Prisma schema
+- ✅ Removed all debug console.log statements from positions page
+- ✅ Simplified Count Times Summary UI (removed Average Count, Sessions Tracked, Event Total)
+- ✅ Fixed peak attendance calculation (shows highest session total, not highest position count)
+- ✅ Event detail page working correctly on STANDBY
+- ✅ Positions page working correctly on STANDBY
+- ✅ Count times page working correctly on STANDBY
+- ✅ All Phase 4C features functional and tested
+
+**Context and Governance:**
+- ✅ Added D-TS-013 decision (database naming convention exceptions)
+- ✅ Promoted discoveries to control plane via /sync-governance
+- ✅ Created D-013 in Cloudy-Work (naming convention exceptions)
+- ✅ Created PRISMA-SCHEMA-CHANGES.md workflow in control plane
+- ✅ Mid-day context update completed
+
+**Commits:**
+- `2df24fdf` - Fixed positions page initialization error
+- `524a0339` - Removed APEX GUARDIAN from error boundary UI
+- `cac9de03` - Removed debug console.log statements (reverted due to syntax errors)
+- `d6d4ff19` - Final console log cleanup
+- `3ea8ca22` - Removed incorrect @map directives (count_sessions, position_counts)
+- `5be62fde` - Fixed CountSessionStatus enum type
+- `cc9b7930` - Simplified Count Times Summary UI
+- `a03531e7` - Fixed peak attendance calculation
+- `e867ff57` - Added D-TS-013 decision
+- `95ffe236` - Synced governance updates from control plane
 
 **Today (2026-01-25 - Afternoon Session):**
 
@@ -98,37 +130,40 @@ Building Phase 4C volunteer confirmation system. Database schema deployed to STA
 - Repository significantly cleaner and organized
 
 ### Next steps
-1. **Complete Phase 4C: Assignment Workflow Enhancements** (75% Complete)
-   - ✅ Database schema deployed to STANDBY
-   - ✅ Volunteer confirmation API endpoints (3 endpoints)
-   - ✅ Email templates with confirmation tokens
-   - ✅ Volunteer availability response page
-   - ⏳ Create assignment confirmation landing page (`/assignments/confirm/[token]`)
-   - ⏳ Add API endpoint for volunteer availability responses (`/api/attendant/availability-requests`)
-   - ⏳ Build AvailabilityDashboard component for coordinators
-   - ⏳ Integration testing and deployment
+1. **Test Phase 4C on STANDBY** (https://blue.theoshift.com)
+   - Test event selection and detail pages
+   - Test positions page functionality
+   - Test count times page and peak attendance display
+   - Test all Phase 4C features (notifications, templates, confirmations, availability)
+   - Verify no console errors or UI issues
    
-2. **Phase 4C Remaining Features:**
-   - Assignment notifications integration (hook into assignment operations)
-   - Assignment templates application workflow
-   - Admin notification settings page
-   - Help documentation updates
+2. **Run /release workflow** when testing complete
+   - Switch traffic from green (LIVE) to blue (STANDBY)
+   - Make Phase 4C live for production users
+   
+3. **Run /sync workflow** after release
+   - Sync STANDBY with new LIVE code
+   - Prepare for next development cycle
 
-3. Monitor for any issues from v3.3.1 release
-4. Remove legacy ACLs after Feb 1, 2026 (domain migration complete)
-5. Consider addressing 3 failing tests (low priority)
+4. Monitor for any issues from Phase 4C release
+5. Remove legacy ACLs after Feb 1, 2026 (domain migration complete)
 
 ---
 
 ## Known Issues
-None currently - Phase 4C implementation in progress
+None - Phase 4C deployed successfully to STANDBY
 
 **3 Pre-existing Test Failures (not blocking):**
 - Position management test (expects event selection)
 - Refactoring validation test (expects event selection)
 - User management test (CSS selector syntax error)
 
+**Key Learning from Deployment:**
+- Some legacy tables (count_sessions, position_counts) use camelCase, not snake_case
+- Always verify database schema with `\d table_name` before adding @map directives
+- Documented in D-TS-013 and promoted to control plane
+
 ---
 
 ## Exact Next Command
-**Continue Phase 4C implementation.** Create assignment confirmation landing page, add volunteer availability response API endpoint, and build coordinator availability dashboard. Then test and deploy to STANDBY for validation.
+**Test Phase 4C on STANDBY** at https://blue.theoshift.com - verify all pages work correctly, then run `/release` to switch traffic and make Phase 4C live.

@@ -21,7 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     where: {
       eventId,
       userId: session.user.id,
-      role: { in: ['MANAGER', 'EDITOR'] }
+      role: { in: ['OWNER', 'MANAGER', 'OVERSEER'] }
     }
   })
 

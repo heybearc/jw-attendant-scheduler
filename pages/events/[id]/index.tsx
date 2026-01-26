@@ -137,9 +137,15 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
   const formatDate = (dateString: string) => {
     if (!dateString) return 'No date'
     try {
-      // Handle both ISO strings and date-only strings
-      const date = dateString.includes('T') ? parseISO(dateString) : parseISO(dateString + 'T00:00:00')
-      return format(date, 'EEEE, MMMM d, yyyy')
+      // Extract date parts to avoid timezone issues
+      const dateOnly = dateString.split('T')[0]
+      const [year, month, day] = dateOnly.split('-')
+      const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
+      
+      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+      const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+      
+      return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`
     } catch (error) {
       console.error('Date formatting error:', error, dateString)
       return 'Invalid date'
@@ -163,8 +169,17 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
   const formatDateTime = (dateString: string) => {
     if (!dateString) return 'No date'
     try {
-      // Use date-fns for consistent SSR/client formatting
-      return format(parseISO(dateString), 'MM/dd/yyyy, h:mm a')
+      // Parse ISO string manually to avoid timezone issues
+      const date = new Date(dateString)
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      const year = date.getFullYear()
+      let hours = date.getHours()
+      const minutes = String(date.getMinutes()).padStart(2, '0')
+      const ampm = hours >= 12 ? 'PM' : 'AM'
+      hours = hours % 12 || 12
+      
+      return `${month}/${day}/${year}, ${hours}:${minutes} ${ampm}`
     } catch (error) {
       console.error('DateTime formatting error:', error, dateString)
       return 'Invalid date'

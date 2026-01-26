@@ -36,10 +36,7 @@ export function VolunteerBadges({
   }
 
   const getVerificationBadge = () => {
-    if (!profileVerificationRequired) {
-      return null // Don't show badge if verification not required
-    }
-    
+    // Show verified badge if verified
     if (profileVerifiedAt) {
       return (
         <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
@@ -48,11 +45,17 @@ export function VolunteerBadges({
       )
     }
     
-    return (
-      <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
-        ⚠️ Needs Verification
-      </span>
-    )
+    // Show needs verification badge if required but not verified
+    if (profileVerificationRequired) {
+      return (
+        <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
+          ⚠️ Needs Verification
+        </span>
+      )
+    }
+    
+    // Don't show badge if not required and not verified
+    return null
   }
 
   const getAvailabilityBadge = () => {
@@ -133,7 +136,7 @@ export function VolunteerBadges({
   }
 
   return (
-    <div className="flex flex-wrap gap-1.5 mt-2">
+    <div className="flex flex-wrap gap-2 mt-2">
       {getStatusBadge()}
       {getVerificationBadge()}
       {getAvailabilityBadge()}

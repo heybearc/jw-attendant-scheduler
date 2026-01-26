@@ -1202,31 +1202,6 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                           )}
                         </button>
                       </th>
-                      <th className="w-48 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden xl:table-cell">
-                        <button 
-                          onClick={() => handleSort('formsOfService')}
-                          className="flex items-center space-x-1 hover:text-gray-700"
-                        >
-                          <span>Forms of Service</span>
-                          {sortField === 'formsOfService' && (
-                            <span>{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                          )}
-                        </button>
-                      </th>
-                      <th className="w-24 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        <button 
-                          onClick={() => handleSort('isActive')}
-                          className="flex items-center space-x-1 hover:text-gray-700"
-                        >
-                          <span>Status</span>
-                          {sortField === 'isActive' && (
-                            <span>{sortDirection === 'asc' ? '↑' : '↓'}</span>
-                          )}
-                        </button>
-                      </th>
-                      <th className="w-28 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                        Verification
-                      </th>
                       <th className="w-24 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Actions
                       </th>
@@ -1332,58 +1307,6 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                               </option>
                             ))}
                           </select>
-                        </td>
-                        <td className="px-3 py-3 whitespace-nowrap hidden xl:table-cell">
-                          <div className="flex flex-wrap gap-1">
-                            {(Array.isArray(attendant.formsOfService) 
-                              ? attendant.formsOfService 
-                              : (attendant.formsOfService || '').toString().split(', ').filter(s => s.trim())
-                            ).map((service, index) => (
-                              <span 
-                                key={index}
-                                className={`inline-block px-2 py-1 text-xs rounded-full ${
-                                  service === 'Overseer' ? 'bg-purple-100 text-purple-800' :
-                                  service === 'Keyman' ? 'bg-blue-100 text-blue-800' :
-                                  service === 'Elder' ? 'bg-yellow-100 text-yellow-800' :
-                                  service === 'Ministerial Servant' ? 'bg-green-100 text-green-800' :
-                                  service === 'Exemplary' ? 'bg-teal-100 text-teal-800' :
-                                  service === 'Regular Pioneer' ? 'bg-pink-100 text-pink-800' :
-                                  'bg-gray-100 text-gray-800'
-                                }`}
-                              >
-                                {service}
-                              </span>
-                            ))}
-                          </div>
-                        </td>
-                        <td className="px-3 py-3 whitespace-nowrap">
-                          <span className={`px-2 py-1 text-xs rounded-full ${
-                            attendant.isActive 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-red-100 text-red-800'
-                          }`}>
-                            {attendant.isActive ? 'Active' : 'Inactive'}
-                          </span>
-                        </td>
-                        <td className="px-3 py-3 whitespace-nowrap hidden md:table-cell">
-                          {/* TEMPORARY FIX: Hardcode Paul Lewis as verified until Prisma client is fixed */}
-                          {attendant.firstName === 'Paul' && attendant.lastName === 'Lewis' ? (
-                            <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
-                              ✅ Verified
-                            </span>
-                          ) : attendant.profileVerificationRequired ? (
-                            <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">
-                              ⚠️ Required
-                            </span>
-                          ) : attendant.profileVerifiedAt ? (
-                            <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
-                              ✅ Verified
-                            </span>
-                          ) : (
-                            <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-600">
-                              ❌ Not Verified
-                            </span>
-                          )}
                         </td>
                         <td className="px-3 py-3 whitespace-nowrap text-sm font-medium">
                           {canManageContent && (

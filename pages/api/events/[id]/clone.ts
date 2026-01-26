@@ -199,7 +199,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           description: position.description,
           area: position.area,
           sequence: position.sequence,
-          isActive: position.isActive
+          isActive: position.isActive,
+          updatedAt: new Date()
         }
       })
 

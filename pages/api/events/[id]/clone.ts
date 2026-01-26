@@ -28,12 +28,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     // Fetch the original event with all related data
+    // Check both old (event_positions) and new (positions) systems
     const originalEvent = await prisma.events.findUnique({
       where: { id },
       include: {
         event_attendants: {
           include: {
             attendant: true
+          }
+        },
+        event_positions: {
+          include: {
+            assignments: true
           }
         },
         positions: {
@@ -124,9 +130,61 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
     }
 
-    // Clone positions with shifts and assignments
+    // Determine which position system to use
+    const useOldSystem = originalEvent.event_positions.length > 0
+    const useNewSystem = originalEvent.positions.length > 0
+
+    // Clone positions - OLD SYSTEM (event_positions)
+    if (useOldSystem) {
+      for (const position of originalEvent.event_positions) {
+        const newPositionId = uuidv4()
+        
+        await prisma.event_positions.create({
+          data: {
+            id: newPositionId,
+            eventId: newEventId,
+            positionNumber: position.positionNumber,
+            positionName: position.positionName,
+            description: position.description,
+            department: position.department,
+            isActive: position.isActive,
+            isAllDay: position.isAllDay,
+            isLeadershipPosition: position.isLeadershipPosition,
+            requiresExperience: position.requiresExperience,
+            maxAttendants: position.maxAttendants,
+            minAttendants: position.minAttendants,
+            tags: position.tags,
+            instructions: position.instructions,
+            updatedAt: new Date()
+          }
+        })
+
+        // Clone assignments for this position (old system uses assignments table)
+        for (const assignment of position.assignments) {
+          await prisma.assignments.create({
+            data: {
+              id: uuidv4(),
+              eventId: newEventId,
+              userId: assignment.userId,
+              positionId: newPositionId,
+              shiftId: assignment.shiftId,
+              shiftStart: assignment.shiftStart,
+              shiftEnd: assignment.shiftEnd,
+              status: assignment.status,
+              notes: assignment.notes,
+              assignedBy: assignment.assignedBy,
+              assignedAt: new Date(),
+              updatedAt: new Date()
+            }
+          })
+        }
+      }
+    }
+
+    // Clone positions - NEW SYSTEM (positions with shifts)
     const positionMapping = new Map<string, string>()
-    for (const position of originalEvent.positions) {
+    if (useNewSystem) {
+      for (const position of originalEvent.positions) {
       const newPositionId = uuidv4()
       positionMapping.set(position.id, newPositionId)
       
@@ -191,6 +249,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         })
       }
     }
+    }
 
     // Clone lanyards
     for (const lanyard of originalEvent.lanyards) {
@@ -211,12 +270,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Note: We intentionally do NOT clone count_sessions as those are event-specific
     // and should start fresh for each event
 
+    const positionCount = useOldSystem ? originalEvent.event_positions.length : originalEvent.positions.length
+    const systemUsed = useOldSystem ? 'old' : 'new'
+    
     return res.status(200).json({ 
       success: true, 
       data: { 
         id: newEventId,
         name: clonedEvent.name,
-        message: `Event cloned successfully with ${originalEvent.positions.length} positions, ${originalEvent.event_attendants.length} volunteers, and ${originalEvent.lanyards.length} lanyards`
+        message: `Event cloned successfully with ${positionCount} positions (${systemUsed} system), ${originalEvent.event_attendants.length} volunteers, and ${originalEvent.lanyards.length} lanyards`
       }
     })
 

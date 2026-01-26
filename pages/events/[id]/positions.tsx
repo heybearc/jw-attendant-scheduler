@@ -1833,15 +1833,6 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                         
                         // APEX GUARDIAN: Debug attendant data first
                         
-                        // Log first few attendants to see their structure
-                        filteredAttendants.slice(0, 5).forEach(attendant => {
-                          console.log(`   👤 ${attendant.firstName} ${attendant.lastName}:`)
-                          console.log(`      - overseerId: ${attendant.overseerId}`)
-                          console.log(`      - keymanId: ${attendant.keymanId}`)
-                          console.log(`      - overseer: ${attendant.overseer ? `${attendant.overseer.firstName} ${attendant.overseer.lastName}` : 'null'}`)
-                          console.log(`      - keyman: ${attendant.keyman ? `${attendant.keyman.firstName} ${attendant.keyman.lastName}` : 'null'}`)
-                        })
-                        
                         // APEX GUARDIAN: EXACT overseer matching filtering
                         if (positionOverseer || positionKeyman) {
                           // Show ONLY attendants assigned to the SAME overseer/keyman as this position

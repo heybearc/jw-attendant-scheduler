@@ -246,8 +246,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           data: {
             id: uuidv4(),
             positionId: newPositionId,
-            attendantId: oversight.attendantId,
-            role: oversight.role,
+            eventId: newEventId,
+            overseerId: oversight.overseerId,
+            keymanId: oversight.keymanId,
             assignedBy: user.id
           }
         })

@@ -14,7 +14,61 @@ Based on user feedback, Phase 4C will focus on:
 ✅ **Feature 1: Assignment Notifications** - APPROVED (High Priority)  
 ✅ **Feature 2: Assignment Templates** - APPROVED (Medium Priority - complements clone event)  
 ✅ **Feature 4: Volunteer Confirmation System** - APPROVED (High Priority - ENHANCED)  
+✅ **Feature 5: Event Permissions Cloning** - APPROVED (Medium Priority - clone enhancement)  
 ⏸️ **Feature 3: Assignment History & Analytics** - DEFERRED to Phase 6
+
+---
+
+## 🔐 Feature 5: Event Permissions Cloning
+
+### **Goal:**
+When cloning an event, also clone the event-specific permissions so users maintain the same access levels in the cloned event.
+
+### **Current Behavior:**
+- Clone event copies positions, volunteers, assignments, oversight, count sessions, and lanyards
+- Event permissions are NOT copied
+- Users who had access to original event don't automatically get access to cloned event
+
+### **New Behavior:**
+- Clone event also copies `event_permissions` records
+- Users with MANAGER, EDITOR, or VIEWER roles on original event get same roles on cloned event
+- Maintains access control consistency across cloned events
+
+### **Implementation:**
+
+#### Files to Modify:
+1. `/pages/api/events/[id]/clone.ts` - Add permissions cloning logic
+
+#### Code Changes:
+```typescript
+// In clone endpoint, after cloning other data:
+
+// Clone event permissions
+const originalPermissions = await prisma.event_permissions.findMany({
+  where: { eventId: id }
+})
+
+for (const permission of originalPermissions) {
+  await prisma.event_permissions.create({
+    data: {
+      id: uuidv4(),
+      eventId: newEventId,
+      userId: permission.userId,
+      role: permission.role,
+      scopeType: permission.scopeType,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+  })
+}
+```
+
+### **Testing:**
+- [ ] Clone event with permissions
+- [ ] Verify users have same roles in cloned event
+- [ ] Verify permissions page shows correct users
+- [ ] Test with MANAGER, EDITOR, and VIEWER roles
+- [ ] Verify creator of clone gets automatic access
 
 ---
 

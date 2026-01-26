@@ -289,6 +289,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Note: We intentionally do NOT clone count_sessions as those are event-specific
     // and should start fresh for each event
 
+    // Clone event permissions
+    const originalPermissions = await prisma.event_permissions.findMany({
+      where: { eventId: id }
+    })
+
+    for (const permission of originalPermissions) {
+      await prisma.event_permissions.create({
+        data: {
+          id: uuidv4(),
+          eventId: newEventId,
+          userId: permission.userId,
+          role: permission.role,
+          scopeType: permission.scopeType,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+      })
+    }
+
     const positionCount = useOldSystem ? originalEvent.event_positions.length : originalEvent.positions.length
     const systemUsed = useOldSystem ? 'old' : 'new'
     const lanyardCount = originalEvent.lanyard_settings?.lanyards.length || 0
@@ -298,7 +317,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       data: { 
         id: newEventId,
         name: clonedEvent.name,
-        message: `Event cloned successfully with ${positionCount} positions (${systemUsed} system), ${originalEvent.event_attendants.length} volunteers, and ${lanyardCount} lanyards`
+        message: `Event cloned successfully with ${positionCount} positions (${systemUsed} system), ${originalEvent.event_attendants.length} volunteers, ${lanyardCount} lanyards, and ${originalPermissions.length} permissions`
       }
     })
 

@@ -85,6 +85,12 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
   const [availabilityStatus, setAvailabilityStatus] = useState<string>('')
   const [availabilityNotes, setAvailabilityNotes] = useState<string>('')
   
+  // Bulk availability request state
+  const [showBulkRequestModal, setShowBulkRequestModal] = useState(false)
+  const [bulkRequestDeadline, setBulkRequestDeadline] = useState('')
+  const [bulkRequestMessage, setBulkRequestMessage] = useState('')
+  const [sendingBulkRequest, setSendingBulkRequest] = useState(false)
+  
   // Helper functions for dropdown management
   const toggleDropdown = (attendantId: string) => {
     setOpenDropdowns(prev => {
@@ -460,6 +466,55 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
     } catch (error) {
       console.error('Error updating availability:', error)
       alert('Failed to update availability')
+    }
+  }
+
+  // Bulk Availability Request Handler
+  const handleBulkAvailabilityRequest = () => {
+    if (selectedAttendants.size === 0) {
+      alert('Please select attendants to request availability from')
+      return
+    }
+    setShowBulkRequestModal(true)
+  }
+
+  const handleSendBulkRequest = async () => {
+    if (selectedAttendants.size === 0) return
+
+    setSendingBulkRequest(true)
+    try {
+      const attendantIds = Array.from(selectedAttendants).map(associationId => {
+        const attendant = attendants.find(a => a.associationId === associationId)
+        return attendant?.id
+      }).filter(Boolean)
+
+      const response = await fetch(`/api/events/${eventId}/availability-request`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          volunteerIds: attendantIds,
+          deadline: bulkRequestDeadline || null,
+          customMessage: bulkRequestMessage.trim() || null
+        })
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        alert(`✅ Availability requests sent to ${result.sent} attendants${result.failed > 0 ? `\n⚠️ ${result.failed} failed` : ''}`)
+        setShowBulkRequestModal(false)
+        setSelectedAttendants(new Set())
+        setBulkRequestDeadline('')
+        setBulkRequestMessage('')
+        preserveStateAndReload()
+      } else {
+        alert(result.error || 'Failed to send availability requests')
+      }
+    } catch (error) {
+      console.error('Error sending bulk availability request:', error)
+      alert('Failed to send availability requests')
+    } finally {
+      setSendingBulkRequest(false)
     }
   }
 
@@ -883,13 +938,22 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                       📥 Import Attendants
                     </button>
                     {selectedAttendants.size > 0 && (
-                      <button 
-                        onClick={handleBulkEdit}
-                        disabled={loading}
-                        className="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white font-bold py-3 px-4 rounded transition-colors min-h-[44px] touch-manipulation"
-                      >
-                        ✏️ Bulk Edit ({selectedAttendants.size})
-                      </button>
+                      <>
+                        <button 
+                          onClick={handleBulkEdit}
+                          disabled={loading}
+                          className="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white font-bold py-3 px-4 rounded transition-colors min-h-[44px] touch-manipulation"
+                        >
+                          ✏️ Bulk Edit ({selectedAttendants.size})
+                        </button>
+                        <button 
+                          onClick={handleBulkAvailabilityRequest}
+                          disabled={loading}
+                          className="bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white font-bold py-3 px-4 rounded transition-colors min-h-[44px] touch-manipulation"
+                        >
+                          📧 Request Availability ({selectedAttendants.size})
+                        </button>
+                      </>
                     )}
                   </div>
                 )}
@@ -1840,6 +1904,94 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                     className="px-4 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white rounded-md min-h-[44px] touch-manipulation order-1 sm:order-2"
                   >
                     {loading ? 'Updating...' : 'Update Attendants'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Bulk Availability Request Modal */}
+        {showBulkRequestModal && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
+            <div className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full">
+              <div className="p-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">
+                  📧 Request Availability from {selectedAttendants.size} Attendants
+                </h3>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Response Deadline (Optional)
+                    </label>
+                    <input
+                      type="date"
+                      value={bulkRequestDeadline}
+                      onChange={(e) => setBulkRequestDeadline(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      When do you need responses by?
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Custom Message (Optional)
+                    </label>
+                    <textarea
+                      value={bulkRequestMessage}
+                      onChange={(e) => setBulkRequestMessage(e.target.value)}
+                      rows={4}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Add any additional information or instructions for volunteers..."
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      This message will be included in the email to volunteers
+                    </p>
+                  </div>
+
+                  <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+                    <h4 className="text-sm font-medium text-blue-900 mb-2">📋 What happens next?</h4>
+                    <ul className="text-sm text-blue-800 space-y-1">
+                      <li>• Emails will be sent to all selected attendants</li>
+                      <li>• Each attendant can respond with: Available, Not Available, or Partial</li>
+                      <li>• Their responses will update the availability badges on this page</li>
+                      <li>• You can send reminders to non-responders later</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowBulkRequestModal(false)
+                      setBulkRequestDeadline('')
+                      setBulkRequestMessage('')
+                    }}
+                    disabled={sendingBulkRequest}
+                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSendBulkRequest}
+                    disabled={sendingBulkRequest}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {sendingBulkRequest ? (
+                      <>
+                        <span className="animate-spin">⏳</span>
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        📧 Send Requests
+                      </>
+                    )}
                   </button>
                 </div>
               </div>

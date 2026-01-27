@@ -45,11 +45,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ error: 'Event not found' })
     }
 
-    // Get volunteers to request from
-    let volunteers
+    // Get attendants to request from (attendants are event-specific volunteers)
+    let attendants
     if (volunteerIds && Array.isArray(volunteerIds) && volunteerIds.length > 0) {
-      // Specific volunteers
-      volunteers = await prisma.users.findMany({
+      // Specific attendants
+      attendants = await prisma.attendants.findMany({
         where: {
           id: { in: volunteerIds },
           isActive: true
@@ -62,23 +62,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       })
     } else {
-      // All active volunteers
-      volunteers = await prisma.users.findMany({
+      // All active attendants for this event
+      const eventAttendants = await prisma.event_attendants.findMany({
         where: {
-          isActive: true,
-          role: { in: ['ATTENDANT', 'KEYMAN', 'ASSISTANT_OVERSEER', 'OVERSEER'] }
+          eventId,
+          attendants: {
+            isActive: true
+          }
         },
-        select: {
-          id: true,
-          email: true,
-          firstName: true,
-          lastName: true
+        include: {
+          attendants: {
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true
+            }
+          }
         }
       })
+      attendants = eventAttendants.map(ea => ea.attendants).filter(Boolean)
     }
 
-    if (volunteers.length === 0) {
-      return res.status(400).json({ error: 'No volunteers found to request from' })
+    if (attendants.length === 0) {
+      return res.status(400).json({ error: 'No attendants found to request from' })
     }
 
     // Format dates
@@ -112,14 +119,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       errors: [] as string[]
     }
 
-    for (const volunteer of volunteers) {
+    for (const attendant of attendants) {
       try {
         // Check if availability request already exists
         const existing = await prisma.volunteer_availability.findUnique({
           where: {
-            eventId_userId: {
+            eventId_attendantId: {
               eventId,
-              userId: volunteer.id
+              attendantId: attendant.id
             }
           }
         })
@@ -139,7 +146,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             data: {
               id: randomBytes(16).toString('hex'),
               eventId,
-              userId: volunteer.id,
+              attendantId: attendant.id,
               status: 'PENDING',
               requestedAt: new Date()
             }
@@ -151,8 +158,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         // Send email
         const emailHtml = generateAvailabilityRequestEmail({
-          volunteerFirstName: volunteer.firstName,
-          volunteerLastName: volunteer.lastName,
+          volunteerFirstName: attendant.firstName,
+          volunteerLastName: attendant.lastName,
           eventName: event.name,
           startDate,
           endDate,
@@ -163,22 +170,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         })
 
         await sendEmail({
-          to: volunteer.email,
+          to: attendant.email,
           subject: `Availability Request: ${event.name}`,
           html: emailHtml
         })
 
         results.sent++
       } catch (error: any) {
-        console.error(`Failed to send to ${volunteer.email}:`, error)
+        console.error(`Failed to send to ${attendant.email}:`, error)
         results.failed++
-        results.errors.push(`${volunteer.firstName} ${volunteer.lastName}: ${error.message}`)
+        results.errors.push(`${attendant.firstName} ${attendant.lastName}: ${error.message}`)
       }
     }
 
     return res.status(200).json({
       success: true,
-      message: `Availability requests sent to ${results.sent} volunteers`,
+      message: `Availability requests sent to ${results.sent} attendants`,
       sent: results.sent,
       failed: results.failed,
       errors: results.errors.length > 0 ? results.errors : undefined

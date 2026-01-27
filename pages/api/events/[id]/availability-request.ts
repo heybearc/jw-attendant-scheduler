@@ -2,8 +2,8 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../auth/[...nextauth]'
 import { prisma } from '../../../../src/lib/prisma'
-import { sendEmail } from '../../../../src/lib/email'
 import { randomBytes } from 'crypto'
+import nodemailer from 'nodemailer'
 
 /**
  * Phase 4C: Bulk Availability Request API
@@ -156,7 +156,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         // Generate response URL
         const responseUrl = `${baseUrl}/attendant/availability?eventId=${eventId}`
 
-        // Send email
+        // Send email using database configuration
         const emailHtml = generateAvailabilityRequestEmail({
           volunteerFirstName: attendant.firstName,
           volunteerLastName: attendant.lastName,
@@ -169,11 +169,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           responseUrl
         })
 
-        await sendEmail({
-          to: attendant.email,
-          subject: `Availability Request: ${event.name}`,
-          html: emailHtml
-        })
+        await sendAvailabilityEmail(attendant.email, `Availability Request: ${event.name}`, emailHtml)
 
         results.sent++
       } catch (error: any) {
@@ -198,6 +194,53 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       message: error.message
     })
   }
+}
+
+// Send email using database configuration
+async function sendAvailabilityEmail(to: string, subject: string, html: string) {
+  // Get email configuration from database
+  const emailConfig = await prisma.system_settings.findFirst({
+    where: { key: 'email_config' }
+  })
+
+  if (!emailConfig) {
+    throw new Error('Email configuration not found. Please configure email settings in Admin → Email Configuration.')
+  }
+
+  const { authType, config } = JSON.parse(emailConfig.value)
+
+  // Create transporter based on auth type
+  let transporter
+  
+  if (authType === 'gmail') {
+    transporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: config.gmailEmail,
+        pass: config.gmailAppPassword
+      }
+    })
+  } else {
+    transporter = nodemailer.createTransport({
+      host: config.smtpServer,
+      port: parseInt(config.smtpPort || '587'),
+      secure: config.smtpSecure || false,
+      auth: {
+        user: config.smtpUser,
+        pass: config.smtpPassword
+      }
+    })
+  }
+
+  // Send email
+  await transporter.sendMail({
+    from: `"${config.fromName}" <${config.fromEmail}>`,
+    to,
+    subject,
+    html
+  })
 }
 
 // Generate availability request email HTML

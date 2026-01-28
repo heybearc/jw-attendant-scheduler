@@ -79,7 +79,7 @@ interface Event {
     }>
     eventTotal?: number
   }
-  event_attendants: Array<{
+  event_volunteers: Array<{
     id: string
     volunteer?: {
       id: string
@@ -103,8 +103,7 @@ interface Event {
     department: string
   }>
   _count: {
-    event_attendants: number
-    assignments: number
+    event_volunteers: number
     positions: number
   }
 }
@@ -892,7 +891,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     const event = await prisma.events.findUnique({
       where: { id: id as string },
       include: {
-        event_attendants: {
+        event_volunteers: {
           include: {
             volunteer: {
               select: {

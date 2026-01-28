@@ -825,4 +825,5 @@ enum UserRole {
   ASSISTANT_OVERSEER
   KEYMAN
   VOLUNTEER
+  ATTENDANT  // Legacy value still in database - will be migrated later
 }

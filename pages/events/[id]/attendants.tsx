@@ -2259,10 +2259,10 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     const availabilityRecords = await prisma.volunteer_availability.findMany({
       where: {
         eventId: id as string,
-        attendantId: { in: attendantIds }
+        volunteerId: { in: attendantIds }
       },
       select: {
-        attendantId: true,
+        volunteerId: true,
         status: true,
         notes: true,
         respondedAt: true
@@ -2272,7 +2272,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     // Create availability map for quick lookup
     const availabilityMap = new Map();
     availabilityRecords.forEach(record => {
-      availabilityMap.set(record.attendantId, {
+      availabilityMap.set(record.volunteerId, {
         status: record.status,
         notes: record.notes,
         respondedAt: record.respondedAt?.toISOString() || null

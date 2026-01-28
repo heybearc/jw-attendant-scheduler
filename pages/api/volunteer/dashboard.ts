@@ -135,7 +135,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         volunteerId: volunteerId as string,
         eventId: eventId as string
       },
-      include: {
+      select: {
+        id: true,
+        eventId: true,
+        volunteerId: true,
         keyman: {
           select: {
             firstName: true,

@@ -54,10 +54,10 @@ export const authOptions: NextAuthOptions = {
         }
       }
     }),
-    // Attendant login with PIN
+    // Volunteer login with PIN
     CredentialsProvider({
-      id: 'attendant-pin',
-      name: 'Attendant Login',
+      id: 'volunteer-pin',
+      name: 'Volunteer PIN Login',
       credentials: {
         firstName: { label: 'First Name', type: 'text' },
         lastName: { label: 'Last Name', type: 'text' },
@@ -69,8 +69,8 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
-        // Find attendant by name and congregation
-        const attendant = await prisma.attendants.findFirst({
+        // Find volunteer by name and congregation
+        const volunteer = await prisma.volunteers.findFirst({
           where: {
             firstName: { equals: credentials.firstName.trim(), mode: 'insensitive' },
             lastName: { equals: credentials.lastName.trim(), mode: 'insensitive' },
@@ -78,13 +78,16 @@ export const authOptions: NextAuthOptions = {
           }
         })
 
-        if (!attendant) {
+        if (!volunteer) {
+          console.log('❌ Volunteer not found')
           return null
         }
 
+        console.log('✅ Volunteer found:', volunteer.id)
+
         // Verify PIN using raw query
         const pinResult = await prisma.$queryRaw<Array<{ pinHash: string | null }>>`
-          SELECT "pinHash" FROM attendants WHERE id = ${attendant.id}
+          SELECT "pinHash" FROM volunteers WHERE id = ${volunteer.id}
         `
         
         const pinHash = pinResult[0]?.pinHash
@@ -92,18 +95,17 @@ export const authOptions: NextAuthOptions = {
           return null
         }
         
-        const pinValid = await bcrypt.compare(credentials.pin, pinHash)
-        if (!pinValid) {
+        const isValidPin = await bcrypt.compare(credentials.pin, pinHash)
+        if (!isValidPin) {
           return null
         }
 
-        // Return attendant as user
+        // Return volunteer as user
         return {
-          id: attendant.id,
-          email: attendant.email || `${attendant.id}@attendant.local`,
-          name: `${attendant.firstName} ${attendant.lastName}`,
-          role: 'ATTENDANT',
-          congregation: attendant.congregation
+          id: volunteer.id,
+          email: volunteer.email,
+          name: `${volunteer.firstName} ${volunteer.lastName}`,
+          role: 'VOLUNTEER'
         }
       }
     })

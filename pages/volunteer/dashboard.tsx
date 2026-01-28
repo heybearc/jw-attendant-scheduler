@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { format, parseISO } from 'date-fns'
 import AnnouncementBanner from '../../components/AnnouncementBanner'
 
-interface Attendant {
+interface Volunteer {
   id: string
   firstName: string
   lastName: string
@@ -79,7 +79,7 @@ interface AvailabilityRequest {
 }
 
 interface DashboardData {
-  attendant: Attendant
+  volunteer: Volunteer
   event: Event
   assignments: Assignment[]
   documents: Document[]
@@ -87,13 +87,13 @@ interface DashboardData {
   activeCountSessions?: CountSession[]
 }
 
-export default function AttendantDashboard() {
+export default function VolunteerDashboard() {
   const router = useRouter()
   const { data: session, status } = useSession()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
-  const [attendant, setAttendant] = useState<Attendant | null>(null)
+  const [volunteer, setVolunteer] = useState<Volunteer | null>(null)
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
   const [showProfileVerification, setShowProfileVerification] = useState(false)
   const [profileData, setProfileData] = useState({ email: '', phone: '' })
@@ -112,8 +112,8 @@ export default function AttendantDashboard() {
   useEffect(() => {
     if (status === 'loading') return
     
-    if (status === 'unauthenticated' || !session || session.user.role !== 'ATTENDANT') {
-      router.push('/attendant/login')
+    if (status === 'unauthenticated' || !session || session.user.role !== 'VOLUNTEER') {
+      router.push('/volunteer/login')
       return
     }
     
@@ -122,7 +122,7 @@ export default function AttendantDashboard() {
 
   const fetchAvailabilityRequests = async (eventId: string) => {
     try {
-      const response = await fetch(`/api/attendant/availability?eventId=${eventId}`)
+      const response = await fetch(`/api/volunteer/availability?eventId=${eventId}`)
       const data = await response.json()
       
       if (data.success) {
@@ -137,7 +137,7 @@ export default function AttendantDashboard() {
     try {
       setRespondingToRequest(requestId)
       
-      const response = await fetch(`/api/attendant/availability?eventId=${selectedEventId}`, {
+      const response = await fetch(`/api/volunteer/availability?eventId=${selectedEventId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ requestId, status, notes })
@@ -170,14 +170,14 @@ export default function AttendantDashboard() {
         return
       }
       
-      console.log('Loading dashboard for attendant:', session.user.id)
+      console.log('Loading dashboard for volunteer:', session.user.id)
       
       // Get selected event from query param or localStorage fallback
       const eventId = router.query.eventId as string || localStorage.getItem('selectedEventId')
       
       if (!eventId) {
         // Need to select an event first
-        router.push('/attendant/select-event')
+        router.push('/volunteer/select-event')
         return
       }
       
@@ -185,29 +185,29 @@ export default function AttendantDashboard() {
 
       // Fetch dashboard data
       console.log('Fetching dashboard data...')
-      const response = await fetch(`/api/attendant/dashboard?attendantId=${session.user.id}&eventId=${eventId}`)
+      const response = await fetch(`/api/volunteer/dashboard?volunteerId=${session.user.id}&eventId=${eventId}`)
       const result = await response.json()
       console.log('Dashboard API response:', result)
 
       if (result.success) {
         console.log('Setting dashboard data...')
         setDashboardData(result.data)
-        setAttendant(result.data.attendant)
+        setVolunteer(result.data.volunteer)
         
         // Fetch availability requests for this event
         await fetchAvailabilityRequests(eventId)
         
         // Check if profile verification is needed
         // Show verification if: 1) email/phone missing OR 2) profileVerificationRequired flag is set
-        const needsVerification = !result.data.attendant.email || 
-                                  !result.data.attendant.phone || 
-                                  result.data.attendant.profileVerificationRequired
+        const needsVerification = !result.data.volunteer.email || 
+                                  !result.data.volunteer.phone || 
+                                  result.data.volunteer.profileVerificationRequired
         
         if (needsVerification) {
           // Pre-fill with existing data
           setProfileData({
-            email: result.data.attendant.email || '',
-            phone: result.data.attendant.phone || ''
+            email: result.data.volunteer.email || '',
+            phone: result.data.volunteer.phone || ''
           })
           setShowProfileVerification(true)
         }
@@ -246,11 +246,11 @@ export default function AttendantDashboard() {
       }
 
       // Update profile via API
-      const response = await fetch(`/api/attendant/profile`, {
+      const response = await fetch(`/api/volunteer/profile`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          attendantId: attendant?.id,
+          volunteerId: volunteer?.id,
           email: profileData.email,
           phone: profileData.phone
         })
@@ -280,19 +280,19 @@ export default function AttendantDashboard() {
 
   const handleEditProfile = () => {
     setEditProfileData({
-      email: dashboardData?.attendant.email || '',
-      phone: dashboardData?.attendant.phone || ''
+      email: dashboardData?.volunteer.email || '',
+      phone: dashboardData?.volunteer.phone || ''
     })
     setIsEditingProfile(true)
   }
 
   const handleSaveProfile = async () => {
     try {
-      const response = await fetch(`/api/attendant/profile`, {
+      const response = await fetch(`/api/volunteer/profile`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          attendantId: attendant?.id,
+          volunteerId: volunteer?.id,
           email: editProfileData.email,
           phone: editProfileData.phone
         })
@@ -318,7 +318,7 @@ export default function AttendantDashboard() {
 
   const handleLogout = async () => {
     // Clear localStorage
-    localStorage.removeItem('attendantSession')
+    localStorage.removeItem('volunteerSession')
     localStorage.removeItem('selectedEventId')
     localStorage.removeItem('profileVerified')
     
@@ -326,11 +326,11 @@ export default function AttendantDashboard() {
     await signOut({ redirect: false })
     
     // Redirect to attendant login
-    router.push('/attendant/login')
+    router.push('/volunteer/login')
   }
 
   const handleSwitchEvent = () => {
-    router.push('/attendant/select-event')
+    router.push('/volunteer/select-event')
   }
 
   const handleSubmitCount = async (sessionId: string) => {
@@ -441,7 +441,7 @@ export default function AttendantDashboard() {
           <h2 className="text-xl font-bold text-gray-900 mb-2">Unable to Load Dashboard</h2>
           <p className="text-gray-600 mb-4">{error}</p>
           <button
-            onClick={() => router.push('/attendant/login')}
+            onClick={() => router.push('/volunteer/login')}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
           >
             Back to Login
@@ -528,7 +528,7 @@ export default function AttendantDashboard() {
               </div>
               <div className="flex items-center space-x-4">
                 <span className="text-sm text-gray-700">
-                  {attendant?.firstName} {attendant?.lastName}
+                  {volunteer?.firstName} {volunteer?.lastName}
                 </span>
                 <button
                   onClick={handleSwitchEvent}
@@ -576,7 +576,7 @@ export default function AttendantDashboard() {
           {/* Welcome Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900">
-              Welcome, {dashboardData.attendant.firstName}!
+              Welcome, {dashboardData.volunteer.firstName}!
             </h1>
             <p className="mt-2 text-lg text-gray-600">
               {dashboardData.event.name}
@@ -972,11 +972,11 @@ export default function AttendantDashboard() {
                   <div className="space-y-4">
                     <div>
                       <span className="text-gray-500 text-sm">Name:</span>
-                      <p className="font-medium text-gray-400">{dashboardData.attendant.firstName} {dashboardData.attendant.lastName} (cannot be changed)</p>
+                      <p className="font-medium text-gray-400">{dashboardData.volunteer.firstName} {dashboardData.volunteer.lastName} (cannot be changed)</p>
                     </div>
                     <div>
                       <span className="text-gray-500 text-sm">Congregation:</span>
-                      <p className="font-medium text-gray-400">{dashboardData.attendant.congregation} (cannot be changed)</p>
+                      <p className="font-medium text-gray-400">{dashboardData.volunteer.congregation} (cannot be changed)</p>
                     </div>
                     <div>
                       <label className="block text-sm text-gray-500 mb-1">Email:</label>
@@ -1017,19 +1017,19 @@ export default function AttendantDashboard() {
                   <div className="space-y-3 text-sm">
                     <div>
                       <span className="text-gray-500">Name:</span>
-                      <p className="font-medium">{dashboardData.attendant.firstName} {dashboardData.attendant.lastName}</p>
+                      <p className="font-medium">{dashboardData.volunteer.firstName} {dashboardData.volunteer.lastName}</p>
                     </div>
                     <div>
                       <span className="text-gray-500">Congregation:</span>
-                      <p className="font-medium">{dashboardData.attendant.congregation}</p>
+                      <p className="font-medium">{dashboardData.volunteer.congregation}</p>
                     </div>
                     <div>
                       <span className="text-gray-500">Email:</span>
-                      <p className="font-medium">{dashboardData.attendant.email || <span className="text-gray-400">Not provided</span>}</p>
+                      <p className="font-medium">{dashboardData.volunteer.email || <span className="text-gray-400">Not provided</span>}</p>
                     </div>
                     <div>
                       <span className="text-gray-500">Phone:</span>
-                      <p className="font-medium">{dashboardData.attendant.phone || <span className="text-gray-400">Not provided</span>}</p>
+                      <p className="font-medium">{dashboardData.volunteer.phone || <span className="text-gray-400">Not provided</span>}</p>
                     </div>
                   </div>
                 )}

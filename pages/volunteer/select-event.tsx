@@ -13,8 +13,8 @@ interface Event {
   status: string
 }
 
-interface AttendantSession {
-  attendant: {
+interface VolunteerSession {
+  volunteer: {
     id: string
     firstName: string
     lastName: string
@@ -24,7 +24,7 @@ interface AttendantSession {
   loginTime: string
 }
 
-export default function AttendantSelectEvent() {
+export default function VolunteerSelectEvent() {
   const router = useRouter()
   const { data: authSession, status } = useSession()
   const [events, setEvents] = useState<Event[]>([])
@@ -33,12 +33,12 @@ export default function AttendantSelectEvent() {
   useEffect(() => {
     if (status === 'loading') return
     
-    if (status === 'unauthenticated' || !authSession || authSession.user.role !== 'ATTENDANT') {
-      router.push('/attendant/login')
+    if (status === 'unauthenticated' || !authSession || authSession.user.role !== 'VOLUNTEER') {
+      router.push('/volunteer/login')
       return
     }
 
-    // Fetch events for this attendant
+    // Fetch events for this volunteer
     fetchEvents()
   }, [status, authSession])
   
@@ -46,7 +46,7 @@ export default function AttendantSelectEvent() {
     try {
       if (!authSession?.user?.id) return
       
-      const response = await fetch(`/api/attendant/events?attendantId=${authSession.user.id}`)
+      const response = await fetch(`/api/volunteer/events?volunteerId=${authSession.user.id}`)
       const result = await response.json()
       
       if (result.success) {
@@ -55,7 +55,7 @@ export default function AttendantSelectEvent() {
         // If only one event, redirect to dashboard
         if (result.data.events.length === 1) {
           localStorage.setItem('selectedEventId', result.data.events[0].id)
-          router.push('/attendant/dashboard')
+          router.push('/volunteer/dashboard')
         }
       }
     } catch (error) {
@@ -72,7 +72,7 @@ export default function AttendantSelectEvent() {
     localStorage.setItem('selectedEventId', eventId)
     
     // Redirect to dashboard with event ID
-    router.push(`/attendant/dashboard?eventId=${eventId}`)
+    router.push(`/volunteer/dashboard?eventId=${eventId}`)
   }
 
   const formatDate = (dateString: string) => {
@@ -189,7 +189,7 @@ export default function AttendantSelectEvent() {
           {/* Footer */}
           <div className="mt-8 text-center">
             <Link
-              href="/attendant/login"
+              href="/volunteer/login"
               className="text-sm text-blue-600 hover:text-blue-800 font-medium"
             >
               ← Back to Login

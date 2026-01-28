@@ -4,18 +4,18 @@ import Head from 'next/head'
 import Link from 'next/link'
 import { signIn } from 'next-auth/react'
 
-interface AttendantLoginForm {
+interface VolunteerLoginForm {
   firstName: string
   lastName: string
   congregation: string
   pin: string
 }
 
-export default function AttendantLogin() {
+export default function VolunteerLogin() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [formData, setFormData] = useState<AttendantLoginForm>({
+  const [formData, setFormData] = useState<VolunteerLoginForm>({
     firstName: '',
     lastName: '',
     congregation: '',
@@ -38,7 +38,7 @@ export default function AttendantLogin() {
 
     try {
       console.log('🔵 Signing in with NextAuth...')
-      const result = await signIn('attendant-pin', {
+      const result = await signIn('volunteer-pin', {
         firstName: formData.firstName,
         lastName: formData.lastName,
         congregation: formData.congregation,
@@ -53,8 +53,8 @@ export default function AttendantLogin() {
         setError('Invalid credentials. Please check your information.')
       } else if (result?.ok) {
         console.log('✅ Login successful, redirecting to dashboard...')
-        // Redirect to attendant dashboard
-        window.location.href = '/attendant/dashboard'
+        // Redirect to volunteer dashboard
+        window.location.href = '/volunteer/dashboard'
       }
     } catch (error) {
       console.error('❌ Exception during login:', error)
@@ -64,7 +64,7 @@ export default function AttendantLogin() {
     }
   }
 
-  const handleInputChange = (field: keyof AttendantLoginForm, value: string) => {
+  const handleInputChange = (field: keyof VolunteerLoginForm, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -74,7 +74,7 @@ export default function AttendantLogin() {
   return (
     <>
       <Head>
-        <title>Attendant Login | Theocratic Shift Scheduler</title>
+        <title>Volunteer Login | Theocratic Shift Scheduler</title>
       </Head>
 
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -85,7 +85,7 @@ export default function AttendantLogin() {
               <span className="text-2xl text-white">👤</span>
             </div>
             <h2 className="mt-6 text-3xl font-bold text-gray-900">
-              Attendant Access
+              Volunteer Access
             </h2>
             <p className="mt-2 text-sm text-gray-600">
               Enter your information to view your assignments and documents
@@ -208,7 +208,7 @@ export default function AttendantLogin() {
               <div className="text-blue-400 text-sm">ℹ️</div>
               <div className="ml-3">
                 <h3 className="text-sm font-medium text-blue-800">
-                  Quick Access for Attendants
+                  Quick Access for Volunteers
                 </h3>
                 <p className="text-xs text-blue-700 mt-1">
                   Simply enter your name and congregation to view your assignments, 

@@ -7,26 +7,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ success: false, error: 'Method not allowed' })
   }
 
-  const { attendantId, eventId } = req.query
+  const { volunteerId, eventId } = req.query
 
-  if (!attendantId || !eventId) {
-    return res.status(400).json({ success: false, error: 'Missing attendantId or eventId' })
+  if (!volunteerId || !eventId) {
+    return res.status(400).json({ success: false, error: 'Missing volunteerId or eventId' })
   }
 
   try {
-    // Get attendant information using proper Prisma
-    const attendant = await prisma.attendants.findUnique({
-      where: { id: attendantId as string }
+    // Get volunteer information using proper Prisma
+    const volunteer = await prisma.volunteers.findUnique({
+      where: { id: volunteerId as string }
     })
 
-    if (!attendant) {
-      return res.status(404).json({ success: false, error: 'Attendant not found' })
+    if (!volunteer) {
+      return res.status(404).json({ success: false, error: 'Volunteer not found' })
     }
 
     // Get published documents using proper Prisma queries
     const publishedDocs = await prisma.document_publications.findMany({
       where: {
-        attendantId: attendantId as string
+        volunteerId: volunteerId as string
       },
       include: {
         event_documents: true
@@ -65,10 +65,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ success: false, error: 'Event not found' })
     }
 
-    // Get position assignments for this attendant
+    // Get position assignments for this volunteer
     const positionAssignments = await prisma.position_assignments.findMany({
       where: {
-        attendantId: attendantId as string,
+        volunteerId: volunteerId as string,
         positions: {
           eventId: eventId as string
         }
@@ -129,10 +129,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     })
     
-    // Get oversight contacts from event_attendants table (source of truth)
-    const eventAttendant = await prisma.event_attendants.findFirst({
+    // Get oversight contacts from event_volunteers table (source of truth)
+    const eventVolunteer = await prisma.event_volunteers.findFirst({
       where: {
-        attendantId: attendantId as string,
+        volunteerId: volunteerId as string,
         eventId: eventId as string
       },
       include: {
@@ -157,20 +157,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     
     // Build oversight contacts array
     const oversightContacts: any[] = []
-    if (eventAttendant?.overseer) {
+    if (eventVolunteer?.overseer) {
       oversightContacts.push({
-        name: `${eventAttendant.overseer.firstName} ${eventAttendant.overseer.lastName}`,
+        name: `${eventVolunteer.overseer.firstName} ${eventVolunteer.overseer.lastName}`,
         role: 'Position Overseer',
-        phone: eventAttendant.overseer.phone,
-        email: eventAttendant.overseer.email
+        phone: eventVolunteer.overseer.phone,
+        email: eventVolunteer.overseer.email
       })
     }
-    if (eventAttendant?.keyman) {
+    if (eventVolunteer?.keyman) {
       oversightContacts.push({
-        name: `${eventAttendant.keyman.firstName} ${eventAttendant.keyman.lastName}`,
+        name: `${eventVolunteer.keyman.firstName} ${eventVolunteer.keyman.lastName}`,
         role: 'Position Keyman',
-        phone: eventAttendant.keyman.phone,
-        email: eventAttendant.keyman.email
+        phone: eventVolunteer.keyman.phone,
+        email: eventVolunteer.keyman.email
       })
     }
 
@@ -226,15 +226,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json({
       success: true,
       data: {
-        attendant: {
-          id: attendant.id,
-          firstName: attendant.firstName,
-          lastName: attendant.lastName,
-          congregation: attendant.congregation,
-          email: attendant.email,
-          phone: attendant.phone,
-          profileVerificationRequired: attendant.profileVerificationRequired || false,
-          profileVerifiedAt: attendant.profileVerifiedAt?.toISOString()
+        volunteer: {
+          id: volunteer.id,
+          firstName: volunteer.firstName,
+          lastName: volunteer.lastName,
+          congregation: volunteer.congregation,
+          email: volunteer.email,
+          phone: volunteer.phone,
+          profileVerificationRequired: volunteer.profileVerificationRequired || false,
+          profileVerifiedAt: volunteer.profileVerifiedAt?.toISOString()
         },
         event: {
           id: event.id,

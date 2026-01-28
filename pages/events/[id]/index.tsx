@@ -81,27 +81,19 @@ interface Event {
   }
   event_attendants: Array<{
     id: string
-    users: {
+    volunteer?: {
       id: string
       firstName: string
       lastName: string
       email: string
-    }
+    } | null
+    users?: {
+      id: string
+      firstName: string
+      lastName: string
+      email: string
+    } | null
   }>
-  assignments: Array<{
-    id: string
-    users: {
-      id: string
-      firstName: string
-      lastName: string
-      email: string
-    }
-    positions: {
-      id: string
-      positionNumber: number
-      name: string
-      area: string
-    }
     shiftStart: string
     shiftEnd: string
     status: string
@@ -906,12 +898,22 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       include: {
         event_attendants: {
           include: {
-            users: true
-          }
-        },
-        assignments: {
-          include: {
-            users: true
+            volunteer: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true
+              }
+            },
+            users: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true
+              }
+            }
           }
         },
         positions: true,

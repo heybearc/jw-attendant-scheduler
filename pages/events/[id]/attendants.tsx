@@ -2306,7 +2306,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     const oversightMap = new Map();
     eventAssociations.forEach(assoc => {
       if (assoc.volunteerId) {
-        oversightMap.set(assoc.volunteerId, { assoc });
+        oversightMap.set(assoc.volunteerId, assoc);
       }
     });
 
@@ -2315,7 +2315,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     
     // First, add all active attendants
     allAttendants.forEach(attendant => {
-      const association = associationMap.get(attendant.id);
+      const association = oversightMap.get(attendant.id);
       
       const availability = availabilityMap.get(attendant.id);
       

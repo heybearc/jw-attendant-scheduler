@@ -23,8 +23,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }
         }
       },
-      include: {
-        events: true
+      select: {
+        id: true,
+        eventId: true,
+        volunteerId: true,
+        events: {
+          select: {
+            id: true,
+            name: true,
+            eventType: true,
+            startDate: true,
+            endDate: true,
+            status: true
+          }
+        }
       }
     })
 

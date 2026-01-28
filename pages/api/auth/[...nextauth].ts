@@ -111,6 +111,7 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
+        token.sub = user.id
         token.role = user.role
         token.congregation = (user as any).congregation
       }

@@ -66,12 +66,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const eventAttendants = await prisma.event_attendants.findMany({
         where: {
           eventId,
-          attendants: {
+          attendant: {
             isActive: true
           }
         },
         include: {
-          attendants: {
+          attendant: {
             select: {
               id: true,
               email: true,
@@ -81,7 +81,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }
         }
       })
-      attendants = eventAttendants.map(ea => ea.attendants).filter(Boolean)
+      attendants = eventAttendants.map(ea => ea.attendant).filter(Boolean)
     }
 
     if (attendants.length === 0) {
@@ -153,8 +153,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           })
         }
 
-        // Generate response URL
-        const responseUrl = `${baseUrl}/attendant/availability?eventId=${eventId}`
+        // Generate response URL - direct to attendant access page
+        const responseUrl = `${baseUrl}/attendant/access`
 
         // Send email using database configuration
         const emailHtml = generateAvailabilityRequestEmail({
@@ -236,7 +236,7 @@ async function sendAvailabilityEmail(to: string, subject: string, html: string) 
 
   // Send email
   await transporter.sendMail({
-    from: `"${config.fromName}" <${config.fromEmail}>`,
+    from: `"TheoShift Team" <${config.fromEmail}>`,
     to,
     subject,
     html
@@ -358,7 +358,7 @@ function generateAvailabilityRequestEmail(data: {
         <!-- Footer -->
         <div style="background-color: #374151; color: #d1d5db; padding: 20px; text-align: center;">
           <p style="margin: 0; font-size: 14px;">
-            Theocratic Shift Scheduler - Organizing Kingdom Hall Events
+            TheoShift - Supporting Theocratic Event Coordination
           </p>
           <p style="margin: 10px 0 0 0; font-size: 12px; opacity: 0.8;">
             This email was sent automatically. Please do not reply to this email.

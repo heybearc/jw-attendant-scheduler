@@ -61,7 +61,7 @@ export function createEmailTransporter() {
 export async function sendEmail(options: EmailOptions): Promise<void> {
   const transporter = createEmailTransporter();
   
-  const fromName = process.env.EMAIL_FROM_NAME || 'Theocratic Shift Scheduler';
+  const fromName = process.env.EMAIL_FROM_NAME || 'TheoShift Team';
   const fromEmail = process.env.EMAIL_FROM || process.env.SMTP_USER;
 
   const mailOptions = {
@@ -172,7 +172,7 @@ export function generateInvitationEmail(data: InvitationEmailData): string {
         <!-- Footer -->
         <div style="background-color: #374151; color: #d1d5db; padding: 20px; text-align: center;">
           <p style="margin: 0; font-size: 14px;">
-            Theocratic Shift Scheduler - Organizing Kingdom Hall Events
+            TheoShift - Supporting Theocratic Event Coordination
           </p>
           <p style="margin: 10px 0 0 0; font-size: 12px; opacity: 0.8;">
             This email was sent automatically. Please do not reply to this email.

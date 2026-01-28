@@ -171,7 +171,7 @@ export function generateAssignmentCreatedEmail(data: AssignmentEmailData): strin
         <!-- Footer -->
         <div style="background-color: #374151; color: #d1d5db; padding: 20px; text-align: center;">
           <p style="margin: 0; font-size: 14px;">
-            Theocratic Shift Scheduler - Organizing Kingdom Hall Events
+            TheoShift - Supporting Theocratic Event Coordination
           </p>
           <p style="margin: 10px 0 0 0; font-size: 12px; opacity: 0.8;">
             This email was sent automatically. Please do not reply to this email.
@@ -258,7 +258,7 @@ export function generateAssignmentUpdatedEmail(data: AssignmentUpdateData): stri
         <!-- Footer -->
         <div style="background-color: #374151; color: #d1d5db; padding: 20px; text-align: center;">
           <p style="margin: 0; font-size: 14px;">
-            Theocratic Shift Scheduler - Organizing Kingdom Hall Events
+            TheoShift - Supporting Theocratic Event Coordination
           </p>
           <p style="margin: 10px 0 0 0; font-size: 12px; opacity: 0.8;">
             This email was sent automatically. Please do not reply to this email.
@@ -343,7 +343,7 @@ export function generateAssignmentCancelledEmail(data: AssignmentCancelledData):
         <!-- Footer -->
         <div style="background-color: #374151; color: #d1d5db; padding: 20px; text-align: center;">
           <p style="margin: 0; font-size: 14px;">
-            Theocratic Shift Scheduler - Organizing Kingdom Hall Events
+            TheoShift - Supporting Theocratic Event Coordination
           </p>
           <p style="margin: 10px 0 0 0; font-size: 12px; opacity: 0.8;">
             This email was sent automatically. Please do not reply to this email.
@@ -473,7 +473,7 @@ export function generateAssignmentReminderEmail(data: AssignmentReminderData): s
         <!-- Footer -->
         <div style="background-color: #374151; color: #d1d5db; padding: 20px; text-align: center;">
           <p style="margin: 0; font-size: 14px;">
-            Theocratic Shift Scheduler - Organizing Kingdom Hall Events
+            TheoShift - Supporting Theocratic Event Coordination
           </p>
           <p style="margin: 10px 0 0 0; font-size: 12px; opacity: 0.8;">
             This email was sent automatically. Please do not reply to this email.

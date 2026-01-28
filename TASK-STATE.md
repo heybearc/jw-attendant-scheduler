@@ -1,8 +1,8 @@
 # TheoShift Task State
 
-**Last updated:** 2026-01-25 (end of day)  
+**Last updated:** 2026-01-28 (early morning)  
 **Current branch:** main  
-**Working on:** Phase 4C Deployment Complete - STANDBY Ready for Testing
+**Working on:** Phase 4C Bug Fixes - Testing on STANDBY
 
 ---
 
@@ -14,7 +14,18 @@ Phase 4C successfully deployed to STANDBY (blue.theoshift.com). All critical dep
 
 ### Recent completions
 
-**Today (2026-01-25 - Evening Session: Phase 4C Deployment):**
+**Today (2026-01-28 - Early Morning Session: Phase 4C Bug Fixes):**
+- ✅ Fixed email sender name to 'TheoShift Team' (was using config.fromName)
+- ✅ Updated all email footers to 'TheoShift - Supporting Theocratic Event Coordination'
+- ✅ Fixed availability request link to go to /attendant/access page
+- ✅ Fixed NextAuth JWT callback to set token.sub = user.id (resolves 401 errors)
+- ✅ Fixed Prisma relation name from 'attendants' to 'attendant'
+- ✅ Deployed fixes to STANDBY (commit 4ae9b54b)
+
+**Commits:**
+- `4ae9b54b` - Fixed email sender, footer, availability link, and session.user.id
+
+**Yesterday (2026-01-25 - Evening Session: Phase 4C Deployment):**
 
 **Phase 4C Deployment to STANDBY:**
 - ✅ Fixed Prisma schema issues (count_sessions, position_counts use camelCase, not snake_case)
@@ -130,12 +141,11 @@ Phase 4C successfully deployed to STANDBY (blue.theoshift.com). All critical dep
 - Repository significantly cleaner and organized
 
 ### Next steps
-1. **Test Phase 4C on STANDBY** (https://blue.theoshift.com)
-   - Test event selection and detail pages
-   - Test positions page functionality
-   - Test count times page and peak attendance display
-   - Test all Phase 4C features (notifications, templates, confirmations, availability)
-   - Verify no console errors or UI issues
+1. **Re-test Phase 4C on STANDBY** (https://blue.theoshift.com)
+   - Test availability request email flow (sender name, footer, link destination)
+   - Test Set PIN functionality (should no longer get 401 errors)
+   - Investigate why only one email was sent to corallen48@gmail.com (check logs)
+   - Verify all Phase 4C features work correctly
    
 2. **Run /release workflow** when testing complete
    - Switch traffic from green (LIVE) to blue (STANDBY)
@@ -151,7 +161,10 @@ Phase 4C successfully deployed to STANDBY (blue.theoshift.com). All critical dep
 ---
 
 ## Known Issues
-None - Phase 4C deployed successfully to STANDBY
+**Under Investigation:**
+- Only one availability request email received (corallen48@gmail.com) when two volunteers were selected (corylallen@gmail.com + corallen48@gmail.com)
+  - Need to check container logs for email sending errors
+  - Both emails should have been sent via the bulk availability request API
 
 **3 Pre-existing Test Failures (not blocking):**
 - Position management test (expects event selection)

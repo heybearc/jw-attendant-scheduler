@@ -52,9 +52,40 @@ export default function VolunteerLogin() {
         console.log('❌ Login failed:', result.error)
         setError('Invalid credentials. Please check your information.')
       } else if (result?.ok) {
-        console.log('✅ Login successful, redirecting to dashboard...')
-        // Redirect to volunteer dashboard
-        window.location.href = '/volunteer/dashboard'
+        console.log('✅ Login successful, fetching session...')
+        
+        // Get session to retrieve user ID
+        const sessionResponse = await fetch('/api/auth/session')
+        const sessionData = await sessionResponse.json()
+        
+        if (sessionData?.user?.id) {
+          // Fetch events to determine redirect
+          const eventsResponse = await fetch(`/api/volunteer/events?volunteerId=${sessionData.user.id}`)
+          const eventsData = await eventsResponse.json()
+          
+          if (eventsData.success && eventsData.data.events) {
+            const events = eventsData.data.events
+            
+            if (events.length === 1) {
+              // Single event - store it and go to dashboard
+              localStorage.setItem('selectedEventId', events[0].id)
+              window.location.href = '/volunteer/dashboard'
+            } else if (events.length > 1) {
+              // Multiple events - go to select page
+              window.location.href = '/volunteer/select-event'
+            } else {
+              // No events
+              setError('No active events found. Please contact your overseer.')
+              setLoading(false)
+            }
+          } else {
+            // Fallback to dashboard
+            window.location.href = '/volunteer/dashboard'
+          }
+        } else {
+          // Fallback to dashboard
+          window.location.href = '/volunteer/dashboard'
+        }
       }
     } catch (error) {
       console.error('❌ Exception during login:', error)

@@ -699,9 +699,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       .filter(association => association.volunteer)
       .map(association => ({
         id: association.volunteer!.id,
-        firstName: association.attendants!.firstName,
-        lastName: association.attendants!.lastName,
-        email: association.attendants!.email
+        firstName: association.volunteer!.firstName,
+        lastName: association.volunteer!.lastName,
+        email: association.volunteer!.email
       }))
 
     // Transform positions data

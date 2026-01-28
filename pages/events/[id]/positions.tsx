@@ -2409,7 +2409,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
           include: {
             assignments: {
               include: {
-                attendant: {
+                volunteer: {
                   select: {
                     id: true,
                     firstName: true,
@@ -2537,17 +2537,17 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
       }
     })
 
-    // Create association map for quick lookup
-    const associationMap = new Map()
+    // Create oversight map for quick lookup
+    const oversightMap = new Map();
     eventAssociations.forEach(assoc => {
-      if (assoc.attendantId) {
-        associationMap.set(assoc.attendantId, assoc)
+      if (assoc.volunteerId) {
+        oversightMap.set(assoc.volunteerId, assoc)
       }
     })
 
     // Merge attendants with their event-specific oversight assignments
     const attendantsData = allAttendants.map(attendant => {
-      const association = associationMap.get(attendant.id)
+      const association = oversightMap.get(attendant.id)
       return {
         ...attendant,
         overseerId: association?.overseerId || null,

@@ -2213,12 +2213,12 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         eventId: id as string
       },
       select: {
-        attendantId: true
+        volunteerId: true
       }
     });
     
     const attendantIds = eventAttendants
-      .map(ea => ea.attendantId)
+      .map(ea => ea.volunteerId)
       .filter(id => id !== null) as string[];
     
     // Get all attendants (active and inactive)
@@ -2302,11 +2302,11 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       }
     });
 
-    // Create association map for quick lookup
-    const associationMap = new Map();
+    // Create oversight map for quick lookup
+    const oversightMap = new Map();
     eventAssociations.forEach(assoc => {
-      if (assoc.attendantId) {
-        associationMap.set(assoc.attendantId, assoc);
+      if (assoc.volunteerId) {
+        oversightMap.set(assoc.volunteerId, { assoc });
       }
     });
 

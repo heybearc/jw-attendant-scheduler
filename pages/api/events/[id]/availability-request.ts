@@ -153,8 +153,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           })
         }
 
-        // Generate response URL - direct to attendant access page
-        const responseUrl = `${baseUrl}/attendant/access`
+        // Generate response URL - direct to attendant login page
+        const responseUrl = `${baseUrl}/attendant/login`
 
         // Send email using database configuration
         const emailHtml = generateAvailabilityRequestEmail({

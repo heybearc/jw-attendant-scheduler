@@ -13,7 +13,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const { action, sessionId } = req.body
-    const userId = session.user.id
+    
+    // Get user ID - fallback to email lookup for old sessions
+    let userId: string | undefined = session.user.id
+    if (!userId && session.user.email) {
+      const user = await prisma.users.findUnique({
+        where: { email: session.user.email },
+        select: { id: true }
+      })
+      userId = user?.id
+    }
+    
+    if (!userId) {
+      console.error('[ACTIVITY] No user ID found in session:', session.user)
+      return res.status(401).json({ error: 'User ID not found in session' })
+    }
+    
+    // userId is guaranteed to be string after this point
     const ipAddress = (req.headers['x-forwarded-for'] as string)?.split(',')[0] || 
                       req.socket.remoteAddress || 
                       'unknown'

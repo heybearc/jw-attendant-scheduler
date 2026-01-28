@@ -1,0 +1,6 @@
+Auto-deploy enabled for theoshift
+This file enables automatic deployment to STANDBY container via Cascade hooks.
+When present, any git push will trigger auto-deploy.sh to deploy to blue.theoshift.com (STANDBY).
+
+Enabled: 2026-01-28
+Purpose: Phase 4C development - Availability confirmation integration

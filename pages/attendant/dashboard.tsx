@@ -63,6 +63,21 @@ interface CountSession {
   status: string
 }
 
+interface AvailabilityRequest {
+  id: string
+  eventId: string
+  status: string
+  requestedAt: string
+  respondedAt: string | null
+  event: {
+    id: string
+    name: string
+    startDate: string
+    endDate: string
+    location: string
+  }
+}
+
 interface DashboardData {
   attendant: Attendant
   event: Event
@@ -91,6 +106,8 @@ export default function AttendantDashboard() {
   const [countSuccess, setCountSuccess] = useState('')
   const [submittedCounts, setSubmittedCounts] = useState<Map<string, {count: number, notes?: string}>>(new Map())
   const [editingSession, setEditingSession] = useState<string | null>(null)
+  const [availabilityRequests, setAvailabilityRequests] = useState<AvailabilityRequest[]>([])
+  const [respondingToRequest, setRespondingToRequest] = useState<string | null>(null)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -103,10 +120,53 @@ export default function AttendantDashboard() {
     loadDashboard()
   }, [status, session])
 
+  const fetchAvailabilityRequests = async (eventId: string) => {
+    try {
+      const response = await fetch(`/api/attendant/availability?eventId=${eventId}`)
+      const data = await response.json()
+      
+      if (data.success) {
+        setAvailabilityRequests(data.requests)
+      }
+    } catch (error) {
+      console.error('Failed to fetch availability requests:', error)
+    }
+  }
+
+  const handleAvailabilityResponse = async (requestId: string, status: string, notes?: string) => {
+    try {
+      setRespondingToRequest(requestId)
+      
+      const response = await fetch(`/api/attendant/availability?eventId=${selectedEventId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ requestId, status, notes })
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        // Refresh availability requests
+        if (selectedEventId) {
+          await fetchAvailabilityRequests(selectedEventId)
+        }
+      } else {
+        alert('Failed to submit response')
+      }
+    } catch (error) {
+      console.error('Failed to submit availability response:', error)
+      alert('Failed to submit response')
+    } finally {
+      setRespondingToRequest(null)
+    }
+  }
+
   const loadDashboard = async () => {
     try {
       if (!session?.user?.id) {
         console.error('No session user ID')
+        setError('Session error')
+        setLoading(false)
         return
       }
       
@@ -133,6 +193,9 @@ export default function AttendantDashboard() {
         console.log('Setting dashboard data...')
         setDashboardData(result.data)
         setAttendant(result.data.attendant)
+        
+        // Fetch availability requests for this event
+        await fetchAvailabilityRequests(eventId)
         
         // Check if profile verification is needed
         // Show verification if: 1) email/phone missing OR 2) profileVerificationRequired flag is set
@@ -586,6 +649,70 @@ export default function AttendantDashboard() {
                   )}
                 </div>
               </div>
+
+              {/* Availability Requests */}
+              {availabilityRequests.length > 0 && (
+                <div className="bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-200 shadow-lg rounded-lg">
+                  <div className="px-6 py-4 border-b border-blue-200 bg-white bg-opacity-60">
+                    <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                      <span className="text-xl mr-2">📅</span>
+                      Availability Requests
+                    </h2>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Please respond to confirm your availability
+                    </p>
+                  </div>
+                  <div className="p-6 space-y-4">
+                    {availabilityRequests.map((request) => (
+                      <div key={request.id} className="bg-white rounded-lg border border-blue-200 p-4">
+                        <div className="mb-4">
+                          <h3 className="font-medium text-gray-900">{request.event.name}</h3>
+                          <p className="text-sm text-gray-600 mt-1">
+                            📍 {request.event.location}
+                          </p>
+                          <p className="text-sm text-gray-500 mt-1">
+                            📅 {format(parseISO(request.event.startDate), 'MMM d, yyyy')} - {format(parseISO(request.event.endDate), 'MMM d, yyyy')}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-2">
+                            Requested: {format(parseISO(request.requestedAt), 'MMM d, yyyy h:mm a')}
+                          </p>
+                        </div>
+                        
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            onClick={() => handleAvailabilityResponse(request.id, 'AVAILABLE')}
+                            disabled={respondingToRequest === request.id}
+                            className="flex-1 min-w-[150px] bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            ✅ Available
+                          </button>
+                          <button
+                            onClick={() => handleAvailabilityResponse(request.id, 'PARTIAL')}
+                            disabled={respondingToRequest === request.id}
+                            className="flex-1 min-w-[150px] bg-yellow-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            ⚡ Partial Availability
+                          </button>
+                          <button
+                            onClick={() => handleAvailabilityResponse(request.id, 'NOT_AVAILABLE')}
+                            disabled={respondingToRequest === request.id}
+                            className="flex-1 min-w-[150px] bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            ❌ Not Available
+                          </button>
+                        </div>
+                        
+                        {respondingToRequest === request.id && (
+                          <div className="mt-3 text-center">
+                            <div className="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                            <p className="text-sm text-gray-600 mt-1">Submitting response...</p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Count Entry Widget */}
               {dashboardData.activeCountSessions && dashboardData.activeCountSessions.length > 0 && dashboardData.assignments && dashboardData.assignments.length > 0 && (

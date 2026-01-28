@@ -329,7 +329,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   // Get events user has access to (respects permissions)
   const userEvents = await getUserEvents(session.user.id)
   
-  // Get counts for each event
+  // Get counts for each event (excluding event_attendants to avoid departmentId column issue)
   const eventsWithCounts = await Promise.all(
     userEvents.map(async (event: any) => {
       const counts = await prisma.events.findUnique({
@@ -337,7 +337,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         select: {
           _count: {
             select: {
-              event_attendants: true,
               positions: true
             }
           }
@@ -346,7 +345,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       
       return {
         ...event,
-        attendantsCount: counts?._count.event_attendants || 0,
+        attendantsCount: 0, // Temporarily disabled to avoid departmentId column query
         positionsCount: counts?._count.positions || 0
       }
     })

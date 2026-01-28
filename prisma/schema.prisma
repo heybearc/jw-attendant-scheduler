@@ -189,7 +189,6 @@ model event_departments {
   template         department_templates? @relation(fields: [templateId], references: [id])
   parent           event_departments?   @relation("EventDepartmentHierarchy", fields: [parentId], references: [id])
   children         event_departments[]  @relation("EventDepartmentHierarchy")
-  event_volunteers event_volunteers[]
 
   @@unique([eventId, name])
   @@index([eventId])

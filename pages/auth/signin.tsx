@@ -126,10 +126,10 @@ export default function SignIn() {
               </Link>
               <span className="hidden sm:inline text-gray-300">•</span>
               <Link
-                href="/attendant/login"
+                href="/volunteer/login"
                 className="text-center text-sm text-green-600 hover:text-green-800 transition-colors"
               >
-                Attendant Login
+                Volunteer Login
               </Link>
             </div>
           </div>

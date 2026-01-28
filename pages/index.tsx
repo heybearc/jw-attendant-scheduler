@@ -28,12 +28,12 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       }
     }
 
-    // CRITICAL: Separate attendants from admin/overseer/keyman users
-    if (session.user?.role === 'ATTENDANT') {
-      // Attendants go to their own portal
+    // CRITICAL: Separate volunteers from admin/overseer/keyman users
+    if (session.user?.role === 'VOLUNTEER') {
+      // Volunteers go to their own portal
       return {
         redirect: {
-          destination: '/attendant/dashboard',
+          destination: '/volunteer/dashboard',
           permanent: false,
         },
       }

@@ -144,7 +144,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         events,
         needsEventSelection,
         defaultEvent,
-        redirectTo: needsEventSelection ? '/attendant/select-event' : '/attendant/dashboard'
+        redirectTo: needsEventSelection ? '/volunteer/select-event' : '/volunteer/dashboard'
       },
       message: `Welcome, ${attendant.firstName}!`
     })

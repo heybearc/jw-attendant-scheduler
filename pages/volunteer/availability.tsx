@@ -41,7 +41,7 @@ export default function AvailabilityPage() {
   const fetchAvailabilityRequests = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/attendant/availability-requests')
+      const response = await fetch('/api/volunteer/availability-requests')
       const data = await response.json()
       
       if (data.success) {
@@ -67,7 +67,7 @@ export default function AvailabilityPage() {
       setResponding(true)
       setSelectedRequest(requestId)
 
-      const response = await fetch(`/api/attendant/availability-requests/${requestId}`, {
+      const response = await fetch(`/api/volunteer/availability-requests/${requestId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status, notes })
@@ -104,7 +104,7 @@ export default function AvailabilityPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <Link href="/attendant/dashboard" className="text-gray-600 hover:text-gray-900">
+              <Link href="/volunteer/dashboard" className="text-gray-600 hover:text-gray-900">
                 ← Back to Dashboard
               </Link>
               <h1 className="text-2xl font-bold text-gray-900">
@@ -130,7 +130,7 @@ export default function AvailabilityPage() {
               You don't have any pending availability requests at this time.
             </p>
             <Link
-              href="/attendant/dashboard"
+              href="/volunteer/dashboard"
               className="mt-4 inline-block text-blue-600 hover:text-blue-800"
             >
               Return to Dashboard

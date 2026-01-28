@@ -25,17 +25,17 @@ test.describe('Refactoring Validation - Position Management', () => {
       page.click('button[type="submit"]')
     ]);
     
-    // Navigate to events
-    await page.goto('/events');
+    // Navigate to event selection
+    await page.goto('/events/select');
     await page.waitForLoadState('networkidle');
     
-    // Click first event to go to positions
+    // Click first event to select it
     const firstEvent = page.locator('a[href*="/events/"]').first();
     await firstEvent.click();
     await page.waitForLoadState('networkidle');
     
     // Verify we're on an event page
-    expect(page.url()).toMatch(/\/events\/\d+/);
+    expect(page.url()).toMatch(/\/events\/[a-f0-9-]+/);
   });
 
   test('Positions page loads without errors', async ({ page }) => {

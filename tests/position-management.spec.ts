@@ -9,7 +9,7 @@ test.describe('TheoShift - Position Management', () => {
   });
 
   test('Positions page loads successfully', async ({ page }) => {
-    const positionsLink = page.locator('a[href*="/positions"], text=/position/i').first();
+    const positionsLink = page.locator('a[href*="/positions"]').first();
     if (await positionsLink.isVisible()) {
       await positionsLink.click();
       await waitForDataLoad(page);

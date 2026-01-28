@@ -8,7 +8,7 @@ test.describe('TheoShift - User Management', () => {
   });
 
   test('Can access user management', async ({ page }) => {
-    const usersLink = page.locator('a[href*="/users"], text=/user|people|team/i').first();
+    const usersLink = page.locator('a[href*="/users"]').first();
     if (await usersLink.isVisible()) {
       await usersLink.click();
       await waitForDataLoad(page);

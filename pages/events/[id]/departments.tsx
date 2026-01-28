@@ -36,9 +36,6 @@ interface Department {
     description: string | null
     isActive: boolean
   }[]
-  _count?: {
-    event_volunteers: number
-  }
 }
 
 interface DepartmentTemplate {
@@ -274,9 +271,9 @@ export default function EventDepartmentsPage({ eventId, event, canManageContent 
             </div>
           </div>
           <div className="bg-white rounded-lg shadow p-6">
-            <div className="text-sm font-medium text-gray-500">Total Volunteers</div>
+            <div className="text-sm font-medium text-gray-500">Parent Departments</div>
             <div className="mt-2 text-3xl font-bold text-blue-600">
-              {departments.reduce((sum, d) => sum + (d._count?.event_volunteers || 0), 0)}
+              {departments.filter(d => !d.parent).length}
             </div>
           </div>
         </div>
@@ -323,11 +320,8 @@ export default function EventDepartmentsPage({ eventId, event, canManageContent 
                   <p className="text-sm text-gray-600 mb-4">{dept.description}</p>
                 )}
 
-                <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                  <div className="text-sm text-gray-500">
-                    <span className="font-medium">{dept._count?.event_volunteers || 0}</span> volunteers
-                  </div>
-                  {canManageContent && (
+                {canManageContent && (
+                  <div className="flex items-center justify-end pt-4 border-t border-gray-200">
                     <div className="flex space-x-2">
                       <button
                         onClick={() => handleEdit(dept)}
@@ -338,13 +332,12 @@ export default function EventDepartmentsPage({ eventId, event, canManageContent 
                       <button
                         onClick={() => handleDelete(dept.id)}
                         className="text-red-600 hover:text-red-900 text-sm font-medium"
-                        disabled={dept._count && dept._count.event_volunteers > 0}
                       >
                         Remove
                       </button>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
 
                 {dept.children && dept.children.length > 0 && (
                   <div className="mt-4 pt-4 border-t border-gray-200">

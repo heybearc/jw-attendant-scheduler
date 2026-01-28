@@ -85,25 +85,6 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse, eventId: str
           sortOrder: true
         },
         orderBy: { sortOrder: 'asc' }
-      },
-      ...(includeVolunteers === 'true' && {
-        event_volunteers: {
-          include: {
-            volunteer: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                email: true
-              }
-            }
-          }
-        }
-      }),
-      _count: {
-        select: {
-          event_volunteers: true
-        }
       }
     },
     orderBy: [

@@ -2502,7 +2502,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
         formsOfService: true,
         congregation: true,
         isActive: true,
-        users: {
+        user: {
           select: {
             role: true
           }

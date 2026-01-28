@@ -49,7 +49,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       include: {
         event_volunteers: {
           include: {
-            event: {
+            events: {
               select: {
                 id: true,
                 name: true,
@@ -61,7 +61,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }
           },
           where: {
-            event: {
+            events: {
               status: {
                 in: ['UPCOMING', 'CURRENT']
               }
@@ -109,12 +109,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Get active events for this volunteer
     const events = volunteer.event_volunteers.map(ev => ({
-      id: ev.event.id,
-      name: ev.event.name,
-      eventType: ev.event.eventType,
-      startDate: ev.event.startDate?.toISOString(),
-      endDate: ev.event.endDate?.toISOString(),
-      status: ev.event.status
+      id: ev.events.id,
+      name: ev.events.name,
+      eventType: ev.events.eventType,
+      startDate: ev.events.startDate?.toISOString(),
+      endDate: ev.events.endDate?.toISOString(),
+      status: ev.events.status
     }))
 
     if (events.length === 0) {

@@ -94,10 +94,6 @@ interface Event {
       email: string
     } | null
   }>
-    shiftStart: string
-    shiftEnd: string
-    status: string
-  }>
   positions: Array<{
     id: string
     positionNumber: number

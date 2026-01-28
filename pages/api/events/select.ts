@@ -24,14 +24,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Verify the event exists and user has access
     const event = await prisma.events.findUnique({
       where: { id: eventId },
-      include: {
-        _count: {
-          select: {
-            event_attendants: true,
-            assignments: true,
-            event_positions: true
-          }
-        }
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        eventType: true,
+        startDate: true,
+        endDate: true,
+        location: true,
+        status: true
       }
     })
 
@@ -57,12 +58,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           startDate: event.startDate,
           endDate: event.endDate,
           location: event.location,
-          status: getEventStatus(event.startDate, event.endDate),
-          stats: {
-            attendants: event._count.event_attendants,
-            assignments: event._count.assignments,
-            positions: event._count.event_positions
-          }
+          status: getEventStatus(event.startDate, event.endDate)
         }
       }
     })

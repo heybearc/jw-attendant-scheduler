@@ -1007,9 +1007,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
             }
           }
         },
-        event_attendants: {
+        event_volunteers: {
           include: {
-            attendant: {
+            volunteer: {
               select: {
                 id: true,
                 firstName: true,
@@ -1082,10 +1082,10 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     })
 
     // Transform attendants data from event_attendant_associations
-    const attendants = eventData.event_attendants
-      ?.filter(association => association?.attendant?.isActive && association.attendant.id)
+    const attendants = eventData.event_volunteers
+      ?.filter(association => association?.volunteer?.isActive && association.volunteer.id)
       ?.map(association => {
-        const att = association.attendant!
+        const att = association.volunteer!
         return {
           id: association.id,
           users: {

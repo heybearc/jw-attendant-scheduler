@@ -2208,7 +2208,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     }
 
     // Simplified: Get attendants for this event (including inactive)
-    const eventAttendants = await prisma.event_attendants.findMany({
+    const eventAttendants = await prisma.event_volunteers.findMany({
       where: {
         eventId: id as string
       },
@@ -2280,7 +2280,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     });
 
     // Get event-attendant associations for oversight assignments
-    const eventAssociations = await prisma.event_attendants.findMany({
+    const eventAssociations = await prisma.event_volunteers.findMany({
       where: {
         eventId: id as string
       },

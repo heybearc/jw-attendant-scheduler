@@ -21,8 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const availabilityRequests = await prisma.volunteer_availability.findMany({
         where: {
           attendantId: session.user.id,
-          eventId: eventId,
-          status: 'PENDING'
+          eventId: eventId
         },
         include: {
           event: {

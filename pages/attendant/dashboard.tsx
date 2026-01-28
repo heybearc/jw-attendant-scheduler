@@ -666,41 +666,90 @@ export default function AttendantDashboard() {
                     {availabilityRequests.map((request) => (
                       <div key={request.id} className="bg-white rounded-lg border border-blue-200 p-4">
                         <div className="mb-4">
-                          <h3 className="font-medium text-gray-900">{request.event.name}</h3>
-                          <p className="text-sm text-gray-600 mt-1">
-                            📍 {request.event.location}
-                          </p>
-                          <p className="text-sm text-gray-500 mt-1">
-                            📅 {format(parseISO(request.event.startDate), 'MMM d, yyyy')} - {format(parseISO(request.event.endDate), 'MMM d, yyyy')}
-                          </p>
-                          <p className="text-xs text-gray-400 mt-2">
-                            Requested: {format(parseISO(request.requestedAt), 'MMM d, yyyy h:mm a')}
-                          </p>
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h3 className="font-medium text-gray-900">{request.event.name}</h3>
+                              <p className="text-sm text-gray-600 mt-1">
+                                📍 {request.event.location}
+                              </p>
+                              <p className="text-sm text-gray-500 mt-1">
+                                📅 {format(parseISO(request.event.startDate), 'MMM d, yyyy')} - {format(parseISO(request.event.endDate), 'MMM d, yyyy')}
+                              </p>
+                              <p className="text-xs text-gray-400 mt-2">
+                                Requested: {format(parseISO(request.requestedAt), 'MMM d, yyyy h:mm a')}
+                              </p>
+                            </div>
+                            {request.status !== 'PENDING' && (
+                              <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                request.status === 'AVAILABLE' ? 'bg-green-100 text-green-800' :
+                                request.status === 'PARTIAL' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-red-100 text-red-800'
+                              }`}>
+                                {request.status === 'AVAILABLE' ? '✅ Available' :
+                                 request.status === 'PARTIAL' ? '⚡ Partial' :
+                                 '❌ Not Available'}
+                              </div>
+                            )}
+                          </div>
+                          {request.respondedAt && (
+                            <p className="text-xs text-gray-400 mt-2">
+                              Responded: {format(parseISO(request.respondedAt), 'MMM d, yyyy h:mm a')}
+                            </p>
+                          )}
                         </div>
                         
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            onClick={() => handleAvailabilityResponse(request.id, 'AVAILABLE')}
-                            disabled={respondingToRequest === request.id}
-                            className="flex-1 min-w-[150px] bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            ✅ Available
-                          </button>
-                          <button
-                            onClick={() => handleAvailabilityResponse(request.id, 'PARTIAL')}
-                            disabled={respondingToRequest === request.id}
-                            className="flex-1 min-w-[150px] bg-yellow-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            ⚡ Partial Availability
-                          </button>
-                          <button
-                            onClick={() => handleAvailabilityResponse(request.id, 'NOT_AVAILABLE')}
-                            disabled={respondingToRequest === request.id}
-                            className="flex-1 min-w-[150px] bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            ❌ Not Available
-                          </button>
-                        </div>
+                        {request.status === 'PENDING' ? (
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              onClick={() => handleAvailabilityResponse(request.id, 'AVAILABLE')}
+                              disabled={respondingToRequest === request.id}
+                              className="flex-1 min-w-[150px] bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              ✅ Available
+                            </button>
+                            <button
+                              onClick={() => handleAvailabilityResponse(request.id, 'PARTIAL')}
+                              disabled={respondingToRequest === request.id}
+                              className="flex-1 min-w-[150px] bg-yellow-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              ⚡ Partial Availability
+                            </button>
+                            <button
+                              onClick={() => handleAvailabilityResponse(request.id, 'NOT_AVAILABLE')}
+                              disabled={respondingToRequest === request.id}
+                              className="flex-1 min-w-[150px] bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              ❌ Not Available
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            <p className="text-sm text-gray-600">Want to change your response?</p>
+                            <div className="flex flex-wrap gap-2">
+                              <button
+                                onClick={() => handleAvailabilityResponse(request.id, 'AVAILABLE')}
+                                disabled={respondingToRequest === request.id}
+                                className="flex-1 min-w-[150px] bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                ✅ Available
+                              </button>
+                              <button
+                                onClick={() => handleAvailabilityResponse(request.id, 'PARTIAL')}
+                                disabled={respondingToRequest === request.id}
+                                className="flex-1 min-w-[150px] bg-yellow-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                ⚡ Partial Availability
+                              </button>
+                              <button
+                                onClick={() => handleAvailabilityResponse(request.id, 'NOT_AVAILABLE')}
+                                disabled={respondingToRequest === request.id}
+                                className="flex-1 min-w-[150px] bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                ❌ Not Available
+                              </button>
+                            </div>
+                          </div>
+                        )}
                         
                         {respondingToRequest === request.id && (
                           <div className="mt-3 text-center">

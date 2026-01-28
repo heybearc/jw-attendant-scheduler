@@ -17,24 +17,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const eventVolunteers = await prisma.event_volunteers.findMany({
       where: {
         volunteerId,
-        events: {
+        event: {
           status: {
             in: ['UPCOMING', 'CURRENT']
           }
         }
       },
       include: {
-        events: true
+        event: true
       }
     })
 
     const events = eventVolunteers.map(ev => ({
-      id: ev.events.id,
-      name: ev.events.name,
-      eventType: ev.events.eventType,
-      startDate: ev.events.startDate?.toISOString(),
-      endDate: ev.events.endDate?.toISOString(),
-      status: ev.events.status
+      id: ev.event.id,
+      name: ev.event.name,
+      eventType: ev.event.eventType,
+      startDate: ev.event.startDate?.toISOString(),
+      endDate: ev.event.endDate?.toISOString(),
+      status: ev.event.status
     }))
 
     return res.status(200).json({

@@ -2159,7 +2159,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           include: {
             assignments: {
               include: {
-                attendant: {
+                volunteer: {
                   select: {
                     id: true,
                     firstName: true,
@@ -2344,13 +2344,13 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     // Then, add assignment info for those who have assignments
     eventData.positions?.forEach(position => {
       position.assignments?.forEach(assignment => {
-        const attendantData = assignment.attendants_assignments_attendantIdToattendants
+        const attendantData = assignment.volunteer
         if (attendantData && attendantMap.has(attendantData.id)) {
           const attendant = attendantMap.get(attendantData.id);
           
           // Update oversight info if this is an oversight assignment (but don't override association data)
-          const overseerData = assignment.attendants_assignments_overseerIdToattendants
-          const keymanData = assignment.attendants_assignments_keymanIdToattendants
+          const overseerData = assignment.overseer
+          const keymanData = assignment.keyman
           
           if (assignment.role === 'OVERSEER' && overseerData && !attendant.overseerId) {
             attendant.overseerId = overseerData.id;

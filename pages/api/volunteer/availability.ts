@@ -6,7 +6,7 @@ import { prisma } from '../../../src/lib/prisma'
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const session = await getServerSession(req, res, authOptions)
 
-  if (!session || session.user.role !== 'ATTENDANT') {
+  if (!session || session.user.role !== 'VOLUNTEER') {
     return res.status(401).json({ success: false, error: 'Unauthorized' })
   }
 
@@ -20,7 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
       const availabilityRequests = await prisma.volunteer_availability.findMany({
         where: {
-          attendantId: session.user.id,
+          volunteerId: session.user.id,
           eventId: eventId
         },
         include: {
@@ -84,7 +84,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(404).json({ success: false, error: 'Availability request not found' })
       }
 
-      if (availabilityRequest.attendantId !== session.user.id) {
+      if (availabilityRequest.volunteerId !== session.user.id) {
         return res.status(403).json({ success: false, error: 'Not authorized to respond to this request' })
       }
 

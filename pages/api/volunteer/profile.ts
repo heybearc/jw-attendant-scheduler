@@ -23,10 +23,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { attendantId, email, phone } = req.body
+    const { volunteerId, email, phone } = req.body
 
-    if (!attendantId) {
-      return res.status(400).json({ success: false, error: 'Attendant ID is required' })
+    if (!volunteerId) {
+      return res.status(400).json({ success: false, error: 'Volunteer ID is required' })
     }
 
     // Format phone number
@@ -41,7 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       pinHash = await bcrypt.hash(newPin, 10)
     }
 
-    // Update attendant profile, clear verification requirement, and update PIN
+    // Update volunteer profile, clear verification requirement, and update PIN
     if (pinHash) {
       await prisma.$executeRaw`
         UPDATE attendants 
@@ -51,7 +51,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             "profileVerificationRequired" = false,
             "profileVerifiedAt" = NOW(),
             "updatedAt" = NOW()
-        WHERE id = ${attendantId}
+        WHERE id = ${volunteerId}
       `
     } else {
       await prisma.$executeRaw`
@@ -61,7 +61,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             "profileVerificationRequired" = false,
             "profileVerifiedAt" = NOW(),
             "updatedAt" = NOW()
-        WHERE id = ${attendantId}
+        WHERE id = ${volunteerId}
       `
     }
 

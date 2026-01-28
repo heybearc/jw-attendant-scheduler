@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../src/lib/prisma'
 import bcrypt from 'bcryptjs'
 
-interface AttendantLoginRequest {
+interface VolunteerLoginRequest {
   firstName: string
   lastName: string
   congregation: string
@@ -10,7 +10,7 @@ interface AttendantLoginRequest {
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  console.log('🟢 Attendant login API called')
+  console.log('🟢 Volunteer login API called')
   
   if (req.method !== 'POST') {
     console.log('❌ Wrong method:', req.method)
@@ -18,7 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { firstName, lastName, congregation, pin }: AttendantLoginRequest = req.body
+    const { firstName, lastName, congregation, pin }: VolunteerLoginRequest = req.body
     console.log('🟢 Login attempt:', { firstName, lastName, congregation, pin: '****' })
 
     if (!firstName || !lastName || !congregation || !pin) {
@@ -29,9 +29,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
     }
 
-    // Search for attendant by name and congregation
-    console.log('🔍 Searching for attendant in database...')
-    const attendant = await prisma.attendants.findFirst({
+    // Search for volunteer by name and congregation
+    console.log('🔍 Searching for volunteer in database...')
+    const volunteer = await prisma.volunteers.findFirst({
       where: {
         firstName: {
           equals: firstName.trim(),
@@ -47,9 +47,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       },
       include: {
-        event_attendants: {
+        event_volunteers: {
           include: {
-            events: {
+            event: {
               select: {
                 id: true,
                 name: true,
@@ -61,7 +61,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }
           },
           where: {
-            events: {
+            event: {
               status: {
                 in: ['UPCOMING', 'CURRENT']
               }
@@ -71,25 +71,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     })
 
-    if (!attendant) {
-      console.log('❌ Attendant not found in database')
+    if (!volunteer) {
+      console.log('❌ Volunteer not found in database')
       return res.status(404).json({ 
         success: false, 
         error: 'Invalid credentials. Please check your information.' 
       })
     }
     
-    console.log('✅ Found attendant:', attendant.id)
+    console.log('✅ Found volunteer:', volunteer.id)
     
     // Verify PIN using raw query (Prisma client doesn't include pinHash field due to server issue)
     const pinResult = await prisma.$queryRaw<Array<{ pinHash: string | null }>>`
-      SELECT "pinHash" FROM attendants WHERE id = ${attendant.id}
+      SELECT "pinHash" FROM attendants WHERE id = ${volunteer.id}
     `
     
     const pinHash = pinResult[0]?.pinHash
     
     if (!pinHash) {
-      console.log('❌ No PIN set for attendant')
+      console.log('❌ No PIN set for volunteer')
       return res.status(403).json({ 
         success: false, 
         error: 'No PIN set. Please contact your overseer.' 
@@ -107,14 +107,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     
     console.log('✅ PIN verified')
 
-    // Get active events for this attendant
-    const events = attendant.event_attendants.map(ea => ({
-      id: ea.events.id,
-      name: ea.events.name,
-      eventType: ea.events.eventType,
-      startDate: ea.events.startDate?.toISOString(),
-      endDate: ea.events.endDate?.toISOString(),
-      status: ea.events.status
+    // Get active events for this volunteer
+    const events = volunteer.event_volunteers.map(ev => ({
+      id: ev.event.id,
+      name: ev.event.name,
+      eventType: ev.event.eventType,
+      startDate: ev.event.startDate?.toISOString(),
+      endDate: ev.event.endDate?.toISOString(),
+      status: ev.event.status
     }))
 
     if (events.length === 0) {
@@ -133,24 +133,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json({
       success: true,
       data: {
-        attendant: {
-          id: attendant.id,
-          firstName: attendant.firstName,
-          lastName: attendant.lastName,
-          congregation: attendant.congregation,
-          email: attendant.email,
-          phone: attendant.phone
+        volunteer: {
+          id: volunteer.id,
+          firstName: volunteer.firstName,
+          lastName: volunteer.lastName,
+          congregation: volunteer.congregation,
+          email: volunteer.email,
+          phone: volunteer.phone
         },
         events,
         needsEventSelection,
         defaultEvent,
         redirectTo: needsEventSelection ? '/volunteer/select-event' : '/volunteer/dashboard'
       },
-      message: `Welcome, ${attendant.firstName}!`
+      message: `Welcome, ${volunteer.firstName}!`
     })
 
   } catch (error) {
-    console.error('❌ Attendant login error:', error)
+    console.error('❌ Volunteer login error:', error)
     console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace')
     return res.status(500).json({ 
       success: false, 

@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ success: false, error: 'Unauthorized' })
     }
 
-    const { attendantId, eventId, pin, autoGenerate } = req.body
+    const { volunteerId, eventId, pin, autoGenerate } = req.body
 
     if (!eventId) {
       return res.status(400).json({ success: false, error: 'Event ID is required' })
@@ -41,20 +41,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
     }
 
-    if (!attendantId) {
-      return res.status(400).json({ success: false, error: 'Attendant ID is required' })
+    if (!volunteerId) {
+      return res.status(400).json({ success: false, error: 'Volunteer ID is required' })
     }
 
     let finalPin = pin
 
     // Auto-generate PIN from phone number if requested
     if (autoGenerate) {
-      const attendant = await prisma.attendants.findUnique({
-        where: { id: attendantId },
+      const volunteer = await prisma.volunteers.findUnique({
+        where: { id: volunteerId },
         select: { phone: true }
       })
 
-      if (!attendant?.phone) {
+      if (!volunteer?.phone) {
         return res.status(400).json({ 
           success: false, 
           error: 'Cannot auto-generate PIN: No phone number on file' 
@@ -62,7 +62,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       // Extract last 4 digits from phone number
-      const digits = attendant.phone.replace(/\D/g, '')
+      const digits = volunteer.phone.replace(/\D/g, '')
       if (digits.length < 4) {
         return res.status(400).json({ 
           success: false, 
@@ -82,17 +82,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Hash the PIN
     const pinHash = await bcrypt.hash(finalPin, 10)
 
-    // Update attendant with PIN
+    // Update volunteer with PIN
     await prisma.$executeRaw`
       UPDATE attendants 
       SET "pinHash" = ${pinHash}, "updatedAt" = NOW() 
-      WHERE id = ${attendantId}
+      WHERE id = ${volunteerId}
     `
 
     return res.status(200).json({
       success: true,
       message: 'PIN set successfully',
-      pin: finalPin // Return PIN so admin can communicate it to attendant
+      pin: finalPin // Return PIN so admin can communicate it to volunteer
     })
   } catch (error) {
     console.error('Set PIN error:', error)

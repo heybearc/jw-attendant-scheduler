@@ -15,17 +15,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(403).json({ success: false, error: 'Unauthorized' })
     }
 
-    const { attendantId } = req.body
+    const { volunteerId } = req.body
 
-    if (!attendantId) {
-      return res.status(400).json({ success: false, error: 'Attendant ID is required' })
+    if (!volunteerId) {
+      return res.status(400).json({ success: false, error: 'Volunteer ID is required' })
     }
 
     // Set profile verification requirement using raw SQL to avoid Prisma client issues
     await prisma.$executeRaw`
       UPDATE attendants 
       SET "profileVerificationRequired" = true, "updatedAt" = NOW() 
-      WHERE id = ${attendantId}
+      WHERE id = ${volunteerId}
     `
 
     return res.status(200).json({

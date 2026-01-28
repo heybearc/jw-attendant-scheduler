@@ -6,19 +6,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ success: false, error: 'Method not allowed' })
   }
 
-  const { attendantId } = req.body
+  const { volunteerId } = req.body
 
-  if (!attendantId) {
-    return res.status(400).json({ success: false, error: 'Missing attendantId' })
+  if (!volunteerId) {
+    return res.status(400).json({ success: false, error: 'Missing volunteerId' })
   }
 
   try {
-    // Update Paul Lewis's verification status
+    // Update volunteer's verification status
     await prisma.$executeRaw`
       UPDATE attendants 
       SET "profileVerifiedAt" = NOW(),
           "profileVerificationRequired" = false
-      WHERE id = ${attendantId}
+      WHERE id = ${volunteerId}
     `
 
     return res.status(200).json({

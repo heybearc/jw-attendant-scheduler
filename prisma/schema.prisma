@@ -189,7 +189,6 @@ model event_departments {
   template         department_templates? @relation(fields: [templateId], references: [id])
   parent           event_departments?   @relation("EventDepartmentHierarchy", fields: [parentId], references: [id])
   children         event_departments[]  @relation("EventDepartmentHierarchy")
-  event_volunteers event_volunteers[]
 
   @@unique([eventId, name])
   @@index([eventId])
@@ -259,13 +258,11 @@ model event_volunteers {
   volunteerId                                         String?            @map("attendantId")
   keymanId                                            String?
   overseerId                                          String?
-  departmentId                                        String?
   volunteer                                           volunteers?        @relation("event_volunteers_volunteerIdTovolunteers", fields: [volunteerId], references: [id], onDelete: Cascade)
   events                                              events             @relation(fields: [eventId], references: [id], onDelete: Cascade)
   keyman                                              volunteers?        @relation("event_volunteers_keymanIdTovolunteers", fields: [keymanId], references: [id])
   overseer                                            volunteers?        @relation("event_volunteers_overseerIdTovolunteers", fields: [overseerId], references: [id])
   users                                               users?             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  department                                          event_departments? @relation(fields: [departmentId], references: [id])
 
   @@unique([eventId, volunteerId])
   @@unique([eventId, userId])

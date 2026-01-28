@@ -56,10 +56,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   } catch (error) {
     console.error('Volunteer events error:', error)
-    console.error('Error details:', error)
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack')
+    console.error('Error message:', error instanceof Error ? error.message : String(error))
     return res.status(500).json({ 
       success: false, 
-      error: 'Failed to fetch events' 
+      error: 'Failed to fetch events',
+      details: error instanceof Error ? error.message : String(error)
     })
   }
 }

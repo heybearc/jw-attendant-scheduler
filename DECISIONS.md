@@ -161,10 +161,29 @@
 **Context:** During Phase 4C deployment, discovered that `count_sessions` and `position_counts` tables use camelCase column names (eventId, sessionName, countSessionId) instead of snake_case like other tables. This caused Prisma query errors when incorrect @map directives were added.  
 **Decision:** Accept that not all tables follow snake_case convention. Only add @map directives to tables that actually use snake_case in the database. Verify actual database schema before adding mappings.  
 **Consequences:** Must check actual database column names (via `\d table_name`) before assuming naming convention. D-TS-010 naming standard applies to new tables, but legacy tables may vary.
-- Configurable verbosity and context filtering
-- Created debug utility: `/src/lib/debug.ts`
-- Created documentation: `/docs/DEBUG-MODE.md`
-- Can be enabled/disabled per environment via .env
+
+### D-TS-014: PM2 Ecosystem Config is Container-Local Only
+**Date:** 2026-01-28  
+**Context:** Found `ecosystem.config.js` versioned in git with only `theoshift-green` defined, causing both blue and green containers to run identical configs. Blue container had errored `theoshift-blue` process (96 restarts) plus `theoshift-green` process. This violated container-first development and blue-green isolation principles.  
+**Decision:** Remove `ecosystem.config.js` from version control (already in .gitignore). Each container maintains its own container-specific config file:
+- Blue container: Defines only `theoshift-blue` process
+- Green container: Defines only `theoshift-green` process  
+
+**Rationale:** 
+- Container-first development: Configuration is container-local, not versioned
+- Blue-green isolation: Each container runs only its own process
+- Industry standard: Environment-specific configs are not versioned  
+
+**Implementation:**
+- Removed from git: `git rm --cached ecosystem.config.js`
+- Created blue config: `/opt/theoshift/ecosystem.config.js` with `theoshift-blue`
+- Created green config: `/opt/theoshift/ecosystem.config.js` with `theoshift-green`
+- Cleaned up PM2 processes and restarted with correct configs  
+
+**Consequences:** 
+- Each container now runs only one process (correct isolation)
+- Config changes must be made on containers, not in git
+- Deployment scripts should not assume ecosystem.config.js exists in repo
 
 ---
 

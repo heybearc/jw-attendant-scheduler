@@ -2491,7 +2491,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
 
     
     // Get all active attendants with their user role
-    const allAttendants = await prisma.attendants.findMany({
+    const allAttendants = await prisma.volunteers.findMany({
       where: {
         isActive: true
       },

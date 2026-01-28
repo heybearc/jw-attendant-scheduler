@@ -2222,7 +2222,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       .filter(id => id !== null) as string[];
     
     // Get all attendants (active and inactive)
-    const allAttendants = await prisma.attendants.findMany({
+    const allAttendants = await prisma.volunteers.findMany({
       where: {
         id: { in: attendantIds }
       },

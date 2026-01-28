@@ -44,7 +44,7 @@ async function getSystemHealth() {
     const [userCount, eventCount, attendantCount] = await Promise.all([
       prisma.users.count(),
       prisma.events.count(),
-      prisma.attendants.count()
+      prisma.volunteers.count()
     ])
 
     // System metrics

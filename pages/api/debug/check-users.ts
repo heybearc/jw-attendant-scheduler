@@ -21,7 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
 
       // Also check attendants table
-      const attendants = await prisma.attendants.findMany({
+      const attendants = await prisma.volunteers.findMany({
         select: {
           id: true,
           firstName: true,

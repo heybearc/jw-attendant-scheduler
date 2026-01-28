@@ -130,7 +130,7 @@ async function handleSetOversight(req: NextApiRequest, res: NextApiResponse, eve
 
     // Verify overseer exists if provided
     if (validatedData.overseerId) {
-      const overseer = await prisma.attendants.findUnique({
+      const overseer = await prisma.volunteers.findUnique({
         where: { id: validatedData.overseerId }
       })
       
@@ -141,7 +141,7 @@ async function handleSetOversight(req: NextApiRequest, res: NextApiResponse, eve
 
     // Verify keyman exists if provided
     if (validatedData.keymanId) {
-      const keyman = await prisma.attendants.findUnique({
+      const keyman = await prisma.volunteers.findUnique({
         where: { id: validatedData.keymanId }
       })
       

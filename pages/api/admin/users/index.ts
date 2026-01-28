@@ -153,7 +153,7 @@ async function handleCreateUser(req: NextApiRequest, res: NextApiResponse) {
     // Handle attendant linking if provided
     if (linkedAttendantId) {
       try {
-        await prisma.attendants.update({
+        await prisma.volunteers.update({
           where: { id: linkedAttendantId },
           data: { userId: user.id }
         })

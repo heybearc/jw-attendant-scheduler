@@ -36,7 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.log(`🔍 Oversight data:`, validatedData)
 
       // Verify the attendant exists and is active
-      const attendant = await prisma.attendants.findFirst({
+      const attendant = await prisma.volunteers.findFirst({
         where: {
           id: attendantId,
           isActive: true

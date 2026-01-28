@@ -52,7 +52,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 async function handleGetEventAttendants(req: NextApiRequest, res: NextApiResponse, eventId: string, event: any) {
   try {
     // NEW SYSTEM: Get attendants who have position assignments
-    const attendantsWithAssignments = await prisma.attendants.findMany({
+    const attendantsWithAssignments = await prisma.volunteers.findMany({
       where: {
         position_assignments: {
           some: {
@@ -125,7 +125,7 @@ async function handleCreateEventAttendant(req: NextApiRequest, res: NextApiRespo
     }
 
     // Create new attendant (no automatic position assignment)
-    const attendant = await prisma.attendants.create({
+    const attendant = await prisma.volunteers.create({
       data: {
         id: require('crypto').randomUUID(),
         firstName,
@@ -197,7 +197,7 @@ async function handleBulkImportEventAttendants(req: NextApiRequest, res: NextApi
         }
 
         // Check if attendant already exists by email
-        const existingAttendant = await prisma.attendants.findFirst({
+        const existingAttendant = await prisma.volunteers.findFirst({
           where: { email: attendantData.email }
         })
 
@@ -213,7 +213,7 @@ async function handleBulkImportEventAttendants(req: NextApiRequest, res: NextApi
           }
 
           // Update existing attendant
-          await prisma.attendants.update({
+          await prisma.volunteers.update({
             where: { id: existingAttendant.id },
             data: {
               firstName: attendantData.firstName,
@@ -241,7 +241,7 @@ async function handleBulkImportEventAttendants(req: NextApiRequest, res: NextApi
           }
 
           // Create new attendant (no position assignment)
-          await prisma.attendants.create({
+          await prisma.volunteers.create({
             data: {
               id: require('crypto').randomUUID(),
               firstName: attendantData.firstName,

@@ -39,7 +39,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       userId = user.id
     } else {
       // Try to find attendant by email
-      const attendant = await prisma.attendants.findFirst({
+      const attendant = await prisma.volunteers.findFirst({
         where: { email: session.user.email },
         select: { id: true }
       })

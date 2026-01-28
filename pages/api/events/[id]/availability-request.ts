@@ -49,7 +49,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let attendants
     if (volunteerIds && Array.isArray(volunteerIds) && volunteerIds.length > 0) {
       // Specific attendants
-      attendants = await prisma.attendants.findMany({
+      attendants = await prisma.volunteers.findMany({
         where: {
           id: { in: volunteerIds },
           isActive: true

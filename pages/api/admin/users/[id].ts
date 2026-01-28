@@ -71,13 +71,13 @@ async function handleUpdateUser(req: NextApiRequest, res: NextApiResponse, id: s
     if (linkedAttendantId !== undefined) {
       if (linkedAttendantId) {
         // Link to new attendant
-        await prisma.attendants.update({
+        await prisma.volunteers.update({
           where: { id: linkedAttendantId },
           data: { userId: id }
         })
       } else {
         // Unlink current attendant
-        await prisma.attendants.updateMany({
+        await prisma.volunteers.updateMany({
           where: { userId: id },
           data: { userId: null }
         })
@@ -141,7 +141,7 @@ async function handleDeleteUser(req: NextApiRequest, res: NextApiResponse, id: s
     }
 
     // Check if user has associated attendants
-    const attendantCount = await prisma.attendants.count({
+    const attendantCount = await prisma.volunteers.count({
       where: { userId: id }
     })
 

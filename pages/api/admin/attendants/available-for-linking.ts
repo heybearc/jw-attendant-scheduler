@@ -16,7 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Get attendants that are not linked to any user account
-    const availableAttendants = await prisma.attendants.findMany({
+    const availableAttendants = await prisma.volunteers.findMany({
       where: {
         userId: null,
         isActive: true

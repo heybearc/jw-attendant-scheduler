@@ -72,7 +72,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
 async function handleGetAttendant(req: NextApiRequest, res: NextApiResponse, eventId: string, attendantId: string) {
   try {
-    const attendant = await prisma.attendants.findUnique({
+    const attendant = await prisma.volunteers.findUnique({
       where: { id: attendantId }
     })
 
@@ -114,7 +114,7 @@ async function handleUpdateAttendant(req: NextApiRequest, res: NextApiResponse, 
     console.log(`🔧 API Update attendant ${attendantId}:`, { firstName, lastName, isActive, congregation, formsOfService, profileVerificationRequired })
 
     // Check if attendant exists
-    const existingAttendant = await prisma.attendants.findUnique({
+    const existingAttendant = await prisma.volunteers.findUnique({
       where: { id: attendantId }
     })
     
@@ -168,7 +168,7 @@ async function handleUpdateAttendant(req: NextApiRequest, res: NextApiResponse, 
     console.log(`📡 Updating attendant ${attendantId} with data:`, updateData)
 
     // Update attendant
-    const updatedAttendant = await prisma.attendants.update({
+    const updatedAttendant = await prisma.volunteers.update({
       where: { id: attendantId },
       data: updateData
     })
@@ -204,7 +204,7 @@ async function handleUpdateAttendant(req: NextApiRequest, res: NextApiResponse, 
 async function handleDeleteAttendant(req: NextApiRequest, res: NextApiResponse, eventId: string, attendantId: string) {
   try {
     // Check if attendant exists
-    const existingAttendant = await prisma.attendants.findUnique({
+    const existingAttendant = await prisma.volunteers.findUnique({
       where: { id: attendantId }
     })
 
@@ -228,7 +228,7 @@ async function handleDeleteAttendant(req: NextApiRequest, res: NextApiResponse, 
     })
 
     if (otherAssignments.length === 0) {
-      await prisma.attendants.delete({
+      await prisma.volunteers.delete({
         where: { id: attendantId }
       })
     }

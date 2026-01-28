@@ -52,7 +52,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           lanyards.map(async (lanyard) => {
             if (lanyard.isCheckedOut && (lanyard as any).attendantId) {
               try {
-                const attendant = await prisma.attendants.findUnique({
+                const attendant = await prisma.volunteers.findUnique({
                   where: { id: (lanyard as any).attendantId }
                 })
                 if (attendant) {

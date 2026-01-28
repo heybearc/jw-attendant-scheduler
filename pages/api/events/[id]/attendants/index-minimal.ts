@@ -45,7 +45,7 @@ async function handleGetEventAttendants(req: NextApiRequest, res: NextApiRespons
     const offset = (page - 1) * limit
 
     // Get all attendants - simplified approach
-    const attendants = await prisma.attendants.findMany({
+    const attendants = await prisma.volunteers.findMany({
       skip: offset,
       take: limit,
       orderBy: [
@@ -54,7 +54,7 @@ async function handleGetEventAttendants(req: NextApiRequest, res: NextApiRespons
       ]
     })
 
-    const total = await prisma.attendants.count()
+    const total = await prisma.volunteers.count()
     const pages = Math.ceil(total / limit)
 
     return res.status(200).json({

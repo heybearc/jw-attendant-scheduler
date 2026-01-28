@@ -132,7 +132,7 @@ async function handleCreateEventAttendant(req: NextApiRequest, res: NextApiRespo
     }
 
     // Create new attendant
-    const attendant = await prisma.attendants.create({
+    const attendant = await prisma.volunteers.create({
       data: {
         id: require('crypto').randomUUID(),
         firstName,
@@ -216,7 +216,7 @@ async function handleBulkImportEventAttendants(req: NextApiRequest, res: NextApi
         }
 
         // Check if attendant already exists by email
-        const existingAttendant = await prisma.attendants.findFirst({
+        const existingAttendant = await prisma.volunteers.findFirst({
           where: { email: attendantData.email }
         })
 
@@ -232,7 +232,7 @@ async function handleBulkImportEventAttendants(req: NextApiRequest, res: NextApi
           }
 
           // Update existing attendant
-          await prisma.attendants.update({
+          await prisma.volunteers.update({
             where: { id: existingAttendant.id },
             data: {
               firstName: attendantData.firstName,
@@ -285,7 +285,7 @@ async function handleBulkImportEventAttendants(req: NextApiRequest, res: NextApi
           }
 
           // Create new attendant
-          const newAttendant = await prisma.attendants.create({
+          const newAttendant = await prisma.volunteers.create({
             data: {
               id: require('crypto').randomUUID(),
               firstName: attendantData.firstName,

@@ -106,7 +106,7 @@ async function handleBulkOversightAssignment(req: NextApiRequest, res: NextApiRe
     // Verify overseer exists if provided
     if (validatedData.overseerId) {
       console.log('5. Verifying overseer exists...')
-      const overseer = await prisma.attendants.findUnique({
+      const overseer = await prisma.volunteers.findUnique({
         where: { id: validatedData.overseerId }
       })
       
@@ -118,7 +118,7 @@ async function handleBulkOversightAssignment(req: NextApiRequest, res: NextApiRe
     // Verify keyman exists if provided
     if (validatedData.keymanId) {
       console.log('6. Verifying keyman exists...')
-      const keyman = await prisma.attendants.findUnique({
+      const keyman = await prisma.volunteers.findUnique({
         where: { id: validatedData.keymanId }
       })
       

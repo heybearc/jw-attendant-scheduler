@@ -82,7 +82,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         // Verify overseer exists in attendants table
-        const overseer = await prisma.attendants.findUnique({
+        const overseer = await prisma.volunteers.findUnique({
           where: { id: validatedData.overseerId }
         })
 
@@ -94,7 +94,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         // Verify keyman exists if provided
         if (validatedData.keymanId) {
-          const keyman = await prisma.attendants.findUnique({
+          const keyman = await prisma.volunteers.findUnique({
             where: { id: validatedData.keymanId }
           })
           

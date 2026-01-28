@@ -31,7 +31,7 @@ async function handleGetSystemInfo(req: NextApiRequest, res: NextApiResponse) {
     const [userCount, eventCount, attendantCount] = await Promise.all([
       prisma.users.count(),
       prisma.events.count(),
-      prisma.attendants.count()
+      prisma.volunteers.count()
     ])
 
     // Get recent activity (last 24 hours)
@@ -45,7 +45,7 @@ async function handleGetSystemInfo(req: NextApiRequest, res: NextApiResponse) {
       prisma.events.count({
         where: { createdAt: { gte: yesterday } }
       }),
-      prisma.attendants.count({
+      prisma.volunteers.count({
         where: { createdAt: { gte: yesterday } }
       })
     ])

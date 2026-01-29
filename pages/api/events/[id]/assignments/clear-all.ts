@@ -32,16 +32,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     console.log(`🧹 BULK CLEAR: Starting assignment cleanup for event ${eventId}`)
 
-    // Get all assignments for this event
-    const assignments = await prisma.assignments.findMany({
-      where: { eventId: eventId }
+    // Get all assignments for this event through positions
+    const assignments = await prisma.position_assignments.findMany({
+      where: { 
+        positions: {
+          eventId: eventId
+        }
+      }
     })
 
     console.log(`🧹 Found ${assignments.length} assignments to delete`)
 
     // Delete all assignments for this event
-    const deleteResult = await prisma.assignments.deleteMany({
-      where: { eventId: eventId }
+    const deleteResult = await prisma.position_assignments.deleteMany({
+      where: { 
+        positions: {
+          eventId: eventId
+        }
+      }
     })
 
     console.log(`✅ BULK CLEAR: Deleted ${deleteResult.count} assignments`)

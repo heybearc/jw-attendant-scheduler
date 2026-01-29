@@ -26,20 +26,49 @@ interface InvitationEmailData {
   loginUrl: string;
 }
 
-// Get email configuration from environment variables
-function getEmailConfig(): EmailConfig | null {
-  const smtpUser = process.env.SMTP_USER;
-  const smtpPassword = process.env.SMTP_PASSWORD;
+// Get email configuration from environment variables or database
+async function getEmailConfig(): Promise<EmailConfig | null> {
+  // Try environment variables first
+  let smtpUser = process.env.SMTP_USER;
+  let smtpPassword = process.env.SMTP_PASSWORD;
+  let smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
+  let smtpPort = parseInt(process.env.SMTP_PORT || '587');
+  let smtpSecure = process.env.SMTP_SECURE === 'true';
+
+  // If not in env, try database
+  if (!smtpUser || !smtpPassword) {
+    try {
+      const { PrismaClient } = require('@prisma/client');
+      const prisma = new PrismaClient();
+      
+      const config = await prisma.system_settings.findFirst({
+        where: { key: 'email_config' }
+      });
+      
+      await prisma.$disconnect();
+      
+      if (config && config.value) {
+        const emailConfig = JSON.parse(config.value as string);
+        smtpUser = emailConfig.smtpUser;
+        smtpPassword = emailConfig.smtpPassword;
+        smtpHost = emailConfig.smtpHost || smtpHost;
+        smtpPort = emailConfig.smtpPort || smtpPort;
+        smtpSecure = emailConfig.smtpSecure || smtpSecure;
+      }
+    } catch (error) {
+      console.error('Error loading email config from database:', error);
+    }
+  }
 
   if (!smtpUser || !smtpPassword) {
-    console.warn('Email configuration not found. SMTP_USER and SMTP_PASSWORD required.');
+    console.warn('Email configuration not found. SMTP credentials required.');
     return null;
   }
 
   return {
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: process.env.SMTP_SECURE === 'true',
+    host: smtpHost,
+    port: smtpPort,
+    secure: smtpSecure,
     auth: {
       user: smtpUser,
       pass: smtpPassword
@@ -48,8 +77,8 @@ function getEmailConfig(): EmailConfig | null {
 }
 
 // Create email transporter
-export function createEmailTransporter() {
-  const config = getEmailConfig();
+export async function createEmailTransporter() {
+  const config = await getEmailConfig();
   if (!config) {
     throw new Error('Email configuration not available');
   }
@@ -59,7 +88,7 @@ export function createEmailTransporter() {
 
 // Send email utility
 export async function sendEmail(options: EmailOptions): Promise<void> {
-  const transporter = createEmailTransporter();
+  const transporter = await createEmailTransporter();
   
   const fromName = process.env.EMAIL_FROM_NAME || 'TheoShift Team';
   const fromEmail = process.env.EMAIL_FROM || process.env.SMTP_USER;
@@ -246,6 +275,30 @@ Theocratic Shift Scheduler
 }
 
 // Check if email is configured
-export function isEmailConfigured(): boolean {
-  return !!(process.env.SMTP_USER && process.env.SMTP_PASSWORD);
+export async function isEmailConfigured(): Promise<boolean> {
+  // Check environment variables first
+  if (process.env.SMTP_USER && process.env.SMTP_PASSWORD) {
+    return true;
+  }
+  
+  // Check database configuration
+  try {
+    const { PrismaClient } = require('@prisma/client');
+    const prisma = new PrismaClient();
+    
+    const config = await prisma.system_settings.findFirst({
+      where: { key: 'email_config' }
+    });
+    
+    await prisma.$disconnect();
+    
+    if (config && config.value) {
+      const emailConfig = JSON.parse(config.value as string);
+      return !!(emailConfig.smtpUser && emailConfig.smtpPassword);
+    }
+  } catch (error) {
+    console.error('Error checking email config from database:', error);
+  }
+  
+  return false;
 }

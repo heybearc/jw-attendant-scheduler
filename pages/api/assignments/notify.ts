@@ -16,20 +16,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const session = await getServerSession(req, res, authOptions)
-    if (!session?.user) {
+    const { type, assignmentId, eventId, changes, reason } = req.body
+    
+    // For reminder notifications, allow API key authentication (from cron)
+    let session = null
+    let isAutomatedReminder = false
+    
+    if (type === 'reminder') {
+      const apiKey = req.headers['x-api-key']
+      if (apiKey && process.env.CRON_API_KEY && apiKey === process.env.CRON_API_KEY) {
+        isAutomatedReminder = true
+      } else {
+        session = await getServerSession(req, res, authOptions)
+      }
+    } else {
+      session = await getServerSession(req, res, authOptions)
+    }
+    
+    // Require authentication unless it's an automated reminder with valid API key
+    if (!isAutomatedReminder && !session?.user) {
       return res.status(401).json({ error: 'Unauthorized' })
     }
 
     // Check if email is configured
-    if (!isEmailConfigured()) {
+    const emailConfigured = await isEmailConfigured();
+    if (!emailConfigured) {
       return res.status(503).json({ 
         error: 'Email not configured',
         message: 'Email notifications are not available. Please configure SMTP settings in admin panel.'
       })
     }
-
-    const { type, assignmentId, eventId, changes, reason } = req.body
 
     if (!type || !assignmentId || !eventId) {
       return res.status(400).json({ 
@@ -188,7 +204,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           positionName: assignment.position.positionName,
           positionNumber: assignment.position.positionNumber,
           reason: reason || undefined,
-          cancelledBy: session.user.name || session.user.email || 'System Administrator'
+          cancelledBy: session?.user?.name || session?.user?.email || 'System Administrator'
         }
         break
 

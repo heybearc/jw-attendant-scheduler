@@ -28,7 +28,7 @@ export default function DepartmentTemplatesPage({ userRole }: DepartmentTemplate
             information is needed.
           </p>
           <p className="text-blue-800">
-            For example, an Attendants event shows different features than a Baptism event or Parking event.
+            For example, an Volunteers event shows different features than a Baptism event or Parking event.
           </p>
         </div>
 
@@ -39,9 +39,9 @@ export default function DepartmentTemplatesPage({ userRole }: DepartmentTemplate
             
             <div className="space-y-4">
               <div className="bg-white border border-gray-200 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">👥 Attendants Department</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">👥 Volunteers Department</h3>
                 <p className="text-gray-600 mb-3">
-                  For managing attendants at assemblies and conventions
+                  For managing volunteers at assemblies and conventions
                 </p>
                 <div className="text-sm text-gray-700">
                   <p className="font-semibold mb-1">Features enabled:</p>
@@ -53,7 +53,7 @@ export default function DepartmentTemplatesPage({ userRole }: DepartmentTemplate
                   </ul>
                   <p className="font-semibold mt-3 mb-1">Terminology:</p>
                   <ul className="list-disc list-inside">
-                    <li>"Attendant" instead of "Volunteer"</li>
+                    <li>"Volunteer" instead of "Volunteer"</li>
                     <li>"Post" instead of "Position"</li>
                   </ul>
                 </div>
@@ -82,7 +82,7 @@ export default function DepartmentTemplatesPage({ userRole }: DepartmentTemplate
               <div className="bg-white border border-gray-200 rounded-lg p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">🚗 Parking Department</h3>
                 <p className="text-gray-600 mb-3">
-                  For managing parking lot attendants and traffic flow
+                  For managing parking lot volunteers and traffic flow
                 </p>
                 <div className="text-sm text-gray-700">
                   <p className="font-semibold mb-1">Features enabled:</p>
@@ -93,7 +93,7 @@ export default function DepartmentTemplatesPage({ userRole }: DepartmentTemplate
                   </ul>
                   <p className="font-semibold mt-3 mb-1">Terminology:</p>
                   <ul className="list-disc list-inside">
-                    <li>"Parking Attendant"</li>
+                    <li>"Parking Volunteer"</li>
                     <li>"Station" instead of "Position"</li>
                   </ul>
                 </div>
@@ -157,7 +157,7 @@ export default function DepartmentTemplatesPage({ userRole }: DepartmentTemplate
                 </li>
                 <li className="flex items-start">
                   <span className="mr-2">✓</span>
-                  <span>Terminology changes to match your department (e.g., "Attendant" vs "Volunteer")</span>
+                  <span>Terminology changes to match your department (e.g., "Volunteer" vs "Volunteer")</span>
                 </li>
                 <li className="flex items-start">
                   <span className="mr-2">✓</span>

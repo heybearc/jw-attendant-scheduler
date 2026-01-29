@@ -124,7 +124,7 @@ export default function PositionTemplatesPage({ userRole }: PositionTemplatesPro
             
             <div className="space-y-4">
               <div className="bg-white border border-gray-200 rounded-lg p-6">
-                <h3 className="font-semibold text-gray-900 mb-2">Attendants Department</h3>
+                <h3 className="font-semibold text-gray-900 mb-2">Volunteers Department</h3>
                 <p className="text-gray-600 mb-2">Available position templates:</p>
                 <ul className="text-sm text-gray-700 space-y-1">
                   <li>• Main Entrance (Capacity: 2)</li>
@@ -141,7 +141,7 @@ export default function PositionTemplatesPage({ userRole }: PositionTemplatesPro
                 <ul className="text-sm text-gray-700 space-y-1">
                   <li>• Baptism Speaker (Capacity: 1)</li>
                   <li>• Pool Assistant (Capacity: 2)</li>
-                  <li>• Changing Room Attendant (Capacity: 2)</li>
+                  <li>• Changing Room Volunteer (Capacity: 2)</li>
                   <li>• Coordinator (Capacity: 1)</li>
                 </ul>
               </div>
@@ -150,8 +150,8 @@ export default function PositionTemplatesPage({ userRole }: PositionTemplatesPro
                 <h3 className="font-semibold text-gray-900 mb-2">Parking Department</h3>
                 <p className="text-gray-600 mb-2">Available position templates:</p>
                 <ul className="text-sm text-gray-700 space-y-1">
-                  <li>• Lot A Attendant (Capacity: 2)</li>
-                  <li>• Lot B Attendant (Capacity: 2)</li>
+                  <li>• Lot A Volunteer (Capacity: 2)</li>
+                  <li>• Lot B Volunteer (Capacity: 2)</li>
                   <li>• Traffic Director (Capacity: 1)</li>
                   <li>• Overflow Coordinator (Capacity: 1)</li>
                 </ul>

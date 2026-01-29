@@ -29,7 +29,7 @@ export default function HelpPage({ userRole }: HelpPageProps) {
       roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN']
     },
     {
-      id: 'attendant-management',
+      id: 'volunteer-management',
       title: '👥 Volunteer Management',
       description: 'Finding, filtering, and managing volunteers',
       roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN']

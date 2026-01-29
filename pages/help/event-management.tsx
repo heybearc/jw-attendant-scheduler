@@ -24,7 +24,7 @@ export default function EventManagementPage({ userRole }: EventManagementProps) 
           <h2 className="text-xl font-semibold text-blue-900 mb-3">Event Management Overview</h2>
           <p className="text-blue-800">
             Events are the core of the Theocratic Shift Scheduler system. They represent assemblies, conventions, 
-            and other gatherings that require attendant coordination and management.
+            and other gatherings that require volunteer coordination and management.
           </p>
         </div>
 
@@ -198,7 +198,7 @@ export default function EventManagementPage({ userRole }: EventManagementProps) 
                     <li>• <strong>Admins:</strong> See all events in the system</li>
                     <li>• <strong>Overseers:</strong> See events they're assigned to manage</li>
                     <li>• <strong>Keymen:</strong> See events in their areas of responsibility</li>
-                    <li>• <strong>Attendants:</strong> See events they're assigned to</li>
+                    <li>• <strong>Volunteers:</strong> See events they're assigned to</li>
                   </ul>
                 </div>
 
@@ -208,7 +208,7 @@ export default function EventManagementPage({ userRole }: EventManagementProps) 
                   <ul className="text-sm text-gray-600 space-y-1">
                     <li>• Event name, type, and status</li>
                     <li>• Date, time, and location</li>
-                    <li>• Attendant capacity and current assignments</li>
+                    <li>• Volunteer capacity and current assignments</li>
                     <li>• Your role and responsibilities</li>
                   </ul>
                 </div>
@@ -220,7 +220,7 @@ export default function EventManagementPage({ userRole }: EventManagementProps) 
                   </p>
                   <ul className="text-sm text-gray-600 space-y-1">
                     <li>• View detailed event information</li>
-                    <li>• Manage attendant assignments</li>
+                    <li>• Manage volunteer assignments</li>
                     <li>• Track attendance and check-ins</li>
                     <li>• Generate reports and documentation</li>
                   </ul>
@@ -240,14 +240,14 @@ export default function EventManagementPage({ userRole }: EventManagementProps) 
             <h2 className="text-2xl font-bold text-gray-900 mb-4">👥 Managing Assignments</h2>
             
             <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Attendant Assignment Process</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Volunteer Assignment Process</h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <h4 className="font-semibold text-gray-900 mb-3">For Overseers & Keymen</h4>
                   <ul className="space-y-2 text-sm text-gray-600">
                     <li>• Review position requirements and qualifications</li>
-                    <li>• Assign attendants to specific positions and shifts</li>
+                    <li>• Assign volunteers to specific positions and shifts</li>
                     <li>• Monitor assignment coverage and gaps</li>
                     <li>• Handle last-minute changes and substitutions</li>
                     <li>• Communicate with volunteers about their assignments</li>
@@ -255,7 +255,7 @@ export default function EventManagementPage({ userRole }: EventManagementProps) 
                 </div>
                 
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-3">For Attendants</h4>
+                  <h4 className="font-semibold text-gray-900 mb-3">For Volunteers</h4>
                   <ul className="space-y-2 text-sm text-gray-600">
                     <li>• View your current and upcoming assignments</li>
                     <li>• Check event details, times, and locations</li>
@@ -282,7 +282,7 @@ export default function EventManagementPage({ userRole }: EventManagementProps) 
                     The system helps track attendance counts throughout the event:
                   </p>
                   <ul className="text-sm text-gray-600 space-y-1">
-                    <li>• Real-time attendant check-in and check-out</li>
+                    <li>• Real-time volunteer check-in and check-out</li>
                     <li>• Position coverage monitoring</li>
                     <li>• Shift rotation tracking</li>
                     <li>• Break and meal period management</li>
@@ -295,7 +295,7 @@ export default function EventManagementPage({ userRole }: EventManagementProps) 
                   <ul className="text-sm text-gray-600 space-y-1">
                     <li>• Total attendance by session</li>
                     <li>• Position coverage statistics</li>
-                    <li>• Attendant participation records</li>
+                    <li>• Volunteer participation records</li>
                     <li>• Event summary and analytics</li>
                   </ul>
                 </div>
@@ -312,8 +312,8 @@ export default function EventManagementPage({ userRole }: EventManagementProps) 
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Creating and Managing Announcements</h3>
                 
                 <p className="text-gray-600 mb-4">
-                  Announcements allow you to communicate important information to attendants. They appear as banners 
-                  on the attendant dashboard when active.
+                  Announcements allow you to communicate important information to volunteers. They appear as banners 
+                  on the volunteer dashboard when active.
                 </p>
 
                 <div className="space-y-4">
@@ -358,7 +358,7 @@ export default function EventManagementPage({ userRole }: EventManagementProps) 
                     <h4 className="font-semibold text-gray-900 mb-2">Date Ranges</h4>
                     <p className="text-sm text-gray-600">
                       Set start and end dates to control when announcements are visible. Announcements will only 
-                      appear to attendants during the specified date range. Leave dates blank to show indefinitely.
+                      appear to volunteers during the specified date range. Leave dates blank to show indefinitely.
                     </p>
                   </div>
 
@@ -375,7 +375,7 @@ export default function EventManagementPage({ userRole }: EventManagementProps) 
 
                 <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                   <p className="text-sm text-blue-800">
-                    <strong>💡 Tip:</strong> Announcements are visible to all attendants assigned to the event. 
+                    <strong>💡 Tip:</strong> Announcements are visible to all volunteers assigned to the event. 
                     Use them for important communications like arrival times, parking changes, or safety reminders.
                   </p>
                 </div>
@@ -410,7 +410,7 @@ export default function EventManagementPage({ userRole }: EventManagementProps) 
                   <ul className="list-disc list-inside space-y-1 text-gray-600 ml-4">
                     <li>All position details and requirements</li>
                     <li>Shift information and timing</li>
-                    <li>Assigned attendants</li>
+                    <li>Assigned volunteers</li>
                     <li>Oversight assignments</li>
                     <li>Color-coded sections for easy reading</li>
                     <li>Professional formatting with proper page breaks</li>
@@ -531,7 +531,7 @@ export default function EventManagementPage({ userRole }: EventManagementProps) 
               <div>
                 <h3 className="font-semibold text-green-800 mb-3">Assignment Management</h3>
                 <ul className="space-y-2 text-sm text-green-700">
-                  <li>• Confirm attendant availability</li>
+                  <li>• Confirm volunteer availability</li>
                   <li>• Provide clear instructions</li>
                   <li>• Have backup plans ready</li>
                   <li>• Monitor coverage regularly</li>

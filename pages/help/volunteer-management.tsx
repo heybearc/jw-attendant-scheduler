@@ -48,9 +48,9 @@ export default function VolunteerManagementHelp({ userRole }: VolunteerManagemen
             At the top of the volunteer list, you'll see three summary cards:
           </p>
           <ul className="list-disc list-inside space-y-2 text-gray-700 ml-4">
-            <li><strong>Total:</strong> Click to see all attendants (active and inactive)</li>
-            <li><strong>Active:</strong> Click to see only active attendants (default view)</li>
-            <li><strong>Inactive:</strong> Click to see only inactive attendants</li>
+            <li><strong>Total:</strong> Click to see all volunteers (active and inactive)</li>
+            <li><strong>Active:</strong> Click to see only active volunteers (default view)</li>
+            <li><strong>Inactive:</strong> Click to see only inactive volunteers</li>
           </ul>
         </section>
 
@@ -62,7 +62,7 @@ export default function VolunteerManagementHelp({ userRole }: VolunteerManagemen
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Filter by Overseer</h3>
               <p className="text-gray-700">
-                Use the "Filter by Overseer" dropdown to see only attendants assigned to a specific overseer.
+                Use the "Filter by Overseer" dropdown to see only volunteers assigned to a specific overseer.
                 Select "All Overseers" to clear this filter.
               </p>
             </div>
@@ -70,15 +70,15 @@ export default function VolunteerManagementHelp({ userRole }: VolunteerManagemen
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Filter by Keyman</h3>
               <p className="text-gray-700">
-                Use the "Filter by Keyman" dropdown to see only attendants assigned to a specific keyman.
-                You can also select "No Keyman" to find attendants without a keyman assignment.
+                Use the "Filter by Keyman" dropdown to see only volunteers assigned to a specific keyman.
+                You can also select "No Keyman" to find volunteers without a keyman assignment.
               </p>
             </div>
 
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Filter by Forms of Service</h3>
               <p className="text-gray-700 mb-2">
-                Use the "Filter by Forms of Service" dropdown to find attendants with specific service roles:
+                Use the "Filter by Forms of Service" dropdown to find volunteers with specific service roles:
               </p>
               <ul className="list-disc list-inside space-y-1 text-gray-700 ml-4">
                 <li>Elder</li>
@@ -114,7 +114,7 @@ export default function VolunteerManagementHelp({ userRole }: VolunteerManagemen
         <section className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <h2 className="text-2xl font-semibold text-gray-900 mb-4">🏷️ Colored Service Badges</h2>
           <p className="text-gray-700 mb-4">
-            Attendants with special forms of service have colored badges that make them easy to identify at a glance:
+            Volunteers with special forms of service have colored badges that make them easy to identify at a glance:
           </p>
           
           <div className="space-y-2 ml-4">
@@ -146,7 +146,7 @@ export default function VolunteerManagementHelp({ userRole }: VolunteerManagemen
 
           <p className="text-gray-700 mt-4">
             These badges appear in the "Forms of Service" column and make it easy to quickly identify
-            attendants with specific roles or responsibilities.
+            volunteers with specific roles or responsibilities.
           </p>
         </section>
 
@@ -154,7 +154,7 @@ export default function VolunteerManagementHelp({ userRole }: VolunteerManagemen
         <section className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <h2 className="text-2xl font-semibold text-gray-900 mb-4">⬆️⬇️ Sorting</h2>
           <p className="text-gray-700 mb-4">
-            Click any column header to sort the attendant list:
+            Click any column header to sort the volunteer list:
           </p>
           <ul className="list-disc list-inside space-y-2 text-gray-700 ml-4">
             <li><strong>Name:</strong> Sort alphabetically by first or last name</li>
@@ -162,22 +162,22 @@ export default function VolunteerManagementHelp({ userRole }: VolunteerManagemen
             <li><strong>Overseer:</strong> Group by overseer assignment</li>
             <li><strong>Keyman:</strong> Group by keyman assignment</li>
             <li><strong>Forms of Service:</strong> Group by service type</li>
-            <li><strong>Status:</strong> Group active and inactive attendants</li>
+            <li><strong>Status:</strong> Group active and inactive volunteers</li>
           </ul>
           <p className="text-gray-700 mt-4">
             Click the same column header again to reverse the sort order (ascending/descending).
           </p>
         </section>
 
-        {/* Managing Attendants */}
+        {/* Managing Volunteers */}
         <section className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-4">✏️ Managing Attendant Details</h2>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-4">✏️ Managing Volunteer Details</h2>
           
           <div className="space-y-4">
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Viewing Details</h3>
               <p className="text-gray-700">
-                Click on any attendant's name to view their full profile, including contact information,
+                Click on any volunteer's name to view their full profile, including contact information,
                 assignments, and service details.
               </p>
             </div>
@@ -192,15 +192,15 @@ export default function VolunteerManagementHelp({ userRole }: VolunteerManagemen
                 <li>Overseer and Keyman assignments</li>
                 <li>Forms of Service</li>
                 <li>Active/Inactive status</li>
-                <li>Attendant PIN (Overseers and Admins)</li>
+                <li>Volunteer PIN (Overseers and Admins)</li>
               </ul>
             </div>
 
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">PIN Management</h3>
               <p className="text-gray-700">
-                Overseers and Administrators can set or reset attendant PINs. This is useful when an
-                attendant forgets their PIN or needs it changed for security reasons.
+                Overseers and Administrators can set or reset volunteer PINs. This is useful when an
+                volunteer forgets their PIN or needs it changed for security reasons.
               </p>
             </div>
           </div>
@@ -210,7 +210,7 @@ export default function VolunteerManagementHelp({ userRole }: VolunteerManagemen
         <section className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <h2 className="text-2xl font-semibold text-gray-900 mb-4">🔐 Administrator Access</h2>
           <p className="text-gray-700 mb-4">
-            System administrators automatically have full access to all events and all attendants without
+            System administrators automatically have full access to all events and all volunteers without
             needing to be explicitly added to event permissions.
           </p>
           
@@ -228,10 +228,10 @@ export default function VolunteerManagementHelp({ userRole }: VolunteerManagemen
           
           <div className="space-y-4">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Why don't I see all attendants?</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Why don't I see all volunteers?</h3>
               <p className="text-gray-700">
-                By default, only active attendants are shown. Click the "Total" card at the top to see
-                all attendants including inactive ones.
+                By default, only active volunteers are shown. Click the "Total" card at the top to see
+                all volunteers including inactive ones.
               </p>
             </div>
 
@@ -245,23 +245,23 @@ export default function VolunteerManagementHelp({ userRole }: VolunteerManagemen
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Can I export the filtered list?</h3>
               <p className="text-gray-700">
-                Yes! When you export attendant data, it respects your current filters, so you only
-                export the attendants you're currently viewing.
+                Yes! When you export volunteer data, it respects your current filters, so you only
+                export the volunteers you're currently viewing.
               </p>
             </div>
 
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">What does "No Keyman" mean?</h3>
               <p className="text-gray-700">
-                This filter shows attendants who haven't been assigned to a keyman yet. It's useful
-                for finding attendants who need keyman assignments.
+                This filter shows volunteers who haven't been assigned to a keyman yet. It's useful
+                for finding volunteers who need keyman assignments.
               </p>
             </div>
 
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Can attendants have multiple Forms of Service?</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Can volunteers have multiple Forms of Service?</h3>
               <p className="text-gray-700">
-                Yes! An attendant can be both an Elder and an Overseer, for example. All their service
+                Yes! An volunteer can be both an Elder and an Overseer, for example. All their service
                 badges will be displayed.
               </p>
             </div>

@@ -40,7 +40,7 @@ export default function FilterPresetsPage({ userRole }: FilterPresetsProps) {
                   <div className="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold">1</div>
                   <div>
                     <h4 className="font-semibold text-gray-900">Set Your Filters</h4>
-                    <p className="text-gray-600">On the Attendants page, set up the filters you want to save (search, congregation, status, roles, etc.)</p>
+                    <p className="text-gray-600">On the Volunteers page, set up the filters you want to save (search, congregation, status, roles, etc.)</p>
                   </div>
                 </div>
 
@@ -97,7 +97,7 @@ export default function FilterPresetsPage({ userRole }: FilterPresetsProps) {
                   <div className="flex-shrink-0 w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold">3</div>
                   <div>
                     <h4 className="font-semibold text-gray-900">Filters Applied!</h4>
-                    <p className="text-gray-600">All the saved filters are instantly applied to your attendant list</p>
+                    <p className="text-gray-600">All the saved filters are instantly applied to your volunteer list</p>
                   </div>
                 </div>
               </div>

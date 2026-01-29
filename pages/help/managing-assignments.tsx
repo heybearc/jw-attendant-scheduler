@@ -23,7 +23,7 @@ export default function ManagingAssignmentsPage({ userRole }: ManagingAssignment
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
           <h2 className="text-xl font-semibold text-blue-900 mb-3">Assignment Management Overview</h2>
           <p className="text-blue-800">
-            Assignments connect attendants to specific positions and shifts during events. 
+            Assignments connect volunteers to specific positions and shifts during events. 
             Proper assignment management ensures adequate coverage and smooth event operations.
           </p>
         </div>
@@ -38,7 +38,7 @@ export default function ManagingAssignmentsPage({ userRole }: ManagingAssignment
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">🔒 Security Positions</h3>
                 <ul className="space-y-2 text-sm text-gray-600">
                   <li>• <strong>Entrance Security:</strong> Monitor main entrances and check credentials</li>
-                  <li>• <strong>Parking Attendants:</strong> Direct traffic and manage parking areas</li>
+                  <li>• <strong>Parking Volunteers:</strong> Direct traffic and manage parking areas</li>
                   <li>• <strong>Roving Security:</strong> Patrol grounds and assist with crowd control</li>
                   <li>• <strong>Emergency Response:</strong> Handle emergency situations and evacuations</li>
                 </ul>
@@ -96,9 +96,9 @@ export default function ManagingAssignmentsPage({ userRole }: ManagingAssignment
                 </div>
 
                 <div className="bg-white border border-gray-200 rounded-lg p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Step 2: Select Qualified Attendants</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Step 2: Select Qualified Volunteers</h3>
                   <div className="space-y-3">
-                    <p className="text-gray-600">Choose attendants based on:</p>
+                    <p className="text-gray-600">Choose volunteers based on:</p>
                     <ul className="space-y-2 text-sm text-gray-600">
                       <li>• <strong>Availability:</strong> Confirm they can attend the full shift</li>
                       <li>• <strong>Experience:</strong> Previous experience in similar roles</li>
@@ -113,10 +113,10 @@ export default function ManagingAssignmentsPage({ userRole }: ManagingAssignment
                   <div className="space-y-3">
                     <p className="text-gray-600">When creating assignments:</p>
                     <ul className="space-y-2 text-sm text-gray-600">
-                      <li>• <strong>Assign Primary:</strong> Select the main attendant for each position</li>
-                      <li>• <strong>Backup Coverage:</strong> Identify backup attendants for critical positions</li>
+                      <li>• <strong>Assign Primary:</strong> Select the main volunteer for each position</li>
+                      <li>• <strong>Backup Coverage:</strong> Identify backup volunteers for critical positions</li>
                       <li>• <strong>Shift Rotations:</strong> Plan rotations for long events</li>
-                      <li>• <strong>Communication:</strong> Notify attendants of their assignments promptly</li>
+                      <li>• <strong>Communication:</strong> Notify volunteers of their assignments promptly</li>
                     </ul>
                   </div>
                 </div>
@@ -137,9 +137,9 @@ export default function ManagingAssignmentsPage({ userRole }: ManagingAssignment
             </div>
           )}
 
-          {/* For Attendants */}
+          {/* For Volunteers */}
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">👤 For Attendants</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">👤 For Volunteers</h2>
             
             <div className="space-y-6">
               <div className="bg-white border border-gray-200 rounded-lg p-6">
@@ -182,7 +182,7 @@ export default function ManagingAssignmentsPage({ userRole }: ManagingAssignment
               <div className="bg-white border border-gray-200 rounded-lg p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Responsibilities</h3>
                 <div className="space-y-3">
-                  <p className="text-gray-600">As an assigned attendant, you should:</p>
+                  <p className="text-gray-600">As an assigned volunteer, you should:</p>
                   <ul className="space-y-2 text-sm text-gray-600">
                     <li>• <strong>Confirm Availability:</strong> Respond promptly to assignment notifications</li>
                     <li>• <strong>Arrive Early:</strong> Check in at least 15 minutes before your shift</li>
@@ -202,9 +202,9 @@ export default function ManagingAssignmentsPage({ userRole }: ManagingAssignment
             <div className="space-y-4">
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                 <h3 className="font-semibold text-yellow-900 mb-2">❗ Last-Minute Cancellations</h3>
-                <p className="text-yellow-800 text-sm mb-2">When attendants can't fulfill their assignments:</p>
+                <p className="text-yellow-800 text-sm mb-2">When volunteers can't fulfill their assignments:</p>
                 <ul className="text-yellow-700 text-sm space-y-1">
-                  <li>• Contact backup attendants immediately</li>
+                  <li>• Contact backup volunteers immediately</li>
                   <li>• Redistribute assignments if necessary</li>
                   <li>• Update the system to reflect changes</li>
                   <li>• Communicate changes to affected parties</li>
@@ -224,9 +224,9 @@ export default function ManagingAssignmentsPage({ userRole }: ManagingAssignment
 
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                 <h3 className="font-semibold text-yellow-900 mb-2">🚫 Insufficient Coverage</h3>
-                <p className="text-yellow-800 text-sm mb-2">When not enough attendants are available:</p>
+                <p className="text-yellow-800 text-sm mb-2">When not enough volunteers are available:</p>
                 <ul className="text-yellow-700 text-sm space-y-1">
-                  <li>• Reach out to additional qualified attendants</li>
+                  <li>• Reach out to additional qualified volunteers</li>
                   <li>• Consider combining similar positions</li>
                   <li>• Adjust shift lengths or rotations</li>
                   <li>• Recruit from other congregations if needed</li>
@@ -244,7 +244,7 @@ export default function ManagingAssignmentsPage({ userRole }: ManagingAssignment
                 <h3 className="font-semibold text-green-800 mb-3">For Overseers & Keymen</h3>
                 <ul className="space-y-2 text-sm text-green-700">
                   <li>• Plan assignments well in advance</li>
-                  <li>• Maintain a pool of backup attendants</li>
+                  <li>• Maintain a pool of backup volunteers</li>
                   <li>• Provide clear job descriptions</li>
                   <li>• Follow up on assignment confirmations</li>
                   <li>• Document lessons learned for future events</li>
@@ -252,7 +252,7 @@ export default function ManagingAssignmentsPage({ userRole }: ManagingAssignment
               </div>
               
               <div>
-                <h3 className="font-semibold text-green-800 mb-3">For Attendants</h3>
+                <h3 className="font-semibold text-green-800 mb-3">For Volunteers</h3>
                 <ul className="space-y-2 text-sm text-green-700">
                   <li>• Check assignments regularly</li>
                   <li>• Confirm availability promptly</li>

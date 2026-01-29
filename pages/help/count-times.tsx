@@ -45,12 +45,12 @@ export default function CountTimesPage({ userRole }: CountTimesProps) {
               </div>
 
               <div className="bg-white border border-gray-200 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">🛡️ Attendant Coverage</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">🛡️ Volunteer Coverage</h3>
                 <ul className="space-y-2 text-sm text-gray-600">
-                  <li>• <strong>Position Staffing:</strong> Attendants present per position</li>
+                  <li>• <strong>Position Staffing:</strong> Volunteers present per position</li>
                   <li>• <strong>Shift Coverage:</strong> Coverage percentage by time period</li>
                   <li>• <strong>Check-in Status:</strong> Who has arrived and checked in</li>
-                  <li>• <strong>Break Rotations:</strong> Attendants on break vs. active</li>
+                  <li>• <strong>Break Rotations:</strong> Volunteers on break vs. active</li>
                 </ul>
               </div>
             </div>
@@ -82,7 +82,7 @@ export default function CountTimesPage({ userRole }: CountTimesProps) {
                     <ul className="space-y-2 text-sm text-gray-600">
                       <li>• <strong>Regular Counts:</strong> Take counts at predetermined intervals</li>
                       <li>• <strong>Peak Attendance:</strong> Identify and record maximum attendance</li>
-                      <li>• <strong>Position Monitoring:</strong> Track attendant check-ins and coverage</li>
+                      <li>• <strong>Position Monitoring:</strong> Track volunteer check-ins and coverage</li>
                       <li>• <strong>Real-time Updates:</strong> Update the system with current numbers</li>
                     </ul>
                   </div>
@@ -117,7 +117,7 @@ export default function CountTimesPage({ userRole }: CountTimesProps) {
                     <ul className="space-y-1 text-sm text-gray-600">
                       <li>• All attendees present in the main auditorium</li>
                       <li>• Include children and infants</li>
-                      <li>• Count attendants on duty in visible areas</li>
+                      <li>• Count volunteers on duty in visible areas</li>
                       <li>• Include overflow areas if applicable</li>
                     </ul>
                   </div>
@@ -135,12 +135,12 @@ export default function CountTimesPage({ userRole }: CountTimesProps) {
               </div>
 
               <div className="bg-white border border-gray-200 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Attendant Coverage Tracking</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Volunteer Coverage Tracking</h3>
                 <div className="space-y-4">
                   <div>
                     <h4 className="font-semibold text-gray-900 mb-2">Check-in Procedures</h4>
                     <ul className="space-y-1 text-sm text-gray-600">
-                      <li>• Attendants must check in upon arrival</li>
+                      <li>• Volunteers must check in upon arrival</li>
                       <li>• Record actual arrival time vs. scheduled time</li>
                       <li>• Note any position changes or substitutions</li>
                       <li>• Track break times and rotations</li>
@@ -179,7 +179,7 @@ export default function CountTimesPage({ userRole }: CountTimesProps) {
                     </ul>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900 mb-2">Attendant Performance</h4>
+                    <h4 className="font-semibold text-gray-900 mb-2">Volunteer Performance</h4>
                     <ul className="space-y-1 text-sm text-gray-600">
                       <li>• Coverage percentage by position</li>
                       <li>• Punctuality and reliability metrics</li>
@@ -196,7 +196,7 @@ export default function CountTimesPage({ userRole }: CountTimesProps) {
                   <p className="text-gray-600">Count data helps with:</p>
                   <ul className="space-y-2 text-sm text-gray-600">
                     <li>• <strong>Future Capacity Planning:</strong> Estimate attendance for similar events</li>
-                    <li>• <strong>Staffing Optimization:</strong> Adjust attendant assignments based on actual needs</li>
+                    <li>• <strong>Staffing Optimization:</strong> Adjust volunteer assignments based on actual needs</li>
                     <li>• <strong>Resource Allocation:</strong> Plan facilities, parking, and services</li>
                     <li>• <strong>Budget Planning:</strong> Estimate costs for future events</li>
                   </ul>
@@ -215,7 +215,7 @@ export default function CountTimesPage({ userRole }: CountTimesProps) {
                 <div>
                   <h4 className="font-semibold text-gray-900 mb-2">Mobile Check-in</h4>
                   <p className="text-gray-600 text-sm mb-2">
-                    Attendants can check in using mobile devices, providing real-time attendance data.
+                    Volunteers can check in using mobile devices, providing real-time attendance data.
                   </p>
                 </div>
                 

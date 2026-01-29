@@ -24,7 +24,7 @@ export default function GettingStartedPage({ userRole }: GettingStartedProps) {
           <h2 className="text-xl font-semibold text-blue-900 mb-3">Welcome to Theocratic Shift Scheduler</h2>
           <p className="text-blue-800 mb-4">
             Theocratic Shift Scheduler is a comprehensive event management system designed specifically for 
-            Jehovah's Witness events and assemblies. It helps manage attendant assignments, track attendance, 
+            Jehovah's Witness events and assemblies. It helps manage volunteer assignments, track attendance, 
             and coordinate event logistics efficiently.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -57,7 +57,7 @@ export default function GettingStartedPage({ userRole }: GettingStartedProps) {
                 <div className="bg-white border border-gray-200 rounded-lg p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-3">1. System Setup</h3>
                   <ul className="space-y-2 text-gray-700">
-                    <li>• <strong>User Management:</strong> Create and manage user accounts for overseers, keymen, and attendants</li>
+                    <li>• <strong>User Management:</strong> Create and manage user accounts for overseers, keymen, and volunteers</li>
                     <li>• <strong>Event Configuration:</strong> Set up event types, positions, and requirements</li>
                     <li>• <strong>System Settings:</strong> Configure email notifications and system preferences</li>
                   </ul>
@@ -71,7 +71,7 @@ export default function GettingStartedPage({ userRole }: GettingStartedProps) {
                   <ul className="space-y-2 text-gray-700">
                     <li>• Create new events with dates, locations, and requirements</li>
                     <li>• Set up positions and assign capacity needs</li>
-                    <li>• Configure attendant requirements and qualifications</li>
+                    <li>• Configure volunteer requirements and qualifications</li>
                   </ul>
                   <Link href="/events/create" className="inline-block mt-3 text-blue-600 hover:text-blue-800">
                     → Create New Event
@@ -132,7 +132,7 @@ export default function GettingStartedPage({ userRole }: GettingStartedProps) {
                   <h3 className="text-lg font-semibold text-gray-900 mb-3">1. Area Management</h3>
                   <ul className="space-y-2 text-gray-700">
                     <li>• View events and positions assigned to your area</li>
-                    <li>• Coordinate with attendants in your section</li>
+                    <li>• Coordinate with volunteers in your section</li>
                     <li>• Monitor attendance and coverage</li>
                   </ul>
                   <Link href="/events/select" className="inline-block mt-3 text-blue-600 hover:text-blue-800">
@@ -141,9 +141,9 @@ export default function GettingStartedPage({ userRole }: GettingStartedProps) {
                 </div>
 
                 <div className="bg-white border border-gray-200 rounded-lg p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">2. Attendant Coordination</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">2. Volunteer Coordination</h3>
                   <ul className="space-y-2 text-gray-700">
-                    <li>• Communicate with attendants about assignments</li>
+                    <li>• Communicate with volunteers about assignments</li>
                     <li>• Handle scheduling conflicts and adjustments</li>
                     <li>• Ensure proper coverage for all positions</li>
                   </ul>

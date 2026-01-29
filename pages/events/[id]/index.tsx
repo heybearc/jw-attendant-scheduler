@@ -866,14 +866,19 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   // APEX GUARDIAN: Check event-specific permissions
   const { id } = context.params!
   
+  console.log('Checking event access for user:', session.user?.id, 'event:', id, 'role:', session.user?.role)
+  
   // Import event access utilities
   const { checkEventAccess } = await import('../../../src/lib/eventAccess')
   
   // Check if user has at least VIEWER access to this event
   const eventPermission = await checkEventAccess(session.user?.id || '', id as string, 'VIEWER')
   
+  console.log('Event permission result:', eventPermission)
+  
   if (!eventPermission) {
     // User doesn't have permission to view this event
+    console.log('❌ No permission - redirecting to /events/select')
     return {
       redirect: {
         destination: '/events/select',
@@ -881,6 +886,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       },
     }
   }
+  
+  console.log('✅ Permission granted - loading event page')
 
   // APEX GUARDIAN: Fetch event data server-side to eliminate client-side API issues
   

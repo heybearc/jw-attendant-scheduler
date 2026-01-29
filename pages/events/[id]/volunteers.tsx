@@ -445,7 +445,7 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
     }
 
     try {
-      const response = await fetch(`/api/events/${eventId}/attendants/${availabilityModalAttendant}/availability`, {
+      const response = await fetch(`/api/events/${eventId}/volunteers/${availabilityModalAttendant}/availability`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -525,8 +525,8 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
 
     try {
       const url = editingAttendant 
-        ? `/api/events/${eventId}/attendants/${editingAttendant.id}`
-        : `/api/events/${eventId}/attendants`
+        ? `/api/events/${eventId}/volunteers/${editingAttendant.id}`
+        : `/api/events/${eventId}/volunteers`
       
       const method = editingAttendant ? 'PUT' : 'POST'
       
@@ -561,7 +561,7 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
     try {
       console.log(`🗑️ Removing attendant: ${attendant.firstName} ${attendant.lastName} (ID: ${attendant.id})`)
       
-      const response = await fetch(`/api/events/${eventId}/attendants/${attendant.id}`, {
+      const response = await fetch(`/api/events/${eventId}/volunteers/${attendant.id}`, {
         method: 'DELETE'
       })
 
@@ -662,7 +662,7 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
       }
 
       // Send to bulk import API
-      const response = await fetch(`/api/events/${eventId}/attendants`, {
+      const response = await fetch(`/api/events/${eventId}/volunteers`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ attendants })
@@ -770,7 +770,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
         if (Object.keys(updateData).length > 0) {
           console.log(`📡 Making bulk update API call for attendant ID: ${attendant.id}`)
           updates.push(
-            fetch(`/api/events/${eventId}/attendants/${attendant.id}`, {
+            fetch(`/api/events/${eventId}/volunteers/${attendant.id}`, {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(updateData)
@@ -837,7 +837,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
         if (Object.keys(oversightData).length > 0) {
           console.log(`🔧 Bulk oversight update for attendant ${attendant.firstName} ${attendant.lastName}:`, oversightData)
           oversightUpdates.push(
-            fetch(`/api/events/${eventId}/attendants/${attendant.id}/oversight`, {
+            fetch(`/api/events/${eventId}/volunteers/${attendant.id}/oversight`, {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(oversightData)
@@ -1308,7 +1308,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                             onChange={async (e) => {
                               const overseerId = e.target.value || null
                               try {
-                                const response = await fetch(`/api/events/${eventId}/attendants/${attendant.id}/oversight`, {
+                                const response = await fetch(`/api/events/${eventId}/volunteers/${attendant.id}/oversight`, {
                                   method: 'PUT',
                                   headers: { 'Content-Type': 'application/json' },
                                   body: JSON.stringify({ overseerId })
@@ -1343,7 +1343,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                             onChange={async (e) => {
                               const keymanId = e.target.value || null
                               try {
-                                const response = await fetch(`/api/events/${eventId}/attendants/${attendant.id}/oversight`, {
+                                const response = await fetch(`/api/events/${eventId}/volunteers/${attendant.id}/oversight`, {
                                   method: 'PUT',
                                   headers: { 'Content-Type': 'application/json' },
                                   body: JSON.stringify({ keymanId })

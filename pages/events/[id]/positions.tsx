@@ -975,8 +975,36 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                 >
                   👁️ {showInactive ? 'Hide Inactive' : 'Show Inactive'}
                 </button>
+                {canManageContent && (
+                  <button
+                    onClick={async () => {
+                      if (!confirm('📧 Send assignment notifications to all volunteers?\n\nThis will send an email to each volunteer with their current assignments.\n\nContinue?')) {
+                        return
+                      }
+                      try {
+                        const response = await fetch(`/api/events/${eventId}/assignments/send-notifications`, {
+                          method: 'POST'
+                        })
+                        const data = await response.json()
+                        
+                        if (data.success) {
+                          alert(`✅ ${data.message}`)
+                        } else {
+                          alert(`❌ ${data.error || 'Failed to send notifications'}`)
+                        }
+                      } catch (error) {
+                        console.error('Send notifications error:', error)
+                        alert('❌ Failed to send notifications')
+                      }
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                    title="Send email notifications to all volunteers with assignments"
+                  >
+                    📧 Send Notifications
+                  </button>
+                )}
                 
-{canManageContent && (
+                {canManageContent && (
                   <button
                     onClick={async () => {
                       if (!confirm('⚠️ Clear ALL assignments from ALL positions?\n\nThis will remove all attendant assignments but keep positions and shifts intact.\n\nThis action cannot be undone.')) {

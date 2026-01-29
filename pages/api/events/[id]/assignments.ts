@@ -208,27 +208,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }
         })
 
-        // Send assignment notification email (Phase 4C Feature #1)
-        try {
-          const notificationResponse = await fetch(`${process.env.NEXTAUTH_URL}/api/assignments/notify`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              type: 'created',
-              assignmentId: newAssignment.id,
-              eventId: eventId
-            })
-          })
-          
-          if (notificationResponse.ok) {
-            console.log('✅ Assignment notification sent')
-          } else {
-            console.warn('⚠️ Assignment notification failed (non-blocking)')
-          }
-        } catch (notificationError) {
-          console.warn('⚠️ Assignment notification error (non-blocking):', notificationError)
-        }
-
         return res.status(201).json({
           success: true,
           data: newAssignment,

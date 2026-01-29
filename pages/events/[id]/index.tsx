@@ -1070,9 +1070,12 @@ export const getServerSideProps: GetServerSideProps<EventDetailsPageProps> = asy
       attendantoverseerassistants: (event as any).attendantoverseerassistants,
       totalShiftsNeeded,
       childEvents: (event as any).childEvents?.map((child: any) => ({
-        ...child,
+        id: child.id,
+        name: child.name,
+        eventType: child.eventType,
         startDate: child.startDate ? format(child.startDate, 'yyyy-MM-dd') : null,
-        endDate: child.endDate ? format(child.endDate, 'yyyy-MM-dd') : null
+        endDate: child.endDate ? format(child.endDate, 'yyyy-MM-dd') : null,
+        status: child.status
       })) || [],
       parentEvent: (event as any).parentEvent || null,
       departmentTemplate: (event as any).departmentTemplate || null,

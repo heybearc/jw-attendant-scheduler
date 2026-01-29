@@ -5,7 +5,7 @@ import AdminLayout from '../../../components/AdminLayout'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 
-interface Attendant {
+interface Volunteer {
   id: string
   firstName: string
   lastName: string
@@ -17,7 +17,7 @@ interface Attendant {
 export default function CreateUserPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [availableAttendants, setAvailableAttendants] = useState<Attendant[]>([])
+  const [availableVolunteers, setAvailableVolunteers] = useState<Volunteer[]>([])
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [formData, setFormData] = useState({
@@ -26,7 +26,7 @@ export default function CreateUserPage() {
     email: '',
     role: 'ATTENDANT',
     isActive: true,
-    linkedAttendantId: '',
+    linkedVolunteerId: '',
     sendInvitation: true,
     passwordOption: 'invitation', // 'invitation', 'manual', 'generate'
     password: '',
@@ -34,16 +34,16 @@ export default function CreateUserPage() {
   })
 
   useEffect(() => {
-    fetchAvailableAttendants()
+    fetchAvailableVolunteers()
   }, [])
 
-  const fetchAvailableAttendants = async () => {
+  const fetchAvailableVolunteers = async () => {
     try {
       const response = await fetch('/api/admin/attendants/available-for-linking')
       const result = await response.json()
       
       if (result.success) {
-        setAvailableAttendants(result.data.attendants)
+        setAvailableVolunteers(result.data.attendants)
       }
     } catch (error) {
       console.error('Failed to fetch available attendants:', error)
@@ -64,7 +64,7 @@ export default function CreateUserPage() {
         },
         body: JSON.stringify({
           ...formData,
-          linkedAttendantId: formData.linkedAttendantId || undefined
+          linkedVolunteerId: formData.linkedVolunteerId || undefined
         })
       })
 
@@ -84,7 +84,7 @@ export default function CreateUserPage() {
           email: '',
           role: 'ATTENDANT',
           isActive: true,
-          linkedAttendantId: '',
+          linkedVolunteerId: '',
           sendInvitation: true,
           passwordOption: 'invitation',
           password: '',
@@ -92,7 +92,7 @@ export default function CreateUserPage() {
         })
         
         // Refresh available attendants
-        fetchAvailableAttendants()
+        fetchAvailableVolunteers()
       } else {
         setError(result.error || 'Failed to create user')
       }
@@ -177,7 +177,7 @@ export default function CreateUserPage() {
                   value={formData.role}
                   onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                 >
-                  <option value="ATTENDANT">Attendant</option>
+                  <option value="ATTENDANT">Volunteer</option>
                   <option value="KEYMAN">Keyman</option>
                   <option value="ASSISTANT_OVERSEER">Assistant Overseer</option>
                   <option value="OVERSEER">Overseer</option>
@@ -202,17 +202,17 @@ export default function CreateUserPage() {
             </div>
 
             <div>
-              <label htmlFor="linkedAttendantId" className="block text-sm font-medium text-gray-700">
-                Link to Attendant Record (Optional)
+              <label htmlFor="linkedVolunteerId" className="block text-sm font-medium text-gray-700">
+                Link to Volunteer Record (Optional)
               </label>
               <select
-                id="linkedAttendantId"
+                id="linkedVolunteerId"
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                value={formData.linkedAttendantId}
-                onChange={(e) => setFormData({ ...formData, linkedAttendantId: e.target.value })}
+                value={formData.linkedVolunteerId}
+                onChange={(e) => setFormData({ ...formData, linkedVolunteerId: e.target.value })}
               >
                 <option value="">No attendant linked</option>
-                {availableAttendants.map((attendant) => (
+                {availableVolunteers.map((attendant) => (
                   <option key={attendant.id} value={attendant.id}>
                     {attendant.firstName} {attendant.lastName} ({attendant.congregation})
                   </option>
@@ -364,17 +364,17 @@ export default function CreateUserPage() {
           <h3 className="text-lg font-medium text-blue-900 mb-2">User Creation Options</h3>
           <div className="text-blue-700 space-y-2">
             <p><strong>Email Invitation:</strong> If enabled, the user will receive an email with login instructions and a link to set their password.</p>
-            <p><strong>Attendant Linking:</strong> Link the user account to an existing attendant record to enable role-based access to their assignments and events.</p>
-            <p><strong>Roles:</strong> Determine what level of access the user will have in the system (Admin {'>'}  Overseer {'>'}  Assistant Overseer {'>'}  Keyman {'>'}  Attendant).</p>
+            <p><strong>Volunteer Linking:</strong> Link the user account to an existing attendant record to enable role-based access to their assignments and events.</p>
+            <p><strong>Roles:</strong> Determine what level of access the user will have in the system (Admin {'>'}  Overseer {'>'}  Assistant Overseer {'>'}  Keyman {'>'}  Volunteer).</p>
           </div>
         </div>
 
-        {/* Available Attendants Info */}
-        {availableAttendants.length > 0 && (
+        {/* Available Volunteers Info */}
+        {availableVolunteers.length > 0 && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <h3 className="text-lg font-medium text-green-900 mb-2">Available Attendants for Linking</h3>
+            <h3 className="text-lg font-medium text-green-900 mb-2">Available Volunteers for Linking</h3>
             <p className="text-green-700 mb-2">
-              There are <strong>{availableAttendants.length}</strong> attendant records available for linking to user accounts.
+              There are <strong>{availableVolunteers.length}</strong> attendant records available for linking to user accounts.
             </p>
             <div className="text-sm text-green-600">
               Linking a user to an attendant record allows them to view their personal assignments and events when they log in.

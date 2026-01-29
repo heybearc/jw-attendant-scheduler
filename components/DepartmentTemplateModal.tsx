@@ -856,7 +856,7 @@ function TerminologyTab({ terminology, setTerminology }: any) {
           <div className="flex-1">
             <h4 className="font-medium text-blue-900 mb-1">Why customize terminology?</h4>
             <p className="text-sm text-blue-700">
-              Different departments use different terms. For example, Attendants use "Post" instead of "Position", 
+              Different departments use different terms. For example, Volunteers use "Post" instead of "Position", 
               while Parking uses "Station". Customize these to match your department's language.
             </p>
           </div>
@@ -866,11 +866,11 @@ function TerminologyTab({ terminology, setTerminology }: any) {
       <div className="space-y-4">
         <TerminologyField
           label="Volunteer"
-          description='What do you call people in this department? (e.g., "Attendant", "Assistant", "Coordinator")'
+          description='What do you call people in this department? (e.g., "Volunteer", "Assistant", "Coordinator")'
           value={terminology.volunteer || ''}
           onChange={(value) => updateTerm('volunteer', value)}
           placeholder="Volunteer"
-          example='Attendants: "Attendant" | Baptism: "Baptism Assistant"'
+          example='Volunteers: "Volunteer" | Baptism: "Baptism Assistant"'
         />
 
         <TerminologyField
@@ -879,7 +879,7 @@ function TerminologyTab({ terminology, setTerminology }: any) {
           value={terminology.position || ''}
           onChange={(value) => updateTerm('position', value)}
           placeholder="Position"
-          example='Attendants: "Post" | Parking: "Station" | Baptism: "Role"'
+          example='Volunteers: "Post" | Parking: "Station" | Baptism: "Role"'
         />
 
         <TerminologyField
@@ -888,7 +888,7 @@ function TerminologyTab({ terminology, setTerminology }: any) {
           value={terminology.shift || ''}
           onChange={(value) => updateTerm('shift', value)}
           placeholder="Shift"
-          example='Attendants: "Rotation" | Baptism: "Time Slot"'
+          example='Volunteers: "Rotation" | Baptism: "Time Slot"'
         />
 
         <TerminologyField

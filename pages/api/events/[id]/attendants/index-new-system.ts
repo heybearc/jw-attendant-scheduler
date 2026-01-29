@@ -99,7 +99,7 @@ async function handleGetEventAttendants(req: NextApiRequest, res: NextApiRespons
     })
   } catch (error) {
     console.error('Get event attendants error:', error)
-    return res.status(500).json({ success: false, error: 'Failed to fetch attendants' })
+    return res.status(500).json({ success: false, error: 'Failed to fetch volunteers' })
   }
 }
 
@@ -162,7 +162,7 @@ async function handleCreateEventAttendant(req: NextApiRequest, res: NextApiRespo
     })
   } catch (error) {
     console.error('Create event attendant error:', error)
-    return res.status(500).json({ success: false, error: 'Failed to create attendant' })
+    return res.status(500).json({ success: false, error: 'Failed to create volunteer' })
   }
 }
 
@@ -281,11 +281,11 @@ async function handleBulkImportEventAttendants(req: NextApiRequest, res: NextApi
         created,
         updated,
         errors,
-        message: `Import complete. ${created + updated} attendants are now available for position assignment.`
+        message: `Import complete. ${created + updated} volunteers are now available for position assignment.`
       }
     })
   } catch (error) {
     console.error('Bulk import event attendants error:', error)
-    return res.status(500).json({ success: false, error: 'Failed to import attendants' })
+    return res.status(500).json({ success: false, error: 'Failed to import volunteers' })
   }
 }

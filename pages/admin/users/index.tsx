@@ -190,7 +190,7 @@ export default function UsersPage({ users: initialUsers, pagination: initialPagi
               <option value="OVERSEER">Overseer</option>
               <option value="ASSISTANT_OVERSEER">Assistant Overseer</option>
               <option value="KEYMAN">Keyman</option>
-              <option value="ATTENDANT">Attendant</option>
+              <option value="ATTENDANT">Volunteer</option>
             </select>
           </div>
           <button
@@ -231,7 +231,7 @@ export default function UsersPage({ users: initialUsers, pagination: initialPagi
                         Status
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Linked Attendant
+                        Linked Volunteer
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Created

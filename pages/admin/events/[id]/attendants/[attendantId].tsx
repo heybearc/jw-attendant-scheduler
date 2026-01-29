@@ -1,7 +1,7 @@
 import { GetServerSideProps } from 'next'
 
 // Redirect admin event attendant detail to main events page
-export default function AdminEventAttendantDetailRedirect() {
+export default function AdminEventVolunteerDetailRedirect() {
   return null
 }
 

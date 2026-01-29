@@ -24,7 +24,7 @@ interface EventFormData {
   endTime: string
   location: string
   capacity: string
-  attendantsNeeded: string
+  volunteersNeeded: string
   status: string
   // APEX GUARDIAN: Oversight Management Fields
   circuitOverseerName: string
@@ -33,10 +33,10 @@ interface EventFormData {
   assemblyOverseerName: string
   assemblyOverseerPhone: string
   assemblyOverseerEmail: string
-  attendantOverseerName: string
-  attendantOverseerPhone: string
-  attendantOverseerEmail: string
-  attendantOverseerAssistants: string // JSON string for form handling
+  volunteerOverseerName: string
+  volunteerOverseerPhone: string
+  volunteerOverseerEmail: string
+  volunteerOverseerAssistants: string // JSON string for form handling
 }
 
 interface Event {
@@ -50,7 +50,7 @@ interface Event {
   endTime?: string
   location?: string
   capacity?: number
-  attendantsNeeded?: number
+  volunteersNeeded?: number
   status: string
   createdAt: string
   updatedAt: string
@@ -61,10 +61,10 @@ interface Event {
   assemblyOverseerName?: string
   assemblyOverseerPhone?: string
   assemblyOverseerEmail?: string
-  attendantOverseerName?: string
-  attendantOverseerPhone?: string
-  attendantOverseerEmail?: string
-  attendantOverseerAssistants?: any[] // JSONB array
+  volunteerOverseerName?: string
+  volunteerOverseerPhone?: string
+  volunteerOverseerEmail?: string
+  volunteerOverseerAssistants?: any[] // JSONB array
 }
 
 interface EditEventPageProps {
@@ -89,7 +89,7 @@ export default function EditEventPage({ event }: EditEventPageProps) {
     endTime: event.endTime || '16:00',
     location: event.location || '',
     capacity: event.capacity ? event.capacity.toString() : '',
-    attendantsNeeded: event.attendantsNeeded ? event.attendantsNeeded.toString() : '',
+    volunteersNeeded: event.volunteersNeeded ? event.volunteersNeeded.toString() : '',
     status: event.status || 'UPCOMING',
     // APEX GUARDIAN: Oversight Management Fields
     circuitOverseerName: event.circuitOverseerName || '',
@@ -98,10 +98,10 @@ export default function EditEventPage({ event }: EditEventPageProps) {
     assemblyOverseerName: event.assemblyOverseerName || '',
     assemblyOverseerPhone: event.assemblyOverseerPhone || '',
     assemblyOverseerEmail: event.assemblyOverseerEmail || '',
-    attendantOverseerName: event.attendantOverseerName || '',
-    attendantOverseerPhone: event.attendantOverseerPhone || '',
-    attendantOverseerEmail: event.attendantOverseerEmail || '',
-    attendantOverseerAssistants: JSON.stringify(event.attendantOverseerAssistants || [])
+    volunteerOverseerName: event.volunteerOverseerName || '',
+    volunteerOverseerPhone: event.volunteerOverseerPhone || '',
+    volunteerOverseerEmail: event.volunteerOverseerEmail || '',
+    volunteerOverseerAssistants: JSON.stringify(event.volunteerOverseerAssistants || [])
   })
 
   const [errors, setErrors] = useState<Partial<EventFormData>>({})
@@ -168,16 +168,16 @@ export default function EditEventPage({ event }: EditEventPageProps) {
       newErrors.capacity = 'Capacity must be a positive number'
     }
 
-    if (formData.attendantsNeeded && parseInt(formData.attendantsNeeded) < 0) {
-      newErrors.attendantsNeeded = 'Attendants needed cannot be negative'
+    if (formData.volunteersNeeded && parseInt(formData.volunteersNeeded) < 0) {
+      newErrors.volunteersNeeded = 'Attendants needed cannot be negative'
     }
 
-    if (formData.capacity && formData.attendantsNeeded) {
+    if (formData.capacity && formData.volunteersNeeded) {
       const capacity = parseInt(formData.capacity)
-      const attendantsNeeded = parseInt(formData.attendantsNeeded)
+      const volunteersNeeded = parseInt(formData.volunteersNeeded)
       
-      if (attendantsNeeded > capacity) {
-        newErrors.attendantsNeeded = 'Attendants needed cannot exceed capacity'
+      if (volunteersNeeded > capacity) {
+        newErrors.volunteersNeeded = 'Attendants needed cannot exceed capacity'
       }
     }
 
@@ -207,7 +207,7 @@ export default function EditEventPage({ event }: EditEventPageProps) {
         endTime: formData.endTime || undefined,
         location: formData.location,
         capacity: formData.capacity ? parseInt(formData.capacity) : undefined,
-        attendantsNeeded: formData.attendantsNeeded ? parseInt(formData.attendantsNeeded) : undefined,
+        volunteersNeeded: formData.volunteersNeeded ? parseInt(formData.volunteersNeeded) : undefined,
         status: formData.status,
         // APEX GUARDIAN: Oversight Management Fields
         circuitOverseerName: formData.circuitOverseerName || undefined,
@@ -216,14 +216,14 @@ export default function EditEventPage({ event }: EditEventPageProps) {
         assemblyOverseerName: formData.assemblyOverseerName || undefined,
         assemblyOverseerPhone: formData.assemblyOverseerPhone || undefined,
         assemblyOverseerEmail: formData.assemblyOverseerEmail || undefined,
-        attendantOverseerName: formData.attendantOverseerName || undefined,
-        attendantOverseerPhone: formData.attendantOverseerPhone || undefined,
-        attendantOverseerEmail: formData.attendantOverseerEmail || undefined,
-        attendantOverseerAssistants: (() => {
+        volunteerOverseerName: formData.volunteerOverseerName || undefined,
+        volunteerOverseerPhone: formData.volunteerOverseerPhone || undefined,
+        volunteerOverseerEmail: formData.volunteerOverseerEmail || undefined,
+        volunteerOverseerAssistants: (() => {
           try {
-            return formData.attendantOverseerAssistants ? JSON.parse(formData.attendantOverseerAssistants) : []
+            return formData.volunteerOverseerAssistants ? JSON.parse(formData.volunteerOverseerAssistants) : []
           } catch (e) {
-            console.error('Invalid JSON in attendantOverseerAssistants:', formData.attendantOverseerAssistants)
+            console.error('Invalid JSON in volunteerOverseerAssistants:', formData.volunteerOverseerAssistants)
             return []
           }
         })()
@@ -560,22 +560,22 @@ export default function EditEventPage({ event }: EditEventPageProps) {
               </div>
 
               <div>
-                <label htmlFor="attendantsNeeded" className="block text-sm font-medium text-gray-700 mb-1">
-                  Attendants Needed
+                <label htmlFor="volunteersNeeded" className="block text-sm font-medium text-gray-700 mb-1">
+                  Volunteers Needed
                 </label>
                 <input
                   type="number"
-                  id="attendantsNeeded"
-                  name="attendantsNeeded"
+                  id="volunteersNeeded"
+                  name="volunteersNeeded"
                   min="0"
-                  value={formData.attendantsNeeded}
+                  value={formData.volunteersNeeded}
                   onChange={handleInputChange}
                   className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.attendantsNeeded ? 'border-red-500' : 'border-gray-300'
+                    errors.volunteersNeeded ? 'border-red-500' : 'border-gray-300'
                   }`}
                   placeholder="Number of attendants needed"
                 />
-                {errors.attendantsNeeded && <p className="mt-1 text-sm text-red-600">{errors.attendantsNeeded}</p>}
+                {errors.volunteersNeeded && <p className="mt-1 text-sm text-red-600">{errors.volunteersNeeded}</p>}
               </div>
             </div>
           </div>
@@ -692,52 +692,52 @@ export default function EditEventPage({ event }: EditEventPageProps) {
               </div>
             </div>
 
-            {/* Attendant Overseer */}
+            {/* Volunteer Overseer */}
             <div className="mb-6">
               <h4 className="text-md font-medium text-gray-800 mb-4 flex items-center">
                 <span className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center mr-3">
                   <span className="text-white text-sm">👥</span>
                 </span>
-                Attendant Overseer
+                Volunteer Overseer
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label htmlFor="attendantOverseerName" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="volunteerOverseerName" className="block text-sm font-medium text-gray-700 mb-1">
                     Name
                   </label>
                   <input
                     type="text"
-                    id="attendantOverseerName"
-                    name="attendantOverseerName"
-                    value={formData.attendantOverseerName}
+                    id="volunteerOverseerName"
+                    name="volunteerOverseerName"
+                    value={formData.volunteerOverseerName}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Attendant Overseer Name"
+                    placeholder="Volunteer Overseer Name"
                   />
                 </div>
                 <div>
-                  <label htmlFor="attendantOverseerPhone" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="volunteerOverseerPhone" className="block text-sm font-medium text-gray-700 mb-1">
                     Phone
                   </label>
                   <input
                     type="tel"
-                    id="attendantOverseerPhone"
-                    name="attendantOverseerPhone"
-                    value={formData.attendantOverseerPhone}
+                    id="volunteerOverseerPhone"
+                    name="volunteerOverseerPhone"
+                    value={formData.volunteerOverseerPhone}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Phone Number"
                   />
                 </div>
                 <div>
-                  <label htmlFor="attendantOverseerEmail" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="volunteerOverseerEmail" className="block text-sm font-medium text-gray-700 mb-1">
                     Email
                   </label>
                   <input
                     type="email"
-                    id="attendantOverseerEmail"
-                    name="attendantOverseerEmail"
-                    value={formData.attendantOverseerEmail}
+                    id="volunteerOverseerEmail"
+                    name="volunteerOverseerEmail"
+                    value={formData.volunteerOverseerEmail}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Email Address"
@@ -746,23 +746,23 @@ export default function EditEventPage({ event }: EditEventPageProps) {
               </div>
             </div>
 
-            {/* Attendant Overseer Assistants */}
+            {/* Volunteer Overseer Assistants */}
             <div>
               <h4 className="text-md font-medium text-gray-800 mb-4 flex items-center">
                 <span className="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center mr-3">
                   <span className="text-white text-sm">🤝</span>
                 </span>
-                Attendant Overseer Assistants
+                Volunteer Overseer Assistants
               </h4>
               <div>
-                <label htmlFor="attendantOverseerAssistants" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="volunteerOverseerAssistants" className="block text-sm font-medium text-gray-700 mb-1">
                   Assistants (JSON Format)
                 </label>
                 <textarea
-                  id="attendantOverseerAssistants"
-                  name="attendantOverseerAssistants"
+                  id="volunteerOverseerAssistants"
+                  name="volunteerOverseerAssistants"
                   rows={3}
-                  value={formData.attendantOverseerAssistants}
+                  value={formData.volunteerOverseerAssistants}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder='[{&quot;name&quot;: &quot;Assistant Name&quot;, &quot;phone&quot;: &quot;555-0123&quot;, &quot;email&quot;: &quot;assistant@example.com&quot;}]'
@@ -870,7 +870,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       endTime: event.endTime || '',
       location: event.location || '',
       capacity: event.capacity,
-      attendantsNeeded: event.attendantsNeeded,
+      volunteersNeeded: event.volunteersNeeded,
       status: event.status,
       // APEX GUARDIAN: Oversight Management Fields (using database field names)
       circuitOverseerName: eventWithOversight.circuitoverseername,
@@ -879,10 +879,10 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       assemblyOverseerName: eventWithOversight.assemblyoverseername,
       assemblyOverseerPhone: eventWithOversight.assemblyoverseerphone,
       assemblyOverseerEmail: eventWithOversight.assemblyoverseeremail,
-      attendantOverseerName: eventWithOversight.attendantoverseername,
-      attendantOverseerPhone: eventWithOversight.attendantoverseerphone,
-      attendantOverseerEmail: eventWithOversight.attendantoverseeremail,
-      attendantOverseerAssistants: eventWithOversight.attendantoverseerassistants,
+      volunteerOverseerName: eventWithOversight.attendantoverseername,
+      volunteerOverseerPhone: eventWithOversight.attendantoverseerphone,
+      volunteerOverseerEmail: eventWithOversight.attendantoverseeremail,
+      volunteerOverseerAssistants: eventWithOversight.attendantoverseerassistants,
       createdAt: event.createdAt?.toISOString() || null,
       updatedAt: event.updatedAt?.toISOString() || null
     }

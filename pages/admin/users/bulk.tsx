@@ -27,7 +27,7 @@ export default function BulkUsersPage() {
   const roles = [
     { value: 'ADMIN', label: 'Administrator' },
     { value: 'OVERSEER', label: 'Overseer' },
-    { value: 'ATTENDANT', label: 'Attendant' },
+    { value: 'ATTENDANT', label: 'Volunteer' },
   ];
 
   const parseBulkText = () => {

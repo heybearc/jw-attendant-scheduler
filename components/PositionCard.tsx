@@ -38,7 +38,7 @@ interface PositionCardProps {
   onToggleSelection: (positionId: string, checked: boolean) => void
   onDeleteShift: (positionId: string, shiftId: string, shiftName: string) => void
   onRemoveAssignment: (assignmentId: string) => void
-  onAssignAttendant: (position: Position, shift: Shift) => void
+  onAssignVolunteer: (position: Position, shift: Shift) => void
   onEdit: (position: Position) => void
   onDelete: (positionId: string) => void
   onActivate: (positionId: string) => void
@@ -55,7 +55,7 @@ export default function PositionCard({
   onToggleSelection,
   onDeleteShift,
   onRemoveAssignment,
-  onAssignAttendant,
+  onAssignVolunteer,
   onEdit,
   onDelete,
   onActivate,
@@ -247,7 +247,7 @@ export default function PositionCard({
                       </div>
                     )}
                     
-                    {/* Attendant Assignments */}
+                    {/* Volunteer Assignments */}
                     {attendantAssignments.length > 0 ? (
                       <div className="space-y-1">
                         {attendantAssignments.map(assignment => (
@@ -272,10 +272,10 @@ export default function PositionCard({
                     
                     {canManageContent && (
                       <button
-                        onClick={() => onAssignAttendant(position, shift)}
+                        onClick={() => onAssignVolunteer(position, shift)}
                         className="mt-2 w-full text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded py-1 transition-colors"
                       >
-                        + Assign Attendant
+                        + Assign Volunteer
                       </button>
                     )}
                   </div>

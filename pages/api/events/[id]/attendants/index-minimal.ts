@@ -86,6 +86,6 @@ async function handleGetEventAttendants(req: NextApiRequest, res: NextApiRespons
     })
   } catch (error) {
     console.error('Get event attendants error:', error)
-    return res.status(500).json({ success: false, error: 'Failed to fetch attendants' })
+    return res.status(500).json({ success: false, error: 'Failed to fetch volunteers' })
   }
 }

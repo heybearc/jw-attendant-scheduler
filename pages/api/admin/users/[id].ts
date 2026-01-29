@@ -148,7 +148,7 @@ async function handleDeleteUser(req: NextApiRequest, res: NextApiResponse, id: s
     if (attendantCount > 0) {
       return res.status(400).json({ 
         success: false, 
-        error: 'Cannot delete user with associated attendants' 
+        error: 'Cannot delete user with associated volunteers' 
       })
     }
 

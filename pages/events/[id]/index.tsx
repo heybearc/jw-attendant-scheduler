@@ -24,7 +24,7 @@ interface Event {
   endTime?: string
   location: string
   capacity?: number
-  attendantsNeeded?: number
+  volunteersNeeded?: number
   status: string
   createdAt: string
   updatedAt: string
@@ -40,7 +40,7 @@ interface Event {
   assemblyoverseername?: string
   assemblyoverseerphone?: string
   assemblyoverseeremail?: string
-  attendantoverseername?: string
+  volunteeroverseername?: string
   attendantoverseerphone?: string
   attendantoverseeremail?: string
   attendantoverseerassistants?: any[]
@@ -263,7 +263,7 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
       [''],
       ['Statistics'],
       ['Total Positions', event._count.positions.toString()],
-      ['Attendants Linked', event._count.event_volunteers.toString()]
+      ['Volunteers Linked', event._count.event_volunteers.toString()]
     ]
 
     const csvContent = csvData.map(row => row.join(',')).join('\n')
@@ -486,9 +486,9 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-500">Attendants Needed</label>
+                  <label className="block text-sm font-medium text-gray-500">Volunteers Needed</label>
                   <p className="mt-1 text-sm font-semibold text-gray-900">
-                    {event.attendantsNeeded ? event.attendantsNeeded.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') : 'Not specified'}
+                    {event.volunteersNeeded ? event.volunteersNeeded.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') : 'Not specified'}
                   </p>
                 </div>
               </div>
@@ -763,9 +763,9 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
                   )}
                 </div>
                 <div className="bg-white bg-opacity-60 rounded-lg p-3">
-                  <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">Attendant Overseer</div>
+                  <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">Volunteer Overseer</div>
                   <div className="text-sm font-semibold text-gray-900">
-                    {event.attendantoverseername || 'Not Assigned'}
+                    {event.volunteeroverseername || 'Not Assigned'}
                   </div>
                   {event.attendantoverseerphone && (
                     <div className="text-xs text-gray-600">📞 {event.attendantoverseerphone}</div>
@@ -843,7 +843,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     }
   }
 
-  // CRITICAL: Block attendants from accessing admin event pages
+  // CRITICAL: Block volunteers from accessing admin event pages
   if (session.user?.role === 'ATTENDANT') {
     return {
       redirect: {
@@ -1044,7 +1044,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     }
 
     // Check event-specific permissions
-    const { canManageEvent, canDeleteEvent, canManageAttendants } = await import('../../../src/lib/eventAccess')
+    const { canManageEvent, canDeleteEvent, canManageVolunteers } = await import('../../../src/lib/eventAccess')
     const userId = session.user?.id || ''
     
     // MANAGER or OWNER can edit event settings
@@ -1054,7 +1054,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     const canDelete = await canDeleteEvent(userId, id as string)
     
     // OWNER, MANAGER, or OVERSEER (no scope) can create positions/attendants/count sessions
-    const canManageContent = await canManageAttendants(userId, id as string)
+    const canManageContent = await canManageVolunteers(userId, id as string)
 
     return {
       props: {

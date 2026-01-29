@@ -216,7 +216,7 @@ export default function InviteUsersPage() {
                 value={formData.role}
                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
               >
-                <option value="ATTENDANT">Attendant</option>
+                <option value="ATTENDANT">Volunteer</option>
                 <option value="KEYMAN">Keyman</option>
                 <option value="ASSISTANT_OVERSEER">Assistant Overseer</option>
                 <option value="OVERSEER">Overseer</option>

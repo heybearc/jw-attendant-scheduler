@@ -190,10 +190,10 @@ export default function BulkPositionCreator({ eventId, onClose, onSuccess }: Bul
   const exampleText = `Position 1
 Position 2
 Position 3
-Parking Lot Attendant
+Parking Lot Volunteer
 Information Desk
 Sound Booth
-Stage Attendant`
+Stage Volunteer`
 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">

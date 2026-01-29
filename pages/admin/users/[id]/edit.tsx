@@ -19,7 +19,7 @@ interface User {
   } | null
 }
 
-interface Attendant {
+interface Volunteer {
   id: string
   firstName: string
   lastName: string
@@ -34,7 +34,7 @@ export default function EditUserPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [user, setUser] = useState<User | null>(null)
-  const [availableAttendants, setAvailableAttendants] = useState<Attendant[]>([])
+  const [availableVolunteers, setAvailableVolunteers] = useState<Volunteer[]>([])
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [formData, setFormData] = useState({
@@ -43,7 +43,7 @@ export default function EditUserPage() {
     email: '',
     role: 'ATTENDANT',
     isActive: true,
-    linkedAttendantId: ''
+    linkedVolunteerId: ''
   })
   const [passwordData, setPasswordData] = useState({
     changePassword: false,
@@ -55,7 +55,7 @@ export default function EditUserPage() {
   useEffect(() => {
     if (id) {
       fetchUser()
-      fetchAvailableAttendants()
+      fetchAvailableVolunteers()
     }
   }, [id])
 
@@ -73,7 +73,7 @@ export default function EditUserPage() {
           email: userData.email,
           role: userData.role,
           isActive: userData.isActive,
-          linkedAttendantId: userData.attendants?.id || ''
+          linkedVolunteerId: userData.attendants?.id || ''
         })
       } else {
         setError(result.error || 'Failed to fetch user')
@@ -85,13 +85,13 @@ export default function EditUserPage() {
     }
   }
 
-  const fetchAvailableAttendants = async () => {
+  const fetchAvailableVolunteers = async () => {
     try {
       const response = await fetch('/api/admin/attendants/available-for-linking')
       const result = await response.json()
       
       if (result.success) {
-        setAvailableAttendants(result.data.attendants)
+        setAvailableVolunteers(result.data.attendants)
       }
     } catch (error) {
       console.error('Failed to fetch available attendants:', error)
@@ -259,7 +259,7 @@ export default function EditUserPage() {
                   value={formData.role}
                   onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                 >
-                  <option value="ATTENDANT">Attendant</option>
+                  <option value="ATTENDANT">Volunteer</option>
                   <option value="KEYMAN">Keyman</option>
                   <option value="ASSISTANT_OVERSEER">Assistant Overseer</option>
                   <option value="OVERSEER">Overseer</option>
@@ -284,14 +284,14 @@ export default function EditUserPage() {
             </div>
 
             <div>
-              <label htmlFor="linkedAttendantId" className="block text-sm font-medium text-gray-700">
-                Link to Attendant Record
+              <label htmlFor="linkedVolunteerId" className="block text-sm font-medium text-gray-700">
+                Link to Volunteer Record
               </label>
               <select
-                id="linkedAttendantId"
+                id="linkedVolunteerId"
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                value={formData.linkedAttendantId}
-                onChange={(e) => setFormData({ ...formData, linkedAttendantId: e.target.value })}
+                value={formData.linkedVolunteerId}
+                onChange={(e) => setFormData({ ...formData, linkedVolunteerId: e.target.value })}
               >
                 <option value="">No attendant linked</option>
                 {/* Show currently linked attendant if exists */}
@@ -301,7 +301,7 @@ export default function EditUserPage() {
                   </option>
                 )}
                 {/* Show available attendants (excluding current if already shown) */}
-                {availableAttendants
+                {availableVolunteers
                   .filter(att => att.id !== user?.attendants?.id)
                   .map((attendant) => (
                     <option key={attendant.id} value={attendant.id}>
@@ -441,10 +441,10 @@ export default function EditUserPage() {
           </form>
         </div>
 
-        {/* Current Attendant Link Status */}
+        {/* Current Volunteer Link Status */}
         {user.attendants && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <h3 className="text-lg font-medium text-green-900 mb-2">Currently Linked Attendant</h3>
+            <h3 className="text-lg font-medium text-green-900 mb-2">Currently Linked Volunteer</h3>
             <p className="text-green-700">
               This user is linked to: <strong>{user.attendants.firstName} {user.attendants.lastName}</strong>
             </p>

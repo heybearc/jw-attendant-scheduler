@@ -6,7 +6,7 @@ import { useState } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
 
-interface Attendant {
+interface Volunteer {
   id: string
   firstName: string
   lastName: string
@@ -17,10 +17,10 @@ interface Attendant {
 }
 
 interface Props {
-  attendants: Attendant[]
+  attendants: Volunteer[]
 }
 
-export default function AttendantPINManagement({ attendants }: Props) {
+export default function VolunteerPINManagement({ attendants }: Props) {
   const [loading, setLoading] = useState<string | null>(null)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
   const [generatedPins, setGeneratedPins] = useState<Record<string, string>>({})
@@ -74,7 +74,7 @@ export default function AttendantPINManagement({ attendants }: Props) {
   return (
     <>
       <Head>
-        <title>Attendant PIN Management | Theocratic Shift Scheduler</title>
+        <title>Volunteer PIN Management | Theocratic Shift Scheduler</title>
       </Head>
 
       <div className="min-h-screen bg-gray-50">
@@ -84,7 +84,7 @@ export default function AttendantPINManagement({ attendants }: Props) {
             <Link href="/admin" className="text-blue-600 hover:text-blue-800 text-sm mb-4 inline-block">
               ← Back to Admin
             </Link>
-            <h1 className="text-3xl font-bold text-gray-900">Attendant PIN Management</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Volunteer PIN Management</h1>
             <p className="mt-2 text-gray-600">
               Set up PIN codes for attendants to access their dashboard
             </p>
@@ -111,7 +111,7 @@ export default function AttendantPINManagement({ attendants }: Props) {
             </p>
           </div>
 
-          {/* Attendants Table */}
+          {/* Volunteers Table */}
           <div className="bg-white shadow rounded-lg overflow-hidden">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">

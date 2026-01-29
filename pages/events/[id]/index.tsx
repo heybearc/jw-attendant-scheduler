@@ -832,18 +832,25 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
 }
 
 export const getServerSideProps: GetServerSideProps<EventDetailsPageProps> = async (context) => {
-  console.log('========================================')
-  console.log('getServerSideProps called for event:', context.params?.id)
-  console.log('Request URL:', context.req.url)
-  console.log('========================================')
+  const fs = require('fs')
+  const logFile = '/tmp/event-page-debug.log'
+  const log = (msg: string) => {
+    const timestamp = new Date().toISOString()
+    fs.appendFileSync(logFile, `${timestamp} - ${msg}\n`)
+  }
+  
+  log('========================================')
+  log(`getServerSideProps called for event: ${context.params?.id}`)
+  log(`Request URL: ${context.req.url}`)
   
   const session = await getServerSession(context.req, context.res, authOptions)
   
-  console.log('Session found:', !!session)
-  console.log('User ID:', session?.user?.id)
-  console.log('User role:', session?.user?.role)
+  log(`Session found: ${!!session}`)
+  log(`User ID: ${session?.user?.id}`)
+  log(`User role: ${session?.user?.role}`)
 
   if (!session) {
+    log('No session - redirecting to signin')
     return {
       redirect: {
         destination: '/auth/signin',
@@ -851,6 +858,8 @@ export const getServerSideProps: GetServerSideProps<EventDetailsPageProps> = asy
       },
     }
   }
+  
+  log('Session validated')
 
   // CRITICAL: Block volunteers from accessing admin event pages
   if (session.user?.role === 'ATTENDANT') {
@@ -875,7 +884,7 @@ export const getServerSideProps: GetServerSideProps<EventDetailsPageProps> = asy
   // APEX GUARDIAN: Check event-specific permissions
   const { id } = context.params!
   
-  console.log('Checking event access for user:', session.user?.id, 'event:', id, 'role:', session.user?.role)
+  log(`Checking event access for user: ${session.user?.id}, event: ${id}, role: ${session.user?.role}`)
   
   // Import event access utilities
   const { checkEventAccess } = await import('../../../src/lib/eventAccess')
@@ -883,11 +892,11 @@ export const getServerSideProps: GetServerSideProps<EventDetailsPageProps> = asy
   // Check if user has at least VIEWER access to this event
   const eventPermission = await checkEventAccess(session.user?.id || '', id as string, 'VIEWER')
   
-  console.log('Event permission result:', eventPermission)
+  log(`Event permission result: ${JSON.stringify(eventPermission)}`)
   
   if (!eventPermission) {
     // User doesn't have permission to view this event
-    console.log('❌ No permission - redirecting to /events/select')
+    log('❌ No permission - redirecting to /events/select')
     return {
       redirect: {
         destination: '/events/select',
@@ -896,7 +905,7 @@ export const getServerSideProps: GetServerSideProps<EventDetailsPageProps> = asy
     }
   }
   
-  console.log('✅ Permission granted - loading event page')
+  log('✅ Permission granted - loading event page')
 
   // APEX GUARDIAN: Fetch event data server-side to eliminate client-side API issues
   
@@ -1082,20 +1091,20 @@ export const getServerSideProps: GetServerSideProps<EventDetailsPageProps> = asy
     }
   } catch (error) {
     // ALWAYS log errors to help debug 404 issues
-    console.error('========================================')
-    console.error('EVENT PAGE ERROR - getServerSideProps failed')
-    console.error('Event ID:', id)
-    console.error('Error:', error)
-    console.error('Error message:', error instanceof Error ? error.message : 'Unknown error')
-    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
-    console.error('Error type:', error?.constructor?.name)
+    log('========================================')
+    log('EVENT PAGE ERROR - getServerSideProps failed')
+    log(`Event ID: ${id}`)
+    log(`Error: ${error}`)
+    log(`Error message: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    log(`Error stack: ${error instanceof Error ? error.stack : 'No stack trace'}`)
+    log(`Error type: ${error?.constructor?.name}`)
     
     // Try to get more details from Prisma errors
     if (error && typeof error === 'object' && 'code' in error) {
-      console.error('Prisma error code:', (error as any).code)
-      console.error('Prisma error meta:', (error as any).meta)
+      log(`Prisma error code: ${(error as any).code}`)
+      log(`Prisma error meta: ${JSON.stringify((error as any).meta)}`)
     }
-    console.error('========================================')
+    log('========================================')
     
     return {
       notFound: true,

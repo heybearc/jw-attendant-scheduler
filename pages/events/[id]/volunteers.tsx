@@ -16,7 +16,7 @@ interface Event {
   status: string
 }
 
-interface Attendant {
+interface Volunteer {
   id: string
   firstName: string
   lastName: string
@@ -48,21 +48,21 @@ interface Attendant {
   } | null
 }
 
-interface AttendantStats {
+interface VolunteerStats {
   total: number
   active: number
   inactive: number
 }
 
-interface EventAttendantsPageProps {
+interface EventVolunteersPageProps {
   eventId: string
   event: Event
   attendants: Attendant[]
   canManageContent: boolean
-  stats: AttendantStats
+  stats: VolunteerStats
 }
 
-export default function EventAttendantsPage({ eventId, event, attendants, canManageContent, stats }: EventAttendantsPageProps) {
+export default function EventAttendantsPage({ eventId, event, attendants, canManageContent, stats }: EventVolunteersPageProps) {
   const router = useRouter()
   const [showAddModal, setShowAddModal] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)

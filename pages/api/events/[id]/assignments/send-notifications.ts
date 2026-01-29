@@ -37,7 +37,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Check if email is configured
-    if (!isEmailConfigured()) {
+    const emailConfigured = await isEmailConfigured();
+    if (!emailConfigured) {
       return res.status(400).json({ 
         error: 'Email not configured',
         message: 'SMTP settings must be configured before sending notifications'

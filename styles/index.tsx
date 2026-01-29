@@ -358,10 +358,10 @@ export default function EventDetailsPage({ event }: EventDetailsPageProps) {
                 📊 Count Times
               </Link>
               <Link
-                href={`/events/${event.id}/attendants`}
+                href={`/events/${event.id}/volunteers`}
                 className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded transition-colors min-h-[44px] touch-manipulation flex items-center justify-center"
               >
-                👥 Attendants
+                👥 Volunteers
               </Link>
               <Link
                 href={`/events/${event.id}/positions`}
@@ -696,10 +696,10 @@ export default function EventDetailsPage({ event }: EventDetailsPageProps) {
                   📋 Manage Positions
                 </Link>
                 <Link
-                  href={`/events/${event.id}/attendants`}
+                  href={`/events/${event.id}/volunteers`}
                   className="w-full flex items-center justify-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors"
                 >
-                  👥 View Attendants
+                  👥 View Volunteers
                 </Link>
                 <Link
                   href={`/events/${event.id}/count-times`}

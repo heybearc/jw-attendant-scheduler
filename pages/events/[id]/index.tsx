@@ -368,7 +368,7 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
                 📊 Count Times
               </Link>
               <Link
-                href={`/events/${event.id}/attendants`}
+                href={`/events/${event.id}/volunteers`}
                 className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded transition-colors min-h-[44px] touch-manipulation flex items-center justify-center"
               >
                 👥 <VolunteerText plural />

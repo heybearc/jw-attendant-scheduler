@@ -84,7 +84,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Get unique volunteers from assignments
-    const volunteerIds = [...new Set(assignments.map(a => a.attendantId))]
+    const volunteerIds = [...new Set(assignments.map(a => a.volunteerId))]
     
     console.log(`📧 Sending notifications to ${volunteerIds.length} volunteer(s) for ${assignments.length} assignment(s)...`)
 
@@ -94,7 +94,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Send one notification per volunteer (consolidates all their assignments)
     for (const volunteerId of volunteerIds) {
-      const volunteerAssignments = assignments.filter(a => a.attendantId === volunteerId)
+      const volunteerAssignments = assignments.filter(a => a.volunteerId === volunteerId)
       
       try {
         // Send notification for first assignment (email will include all assignments for this volunteer)

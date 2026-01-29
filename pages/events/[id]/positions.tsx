@@ -670,8 +670,8 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
     positions.forEach(position => {
       // Track assigned attendants
       position.assignments?.forEach(assignment => {
-        if (assignment.attendant?.id) {
-          assignedAttendantIds.add(assignment.attendant.id)
+        if (assignment.volunteer?.id) {
+          assignedAttendantIds.add(assignment.volunteer.id)
         }
       })
       
@@ -719,8 +719,8 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
     positions.forEach(position => {
       // Track assigned attendants
       position.assignments?.forEach(assignment => {
-        if (assignment.attendant?.id) {
-          assignedAttendantIds.add(assignment.attendant.id)
+        if (assignment.volunteer?.id) {
+          assignedAttendantIds.add(assignment.volunteer.id)
         }
       })
       
@@ -1406,7 +1406,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                                           <div key={assignment.id} className={`flex items-center justify-between ${bgColor} border rounded px-2 py-1`}>
                                             <div className="flex items-center">
                                               <span className={`text-xs font-medium ${roleColor}`}>
-                                                {assignment.attendant?.firstName} {assignment.attendant?.lastName}
+                                                {assignment.volunteer?.firstName} {assignment.volunteer?.lastName}
                                               </span>
                                               <span className="ml-2 text-xs text-gray-500">
                                                 ({assignment.role})
@@ -1438,7 +1438,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                                         <div key={assignment.id} className={`flex items-center justify-between ${bgColor} border rounded px-2 py-1`}>
                                           <div className="flex items-center">
                                             <span className={`text-xs font-medium ${roleColor}`}>
-                                              {assignment.attendant?.firstName} {assignment.attendant?.lastName}
+                                              {assignment.volunteer?.firstName} {assignment.volunteer?.lastName}
                                             </span>
                                             <span className="ml-2 text-xs text-gray-500">
                                               ({assignment.role || 'Attendant'})

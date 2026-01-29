@@ -1066,6 +1066,14 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     }
   } catch (error) {
     console.error('Event page error:', error)
+    console.error('Error details:', error instanceof Error ? error.message : 'Unknown error')
+    console.error('Stack:', error instanceof Error ? error.stack : 'No stack trace')
+    
+    // Return error details in development
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Full error object:', JSON.stringify(error, null, 2))
+    }
+    
     return {
       notFound: true,
     }

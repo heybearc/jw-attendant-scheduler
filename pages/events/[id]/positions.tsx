@@ -592,7 +592,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
   // Auto-assign algorithm - APEX GUARDIAN OVERSIGHT-AWARE VERSION v3.0
   // Refactored to use extracted AutoAssignmentEngine (Week 1, Step 2)
   const handleAutoAssignOversightAware = async () => {
-    if (!confirm('Auto-assign available attendants to unfilled positions?')) return
+    if (!confirm('Auto-assign available volunteers to unfilled positions?')) return
     
     try {
       setIsSubmitting(true)
@@ -915,7 +915,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                           ? 'bg-green-500 hover:bg-green-600'
                           : 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 animate-pulse'
                     }`}
-                    title={`Auto-assign ${getUnassignedCount()} available attendants with oversight awareness`}
+                    title={`Auto-assign ${getUnassignedCount()} available volunteers with oversight awareness`}
                   >
                     <div className="flex items-center space-x-2">
                       {isSubmitting ? (
@@ -1112,7 +1112,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Available Attendants</p>
+                  <p className="text-sm font-medium text-gray-500">Available Volunteers</p>
                   <p className="text-3xl font-bold text-gray-900">{getUnassignedCount()}</p>
                   <p className="text-xs text-gray-400 mt-1">Click to view list</p>
                 </div>
@@ -1801,7 +1801,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                 }}>
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Select Attendant
+                      Select Volunteer
                       {(() => {
                         const positionOverseer = selectedPosition.assignments?.find(a => a.role === 'OVERSEER')?.attendant
                         const positionKeyman = selectedPosition.assignments?.find(a => a.role === 'KEYMAN')?.attendant
@@ -2276,13 +2276,13 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
           </div>
         )}
 
-        {/* Available Attendants Modal */}
+        {/* Available Volunteers Modal */}
         {showAvailableAttendants && (
           <div className="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
             <div className="relative mx-auto border w-full max-w-2xl shadow-2xl rounded-xl bg-white">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-2xl font-bold text-gray-900">Available Attendants</h3>
+                  <h3 className="text-2xl font-bold text-gray-900">Available Volunteers</h3>
                   <button
                     onClick={() => setShowAvailableAttendants(false)}
                     className="text-gray-400 hover:text-gray-600 text-2xl font-bold"

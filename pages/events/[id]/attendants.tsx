@@ -472,7 +472,7 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
   // Bulk Availability Request Handler
   const handleBulkAvailabilityRequest = () => {
     if (selectedAttendants.size === 0) {
-      alert('Please select attendants to request availability from')
+      alert('Please select volunteers to request availability from')
       return
     }
     setShowBulkRequestModal(true)
@@ -725,7 +725,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
 
   const handleBulkEdit = () => {
     if (selectedAttendants.size === 0) {
-      alert('Please select attendants to edit')
+      alert('Please select volunteers to edit')
       return
     }
     setShowBulkEditModal(true)

@@ -1016,7 +1016,7 @@ export const getServerSideProps: GetServerSideProps<EventDetailsPageProps> = asy
     const sessionBreakdown = countSessions.map(session => ({
       id: session.id,
       sessionName: session.sessionName,
-      countTime: session.countTime.toISOString(),
+      countTime: typeof session.countTime === 'string' ? session.countTime : session.countTime?.toISOString() || null,
       totalCount: session.position_counts.reduce((sum, count) => sum + (count.attendeeCount || 0), 0),
       positionsReported: session.position_counts.length,
       status: session.status

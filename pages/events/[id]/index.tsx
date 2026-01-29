@@ -831,8 +831,17 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
   )
 }
 
-export const getServerSideProps: GetServerSideProps = async (context) => {
+export const getServerSideProps: GetServerSideProps<EventDetailsPageProps> = async (context) => {
+  console.log('========================================')
+  console.log('getServerSideProps called for event:', context.params?.id)
+  console.log('Request URL:', context.req.url)
+  console.log('========================================')
+  
   const session = await getServerSession(context.req, context.res, authOptions)
+  
+  console.log('Session found:', !!session)
+  console.log('User ID:', session?.user?.id)
+  console.log('User role:', session?.user?.role)
 
   if (!session) {
     return {

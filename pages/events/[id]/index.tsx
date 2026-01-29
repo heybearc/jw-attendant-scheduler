@@ -264,7 +264,7 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
       ['Statistics'],
       ['Total Positions', event._count.positions.toString()],
       ['Total Assignments', event._count.assignments.toString()],
-      ['Attendants Linked', event._count.event_attendants.toString()]
+      ['Attendants Linked', event._count.event_volunteers.toString()]
     ]
 
     const csvContent = csvData.map(row => row.join(',')).join('\n')
@@ -604,7 +604,7 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
                   <div className="text-sm text-green-600 font-medium">Assignments Made</div>
                 </div>
                 <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-purple-600">{event._count.event_attendants}</div>
+                  <div className="text-2xl font-bold text-purple-600">{event._count.event_volunteers}</div>
                   <div className="text-sm text-purple-600 font-medium"><VolunteerText plural /> Linked</div>
                 </div>
                 <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 text-center">
@@ -1031,7 +1031,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       parentEvent: (event as any).parentEvent || null,
       departmentTemplate: (event as any).departmentTemplate || null,
       _count: {
-        event_attendants: event.event_attendants?.length || 0,
+        event_volunteers: event.event_volunteers?.length || 0,
         assignments: totalAssignments,
         positions: event.positions?.length || 0
       },

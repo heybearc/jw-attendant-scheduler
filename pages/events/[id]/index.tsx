@@ -1054,6 +1054,8 @@ export const getServerSideProps: GetServerSideProps<EventDetailsPageProps> = asy
       })) || [],
       parentEvent: (event as any).parentEvent || null,
       departmentTemplate: (event as any).departmentTemplate || null,
+      event_volunteers: event.event_volunteers || [],
+      positions: event.positions || [],
       _count: {
         event_volunteers: event.event_volunteers?.length || 0,
         positions: event.positions?.length || 0

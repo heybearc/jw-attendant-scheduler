@@ -29,7 +29,7 @@ interface Event {
   status: string
 }
 
-interface Attendant {
+interface Volunteer {
   id: string
   users: {
     id: string

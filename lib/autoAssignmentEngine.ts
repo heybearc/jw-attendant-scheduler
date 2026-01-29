@@ -20,7 +20,7 @@ export interface Shift {
   isAllDay: boolean
 }
 
-export interface Attendant {
+export interface Volunteer {
   id: string
   firstName: string
   lastName: string

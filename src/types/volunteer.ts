@@ -1,7 +1,7 @@
-// Enhanced Attendant Types for Theocratic Shift Scheduler
+// Enhanced Volunteer Types for Theocratic Shift Scheduler
 // Date: 2025-01-04
 
-export interface Attendant {
+export interface Volunteer {
   id: string
   userId?: string | null
   firstName: string
@@ -39,7 +39,7 @@ export interface Attendant {
   } | null
 }
 
-export interface AttendantCreateInput {
+export interface VolunteerCreateInput {
   firstName: string
   lastName: string
   email: string
@@ -51,7 +51,7 @@ export interface AttendantCreateInput {
   userId?: string // Optional link to existing user
 }
 
-export interface AttendantUpdateInput {
+export interface VolunteerUpdateInput {
   firstName?: string
   lastName?: string
   email?: string
@@ -63,12 +63,12 @@ export interface AttendantUpdateInput {
   userId?: string
 }
 
-export interface AttendantBulkImport {
-  attendants: AttendantImportRow[]
+export interface VolunteerBulkImport {
+  attendants: VolunteerImportRow[]
   eventId?: string // If importing for specific event
 }
 
-export interface AttendantImportRow {
+export interface VolunteerImportRow {
   firstName: string
   lastName: string
   email: string
@@ -79,7 +79,7 @@ export interface AttendantImportRow {
   notes?: string
 }
 
-export interface AttendantSearchFilters {
+export interface VolunteerSearchFilters {
   search?: string
   congregation?: string
   formsOfService?: FormOfService[]
@@ -87,7 +87,7 @@ export interface AttendantSearchFilters {
   hasUser?: boolean
 }
 
-export interface AttendantStats {
+export interface VolunteerStats {
   total: number
   active: number
   inactive: number
@@ -118,8 +118,8 @@ export const FORMS_OF_SERVICE_OPTIONS = FORMS_OF_SERVICE.map(form => ({
   label: form
 }))
 
-// Event-Attendant Association
-export interface EventAttendantAssociation {
+// Event-Volunteer Association
+export interface EventVolunteerAssociation {
   id: string
   eventId: string
   attendantId: string
@@ -130,7 +130,7 @@ export interface EventAttendantAssociation {
   createdAt: string
   updatedAt: string
   
-  attendant: Attendant
+  attendant: Volunteer
   event: {
     id: string
     name: string
@@ -141,30 +141,30 @@ export interface EventAttendantAssociation {
 }
 
 // API Response Types
-export interface AttendantResponse {
+export interface VolunteerResponse {
   success: boolean
-  data: Attendant
+  data: Volunteer
   error?: string
 }
 
-export interface AttendantsResponse {
+export interface VolunteersResponse {
   success: boolean
   data: {
-    attendants: Attendant[]
+    attendants: Volunteer[]
     pagination: {
       page: number
       limit: number
       total: number
       pages: number
     }
-    stats?: AttendantStats
+    stats?: VolunteerStats
     eventId?: string
     eventName?: string
   }
   error?: string
 }
 
-export interface AttendantBulkResponse {
+export interface VolunteerBulkResponse {
   success: boolean
   data: {
     created: number

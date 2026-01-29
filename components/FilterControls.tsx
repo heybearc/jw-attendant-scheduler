@@ -1,6 +1,6 @@
 import React from 'react'
 
-interface Attendant {
+interface Volunteer {
   id: string
   firstName: string
   lastName: string

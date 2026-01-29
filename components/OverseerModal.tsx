@@ -5,7 +5,7 @@ interface Position {
   name: string
 }
 
-interface Attendant {
+interface Volunteer {
   id: string
   firstName: string
   lastName: string

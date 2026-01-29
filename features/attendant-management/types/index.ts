@@ -1,5 +1,5 @@
 // Re-export attendant types for feature isolation
-export * from '../../../src/types/attendant'
+export * from '../../../src/types/volunteer'
 
 // Feature-specific types
 export interface AttendantTableProps {
@@ -36,4 +36,4 @@ export interface BulkImportModalProps {
 }
 
 // Import from main types
-import { Attendant, AttendantCreateInput, AttendantSearchFilters, AttendantBulkImport } from '../../../src/types/attendant'
+import { Attendant, AttendantCreateInput, AttendantSearchFilters, AttendantBulkImport } from '../../../src/types/volunteer'

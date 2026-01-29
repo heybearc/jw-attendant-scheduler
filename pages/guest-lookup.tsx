@@ -19,7 +19,7 @@ interface Assignment {
   }
 }
 
-interface AttendantData {
+interface VolunteerData {
   id: string
   firstName: string
   lastName: string

@@ -123,7 +123,7 @@ interface Stats {
   assigned: number
 }
 
-interface Attendant {
+interface Volunteer {
   id: string
   firstName: string
   lastName: string

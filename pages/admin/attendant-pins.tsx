@@ -223,7 +223,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   }
 
   // Fetch all active attendants
-  const attendants = await prisma.attendants.findMany({
+  const attendants = await prisma.volunteers.findMany({
     where: { isActive: true },
     select: {
       id: true,

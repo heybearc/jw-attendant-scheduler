@@ -66,6 +66,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         console.log(`📋 Removing ${assignment.volunteer.firstName} ${assignment.volunteer.lastName} from position ${assignment.positions.name}`)
 
+        // Send cancellation notification before deleting (Phase 4C Feature #1)
+        try {
+          const notificationResponse = await fetch(`${process.env.NEXTAUTH_URL}/api/assignments/notify`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              type: 'cancelled',
+              assignmentId: assignmentId,
+              eventId: eventId,
+              reason: 'Assignment removed by coordinator'
+            })
+          })
+          
+          if (notificationResponse.ok) {
+            console.log('✅ Cancellation notification sent')
+          } else {
+            console.warn('⚠️ Cancellation notification failed (non-blocking)')
+          }
+        } catch (notificationError) {
+          console.warn('⚠️ Cancellation notification error (non-blocking):', notificationError)
+        }
+
         // Delete the assignment
         await prisma.position_assignments.delete({
           where: { id: assignmentId }

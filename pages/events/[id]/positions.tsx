@@ -1408,9 +1408,6 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                                               <span className={`text-xs font-medium ${roleColor}`}>
                                                 {assignment.volunteer?.firstName} {assignment.volunteer?.lastName}
                                               </span>
-                                              <span className="ml-2 text-xs text-gray-500">
-                                                ({assignment.role})
-                                              </span>
                                             </div>
                                             <button
                                               onClick={() => handleRemoveAssignment(assignment.id)}
@@ -1439,9 +1436,6 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                                           <div className="flex items-center">
                                             <span className={`text-xs font-medium ${roleColor}`}>
                                               {assignment.volunteer?.firstName} {assignment.volunteer?.lastName}
-                                            </span>
-                                            <span className="ml-2 text-xs text-gray-500">
-                                              ({assignment.role || 'Attendant'})
                                             </span>
                                           </div>
                                           <button

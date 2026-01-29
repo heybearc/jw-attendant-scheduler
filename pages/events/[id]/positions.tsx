@@ -982,19 +982,26 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                         return
                       }
                       try {
+                        console.log('Sending notifications to:', `/api/events/${eventId}/assignments/send-notifications`)
                         const response = await fetch(`/api/events/${eventId}/assignments/send-notifications`, {
-                          method: 'POST'
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json'
+                          }
                         })
-                        const data = await response.json()
                         
-                        if (data.success) {
+                        console.log('Response status:', response.status)
+                        const data = await response.json()
+                        console.log('Response data:', data)
+                        
+                        if (response.ok && data.success) {
                           alert(`✅ ${data.message}`)
                         } else {
-                          alert(`❌ ${data.error || 'Failed to send notifications'}`)
+                          alert(`❌ ${data.error || data.message || 'Failed to send notifications'}`)
                         }
                       } catch (error) {
                         console.error('Send notifications error:', error)
-                        alert('❌ Failed to send notifications')
+                        alert(`❌ Failed to send notifications: ${error.message}`)
                       }
                     }}
                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"

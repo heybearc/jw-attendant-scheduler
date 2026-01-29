@@ -895,7 +895,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
 
   return (
     <EventLayout 
-      title={`${event.name} - Attendants | Theocratic Shift Scheduler`}
+      title={`${event.name} - Volunteers | Theocratic Shift Scheduler`}
       breadcrumbs={[
         { label: 'Events', href: '/events' },
         { label: event.name, href: `/events/${eventId}` },

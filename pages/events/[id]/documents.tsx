@@ -603,7 +603,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       where: {
         event_volunteers_primary: {
           some: {
-            eventId: id as string
+            events: {
+              id: id as string
+            }
           }
         }
       },

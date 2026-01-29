@@ -1065,14 +1065,21 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       },
     }
   } catch (error) {
-    console.error('Event page error:', error)
-    console.error('Error details:', error instanceof Error ? error.message : 'Unknown error')
-    console.error('Stack:', error instanceof Error ? error.stack : 'No stack trace')
+    // ALWAYS log errors to help debug 404 issues
+    console.error('========================================')
+    console.error('EVENT PAGE ERROR - getServerSideProps failed')
+    console.error('Event ID:', id)
+    console.error('Error:', error)
+    console.error('Error message:', error instanceof Error ? error.message : 'Unknown error')
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
+    console.error('Error type:', error?.constructor?.name)
     
-    // Return error details in development
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Full error object:', JSON.stringify(error, null, 2))
+    // Try to get more details from Prisma errors
+    if (error && typeof error === 'object' && 'code' in error) {
+      console.error('Prisma error code:', (error as any).code)
+      console.error('Prisma error meta:', (error as any).meta)
     }
+    console.error('========================================')
     
     return {
       notFound: true,

@@ -994,8 +994,16 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                         const data = await response.json()
                         console.log('Response data:', data)
                         
+                        if (data.errors && data.errors.length > 0) {
+                          console.error('Notification errors:', data.errors)
+                        }
+                        
                         if (response.ok && data.success) {
-                          alert(`✅ ${data.message}`)
+                          if (data.failed > 0) {
+                            alert(`⚠️ ${data.message}\n\nErrors:\n${data.errors?.join('\n') || 'Unknown errors'}`)
+                          } else {
+                            alert(`✅ ${data.message}`)
+                          }
                         } else {
                           alert(`❌ ${data.error || data.message || 'Failed to send notifications'}`)
                         }

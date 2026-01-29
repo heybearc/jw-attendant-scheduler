@@ -1067,9 +1067,18 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       },
     }
   } catch (error) {
-    console.error('Event page error:', error)
+    console.error('======================================')
+    console.error('EVENT PAGE ERROR:', error)
+    console.error('Error message:', error instanceof Error ? error.message : String(error))
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack')
+    console.error('======================================')
     return {
-      notFound: true,
+      props: {
+        error: {
+          message: error instanceof Error ? error.message : String(error),
+          type: error?.constructor?.name || 'Unknown'
+        }
+      } as any
     }
   }
 }

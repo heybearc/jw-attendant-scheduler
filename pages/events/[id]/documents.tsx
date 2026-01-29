@@ -599,9 +599,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     }))
 
     // Fetch attendants for publishing
-    const attendants = await (prisma as any).attendants.findMany({
+    const attendants = await prisma.volunteers.findMany({
       where: {
-        event_volunteers: {
+        event_volunteers_primary: {
           some: {
             eventId: id as string
           }

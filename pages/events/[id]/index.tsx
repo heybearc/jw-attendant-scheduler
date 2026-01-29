@@ -1039,13 +1039,35 @@ export const getServerSideProps: GetServerSideProps<EventDetailsPageProps> = asy
     // Calculate event total (sum of all session totals)
     const eventTotal = sessionBreakdown.reduce((sum, session) => sum + session.totalCount, 0)
 
-    // Transform event data for frontend compatibility
+    // Transform event data for frontend compatibility - serialize ALL fields properly
     const transformedEvent = {
-      ...event,
+      id: event.id,
+      name: event.name,
+      description: event.description,
+      eventType: event.eventType,
       startDate: event.startDate ? format(event.startDate, 'yyyy-MM-dd') : null,
       endDate: event.endDate ? format(event.endDate, 'yyyy-MM-dd') : null,
+      startTime: event.startTime,
+      endTime: event.endTime,
+      location: event.location,
+      capacity: event.capacity,
+      volunteersNeeded: event.volunteersNeeded,
+      status: event.status,
       createdAt: event.createdAt?.toISOString() || null,
       updatedAt: event.updatedAt?.toISOString() || null,
+      parentEventId: event.parentEventId,
+      departmentTemplateId: event.departmentTemplateId,
+      settings: event.settings,
+      circuitoverseername: event.circuitoverseername,
+      circuitoverseerphone: event.circuitoverseerphone,
+      circuitoverseeremail: event.circuitoverseeremail,
+      assemblyoverseername: event.assemblyoverseername,
+      assemblyoverseerphone: event.assemblyoverseerphone,
+      assemblyoverseeremail: event.assemblyoverseeremail,
+      volunteeroverseername: (event as any).volunteeroverseername,
+      attendantoverseerphone: (event as any).attendantoverseerphone,
+      attendantoverseeremail: (event as any).attendantoverseeremail,
+      attendantoverseerassistants: (event as any).attendantoverseerassistants,
       totalShiftsNeeded,
       childEvents: (event as any).childEvents?.map((child: any) => ({
         ...child,

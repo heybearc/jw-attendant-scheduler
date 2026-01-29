@@ -7,7 +7,7 @@ import crypto from 'crypto'
 
 // Validation schema for assignment creation
 const assignmentSchema = z.object({
-  attendantId: z.string().min(1, 'Attendant ID is required'),
+  volunteerId: z.string().min(1, 'Volunteer ID is required'),
   positionId: z.string().min(1, 'Position ID is required'),
   role: z.enum(['ATTENDANT', 'OVERSEER', 'KEYMAN']).optional().default('ATTENDANT'),
   shiftId: z.string().min(1, 'Shift ID is required for all assignments'),
@@ -89,7 +89,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         // Check if attendant is already assigned to this specific shift
         const existingShiftAssignment = await prisma.position_assignments.findFirst({
           where: {
-            attendantId: validatedData.attendantId,
+            volunteerId: validatedData.volunteerId,
             shiftId: validatedData.shiftId
           }
         })
@@ -106,7 +106,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         // If assigning an all-day shift, attendant can't have any existing shifts
         const existingAssignments = await (prisma as any).position_assignments.findMany({
           where: {
-            attendantId: validatedData.attendantId,
+            volunteerId: validatedData.volunteerId,
             NOT: { shiftId: validatedData.shiftId }
           },
           include: {
@@ -200,7 +200,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           data: {
             id: crypto.randomUUID(),
             positionId: validatedData.positionId,
-            attendantId: validatedData.attendantId,
+            volunteerId: validatedData.volunteerId,
             role: validatedData.role,
             shiftId: validatedData.shiftId,
             assignedAt: new Date(),

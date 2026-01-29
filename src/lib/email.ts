@@ -41,19 +41,36 @@ async function getEmailConfig(): Promise<EmailConfig | null> {
       const { PrismaClient } = require('@prisma/client');
       const prisma = new PrismaClient();
       
-      const config = await prisma.system_settings.findFirst({
+      const configRecord = await prisma.system_settings.findFirst({
         where: { key: 'email_config' }
       });
       
       await prisma.$disconnect();
       
-      if (config && config.value) {
-        const emailConfig = JSON.parse(config.value as string);
-        smtpUser = emailConfig.smtpUser;
-        smtpPassword = emailConfig.smtpPassword;
-        smtpHost = emailConfig.smtpHost || smtpHost;
-        smtpPort = emailConfig.smtpPort || smtpPort;
-        smtpSecure = emailConfig.smtpSecure || smtpSecure;
+      if (configRecord && configRecord.value) {
+        const emailConfig = JSON.parse(configRecord.value as string);
+        
+        // Handle nested config structure from admin panel
+        if (emailConfig.authType === 'gmail' && emailConfig.config) {
+          smtpUser = emailConfig.config.gmailEmail;
+          smtpPassword = emailConfig.config.gmailAppPassword;
+          smtpHost = emailConfig.config.smtpServer || smtpHost;
+          smtpPort = parseInt(emailConfig.config.smtpPort) || smtpPort;
+          smtpSecure = emailConfig.config.smtpSecure !== undefined ? emailConfig.config.smtpSecure : smtpSecure;
+        } else if (emailConfig.authType === 'smtp' && emailConfig.config) {
+          smtpUser = emailConfig.config.smtpUser;
+          smtpPassword = emailConfig.config.smtpPassword;
+          smtpHost = emailConfig.config.smtpServer || smtpHost;
+          smtpPort = parseInt(emailConfig.config.smtpPort) || smtpPort;
+          smtpSecure = emailConfig.config.smtpSecure !== undefined ? emailConfig.config.smtpSecure : smtpSecure;
+        } else {
+          // Fallback to flat structure
+          smtpUser = emailConfig.smtpUser;
+          smtpPassword = emailConfig.smtpPassword;
+          smtpHost = emailConfig.smtpHost || smtpHost;
+          smtpPort = emailConfig.smtpPort || smtpPort;
+          smtpSecure = emailConfig.smtpSecure || smtpSecure;
+        }
       }
     } catch (error) {
       console.error('Error loading email config from database:', error);
@@ -286,15 +303,24 @@ export async function isEmailConfigured(): Promise<boolean> {
     const { PrismaClient } = require('@prisma/client');
     const prisma = new PrismaClient();
     
-    const config = await prisma.system_settings.findFirst({
+    const configRecord = await prisma.system_settings.findFirst({
       where: { key: 'email_config' }
     });
     
     await prisma.$disconnect();
     
-    if (config && config.value) {
-      const emailConfig = JSON.parse(config.value as string);
-      return !!(emailConfig.smtpUser && emailConfig.smtpPassword);
+    if (configRecord && configRecord.value) {
+      const emailConfig = JSON.parse(configRecord.value as string);
+      
+      // Handle nested config structure from admin panel
+      if (emailConfig.authType === 'gmail' && emailConfig.config) {
+        return !!(emailConfig.config.gmailEmail && emailConfig.config.gmailAppPassword);
+      } else if (emailConfig.authType === 'smtp' && emailConfig.config) {
+        return !!(emailConfig.config.smtpUser && emailConfig.config.smtpPassword);
+      } else {
+        // Fallback to flat structure
+        return !!(emailConfig.smtpUser && emailConfig.smtpPassword);
+      }
     }
   } catch (error) {
     console.error('Error checking email config from database:', error);

@@ -80,7 +80,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }
           }
         },
-        event_attendants_position_assignments_attendantIdToevent_attendants: {
+        volunteer: {
           include: {
             users: {
               select: {
@@ -92,7 +92,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }
           }
         },
-        event_attendants_position_assignments_overseerIdToevent_attendants: {
+        overseer: {
           include: {
             users: {
               select: {
@@ -111,14 +111,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ error: 'Assignment not found' })
     }
 
-    const attendant = assignment.event_attendants_position_assignments_attendantIdToevent_attendants
+    const attendant = assignment.volunteer
     if (!attendant?.users) {
       return res.status(400).json({ error: 'Assignment has no associated user' })
     }
 
     const volunteer = attendant.users
     const event = assignment.positions.events
-    const overseer = assignment.event_attendants_position_assignments_overseerIdToevent_attendants?.users
+    const overseer = assignment.overseer?.users
 
     // Format dates
     const eventDate = new Date(event.startDate).toLocaleDateString('en-US', {
@@ -156,14 +156,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           eventName: event.name,
           eventDate,
           eventLocation: event.location,
-          positionName: assignment.position.positionName,
-          positionNumber: assignment.position.positionNumber,
+          positionName: assignment.positions.positionName,
+          positionNumber: assignment.positions.positionNumber,
           shiftStart,
           shiftEnd,
           overseerName: overseer ? `${overseer.firstName} ${overseer.lastName}` : undefined,
           overseerEmail: overseer?.email || undefined,
           overseerPhone: overseer?.phone || undefined,
-          notes: assignment.notes || undefined,
           eventUrl
         }
         break
@@ -181,14 +180,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           eventName: event.name,
           eventDate,
           eventLocation: event.location,
-          positionName: assignment.position.positionName,
-          positionNumber: assignment.position.positionNumber,
+          positionName: assignment.positions.positionName,
+          positionNumber: assignment.positions.positionNumber,
           shiftStart,
           shiftEnd,
           overseerName: overseer ? `${overseer.firstName} ${overseer.lastName}` : undefined,
           overseerEmail: overseer?.email || undefined,
           overseerPhone: overseer?.phone || undefined,
-          notes: assignment.notes || undefined,
           eventUrl,
           changes
         }
@@ -201,8 +199,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           volunteerEmail: volunteer.email,
           eventName: event.name,
           eventDate,
-          positionName: assignment.position.positionName,
-          positionNumber: assignment.position.positionNumber,
+          positionName: assignment.positions.positionName,
+          positionNumber: assignment.positions.positionNumber,
           reason: reason || undefined,
           cancelledBy: session?.user?.name || session?.user?.email || 'System Administrator'
         }
@@ -221,14 +219,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           eventName: event.name,
           eventDate,
           eventLocation: event.location,
-          positionName: assignment.position.positionName,
-          positionNumber: assignment.position.positionNumber,
+          positionName: assignment.positions.positionName,
+          positionNumber: assignment.positions.positionNumber,
           shiftStart,
           shiftEnd,
           overseerName: overseer ? `${overseer.firstName} ${overseer.lastName}` : undefined,
           overseerEmail: overseer?.email || undefined,
           overseerPhone: overseer?.phone || undefined,
-          notes: assignment.notes || undefined,
           eventUrl,
           hoursUntilEvent
         }

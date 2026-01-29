@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // First, delete all assignments related to shifts in this event
       const assignmentsResult = await prisma.position_assignments.deleteMany({
         where: {
-          position: {
+          positions: {
             eventId: eventId as string
           },
           shiftId: {
@@ -29,7 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Then, delete all shifts for positions in this event
       const shiftsResult = await prisma.position_shifts.deleteMany({
         where: {
-          position: {
+          positions: {
             eventId: eventId as string
           }
         }

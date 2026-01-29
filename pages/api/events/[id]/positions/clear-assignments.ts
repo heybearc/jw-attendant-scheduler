@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Delete all attendant assignments for this event
       const result = await prisma.position_assignments.deleteMany({
         where: {
-          position: {
+          positions: {
             eventId: eventId as string
           },
           role: 'ATTENDANT'

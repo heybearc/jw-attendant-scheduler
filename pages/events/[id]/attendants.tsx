@@ -1,15 +1,18 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/router'
+import { GetServerSideProps } from 'next'
 
 export default function AttendantsRedirect() {
-  const router = useRouter()
-  const { id } = router.query
-
-  useEffect(() => {
-    if (id) {
-      router.replace(`/events/${id}/volunteers`)
-    }
-  }, [id, router])
-
   return null
+}
+
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const { id } = context.params || {}
+  
+  return {
+    redirect: {
+      destination: `/events/${id}/volunteers`,
+      permanent: false,
+    },
+  }
 }

@@ -912,7 +912,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
         <div className="mb-6">
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Event Attendants</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Event Volunteers</h2>
               <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-3">
                 <button 
                   onClick={() => router.push(`/events/${eventId}`)}
@@ -928,14 +928,14 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                       disabled={loading}
                       className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold py-3 px-4 rounded transition-colors min-h-[44px] touch-manipulation"
                     >
-                      ➕ Add Attendant
+                      ➕ Add Volunteer
                     </button>
                     <button 
                       onClick={handleImportAttendants}
                       disabled={loading}
                       className="bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white font-bold py-3 px-4 rounded transition-colors min-h-[44px] touch-manipulation"
                     >
-                      📥 Import Attendants
+                      📥 Import Volunteers
                     </button>
                     {selectedAttendants.size > 0 && (
                       <>
@@ -1692,7 +1692,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
           <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
             <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
               <div className="mt-3">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Import Attendants</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Import Volunteers</h3>
                 
                 <div className="mb-4">
                   <p className="text-sm text-gray-600 mb-2">
@@ -1740,7 +1740,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                     disabled={loading || !importFile}
                     className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white rounded-md"
                   >
-                    {loading ? 'Importing...' : 'Import Attendants'}
+                    {loading ? 'Importing...' : 'Import Volunteers'}
                   </button>
                 </div>
               </div>

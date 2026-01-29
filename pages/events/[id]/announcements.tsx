@@ -155,7 +155,7 @@ export default function EventAnnouncementsPage({ eventId, event, announcements, 
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Announcements</h1>
-              <p className="text-gray-600">Manage banner announcements for attendants</p>
+              <p className="text-gray-600">Manage banner announcements for volunteers</p>
             </div>
             <div className="flex space-x-3">
               <Link
@@ -186,7 +186,7 @@ export default function EventAnnouncementsPage({ eventId, event, announcements, 
             <div className="text-6xl mb-4">📢</div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">No Announcements</h3>
             <p className="text-gray-500 text-lg mb-4">
-              {canManage ? 'Create your first announcement to notify attendants' : 'No announcements available'}
+              {canManage ? 'Create your first announcement to notify volunteers' : 'No announcements available'}
             </p>
             {canManage && (
               <button
@@ -282,7 +282,7 @@ export default function EventAnnouncementsPage({ eventId, event, announcements, 
                       value={formData.title}
                       onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="e.g., Attendant Meeting - November 2"
+                      placeholder="e.g., Volunteer Meeting - November 2"
                       required
                       maxLength={200}
                     />
@@ -297,7 +297,7 @@ export default function EventAnnouncementsPage({ eventId, event, announcements, 
                       value={formData.message}
                       onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="e.g., All attendants please meet at 7:00 AM on November 2 for important updates."
+                      placeholder="e.g., All volunteers please meet at 7:00 AM on November 2 for important updates."
                       required
                       maxLength={1000}
                     />

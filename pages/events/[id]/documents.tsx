@@ -130,7 +130,7 @@ export default function EventDocumentsPage({ eventId, event, documents, attendan
       const result = await response.json()
 
       if (result.success) {
-        setSuccess(`Document published to ${publishType === 'all' ? 'all attendants' : `${selectedAttendants.length} attendants`}`)
+        setSuccess(`Document published to ${publishType === 'all' ? 'all volunteers' : `${selectedAttendants.length} volunteers`}`)
         setShowPublishModal(false)
         setSelectedDocument(null)
         setSelectedAttendants([])
@@ -219,7 +219,7 @@ export default function EventDocumentsPage({ eventId, event, documents, attendan
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Event Documents</h1>
                 <p className="mt-1 text-sm text-gray-600">
-                  Upload and publish documents to attendants for {event?.name}
+                  Upload and publish documents to volunteers for {event?.name}
                 </p>
               </div>
               <div className="flex space-x-3">
@@ -336,7 +336,7 @@ export default function EventDocumentsPage({ eventId, event, documents, attendan
                 <div className="text-6xl mb-4">📄</div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No documents uploaded yet</h3>
                 <p className="text-gray-600 mb-4">
-                  Upload your first document to share with attendants
+                  Upload your first document to share with volunteers
                 </p>
                 <button
                   onClick={() => setShowUploadForm(true)}
@@ -366,11 +366,11 @@ export default function EventDocumentsPage({ eventId, event, documents, attendan
                           <div className="flex items-center space-x-2 mt-2">
                             {document.publishedTo === 'all' ? (
                               <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-                                📢 Published to All Attendants
+                                📢 Published to All Volunteers
                               </span>
                             ) : document.publishedCount > 0 ? (
                               <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                                📤 Published to {document.publishedCount} Attendants
+                                📤 Published to {document.publishedCount} Volunteers
                               </span>
                             ) : (
                               <span className="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full">
@@ -437,7 +437,7 @@ export default function EventDocumentsPage({ eventId, event, documents, attendan
                           onChange={(e) => setPublishType(e.target.value as 'all' | 'individual')}
                           className="mr-2"
                         />
-                        <span>📢 All Attendants ({attendants.length} people)</span>
+                        <span>📢 All Volunteers ({attendants.length} people)</span>
                       </label>
                       <label className="flex items-center">
                         <input
@@ -448,7 +448,7 @@ export default function EventDocumentsPage({ eventId, event, documents, attendan
                           onChange={(e) => setPublishType(e.target.value as 'all' | 'individual')}
                           className="mr-2"
                         />
-                        <span>👤 Select Individual Attendants</span>
+                        <span>👤 Select Individual Volunteers</span>
                       </label>
                     </div>
                   </div>
@@ -456,7 +456,7 @@ export default function EventDocumentsPage({ eventId, event, documents, attendan
                   {publishType === 'individual' && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Search and Select Attendants
+                        Search and Select Volunteers
                       </label>
                       <input
                         type="text"

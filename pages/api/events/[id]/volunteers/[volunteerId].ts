@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '../../../../../src/lib/prisma'
-import { checkEventAccess, canManageAttendants } from '../../../../../src/lib/eventAccess'
+import { checkEventAccess, canManageVolunteers } from '../../../../../src/lib/eventAccess'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { id: eventId, volunteerId } = req.query
@@ -42,30 +42,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Check permissions based on method
     if (req.method === 'GET') {
-      // Anyone with event access can view attendants
+      // Anyone with event access can view volunteers
       const hasAccess = await checkEventAccess(user.id, eventId, 'VIEWER')
       if (!hasAccess) {
         return res.status(403).json({ error: 'You do not have permission to view this event' })
       }
       return await handleGetVolunteer(req, res, eventId, volunteerId)
     } else if (req.method === 'PUT' || req.method === 'DELETE') {
-      // Only OVERSEER+ can manage attendants
-      const canManage = await canManageAttendants(user.id, eventId)
+      // Only OVERSEER+ can manage volunteers
+      const canManage = await canManageVolunteers(user.id, eventId)
       if (!canManage) {
-        return res.status(403).json({ error: 'You do not have permission to manage attendants' })
+        return res.status(403).json({ error: 'You do not have permission to manage volunteers' })
       }
       
       if (req.method === 'PUT') {
-        return await handleUpdateAttendant(req, res, eventId, attendantId)
+        return await handleUpdateVolunteer(req, res, eventId, volunteerId)
       } else {
-        return await handleDeleteAttendant(req, res, eventId, attendantId)
+        return await handleDeleteVolunteer(req, res, eventId, volunteerId)
       }
     } else {
       res.setHeader('Allow', ['GET', 'PUT', 'DELETE'])
       return res.status(405).json({ error: 'Method not allowed' })
     }
   } catch (error) {
-    console.error('Attendant API error:', error)
+    console.error('Volunteer API error:', error)
     return res.status(500).json({ error: 'Internal server error' })
   }
 }
@@ -80,46 +80,52 @@ async function handleGetVolunteer(req: NextApiRequest, res: NextApiResponse, eve
       return res.status(404).json({ error: 'Volunteer not found' })
     }
 
-    return res.status(200).json({ success: true, data: volunteer })
-        id: attendant.id,
-        firstName: attendant.firstName,
-        lastName: attendant.lastName,
-        email: attendant.email,
-        phone: attendant.phone,
-        congregation: (attendant as any).congregation || '',
-        formsOfService: (attendant as any).formsOfService || [],
-        isActive: (attendant as any).isActive !== false,
-        notes: attendant.notes,
-        userId: attendant.userId,
-        createdAt: attendant.createdAt,
-        updatedAt: attendant.updatedAt
+    // APEX GUARDIAN: Event Volunteers page is source of truth for all volunteers
+    // All active volunteers are available for this event - no position assignment required
+    console.log(`✅ Fetching volunteer ${volunteerId} - Event Volunteers page is source of truth`)
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        id: volunteer.id,
+        firstName: volunteer.firstName,
+        lastName: volunteer.lastName,
+        email: volunteer.email,
+        phone: volunteer.phone,
+        congregation: (volunteer as any).congregation || '',
+        formsOfService: (volunteer as any).formsOfService || [],
+        isActive: (volunteer as any).isActive !== false,
+        notes: volunteer.notes,
+        userId: volunteer.userId,
+        createdAt: volunteer.createdAt,
+        updatedAt: volunteer.updatedAt
       }
     })
   } catch (error) {
-    console.error('Get attendant error:', error)
-    return res.status(500).json({ error: 'Failed to fetch attendant' })
+    console.error('Get volunteer error:', error)
+    return res.status(500).json({ error: 'Failed to fetch volunteer' })
   }
 }
 
-async function handleUpdateAttendant(req: NextApiRequest, res: NextApiResponse, eventId: string, attendantId: string) {
+async function handleUpdateVolunteer(req: NextApiRequest, res: NextApiResponse, eventId: string, volunteerId: string) {
   try {
     const { firstName, lastName, email, phone, congregation, notes, formsOfService, isActive, profileVerificationRequired } = req.body
 
-    console.log(`🔧 API Update attendant ${attendantId}:`, { firstName, lastName, isActive, congregation, formsOfService, profileVerificationRequired })
+    console.log(`🔧 API Update volunteer ${volunteerId}:`, { firstName, lastName, isActive, congregation, formsOfService, profileVerificationRequired })
 
-    // Check if attendant exists
-    const existingAttendant = await prisma.volunteers.findUnique({
-      where: { id: attendantId }
+    // Check if volunteer exists
+    const existingVolunteer = await prisma.volunteers.findUnique({
+      where: { id: volunteerId }
     })
     
-    if (!existingAttendant) {
-      console.error(`❌ Attendant not found: ${attendantId}`)
-      return res.status(404).json({ error: 'Attendant not found' })
+    if (!existingVolunteer) {
+      console.error(`❌ Volunteer not found: ${volunteerId}`)
+      return res.status(404).json({ error: 'Volunteer not found' })
     }
 
-    // APEX GUARDIAN: Event Attendants page is source of truth for all attendants
-    // No need to check for position assignments - all active attendants are editable
-    console.log(`✅ Editing attendant ${attendantId} - Event Attendants page is source of truth`)
+    // APEX GUARDIAN: Event Volunteers page is source of truth for all volunteers
+    // No need to check for position assignments - all active volunteers are editable
+    console.log(`✅ Editing volunteer ${volunteerId} - Event Volunteers page is source of truth`)
 
     // Process forms of service
     let processedFormsOfService: string[] = []
@@ -159,80 +165,80 @@ async function handleUpdateAttendant(req: NextApiRequest, res: NextApiResponse, 
     
     updateData.updatedAt = new Date()
 
-    console.log(`📡 Updating attendant ${attendantId} with data:`, updateData)
+    console.log(`📡 Updating volunteer ${volunteerId} with data:`, updateData)
 
-    // Update attendant
-    const updatedAttendant = await prisma.volunteers.update({
-      where: { id: attendantId },
+    // Update volunteer
+    const updatedVolunteer = await prisma.volunteers.update({
+      where: { id: volunteerId },
       data: updateData
     })
 
-    console.log(`✅ Successfully updated attendant ${attendantId}:`, {
-      isActive: (updatedAttendant as any).isActive,
-      congregation: (updatedAttendant as any).congregation
+    console.log(`✅ Successfully updated volunteer ${volunteerId}:`, {
+      isActive: (updatedVolunteer as any).isActive,
+      congregation: (updatedVolunteer as any).congregation
     })
 
     return res.status(200).json({
       success: true,
       data: {
-        id: updatedAttendant.id,
-        firstName: updatedAttendant.firstName,
-        lastName: updatedAttendant.lastName,
-        email: updatedAttendant.email,
-        phone: updatedAttendant.phone,
-        congregation: (updatedAttendant as any).congregation || '',
-        formsOfService: (updatedAttendant as any).formsOfService || [],
-        isActive: (updatedAttendant as any).isActive !== false,
-        notes: updatedAttendant.notes,
-        userId: updatedAttendant.userId,
-        createdAt: updatedAttendant.createdAt,
-        updatedAt: updatedAttendant.updatedAt
+        id: updatedVolunteer.id,
+        firstName: updatedVolunteer.firstName,
+        lastName: updatedVolunteer.lastName,
+        email: updatedVolunteer.email,
+        phone: updatedVolunteer.phone,
+        congregation: (updatedVolunteer as any).congregation || '',
+        formsOfService: (updatedVolunteer as any).formsOfService || [],
+        isActive: (updatedVolunteer as any).isActive !== false,
+        notes: updatedVolunteer.notes,
+        userId: updatedVolunteer.userId,
+        createdAt: updatedVolunteer.createdAt,
+        updatedAt: updatedVolunteer.updatedAt
       }
     })
   } catch (error) {
-    console.error('Update attendant error:', error)
-    return res.status(500).json({ error: 'Failed to update attendant' })
+    console.error('Update volunteer error:', error)
+    return res.status(500).json({ error: 'Failed to update volunteer' })
   }
 }
 
 async function handleDeleteVolunteer(req: NextApiRequest, res: NextApiResponse, eventId: string, volunteerId: string) {
   try {
-    // Check if attendant exists
-    const existingAttendant = await prisma.volunteers.findUnique({
+    // Check if volunteer exists
+    const existingVolunteer = await prisma.volunteers.findUnique({
       where: { id: volunteerId }
     })
 
-    if (!existingAttendant) {
-      return res.status(404).json({ error: 'Attendant not found' })
+    if (!existingVolunteer) {
+      return res.status(404).json({ error: 'Volunteer not found' })
     }
 
     // Delete the position assignments first (NEW SYSTEM)
     await prisma.position_assignments.deleteMany({
       where: {
-        attendantId,
+        volunteerId,
         positions: {
           eventId
         }
       }
     })
 
-    // Optionally delete the attendant if not associated with other events
+    // Optionally delete the volunteer if not associated with other events
     const otherAssignments = await prisma.position_assignments.findMany({
-      where: { attendantId }
+      where: { volunteerId }
     })
 
     if (otherAssignments.length === 0) {
       await prisma.volunteers.delete({
-        where: { id: attendantId }
+        where: { id: volunteerId }
       })
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Attendant removed from event'
+      message: 'Volunteer removed from event'
     })
   } catch (error) {
-    console.error('Delete attendant error:', error)
-    return res.status(500).json({ error: 'Failed to delete attendant' })
+    console.error('Delete volunteer error:', error)
+    return res.status(500).json({ error: 'Failed to delete volunteer' })
   }
 }

@@ -10,14 +10,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(401).json({ error: 'Unauthorized' })
   }
 
-  const { id: eventId, attendantId } = req.query
+  const { id: eventId, volunteerId } = req.query
 
-  if (typeof eventId !== 'string' || typeof attendantId !== 'string') {
-    return res.status(400).json({ error: 'Invalid event or attendant ID' })
+  if (typeof eventId !== 'string' || typeof volunteerId !== 'string') {
+    return res.status(400).json({ error: 'Invalid event or volunteer ID' })
   }
 
   // Check if caller has permission to manage events
-  // Similar to verification - only checking caller's role, not the attendant being updated
+  // Similar to verification - only checking caller's role, not the volunteer being updated
   const isAdmin = session.user.role === 'ADMIN'
   const isOverseer = ['OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN'].includes(session.user.role || '')
 
@@ -25,23 +25,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(403).json({ error: 'Insufficient permissions' })
   }
 
-  // Update availability for the attendant (volunteer_availability references attendants table)
+  // Update availability for the volunteer (volunteer_availability references volunteers table)
   if (req.method === 'GET') {
-    return handleGet(eventId, attendantId, res)
+    return handleGet(eventId, volunteerId, res)
   } else if (req.method === 'PUT') {
-    return handleUpdate(eventId, attendantId, req.body, res)
+    return handleUpdate(eventId, volunteerId, req.body, res)
   } else {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 }
 
-async function handleGet(eventId: string, attendantId: string, res: NextApiResponse) {
+async function handleGet(eventId: string, volunteerId: string, res: NextApiResponse) {
   try {
     const availability = await prisma.volunteer_availability.findUnique({
       where: {
-        eventId_attendantId: {
+        eventId_volunteerId: {
           eventId,
-          attendantId
+          volunteerId
         }
       }
     })
@@ -55,7 +55,7 @@ async function handleGet(eventId: string, attendantId: string, res: NextApiRespo
 
 async function handleUpdate(
   eventId: string, 
-  attendantId: string, 
+  volunteerId: string, 
   body: { status: string; notes?: string }, 
   res: NextApiResponse
 ) {
@@ -73,9 +73,9 @@ async function handleUpdate(
 
     const availability = await prisma.volunteer_availability.upsert({
       where: {
-        eventId_attendantId: {
+        eventId_volunteerId: {
           eventId,
-          attendantId
+          volunteerId
         }
       },
       update: {
@@ -87,7 +87,7 @@ async function handleUpdate(
       create: {
         id: crypto.randomUUID(),
         eventId,
-        attendantId,
+        volunteerId,
         status,
         notes: notes || null,
         requestedAt: new Date(),

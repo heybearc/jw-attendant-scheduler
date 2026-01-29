@@ -19,9 +19,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(401).json({ error: 'Unauthorized' })
   }
 
-  const { id: eventId, attendantId } = req.query
+  const { id: eventId, volunteerId } = req.query
 
-  if (typeof eventId !== 'string' || typeof attendantId !== 'string') {
+  if (typeof eventId !== 'string' || typeof volunteerId !== 'string') {
     return res.status(400).json({ error: 'Invalid parameters' })
   }
 
@@ -30,48 +30,48 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Validate request body
       const validatedData = oversightSchema.parse(req.body)
 
-      // APEX GUARDIAN: Event Attendants page shows ALL attendants
-      // We need to create event-attendant associations to store oversight assignments
-      console.log(`🔍 Updating oversight for attendant: eventId=${eventId}, attendantId=${attendantId}`)
+      // APEX GUARDIAN: Event Volunteers page shows ALL volunteers
+      // We need to create event-volunteer associations to store oversight assignments
+      console.log(`🔍 Updating oversight for volunteer: eventId=${eventId}, volunteerId=${volunteerId}`)
       console.log(`🔍 Oversight data:`, validatedData)
 
-      // Verify the attendant exists and is active
-      const attendant = await prisma.volunteers.findFirst({
+      // Verify the volunteer exists and is active
+      const volunteer = await prisma.volunteers.findFirst({
         where: {
-          id: attendantId,
+          id: volunteerId,
           isActive: true
         }
       })
 
-      if (!attendant) {
-        return res.status(404).json({ error: 'Attendant not found or inactive' })
+      if (!volunteer) {
+        return res.status(404).json({ error: 'Volunteer not found or inactive' })
       }
 
-      // Find or create an event-attendant association
-      let association = await prisma.event_attendants.findFirst({
+      // Find or create an event-volunteer association
+      let association = await prisma.event_volunteers.findFirst({
         where: {
           eventId: eventId,
-          attendantId: attendantId
+          volunteerId: volunteerId
         }
       })
 
       if (!association) {
         // Create new association
-        association = await prisma.event_attendants.create({
+        association = await prisma.event_volunteers.create({
           data: {
             id: require('crypto').randomUUID(),
             eventId: eventId,
-            attendantId: attendantId,
+            volunteerId: volunteerId,
             overseerId: validatedData.overseerId,
             keymanId: validatedData.keymanId,
             updatedAt: new Date()
           }
         })
         
-        console.log(`✅ Created new event-attendant association: ${association.id}`)
+        console.log(`✅ Created new event-volunteer association: ${association.id}`)
       } else {
         // Update existing association
-        association = await prisma.event_attendants.update({
+        association = await prisma.event_volunteers.update({
           where: {
             id: association.id
           },
@@ -81,11 +81,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }
         })
         
-        console.log(`✅ Updated existing event-attendant association: ${association.id}`)
+        console.log(`✅ Updated existing event-volunteer association: ${association.id}`)
       }
 
       // Fetch the updated association with related data
-      const updatedAssociation = await prisma.event_attendants.findUnique({
+      const updatedAssociation = await prisma.event_volunteers.findUnique({
         where: {
           id: association.id
         },
@@ -113,7 +113,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
 
     } catch (error) {
-      console.error('Error updating attendant oversight:', error)
+      console.error('Error updating volunteer oversight:', error)
       
       if (error instanceof z.ZodError) {
         return res.status(400).json({ 
@@ -123,7 +123,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       return res.status(500).json({ 
-        error: 'Failed to update attendant oversight' 
+        error: 'Failed to update volunteer oversight' 
       })
     }
   }

@@ -185,6 +185,29 @@
 - Config changes must be made on containers, not in git
 - Deployment scripts should not assume ecosystem.config.js exists in repo
 
+### D-TS-015: Backward Compatible Attendant→Volunteer Refactor
+**Date:** 2026-01-28  
+**Context:** Fixed 404 errors on Positions and Volunteers pages caused by incomplete attendant→volunteer terminology refactor. Database enum values couldn't be migrated without superuser permissions.  
+**Decision:** Use Prisma @map directives for backward compatibility rather than database migration:
+- Code uses `volunteers` model, database uses `attendants` table
+- Code uses `volunteerId` field, database uses `attendantId` column
+- Support both `ATTENDANT` and `VOLUNTEER` enum values in PositionRole
+- Defer database cleanup to optional Phase 2 (documented in TECH-DEBT.md)
+
+**Implementation:**
+- Replaced all `prisma.attendants` → `prisma.volunteers` (18 API files)
+- Fixed relation names (`attendant` → `volunteer`, `users` → `user`)
+- Fixed field names (`attendantId` → `volunteerId` in volunteer_availability)
+- Added `ATTENDANT` back to PositionRole enum for existing data
+- Regenerated Prisma client multiple times to sync schema changes
+
+**Consequences:**
+- Zero downtime deployment achieved
+- No database migration required
+- Both pages now working on STANDBY
+- Database cleanup deferred as tech debt (TD-001)
+- UI text refactor pending (50+ instances of "attendant" in labels/help pages)
+
 ---
 
 ## Shared Decisions

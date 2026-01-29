@@ -1,18 +1,34 @@
 # TheoShift Task State
 
-**Last updated:** 2026-01-28 (early morning)  
+**Last updated:** 2026-01-28 (afternoon)  
 **Current branch:** main  
-**Working on:** Phase 4C Bug Fixes - Testing on STANDBY
+**Working on:** Attendant→Volunteer Refactor Complete - Awaiting UI Text Update Decision
 
 ---
 
 ## Current Task
-**Phase 4C: Deployment Complete - Ready for Production Testing**
+**Attendant→Volunteer Code Refactor: Complete ✅**
 
 ### What I'm doing right now
-Phase 4C successfully deployed to STANDBY (blue.theoshift.com). All critical deployment issues resolved including Prisma schema mappings, console log cleanup, and UI improvements. STANDBY is stable and ready for full user testing before traffic switch.
+Completed backward-compatible refactor of attendant→volunteer terminology in code layer. Both Positions and Volunteers pages now working on STANDBY. Awaiting user decision on Phase 2A (UI text updates) or marking task complete.
 
 ### Recent completions
+
+**Today (2026-01-28 - Afternoon Session: Attendant→Volunteer Refactor):**
+- ✅ Fixed 404 errors on Positions and Volunteers pages
+- ✅ Replaced all `prisma.attendants` → `prisma.volunteers` (18 API files)
+- ✅ Fixed relation names (`attendant` → `volunteer`, `users` → `user`)
+- ✅ Fixed field names (`attendantId` → `volunteerId` in volunteer_availability)
+- ✅ Added `ATTENDANT` enum back for backward compatibility
+- ✅ Regenerated Prisma client multiple times to sync schema
+- ✅ Both pages tested and working on STANDBY
+- ✅ Documented decision D-TS-015 (backward compatible refactor)
+- ✅ Documented tech debt TD-001 (database cleanup deferred)
+
+**Commits:**
+- `2ea1173c` - fix: change attendantId to volunteerId in volunteer_availability queries
+- `af4f0fab` - fix: change users to user in positions.tsx volunteer query
+- `3ef58ae6` - fix: comprehensive attendant to volunteer refactor with backward compatibility
 
 **Today (2026-01-28 - Early Morning Session: Phase 4C Bug Fixes):**
 - ✅ Fixed email sender name to 'TheoShift Team' (was using config.fromName)
@@ -141,26 +157,35 @@ Phase 4C successfully deployed to STANDBY (blue.theoshift.com). All critical dep
 - Repository significantly cleaner and organized
 
 ### Next steps
-1. **Re-test Phase 4C on STANDBY** (https://blue.theoshift.com)
+1. **Decide on UI Text Refactor (Phase 2A)** - PENDING USER DECISION
+   - Option A: Update all UI text/labels from "attendant" to "volunteer" (~50+ instances)
+   - Option B: Keep as-is and mark refactor complete
+   - Option C: Document as tech debt for later
+   
+2. **Re-test Phase 4C on STANDBY** (https://blue.theoshift.com)
    - Test availability request email flow (sender name, footer, link destination)
    - Test Set PIN functionality (should no longer get 401 errors)
-   - Investigate why only one email was sent to corallen48@gmail.com (check logs)
+   - Verify Positions and Volunteers pages work correctly
    - Verify all Phase 4C features work correctly
    
-2. **Run /release workflow** when testing complete
+3. **Run /release workflow** when testing complete
    - Switch traffic from green (LIVE) to blue (STANDBY)
-   - Make Phase 4C live for production users
+   - Make Phase 4C + refactor live for production users
    
-3. **Run /sync workflow** after release
+4. **Run /sync workflow** after release
    - Sync STANDBY with new LIVE code
    - Prepare for next development cycle
 
-4. Monitor for any issues from Phase 4C release
-5. Remove legacy ACLs after Feb 1, 2026 (domain migration complete)
+5. Monitor for any issues from Phase 4C release
+6. Remove legacy ACLs after Feb 1, 2026 (domain migration complete)
 
 ---
 
 ## Known Issues
+**Resolved:**
+- ✅ 404 errors on Positions and Volunteers pages (fixed via attendant→volunteer refactor)
+- ✅ Prisma schema mismatches (fixed via multiple client regenerations)
+
 **Under Investigation:**
 - Only one availability request email received (corallen48@gmail.com) when two volunteers were selected (corylallen@gmail.com + corallen48@gmail.com)
   - Need to check container logs for email sending errors
@@ -171,12 +196,18 @@ Phase 4C successfully deployed to STANDBY (blue.theoshift.com). All critical dep
 - Refactoring validation test (expects event selection)
 - User management test (CSS selector syntax error)
 
-**Key Learning from Deployment:**
+**Tech Debt:**
+- UI still shows "attendant" terminology in ~50+ places (help pages, labels, buttons)
+- Database tables/columns still use "attendant" naming (backward compatible via @map)
+- Documented in TECH-DEBT.md as TD-001
+
+**Key Learnings:**
 - Some legacy tables (count_sessions, position_counts) use camelCase, not snake_case
 - Always verify database schema with `\d table_name` before adding @map directives
-- Documented in D-TS-013 and promoted to control plane
+- Prisma client must be regenerated after schema changes
+- Backward compatibility via @map directives is production-ready approach
 
 ---
 
 ## Exact Next Command
-**Test Phase 4C on STANDBY** at https://blue.theoshift.com - verify all pages work correctly, then run `/release` to switch traffic and make Phase 4C live.
+**Decide on UI text refactor** - then test Phase 4C on STANDBY at https://blue.theoshift.com and run `/release` to switch traffic.

@@ -44,7 +44,7 @@ interface EventAttendantBulkImportResponse {
 
 class EventAttendantService {
   private getBaseUrl(eventId: string) {
-    return `/api/events/${eventId}/attendants`
+    return `/api/events/${eventId}/volunteers`
   }
 
   async getEventAttendants(eventId: string, filters?: AttendantSearchFilters & { 

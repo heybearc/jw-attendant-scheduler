@@ -1,4 +1,4 @@
-// Re-export attendant types for feature isolation
+// Re-export all types from the main types file
 export * from '../../../src/types/volunteer'
 
 // Feature-specific types
@@ -36,4 +36,10 @@ export interface BulkImportModalProps {
 }
 
 // Import from main types
-import { Attendant, AttendantCreateInput, AttendantSearchFilters, AttendantBulkImport } from '../../../src/types/volunteer'
+import { Volunteer, VolunteerCreateInput, VolunteerSearchFilters, VolunteerBulkImport } from '../../../src/types/volunteer'
+
+// Type aliases for backward compatibility in this feature module
+export type Attendant = Volunteer
+export type AttendantCreateInput = VolunteerCreateInput
+export type AttendantSearchFilters = VolunteerSearchFilters
+export type AttendantBulkImport = VolunteerBulkImport

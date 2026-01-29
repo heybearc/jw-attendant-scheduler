@@ -58,7 +58,7 @@ export default function EventAttendantManagementPageSimple({
         setLoading(true)
         setError(null)
         
-        const response = await fetch(`/api/events/${eventId}/attendants?page=1&limit=25`)
+        const response = await fetch(`/api/events/${eventId}/volunteers?page=1&limit=25`)
         console.log('APEX GUARDIAN: Response status:', response.status)
         
         if (response.ok) {

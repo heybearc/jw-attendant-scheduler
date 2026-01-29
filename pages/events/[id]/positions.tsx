@@ -1748,7 +1748,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                   const shiftId = formData.get('shiftId') as string
                   
                   if (!attendantId) {
-                    alert('Please select an attendant')
+                    alert('Please select a volunteer')
                     return
                   }
                   
@@ -1821,7 +1821,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
                     >
-                      <option value="">Select an attendant...</option>
+                      <option value="">Select a volunteer...</option>
                       {(() => {
                         // APEX GUARDIAN: Get oversight from position.oversight array
                         const oversight = selectedPosition.oversight && selectedPosition.oversight.length > 0 ? selectedPosition.oversight[0] : null

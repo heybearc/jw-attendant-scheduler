@@ -24,7 +24,7 @@ interface Event {
   endTime?: string
   location: string
   capacity?: number
-  volunteersNeeded?: number
+  attendantsNeeded?: number
   status: string
   createdAt: string
   updatedAt: string
@@ -40,7 +40,7 @@ interface Event {
   assemblyoverseername?: string
   assemblyoverseerphone?: string
   assemblyoverseeremail?: string
-  volunteeroverseername?: string
+  attendantoverseername?: string
   attendantoverseerphone?: string
   attendantoverseeremail?: string
   attendantoverseerassistants?: any[]
@@ -263,7 +263,7 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
       [''],
       ['Statistics'],
       ['Total Positions', event._count.positions.toString()],
-      ['Volunteers Linked', event._count.event_volunteers.toString()]
+      ['Attendants Linked', event._count.event_volunteers.toString()]
     ]
 
     const csvContent = csvData.map(row => row.join(',')).join('\n')
@@ -486,9 +486,9 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-500">Volunteers Needed</label>
+                  <label className="block text-sm font-medium text-gray-500">Attendants Needed</label>
                   <p className="mt-1 text-sm font-semibold text-gray-900">
-                    {event.volunteersNeeded ? event.volunteersNeeded.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') : 'Not specified'}
+                    {event.attendantsNeeded ? event.attendantsNeeded.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') : 'Not specified'}
                   </p>
                 </div>
               </div>
@@ -763,9 +763,9 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
                   )}
                 </div>
                 <div className="bg-white bg-opacity-60 rounded-lg p-3">
-                  <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">Volunteer Overseer</div>
+                  <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">Attendant Overseer</div>
                   <div className="text-sm font-semibold text-gray-900">
-                    {event.volunteeroverseername || 'Not Assigned'}
+                    {event.attendantoverseername || 'Not Assigned'}
                   </div>
                   {event.attendantoverseerphone && (
                     <div className="text-xs text-gray-600">📞 {event.attendantoverseerphone}</div>
@@ -831,26 +831,10 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
   )
 }
 
-export const getServerSideProps: GetServerSideProps<EventDetailsPageProps> = async (context) => {
-  const fs = require('fs')
-  const logFile = '/tmp/event-page-debug.log'
-  const log = (msg: string) => {
-    const timestamp = new Date().toISOString()
-    fs.appendFileSync(logFile, `${timestamp} - ${msg}\n`)
-  }
-  
-  log('========================================')
-  log(`getServerSideProps called for event: ${context.params?.id}`)
-  log(`Request URL: ${context.req.url}`)
-  
+export const getServerSideProps: GetServerSideProps = async (context) => {
   const session = await getServerSession(context.req, context.res, authOptions)
-  
-  log(`Session found: ${!!session}`)
-  log(`User ID: ${session?.user?.id}`)
-  log(`User role: ${session?.user?.role}`)
 
   if (!session) {
-    log('No session - redirecting to signin')
     return {
       redirect: {
         destination: '/auth/signin',
@@ -858,14 +842,12 @@ export const getServerSideProps: GetServerSideProps<EventDetailsPageProps> = asy
       },
     }
   }
-  
-  log('Session validated')
 
-  // CRITICAL: Block volunteers from accessing admin event pages
+  // CRITICAL: Block attendants from accessing admin event pages
   if (session.user?.role === 'ATTENDANT') {
     return {
       redirect: {
-        destination: '/volunteer/dashboard',
+        destination: '/attendant/dashboard',
         permanent: false,
       },
     }
@@ -884,19 +866,14 @@ export const getServerSideProps: GetServerSideProps<EventDetailsPageProps> = asy
   // APEX GUARDIAN: Check event-specific permissions
   const { id } = context.params!
   
-  log(`Checking event access for user: ${session.user?.id}, event: ${id}, role: ${session.user?.role}`)
-  
   // Import event access utilities
   const { checkEventAccess } = await import('../../../src/lib/eventAccess')
   
   // Check if user has at least VIEWER access to this event
   const eventPermission = await checkEventAccess(session.user?.id || '', id as string, 'VIEWER')
   
-  log(`Event permission result: ${JSON.stringify(eventPermission)}`)
-  
   if (!eventPermission) {
     // User doesn't have permission to view this event
-    log('❌ No permission - redirecting to /events/select')
     return {
       redirect: {
         destination: '/events/select',
@@ -904,8 +881,6 @@ export const getServerSideProps: GetServerSideProps<EventDetailsPageProps> = asy
       },
     }
   }
-  
-  log('✅ Permission granted - loading event page')
 
   // APEX GUARDIAN: Fetch event data server-side to eliminate client-side API issues
   
@@ -1016,7 +991,7 @@ export const getServerSideProps: GetServerSideProps<EventDetailsPageProps> = asy
     const sessionBreakdown = countSessions.map(session => ({
       id: session.id,
       sessionName: session.sessionName,
-      countTime: typeof session.countTime === 'string' ? session.countTime : session.countTime?.toISOString() || null,
+      countTime: session.countTime.toISOString(),
       totalCount: session.position_counts.reduce((sum, count) => sum + (count.attendeeCount || 0), 0),
       positionsReported: session.position_counts.length,
       status: session.status
@@ -1039,78 +1014,21 @@ export const getServerSideProps: GetServerSideProps<EventDetailsPageProps> = asy
     // Calculate event total (sum of all session totals)
     const eventTotal = sessionBreakdown.reduce((sum, session) => sum + session.totalCount, 0)
 
-    // Transform event data for frontend compatibility - serialize ALL fields properly
+    // Transform event data for frontend compatibility
     const transformedEvent = {
-      id: event.id,
-      name: event.name,
-      description: event.description,
-      eventType: event.eventType,
+      ...event,
       startDate: event.startDate ? format(event.startDate, 'yyyy-MM-dd') : null,
       endDate: event.endDate ? format(event.endDate, 'yyyy-MM-dd') : null,
-      startTime: event.startTime,
-      endTime: event.endTime,
-      location: event.location,
-      capacity: event.capacity,
-      volunteersNeeded: event.volunteersNeeded,
-      status: event.status,
       createdAt: event.createdAt?.toISOString() || null,
       updatedAt: event.updatedAt?.toISOString() || null,
-      parentEventId: event.parentEventId,
-      departmentTemplateId: event.departmentTemplateId,
-      settings: event.settings,
-      circuitoverseername: event.circuitoverseername,
-      circuitoverseerphone: event.circuitoverseerphone,
-      circuitoverseeremail: event.circuitoverseeremail,
-      assemblyoverseername: event.assemblyoverseername,
-      assemblyoverseerphone: event.assemblyoverseerphone,
-      assemblyoverseeremail: event.assemblyoverseeremail,
-      volunteeroverseername: (event as any).volunteeroverseername,
-      attendantoverseerphone: (event as any).attendantoverseerphone,
-      attendantoverseeremail: (event as any).attendantoverseeremail,
-      attendantoverseerassistants: (event as any).attendantoverseerassistants,
       totalShiftsNeeded,
       childEvents: (event as any).childEvents?.map((child: any) => ({
-        id: child.id,
-        name: child.name,
-        eventType: child.eventType,
+        ...child,
         startDate: child.startDate ? format(child.startDate, 'yyyy-MM-dd') : null,
-        endDate: child.endDate ? format(child.endDate, 'yyyy-MM-dd') : null,
-        status: child.status
+        endDate: child.endDate ? format(child.endDate, 'yyyy-MM-dd') : null
       })) || [],
-      parentEvent: (event as any).parentEvent ? {
-        id: (event as any).parentEvent.id,
-        name: (event as any).parentEvent.name
-      } : null,
-      departmentTemplate: (event as any).departmentTemplate ? {
-        id: (event as any).departmentTemplate.id,
-        name: (event as any).departmentTemplate.name,
-        description: (event as any).departmentTemplate.description,
-        moduleConfig: (event as any).departmentTemplate.moduleConfig,
-        terminology: (event as any).departmentTemplate.terminology
-      } : null,
-      event_volunteers: (event as any).event_volunteers?.map((ev: any) => ({
-        id: ev.id,
-        volunteer: ev.volunteer ? {
-          id: ev.volunteer.id,
-          firstName: ev.volunteer.firstName,
-          lastName: ev.volunteer.lastName,
-          email: ev.volunteer.email
-        } : null,
-        users: ev.users ? {
-          id: ev.users.id,
-          firstName: ev.users.firstName,
-          lastName: ev.users.lastName,
-          email: ev.users.email
-        } : null
-      })) || [],
-      positions: (event as any).positions?.map((p: any) => ({
-        id: p.id,
-        positionNumber: p.positionNumber,
-        name: p.name,
-        area: p.area,
-        isActive: p.isActive,
-        department: p.department
-      })) || [],
+      parentEvent: (event as any).parentEvent || null,
+      departmentTemplate: (event as any).departmentTemplate || null,
       _count: {
         event_volunteers: event.event_volunteers?.length || 0,
         positions: event.positions?.length || 0
@@ -1126,7 +1044,7 @@ export const getServerSideProps: GetServerSideProps<EventDetailsPageProps> = asy
     }
 
     // Check event-specific permissions
-    const { canManageEvent, canDeleteEvent, canManageVolunteers } = await import('../../../src/lib/eventAccess')
+    const { canManageEvent, canDeleteEvent, canManageAttendants } = await import('../../../src/lib/eventAccess')
     const userId = session.user?.id || ''
     
     // MANAGER or OWNER can edit event settings
@@ -1136,7 +1054,7 @@ export const getServerSideProps: GetServerSideProps<EventDetailsPageProps> = asy
     const canDelete = await canDeleteEvent(userId, id as string)
     
     // OWNER, MANAGER, or OVERSEER (no scope) can create positions/attendants/count sessions
-    const canManageContent = await canManageVolunteers(userId, id as string)
+    const canManageContent = await canManageAttendants(userId, id as string)
 
     return {
       props: {
@@ -1147,22 +1065,7 @@ export const getServerSideProps: GetServerSideProps<EventDetailsPageProps> = asy
       },
     }
   } catch (error) {
-    // ALWAYS log errors to help debug 404 issues
-    log('========================================')
-    log('EVENT PAGE ERROR - getServerSideProps failed')
-    log(`Event ID: ${id}`)
-    log(`Error: ${error}`)
-    log(`Error message: ${error instanceof Error ? error.message : 'Unknown error'}`)
-    log(`Error stack: ${error instanceof Error ? error.stack : 'No stack trace'}`)
-    log(`Error type: ${error?.constructor?.name}`)
-    
-    // Try to get more details from Prisma errors
-    if (error && typeof error === 'object' && 'code' in error) {
-      log(`Prisma error code: ${(error as any).code}`)
-      log(`Prisma error meta: ${JSON.stringify((error as any).meta)}`)
-    }
-    log('========================================')
-    
+    console.error('Event page error:', error)
     return {
       notFound: true,
     }

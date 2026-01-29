@@ -1031,9 +1031,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       parentEvent: (event as any).parentEvent || null,
       departmentTemplate: (event as any).departmentTemplate || null,
       _count: {
-        event_volunteers: event.event_volunteers?.length || 0,
+        event_volunteers: (event as any).event_volunteers?.length || 0,
         assignments: totalAssignments,
-        positions: event.positions?.length || 0
+        positions: (event as any).positions?.length || 0
       },
       countStats: {
         peakAttendance,

@@ -4,18 +4,18 @@ import { authOptions } from '../api/auth/[...nextauth]'
 import HelpLayout from '../../components/HelpLayout'
 import Link from 'next/link'
 
-interface AttendantManagementHelpProps {
+interface VolunteerManagementHelpProps {
   userRole: string
 }
 
-export default function AttendantManagementHelp({ userRole }: AttendantManagementHelpProps) {
+export default function VolunteerManagementHelp({ userRole }: VolunteerManagementHelpProps) {
   return (
     <HelpLayout>
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">👥 Attendant Management</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">👥 Volunteer Management</h1>
           <p className="text-gray-600">
-            Learn how to find, filter, and manage attendants effectively
+            Learn how to find, filter, and manage volunteers effectively
           </p>
         </div>
 
@@ -23,7 +23,7 @@ export default function AttendantManagementHelp({ userRole }: AttendantManagemen
         <section className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <h2 className="text-2xl font-semibold text-gray-900 mb-4">📊 Overview</h2>
           <p className="text-gray-700 mb-4">
-            The attendant management system helps you quickly find and organize attendants using
+            The volunteer management system helps you quickly find and organize volunteers using
             powerful filtering tools, colored badges, and smart defaults.
           </p>
         </section>
@@ -32,20 +32,20 @@ export default function AttendantManagementHelp({ userRole }: AttendantManagemen
         <section className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <h2 className="text-2xl font-semibold text-gray-900 mb-4">🎯 Smart Default View</h2>
           <p className="text-gray-700 mb-4">
-            By default, the attendant list shows only <strong>active attendants</strong>. This makes it
+            By default, the volunteer list shows only <strong>active volunteers</strong>. This makes it
             easier to find who you need without scrolling through inactive records.
           </p>
           
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
             <p className="text-sm text-blue-900">
-              <strong>Tip:</strong> To see all attendants including inactive ones, click the "Total" card
+              <strong>Tip:</strong> To see all volunteers including inactive ones, click the "Total" card
               at the top of the page.
             </p>
           </div>
 
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Quick Filter Cards</h3>
           <p className="text-gray-700 mb-2">
-            At the top of the attendant list, you'll see three summary cards:
+            At the top of the volunteer list, you'll see three summary cards:
           </p>
           <ul className="list-disc list-inside space-y-2 text-gray-700 ml-4">
             <li><strong>Total:</strong> Click to see all attendants (active and inactive)</li>

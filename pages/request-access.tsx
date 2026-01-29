@@ -90,7 +90,7 @@ export default function RequestAccess() {
                 Back to Sign In
               </Link>
               <Link
-                href="/attendant/login"
+                href="/volunteer/login"
                 className="inline-flex items-center justify-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               >
                 <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

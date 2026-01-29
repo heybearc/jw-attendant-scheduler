@@ -125,7 +125,7 @@ export default function HelpPage({ userRole }: HelpPageProps) {
               🔐 Sign In
             </Link>
             <Link
-              href="/attendant/login"
+              href="/volunteer/login"
               className="text-blue-600 hover:text-blue-800 transition-colors"
             >
               👤 Attendant Login

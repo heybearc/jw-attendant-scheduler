@@ -847,7 +847,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   if (session.user?.role === 'ATTENDANT') {
     return {
       redirect: {
-        destination: '/attendant/dashboard',
+        destination: '/volunteer/dashboard',
         permanent: false,
       },
     }

@@ -302,11 +302,11 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     }
   }
 
-  // CRITICAL: Attendants should NEVER access this page - redirect to attendant portal
+  // CRITICAL: Volunteers should NEVER access this page - redirect to volunteer portal
   if (session.user?.role === 'ATTENDANT') {
     return {
       redirect: {
-        destination: '/attendant/dashboard',
+        destination: '/volunteer/dashboard',
         permanent: false,
       },
     }

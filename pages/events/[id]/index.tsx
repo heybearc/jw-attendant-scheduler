@@ -1077,8 +1077,17 @@ export const getServerSideProps: GetServerSideProps<EventDetailsPageProps> = asy
         endDate: child.endDate ? format(child.endDate, 'yyyy-MM-dd') : null,
         status: child.status
       })) || [],
-      parentEvent: (event as any).parentEvent || null,
-      departmentTemplate: (event as any).departmentTemplate || null,
+      parentEvent: (event as any).parentEvent ? {
+        id: (event as any).parentEvent.id,
+        name: (event as any).parentEvent.name
+      } : null,
+      departmentTemplate: (event as any).departmentTemplate ? {
+        id: (event as any).departmentTemplate.id,
+        name: (event as any).departmentTemplate.name,
+        description: (event as any).departmentTemplate.description,
+        moduleConfig: (event as any).departmentTemplate.moduleConfig,
+        terminology: (event as any).departmentTemplate.terminology
+      } : null,
       event_volunteers: (event as any).event_volunteers?.map((ev: any) => ({
         id: ev.id,
         volunteer: ev.volunteer ? {

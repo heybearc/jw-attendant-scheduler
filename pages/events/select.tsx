@@ -43,7 +43,8 @@ export default function EventSelectPage({ events, userLastSeenVersion }: EventSe
       })
 
       if (response.ok) {
-        router.push(`/events/${eventId}`)
+        // Use window.location for full page reload to avoid client-side routing issues
+        window.location.href = `/events/${eventId}`
       } else {
         setError('Failed to select event')
       }

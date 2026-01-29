@@ -1772,10 +1772,10 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                 <form onSubmit={async (e) => {
                   e.preventDefault()
                   const formData = new FormData(e.currentTarget)
-                  const attendantId = formData.get('attendantId') as string
+                  const volunteerId = formData.get('volunteerId') as string
                   const shiftId = formData.get('shiftId') as string
                   
-                  if (!attendantId) {
+                  if (!volunteerId) {
                     alert('Please select a volunteer')
                     return
                   }
@@ -1791,7 +1791,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({
                         positionId: selectedPosition.id,
-                        attendantId: attendantId,
+                        volunteerId: volunteerId,
                         shiftId: shiftId,
                         role: 'ATTENDANT'
                       })
@@ -1845,7 +1845,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                       })()}
                     </label>
                     <select 
-                      name="attendantId"
+                      name="volunteerId"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
                     >

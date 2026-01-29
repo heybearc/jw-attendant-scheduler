@@ -646,7 +646,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
       return // Don't close modal immediately
     } catch (error) {
       console.error('Auto-assign error:', error)
-      alert('Failed to auto-assign attendants')
+      alert('Failed to auto-assign volunteers')
     } finally {
       setIsSubmitting(false)
       setShowProgressModal(false)
@@ -1436,7 +1436,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                                     }}
                                     className="w-full text-xs text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded px-2 py-1 transition-colors"
                                   >
-                                    + Assign Attendant
+                                    + Assign Volunteer
                                   </button>
                                 )}
                               </div>
@@ -1511,7 +1511,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                             }}
                             className="w-full text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded px-2 py-1 transition-colors"
                           >
-                            + Assign Attendant
+                            + Assign Volunteer
                           </button>
                         </div>
                       </div>
@@ -1728,13 +1728,13 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
           onFormDataChange={setOverseerFormData}
         />
 
-        {/* Assign Attendant Modal */}
+        {/* Assign Volunteer Modal */}
         {showAssignAttendantModal && selectedPosition && (
           <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
             <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
               <div className="mt-3">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  Assign Attendant to {selectedPosition.name}
+                  Assign Volunteer to {selectedPosition.name}
                   {selectedShift && (
                     <div className="text-sm text-gray-600 mt-1">
                       Shift: {selectedShift.name} {!selectedShift.isAllDay && `(${formatTime12Hour(selectedShift.startTime || '')} - ${formatTime12Hour(selectedShift.endTime || '')})`}
@@ -1788,15 +1788,15 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                         } else if (errorData.conflictType === 'ROLE_OCCUPIED') {
                           alert(`⚠️ Role Occupied: ${errorData.message}`)
                         } else {
-                          alert(`⚠️ Assignment Conflict: ${errorData.message || 'Unable to assign attendant to this shift.'}`)
+                          alert(`⚠️ Assignment Conflict: ${errorData.message || 'Unable to assign volunteer to this shift.'}`)
                         }
                       } else {
-                        alert(`Failed to assign attendant: ${errorData.error || 'Unknown error'}`)
+                        alert(`Failed to assign volunteer: ${errorData.error || 'Unknown error'}`)
                       }
                     }
                   } catch (error) {
-                    console.error('Error assigning attendant:', error)
-                    alert('Failed to assign attendant')
+                    console.error('Error assigning volunteer:', error)
+                    alert('Failed to assign volunteer')
                   }
                 }}>
                   <div className="mb-4">
@@ -1891,7 +1891,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                       type="submit"
                       className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
                     >
-                      Assign Attendant
+                      Assign Volunteer
                     </button>
                   </div>
                 </form>

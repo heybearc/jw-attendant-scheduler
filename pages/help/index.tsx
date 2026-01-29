@@ -55,7 +55,7 @@ export default function HelpPage({ userRole }: HelpPageProps) {
     {
       id: 'assignments',
       title: '📋 Managing Assignments',
-      description: 'How to assign attendants to positions and manage schedules',
+      description: 'How to assign volunteers to positions and manage schedules',
       roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN']
     },
     {
@@ -128,7 +128,7 @@ export default function HelpPage({ userRole }: HelpPageProps) {
               href="/volunteer/login"
               className="text-blue-600 hover:text-blue-800 transition-colors"
             >
-              👤 Attendant Login
+              👤 Volunteer Login
             </Link>
           </div>
         </div>

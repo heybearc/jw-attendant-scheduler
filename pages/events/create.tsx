@@ -163,7 +163,7 @@ export default function CreateEventPage() {
     }
 
     if (formData.attendantsNeeded && parseInt(formData.attendantsNeeded) < 0) {
-      newErrors.attendantsNeeded = 'Attendants needed cannot be negative'
+      newErrors.attendantsNeeded = 'Volunteers needed cannot be negative'
     }
 
     if (formData.capacity && formData.attendantsNeeded) {
@@ -171,7 +171,7 @@ export default function CreateEventPage() {
       const attendantsNeeded = parseInt(formData.attendantsNeeded)
       
       if (attendantsNeeded > capacity) {
-        newErrors.attendantsNeeded = 'Attendants needed cannot exceed capacity'
+        newErrors.attendantsNeeded = 'Volunteers needed cannot exceed capacity'
       }
     }
 

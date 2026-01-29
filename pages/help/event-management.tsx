@@ -250,7 +250,7 @@ export default function EventManagementPage({ userRole }: EventManagementProps) 
                     <li>• Assign attendants to specific positions and shifts</li>
                     <li>• Monitor assignment coverage and gaps</li>
                     <li>• Handle last-minute changes and substitutions</li>
-                    <li>• Communicate with attendants about their assignments</li>
+                    <li>• Communicate with volunteers about their assignments</li>
                   </ul>
                 </div>
                 

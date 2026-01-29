@@ -443,7 +443,7 @@ export default function EventDetailsPage({ event }: EventDetailsPageProps) {
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-500">Attendants Needed</label>
+                  <label className="block text-sm font-medium text-gray-500">Volunteers Needed</label>
                   <p className="mt-1 text-sm font-semibold text-gray-900">
                     {event.attendantsNeeded ? event.attendantsNeeded.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') : 'Not specified'}
                   </p>

@@ -15,7 +15,7 @@ export default function ManagingAssignmentsPage({ userRole }: ManagingAssignment
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">👥 Managing Assignments</h1>
           <p className="text-gray-600">
-            How to assign attendants to positions and manage schedules effectively
+            How to assign volunteers to positions and manage schedules effectively
           </p>
         </div>
 

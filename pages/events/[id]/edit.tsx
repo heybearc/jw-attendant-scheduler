@@ -169,7 +169,7 @@ export default function EditEventPage({ event }: EditEventPageProps) {
     }
 
     if (formData.volunteersNeeded && parseInt(formData.volunteersNeeded) < 0) {
-      newErrors.volunteersNeeded = 'Attendants needed cannot be negative'
+      newErrors.volunteersNeeded = 'Volunteers needed cannot be negative'
     }
 
     if (formData.capacity && formData.volunteersNeeded) {
@@ -177,7 +177,7 @@ export default function EditEventPage({ event }: EditEventPageProps) {
       const volunteersNeeded = parseInt(formData.volunteersNeeded)
       
       if (volunteersNeeded > capacity) {
-        newErrors.volunteersNeeded = 'Attendants needed cannot exceed capacity'
+        newErrors.volunteersNeeded = 'Volunteers needed cannot exceed capacity'
       }
     }
 
@@ -573,7 +573,7 @@ export default function EditEventPage({ event }: EditEventPageProps) {
                   className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                     errors.volunteersNeeded ? 'border-red-500' : 'border-gray-300'
                   }`}
-                  placeholder="Number of attendants needed"
+                  placeholder="Number of volunteers needed"
                 />
                 {errors.volunteersNeeded && <p className="mt-1 text-sm text-red-600">{errors.volunteersNeeded}</p>}
               </div>

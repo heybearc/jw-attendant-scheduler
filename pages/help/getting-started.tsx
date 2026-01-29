@@ -32,9 +32,9 @@ export default function GettingStartedPage({ userRole }: GettingStartedProps) {
               <h3 className="font-semibold text-gray-900 mb-2">🎯 Your Role: {userRole}</h3>
               <p className="text-sm text-gray-600">
                 {userRole === 'ADMIN' && 'You have full system access including user management, event creation, and system configuration.'}
-                {userRole === 'OVERSEER' && 'You can manage events, assign attendants, and oversee event operations.'}
-                {userRole === 'ASSISTANT_OVERSEER' && 'You can assist with event management and attendant coordination.'}
-                {userRole === 'KEYMAN' && 'You can manage specific areas and coordinate with attendants in your section.'}
+                {userRole === 'OVERSEER' && 'You can manage events, assign volunteers, and oversee event operations.'}
+                {userRole === 'ASSISTANT_OVERSEER' && 'You can assist with event management and volunteer coordination.'}
+                {userRole === 'KEYMAN' && 'You can manage specific areas and coordinate with volunteers in your section.'}
                 {userRole === 'ATTENDANT' && 'You can view your assignments, check in for events, and manage your personal information.'}
               </p>
             </div>

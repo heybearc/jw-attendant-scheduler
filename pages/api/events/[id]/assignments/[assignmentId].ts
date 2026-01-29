@@ -45,7 +45,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           where: { id: assignmentId },
           include: {
             positions: true,
-            attendant: {
+            volunteer: {
               select: {
                 firstName: true,
                 lastName: true
@@ -64,7 +64,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           return res.status(400).json({ error: 'Assignment does not belong to this event' })
         }
 
-        console.log(`📋 Removing ${assignment.attendant.firstName} ${assignment.attendant.lastName} from position ${assignment.positions.name}`)
+        console.log(`📋 Removing ${assignment.volunteer.firstName} ${assignment.volunteer.lastName} from position ${assignment.positions.name}`)
 
         // Delete the assignment
         await prisma.position_assignments.delete({

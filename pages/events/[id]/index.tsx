@@ -1054,8 +1054,29 @@ export const getServerSideProps: GetServerSideProps<EventDetailsPageProps> = asy
       })) || [],
       parentEvent: (event as any).parentEvent || null,
       departmentTemplate: (event as any).departmentTemplate || null,
-      event_volunteers: event.event_volunteers || [],
-      positions: event.positions || [],
+      event_volunteers: (event as any).event_volunteers?.map((ev: any) => ({
+        id: ev.id,
+        volunteer: ev.volunteer ? {
+          id: ev.volunteer.id,
+          firstName: ev.volunteer.firstName,
+          lastName: ev.volunteer.lastName,
+          email: ev.volunteer.email
+        } : null,
+        users: ev.users ? {
+          id: ev.users.id,
+          firstName: ev.users.firstName,
+          lastName: ev.users.lastName,
+          email: ev.users.email
+        } : null
+      })) || [],
+      positions: (event as any).positions?.map((p: any) => ({
+        id: p.id,
+        positionNumber: p.positionNumber,
+        name: p.name,
+        area: p.area,
+        isActive: p.isActive,
+        department: p.department
+      })) || [],
       _count: {
         event_volunteers: event.event_volunteers?.length || 0,
         positions: event.positions?.length || 0

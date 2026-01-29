@@ -63,7 +63,20 @@ if [ -f "$REPO_ROOT/.debugging" ]; then
     
     if [ $? -eq 0 ]; then
         echo "✅ Deployed to $CONTAINER"
-        echo "💡 Test your changes now"
+        
+        # Run smoke tests if AUTO_TEST is enabled
+        if [ -f "$REPO_ROOT/.auto-test" ]; then
+            echo "🧪 Running smoke tests..."
+            ssh "$CONTAINER" "cd $APP_PATH && npm run test:smoke:quick" 2>/dev/null
+            
+            if [ $? -eq 0 ]; then
+                echo "✅ Tests passing"
+            else
+                echo "⚠️  Some tests failed - check test output"
+            fi
+        else
+            echo "💡 Test your changes now (or enable auto-test: touch .auto-test)"
+        fi
     else
         echo "❌ Deployment failed - check SSH connection"
     fi

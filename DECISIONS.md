@@ -208,6 +208,47 @@
 - Database cleanup deferred as tech debt (TD-001)
 - UI text refactor pending (50+ instances of "attendant" in labels/help pages)
 
+### D-TS-016: Phase-by-Phase Refactoring for Large Terminology Changes
+**Date:** 2026-01-29  
+**Context:** Need to refactor "attendant" to "volunteer" across entire application without breaking production  
+**Decision:** Use 6-phase approach: (1) Routes, (2) API endpoints, (3) Frontend vars, (4) API vars, (5) Type defs, (6) Cleanup  
+**Consequences:**
+- Each phase independently testable with custom test suites
+- Backward compatibility maintained throughout all phases
+- Safe rollback capability at any phase
+- Zero downtime deployment achieved (v3.5.0)
+- Documented as runbook in control plane for future refactors
+
+### D-TS-017: Server-Side Redirects Over Client-Side for Route Changes
+**Date:** 2026-01-29  
+**Context:** Old /attendants route needs to redirect to new /volunteers route  
+**Decision:** Use Next.js getServerSideProps with 307 redirect instead of client-side useEffect redirect  
+**Consequences:**
+- Better SEO (search engines follow server redirects)
+- Faster for users (no client-side JavaScript execution)
+- More reliable (works even if JS disabled)
+- Proper HTTP status code (307 Temporary Redirect)
+
+### D-TS-018: Type Aliases for Gradual Migration
+**Date:** 2026-01-29  
+**Context:** Feature modules still reference "Attendant" types but core types renamed to "Volunteer"  
+**Decision:** Create type aliases (export type Attendant = Volunteer) for backward compatibility in feature modules  
+**Consequences:**
+- Feature modules can migrate gradually without breaking
+- No breaking changes during refactor
+- Clear migration path for future Phase 6B cleanup
+- TypeScript compilation succeeds throughout refactor
+
+### D-TS-019: Help Documentation Updates Required for User-Facing Changes
+**Date:** 2026-01-29  
+**Context:** Terminology change from "attendant" to "volunteer" affects all user-facing text  
+**Decision:** Update all help documentation as mandatory part of version bump workflow, not optional  
+**Consequences:**
+- Help docs always match current terminology
+- Users see consistent language throughout app
+- Documentation updates tracked in version control
+- Part of /bump checklist, enforced before release
+
 ---
 
 ## Shared Decisions

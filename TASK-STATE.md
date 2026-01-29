@@ -1,18 +1,48 @@
 # TheoShift Task State
 
-**Last updated:** 2026-01-28 (afternoon)  
+**Last updated:** 2026-01-29 (afternoon)  
 **Current branch:** main  
-**Working on:** Attendant→Volunteer Refactor Complete - Awaiting UI Text Update Decision
+**Working on:** Attendant→Volunteer Refactor - DEPLOYED TO PRODUCTION ✅
 
 ---
 
 ## Current Task
-**Attendant→Volunteer Code Refactor: Complete ✅**
+**Attendant→Volunteer Refactor: COMPLETE AND LIVE ✅**
 
 ### What I'm doing right now
-Completed backward-compatible refactor of attendant→volunteer terminology in code layer. Both Positions and Volunteers pages now working on STANDBY. Awaiting user decision on Phase 2A (UI text updates) or marking task complete.
+Successfully completed full 6-phase refactor and deployed v3.5.0 to production. All phases tested, version bumped, released to LIVE, STANDBY synced, and learnings promoted to control plane. Ready for next development cycle.
 
 ### Recent completions
+
+**Today (2026-01-29 - Full Day: Attendant→Volunteer Refactor - Production Deployment):**
+- ✅ Completed all 6 phases of terminology refactor
+- ✅ Phase 1: Renamed routes with server-side redirects
+- ✅ Phase 2: Created new /volunteers API endpoints
+- ✅ Phase 3: Updated frontend variables
+- ✅ Phase 4: Updated API variables
+- ✅ Phase 5: Updated TypeScript type definitions
+- ✅ Phase 6A: Updated feature modules to use new APIs
+- ✅ Created custom test suites for each phase (18 tests total)
+- ✅ All refactor tests passed (18/18 - 100%)
+- ✅ Updated all help documentation with new terminology
+- ✅ Version bumped to v3.5.0 with user-friendly release notes
+- ✅ Released to LIVE via traffic switch (BLUE now LIVE)
+- ✅ Synced STANDBY (GREEN) with new code
+- ✅ Promoted learnings to control plane (terminology-refactor.md runbook)
+- ✅ Updated Cloudy-Work submodule in TheoShift repo
+
+**Decisions Added:**
+- D-TS-016: Phase-by-phase refactoring approach
+- D-TS-017: Server-side redirects over client-side
+- D-TS-018: Type aliases for gradual migration
+- D-TS-019: Help documentation updates mandatory
+
+**Commits:**
+- `22a4036e` - Release v3.5.0 - Volunteer Terminology Update
+- `71154c32` - refactor(phase6a): update feature modules and types to use new volunteer APIs
+- `ab0037e1` - test(phase5): add type definitions verification tests
+- `49e5c45b` - refactor(phase5): rename type definitions from Attendant to Volunteer
+- Multiple phase commits for routes, APIs, variables, types
 
 **Today (2026-01-28 - Afternoon Session: Attendant→Volunteer Refactor):**
 - ✅ Fixed 404 errors on Positions and Volunteers pages

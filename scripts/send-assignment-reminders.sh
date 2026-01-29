@@ -22,9 +22,9 @@ fi
 
 # Set the API URL based on server role
 if [ "$SERVER_ROLE" = "blue" ]; then
-  API_URL="http://localhost:3000"
+  API_URL="http://localhost:3001"
 elif [ "$SERVER_ROLE" = "green" ]; then
-  API_URL="http://localhost:3000"
+  API_URL="http://localhost:3002"
 else
   API_URL="http://localhost:3000"
 fi

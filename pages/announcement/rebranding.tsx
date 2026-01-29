@@ -28,7 +28,7 @@ export default function RebrandingAnnouncement() {
               <strong className="text-blue-600"> Theocratic Shift Scheduler</strong>!
             </p>
             <p>
-              This change reflects our vision to expand beyond attendant management and support 
+              This change reflects our vision to expand beyond volunteer management and support 
               <strong> all volunteer departments</strong> at theocratic events, including:
             </p>
             <ul className="list-disc list-inside space-y-2 ml-4">

@@ -325,7 +325,7 @@ export default function VolunteerDashboard() {
     // CRITICAL: Sign out from NextAuth to clear the session cookie
     await signOut({ redirect: false })
     
-    // Redirect to attendant login
+    // Redirect to volunteer login
     router.push('/volunteer/login')
   }
 

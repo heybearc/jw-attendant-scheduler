@@ -30,8 +30,8 @@ export default function HelpPage({ userRole }: HelpPageProps) {
     },
     {
       id: 'attendant-management',
-      title: '👥 Attendant Management',
-      description: 'Finding, filtering, and managing attendants',
+      title: '👥 Volunteer Management',
+      description: 'Finding, filtering, and managing volunteers',
       roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN']
     },
     {
@@ -65,8 +65,8 @@ export default function HelpPage({ userRole }: HelpPageProps) {
       roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN']
     },
     {
-      id: 'attendant-portal',
-      title: '🏠 Attendant Portal',
+      id: 'volunteer-portal',
+      title: '🏠 Volunteer Portal',
       description: 'Using the personal dashboard and viewing assignments',
       roles: ['ATTENDANT']
     },

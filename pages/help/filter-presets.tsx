@@ -207,8 +207,8 @@ export default function FilterPresetsPage({ userRole }: FilterPresetsProps) {
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-3">📚 Related Help Topics</h3>
             <div className="space-y-2">
-              <Link href="/help/attendant-management" className="block text-blue-600 hover:text-blue-800 hover:underline">
-                → Attendant Management - Managing volunteers
+              <Link href="/help/volunteer-management" className="block text-blue-600 hover:text-blue-800 hover:underline">
+                → Volunteer Management - Managing volunteers
               </Link>
               <Link href="/help/event-management" className="block text-blue-600 hover:text-blue-800 hover:underline">
                 → Event Management - Creating and managing events

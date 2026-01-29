@@ -401,10 +401,10 @@ export default function AssignmentNotificationsHelp() {
                 <p className="text-sm text-gray-600">Complete guide to managing events</p>
               </Link>
               <Link
-                href="/help/attendant-management"
+                href="/help/volunteer-management"
                 className="block p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:shadow-md transition-all"
               >
-                <h4 className="font-semibold text-gray-900 mb-1">Attendant Management</h4>
+                <h4 className="font-semibold text-gray-900 mb-1">Volunteer Management</h4>
                 <p className="text-sm text-gray-600">Managing volunteer profiles and information</p>
               </Link>
               <Link

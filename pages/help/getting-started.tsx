@@ -107,9 +107,9 @@ export default function GettingStartedPage({ userRole }: GettingStartedProps) {
                 </div>
 
                 <div className="bg-white border border-gray-200 rounded-lg p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">2. Attendant Management</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">2. Volunteer Management</h3>
                   <ul className="space-y-2 text-gray-700">
-                    <li>• Assign attendants to positions and shifts</li>
+                    <li>• Assign volunteers to positions and shifts</li>
                     <li>• Monitor attendance and check-in status</li>
                     <li>• Coordinate with keymen for area management</li>
                   </ul>

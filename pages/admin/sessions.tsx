@@ -41,6 +41,9 @@ export default function SessionsManagement() {
   const [lastUpdated, setLastUpdated] = useState<string>('')
   const [filterRole, setFilterRole] = useState<string>('all')
   const [searchTerm, setSearchTerm] = useState('')
+  const [expiredCount, setExpiredCount] = useState<number>(0)
+  const [cleaning, setCleaning] = useState(false)
+  const [cleanupMessage, setCleanupMessage] = useState('')
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -63,10 +66,38 @@ export default function SessionsManagement() {
       const data: SessionsResponse = await response.json()
       setSessions(data.sessions || [])
       setLastUpdated(new Date(data.timestamp).toLocaleString())
+      
+      // Fetch expired session count
+      const cleanupResponse = await fetch('/api/admin/sessions/cleanup')
+      if (cleanupResponse.ok) {
+        const cleanupData = await cleanupResponse.json()
+        setExpiredCount(cleanupData.expiredSessions || 0)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load sessions')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const cleanupExpiredSessions = async () => {
+    setCleaning(true)
+    setCleanupMessage('')
+    try {
+      const response = await fetch('/api/admin/sessions/cleanup', {
+        method: 'POST'
+      })
+      if (!response.ok) {
+        throw new Error('Failed to cleanup sessions')
+      }
+      const data = await response.json()
+      setCleanupMessage(`✅ ${data.message}`)
+      // Refresh sessions list
+      await fetchSessions()
+    } catch (err) {
+      setCleanupMessage(`❌ ${err instanceof Error ? err.message : 'Failed to cleanup sessions'}`)
+    } finally {
+      setCleaning(false)
     }
   }
 
@@ -160,6 +191,43 @@ export default function SessionsManagement() {
             )}
           </div>
 
+          {/* Cleanup Warning */}
+          {expiredCount > 0 && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <span className="text-2xl mr-3">⚠️</span>
+                  <div>
+                    <h3 className="text-sm font-medium text-yellow-800">Expired Sessions Detected</h3>
+                    <p className="text-sm text-yellow-700 mt-1">
+                      {expiredCount} session{expiredCount !== 1 ? 's' : ''} expired (inactive for 30+ days). Click cleanup to remove.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={cleanupExpiredSessions}
+                  disabled={cleaning}
+                  className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                >
+                  {cleaning ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <span>Cleaning...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>🧹</span>
+                      <span>Cleanup Expired</span>
+                    </>
+                  )}
+                </button>
+              </div>
+              {cleanupMessage && (
+                <p className="text-sm mt-2 ml-11">{cleanupMessage}</p>
+              )}
+            </div>
+          )}
+
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div className="bg-white rounded-lg shadow p-6">
@@ -167,6 +235,9 @@ export default function SessionsManagement() {
                 <div>
                   <p className="text-sm font-medium text-gray-500">Total Active Sessions</p>
                   <p className="text-3xl font-bold text-gray-900 mt-2">{sessions.length}</p>
+                  {expiredCount > 0 && (
+                    <p className="text-xs text-yellow-600 mt-1">{expiredCount} expired</p>
+                  )}
                 </div>
                 <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
                   <span className="text-2xl">👥</span>

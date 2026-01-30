@@ -1,22 +1,55 @@
 {
-  "name": "TheoShift",
+  "name": "TheoShift - Volunteer Coordination",
   "short_name": "TheoShift",
   "description": "Volunteer Coordination Platform for Theocratic Events",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#ffffff",
   "theme_color": "#1e40af",
+  "categories": ["productivity", "utilities"],
   "icons": [
     {
       "src": "/favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "200x200",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/logo.svg",
-      "sizes": "200x200",
-      "type": "image/svg+xml"
+      "src": "/logo-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Events",
+      "short_name": "Events",
+      "description": "View and manage events",
+      "url": "/events/select",
+      "icons": []
+    },
+    {
+      "name": "Volunteers",
+      "short_name": "Volunteers",
+      "description": "Manage volunteers",
+      "url": "/admin/volunteers",
+      "icons": []
     }
   ]
 }

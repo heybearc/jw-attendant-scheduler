@@ -48,12 +48,12 @@ export default function EventLayout({
 
 
   // Add admin navigation for admin users
-  if (session?.user?.role === 'ADMIN') {
+  if (session?.user?.role === 'ADMIN' || session?.user?.role === 'admin') {
     navigationItems.push({
       label: 'Admin Portal',
       href: '/admin',
       icon: '🛡️',
-      roles: ['ADMIN']
+      roles: ['ADMIN', 'admin']
     })
   }
 

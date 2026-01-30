@@ -112,7 +112,7 @@ export default function EventSelectPage({ events, userLastSeenVersion }: EventSe
         {/* Top Navigation */}
         <div className="flex justify-between items-center mb-4">
           <div>
-            {session?.user?.role === 'ADMIN' && (
+            {(session?.user?.role === 'ADMIN' || session?.user?.role === 'admin') && (
               <Link
                 href="/admin"
                 className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"

@@ -49,27 +49,60 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Fetch all active sessions from user_activity table
       let sessions
       try {
-        sessions = await prisma.user_activity.findMany({
+        // First, get all active sessions
+        const allSessions = await prisma.user_activity.findMany({
           where: {
             isActive: true
-          },
-          include: {
-            users: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                role: true,
-                firstName: true,
-                lastName: true,
-                isActive: true
-              }
-            }
           },
           orderBy: {
             lastActivityAt: 'desc'
           }
         })
+
+        // Then fetch user data separately to handle orphaned sessions
+        const userIds = [...new Set(allSessions.map(s => s.userId))]
+        const users = await prisma.users.findMany({
+          where: {
+            id: { in: userIds }
+          },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            firstName: true,
+            lastName: true,
+            isActive: true
+          }
+        })
+
+        const userMap = new Map(users.map(u => [u.id, u]))
+
+        // Filter out orphaned sessions (where user no longer exists)
+        sessions = allSessions
+          .filter(s => userMap.has(s.userId))
+          .map(s => ({
+            ...s,
+            users: userMap.get(s.userId)!
+          }))
+
+        // Mark orphaned sessions as inactive
+        const orphanedSessionIds = allSessions
+          .filter(s => !userMap.has(s.userId))
+          .map(s => s.id)
+
+        if (orphanedSessionIds.length > 0) {
+          console.log(`[SESSIONS] Found ${orphanedSessionIds.length} orphaned sessions, marking as inactive`)
+          await prisma.user_activity.updateMany({
+            where: {
+              id: { in: orphanedSessionIds }
+            },
+            data: {
+              isActive: false,
+              logoutAt: new Date()
+            }
+          })
+        }
       } catch (queryError) {
         console.error('[SESSIONS] Error fetching sessions:', queryError)
         throw queryError

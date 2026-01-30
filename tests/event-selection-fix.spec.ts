@@ -10,7 +10,7 @@ test.describe('Event Selection Fix', () => {
     const eventId = 'ba89b1c7-4790-418f-a4f5-c400931ef28d'
     
     // Go to events select page
-    await page.goto('${BASE_URL}/events/select')
+    await page.goto(`${BASE_URL}/events/select')
     
     // Wait for page to load
     await page.waitForLoadState('networkidle')
@@ -79,7 +79,7 @@ test.describe('Event Selection Fix', () => {
       }
     })
     
-    await page.goto('${BASE_URL}/events/select')
+    await page.goto(`${BASE_URL}/events/select')
     await page.waitForLoadState('networkidle')
     
     // Click any event card

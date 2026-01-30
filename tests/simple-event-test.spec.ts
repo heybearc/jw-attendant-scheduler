@@ -1,8 +1,12 @@
 import { test, expect } from '@playwright/test'
+import { getBaseUrl, getTestCredentials } from './helpers/test-config'
+
+const BASE_URL = getBaseUrl()
+const credentials = getTestCredentials()
 
 test('simple event page test', async ({ page }) => {
   // Login
-  await page.goto('${BASE_URL}/auth/signin')
+  await page.goto(`${BASE_URL}/auth/signin`)
   await page.fill('#email', 'admin@theoshift.local')
   await page.fill('#password', 'AdminPass123!')
   await page.click('button[type="submit"]')

@@ -9,7 +9,7 @@ test.describe('Phase 5: Type Definitions', () => {
   const eventId = '7a14c6ac-18c3-4c98-9b07-ba853d30f144'
   
   test.beforeEach(async ({ page }) => {
-    await page.goto('${BASE_URL}/auth/signin')
+    await page.goto(`${BASE_URL}/auth/signin')
     await page.fill('#email', 'admin@theoshift.local')
     await page.fill('#password', 'AdminPass123!')
     await page.click('button[type="submit"]')

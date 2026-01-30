@@ -3,10 +3,13 @@
  */
 
 import { test } from '@playwright/test'
+import { getBaseUrl } from './helpers/test-config'
+
+const BASE_URL = getBaseUrl()
 
 test('check session via debug endpoint', async ({ page, context }) => {
   // Login
-  await page.goto('${BASE_URL}/auth/signin')
+  await page.goto(`${BASE_URL}/auth/signin`)
   await page.fill('#email', 'admin@theoshift.local')
   await page.fill('#password', 'AdminPass123!')
   await page.click('button[type="submit"]')
@@ -20,7 +23,7 @@ test('check session via debug endpoint', async ({ page, context }) => {
   console.log('Session cookie:', sessionCookie?.name, sessionCookie?.value.substring(0, 50))
   
   // Call debug endpoint
-  const response = await page.goto('${BASE_URL}/api/debug-session')
+  const response = await page.goto(`${BASE_URL}/api/debug-session')
   const data = await response?.json()
   
   console.log('Debug session response:', JSON.stringify(data, null, 2))

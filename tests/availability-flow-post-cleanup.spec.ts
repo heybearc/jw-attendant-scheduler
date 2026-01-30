@@ -5,7 +5,7 @@ import { test, expect } from '@playwright/test'
  * Verify availability flow still works after removing redundant files
  */
 
-const BASE_URL = process.env.BASE_URL || '${BASE_URL}'
+const BASE_URL = process.env.BASE_URL || 'http://localhost:3001'
 
 test.describe('Availability Request Flow - Post-Cleanup Verification', () => {
   

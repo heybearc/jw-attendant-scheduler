@@ -7,7 +7,7 @@ import { test, expect } from '@playwright/test'
 
 test.describe('Event Page Diagnostic', () => {
   test('check signin page structure', async ({ page }) => {
-    await page.goto('${BASE_URL}/auth/signin')
+    await page.goto(`${BASE_URL}/auth/signin')
     
     // Take screenshot
     await page.screenshot({ path: 'test-results/signin-page.png', fullPage: true })

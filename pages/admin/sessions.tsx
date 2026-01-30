@@ -44,6 +44,8 @@ export default function SessionsManagement() {
   const [expiredCount, setExpiredCount] = useState<number>(0)
   const [cleaning, setCleaning] = useState(false)
   const [cleanupMessage, setCleanupMessage] = useState('')
+  const [cleaningUsers, setCleaningUsers] = useState(false)
+  const [userCleanupMessage, setUserCleanupMessage] = useState('')
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -98,6 +100,29 @@ export default function SessionsManagement() {
       setCleanupMessage(`❌ ${err instanceof Error ? err.message : 'Failed to cleanup sessions'}`)
     } finally {
       setCleaning(false)
+    }
+  }
+
+  const cleanupExcessiveSessions = async () => {
+    setCleaningUsers(true)
+    setUserCleanupMessage('')
+    try {
+      const response = await fetch('/api/admin/sessions/cleanup-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ maxSessionsPerUser: 5 })
+      })
+      if (!response.ok) {
+        throw new Error('Failed to cleanup excessive sessions')
+      }
+      const data = await response.json()
+      setUserCleanupMessage(`✅ ${data.message} (${data.usersAffected} users affected)`)
+      // Refresh sessions list
+      await fetchSessions()
+    } catch (err) {
+      setUserCleanupMessage(`❌ ${err instanceof Error ? err.message : 'Failed to cleanup sessions'}`)
+    } finally {
+      setCleaningUsers(false)
     }
   }
 
@@ -170,6 +195,24 @@ export default function SessionsManagement() {
               </div>
               <div className="flex space-x-3">
                 <button
+                  onClick={cleanupExcessiveSessions}
+                  disabled={cleaningUsers}
+                  className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                  title="Keep only 5 most recent sessions per user"
+                >
+                  {cleaningUsers ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <span>Cleaning...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>🧹</span>
+                      <span>Cleanup Excessive</span>
+                    </>
+                  )}
+                </button>
+                <button
                   onClick={fetchSessions}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2"
                 >
@@ -188,6 +231,9 @@ export default function SessionsManagement() {
               <p className="text-sm text-gray-500 mt-2">
                 Last updated: {lastUpdated}
               </p>
+            )}
+            {userCleanupMessage && (
+              <p className="text-sm mt-2">{userCleanupMessage}</p>
             )}
           </div>
 

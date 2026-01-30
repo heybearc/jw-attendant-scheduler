@@ -19,8 +19,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const { type, assignmentId, eventId, changes, reason } = req.body
     
     // For reminder notifications, allow API key authentication (from cron)
+    // For internal calls from send-notifications, allow localhost without session
     let session = null
     let isAutomatedReminder = false
+    let isInternalCall = false
+    
+    // Check if this is an internal call (from send-notifications endpoint)
+    const host = req.headers.host || ''
+    const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1')
     
     if (type === 'reminder') {
       const apiKey = req.headers['x-api-key']
@@ -29,12 +35,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       } else {
         session = await getServerSession(req, res, authOptions)
       }
+    } else if (isLocalhost && type === 'created') {
+      // Internal call from send-notifications endpoint
+      isInternalCall = true
     } else {
       session = await getServerSession(req, res, authOptions)
     }
     
-    // Require authentication unless it's an automated reminder with valid API key
-    if (!isAutomatedReminder && !session) {
+    // Require authentication unless it's an automated reminder with valid API key or internal call
+    if (!isAutomatedReminder && !isInternalCall && !session) {
       return res.status(401).json({ error: 'Unauthorized' })
     }
 

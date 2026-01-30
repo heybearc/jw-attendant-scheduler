@@ -47,52 +47,63 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       // Fetch all active sessions from user_activity table
-      const sessions = await prisma.user_activity.findMany({
-        where: {
-          isActive: true
-        },
-        include: {
-          users: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              role: true,
-              firstName: true,
-              lastName: true,
-              isActive: true
+      let sessions
+      try {
+        sessions = await prisma.user_activity.findMany({
+          where: {
+            isActive: true
+          },
+          include: {
+            users: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                firstName: true,
+                lastName: true,
+                isActive: true
+              }
             }
+          },
+          orderBy: {
+            lastActivityAt: 'desc'
           }
-        },
-        orderBy: {
-          lastActivityAt: 'desc'
-        }
-      })
+        })
+      } catch (queryError) {
+        console.error('[SESSIONS] Error fetching sessions:', queryError)
+        throw queryError
+      }
 
       // Transform sessions to include useful metadata
       const now = new Date()
-      const activeSessions = sessions.map(s => {
-        const minutesSinceActivity = Math.floor((now.getTime() - new Date(s.lastActivityAt).getTime()) / (1000 * 60))
-        const isOnline = minutesSinceActivity < 15 // Online if active within 15 minutes
-        
-        return {
-          id: s.id,
-          userId: s.userId,
-          userName: s.users.name || `${s.users.firstName} ${s.users.lastName}`,
-          userEmail: s.users.email,
-          userRole: s.users.role,
-          isUserActive: s.users.isActive,
-          sessionToken: s.sessionId.substring(0, 8) + '...', // Truncated for security
-          loginAt: s.loginAt,
-          lastActivityAt: s.lastActivityAt,
-          minutesSinceActivity,
-          isOnline,
-          ipAddress: s.ipAddress,
-          userAgent: s.userAgent,
-          serverNode: s.serverNode || 'UNKNOWN',
-          // Calculate expiry based on 30 days from last activity
-          expires: new Date(new Date(s.lastActivityAt).getTime() + (30 * 24 * 60 * 60 * 1000)),
-          daysUntilExpiry: Math.ceil((new Date(s.lastActivityAt).getTime() + (30 * 24 * 60 * 60 * 1000) - now.getTime()) / (1000 * 60 * 60 * 24))
+      const activeSessions = sessions.map((s, index) => {
+        try {
+          const minutesSinceActivity = Math.floor((now.getTime() - new Date(s.lastActivityAt).getTime()) / (1000 * 60))
+          const isOnline = minutesSinceActivity < 15 // Online if active within 15 minutes
+          
+          return {
+            id: s.id,
+            userId: s.userId,
+            userName: s.users.name || `${s.users.firstName || ''} ${s.users.lastName || ''}`.trim() || 'Unknown',
+            userEmail: s.users.email,
+            userRole: s.users.role,
+            isUserActive: s.users.isActive,
+            sessionToken: s.sessionId.substring(0, 8) + '...', // Truncated for security
+            loginAt: s.loginAt,
+            lastActivityAt: s.lastActivityAt,
+            minutesSinceActivity,
+            isOnline,
+            ipAddress: s.ipAddress,
+            userAgent: s.userAgent,
+            serverNode: s.serverNode || 'UNKNOWN',
+            // Calculate expiry based on 30 days from last activity
+            expires: new Date(new Date(s.lastActivityAt).getTime() + (30 * 24 * 60 * 60 * 1000)),
+            daysUntilExpiry: Math.ceil((new Date(s.lastActivityAt).getTime() + (30 * 24 * 60 * 60 * 1000) - now.getTime()) / (1000 * 60 * 60 * 24))
+          }
+        } catch (transformError) {
+          console.error(`[SESSIONS] Error transforming session ${index}:`, transformError, 'Session data:', JSON.stringify(s, null, 2))
+          throw transformError
         }
       })
 

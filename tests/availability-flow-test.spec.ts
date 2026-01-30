@@ -16,8 +16,8 @@ test.describe('Availability Request Flow - Pre-Cleanup', () => {
     
     // Login as admin
     await page.goto(`${BASE_URL}/auth/signin`)
-    await page.fill('input[name="email"]', TEST_USER_EMAIL)
-    await page.fill('input[name="password"]', TEST_USER_PASSWORD)
+    await page.fill('#email', TEST_USER_EMAIL)
+    await page.fill('#password', TEST_USER_PASSWORD)
     await page.click('button[type="submit"]')
     await page.waitForURL(/\/events/)
     console.log('✅ Logged in as admin')
@@ -76,8 +76,8 @@ test.describe('Availability Request Flow - Pre-Cleanup', () => {
     
     // Login as admin first
     await page.goto(`${BASE_URL}/auth/signin`)
-    await page.fill('input[name="email"]', TEST_USER_EMAIL)
-    await page.fill('input[name="password"]', TEST_USER_PASSWORD)
+    await page.fill('#email', TEST_USER_EMAIL)
+    await page.fill('#password', TEST_USER_PASSWORD)
     await page.click('button[type="submit"]')
     await page.waitForURL(/\/events/)
     
@@ -95,8 +95,8 @@ test.describe('Availability Request Flow - Pre-Cleanup', () => {
     
     // Login as admin
     await page.goto(`${BASE_URL}/auth/signin`)
-    await page.fill('input[name="email"]', TEST_USER_EMAIL)
-    await page.fill('input[name="password"]', TEST_USER_PASSWORD)
+    await page.fill('#email', TEST_USER_EMAIL)
+    await page.fill('#password', TEST_USER_PASSWORD)
     await page.click('button[type="submit"]')
     await page.waitForURL(/\/events/)
     

@@ -16,21 +16,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     select: { role: true }
   })
 
-  if (user?.role !== 'ADMIN') {
+  if (user?.role !== 'ADMIN' && user?.role !== 'admin') {
     return res.status(403).json({ error: 'Forbidden - Admin access required' })
   }
 
   if (req.method === 'GET') {
     try {
       // Check if user_activity table exists
-      const tableExists = await prisma.$queryRaw`
-        SELECT EXISTS (
-          SELECT FROM information_schema.tables 
-          WHERE table_name = 'user_activity'
-        );
-      `
+      let tableExists = false
+      try {
+        const result = await prisma.$queryRaw`
+          SELECT EXISTS (
+            SELECT FROM information_schema.tables 
+            WHERE table_name = 'user_activity'
+          );
+        `
+        tableExists = (result as any)[0]?.exists || false
+      } catch (error) {
+        console.error('[SESSIONS] Error checking table existence:', error)
+      }
       
-      if (!tableExists || !(tableExists as any)[0]?.exists) {
+      if (!tableExists) {
         console.log('[SESSIONS] user_activity table does not exist yet')
         return res.status(200).json({
           sessions: [],

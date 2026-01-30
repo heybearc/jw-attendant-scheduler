@@ -13,10 +13,27 @@ These tests were created to diagnose specific issues during development but were
 
 ## Archived Tests
 
+### Initial Archive (2026-01-30 AM)
 - `check-event-logs.spec.ts` - Diagnostic test to capture server logs during 404 investigation
 - `check-session-debug.spec.ts` - Debug test to inspect session data structure
 - `event-page-diagnostic.spec.ts` - Diagnostic test for event page 404 issue (now resolved)
 - `reproduce-404.spec.ts` - Test to reproduce 404 error (issue now fixed)
+
+### Additional Archive (2026-01-30 PM)
+**Fix/Issue-Specific Tests:**
+- `event-page-404.spec.ts` - Test for specific 404 bug (now resolved)
+- `event-selection-fix.spec.ts` - Verification test for event selection fix (now resolved)
+- `simple-event-test.spec.ts` - Simple debugging test with no clear purpose
+
+**Migration/Refactoring Tests:**
+- `phase1-volunteers-route.spec.ts` - Phase 1 migration validation (attendant→volunteer)
+- `phase2-volunteers-api.spec.ts` - Phase 2 API migration validation
+- `phase4-api-variables.spec.ts` - Phase 4 variable naming migration validation
+- `phase5-type-definitions.spec.ts` - Phase 5 TypeScript type migration validation
+- `refactor-complete-suite.spec.ts` - Complete refactoring validation suite
+- `refactoring-validation.spec.ts` - Week 3 refactoring validation
+
+**Total Archived:** 13 test files
 
 ## Resolution
 

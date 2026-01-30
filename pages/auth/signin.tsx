@@ -3,6 +3,7 @@ import { signIn, getSession } from 'next-auth/react'
 import { useRouter } from 'next/router'
 import { GetServerSideProps } from 'next'
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default function SignIn() {
   const [email, setEmail] = useState('')
@@ -42,13 +43,18 @@ export default function SignIn() {
         <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 border border-white/20">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="mx-auto h-16 w-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mb-4">
-              <svg className="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
+            <div className="mx-auto mb-6 flex justify-center">
+              <Image
+                src="/logo.svg"
+                alt="TheoShift Logo"
+                width={120}
+                height={120}
+                priority
+                className="drop-shadow-lg"
+              />
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-            <p className="text-gray-600">Sign in to Theocratic Shift Scheduler</p>
+            <p className="text-gray-600">Sign in to TheoShift</p>
           </div>
 
           {/* Form */}
@@ -140,7 +146,7 @@ export default function SignIn() {
         {/* Footer */}
         <div className="text-center">
           <p className="text-white/80 text-sm">
-            Theocratic Shift Scheduler • Secure Event Management System
+            TheoShift • Volunteer Coordination Platform
           </p>
         </div>
       </div>

@@ -87,6 +87,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const volunteerIds = [...new Set(assignments.map(a => a.volunteerId))]
     
     console.log(`📧 Sending notifications to ${volunteerIds.length} volunteer(s) for ${assignments.length} assignment(s)...`)
+    console.log('Volunteer IDs:', volunteerIds)
+    console.log('Sample assignment:', assignments[0])
 
     let sent = 0
     let failed = 0
@@ -96,8 +98,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     for (const volunteerId of volunteerIds) {
       const volunteerAssignments = assignments.filter(a => a.volunteerId === volunteerId)
       
+      console.log(`\n🔄 Processing volunteer ${volunteerId}:`)
+      console.log(`  - ${volunteerAssignments.length} assignment(s)`)
+      console.log(`  - First assignment ID: ${volunteerAssignments[0].id}`)
+      
       try {
         // Send notification for first assignment (email will include all assignments for this volunteer)
+        console.log(`  - Calling notify API...`)
         const notificationResponse = await fetch(`${process.env.NEXTAUTH_URL}/api/assignments/notify`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -108,12 +115,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           })
         })
 
+        console.log(`  - Notify API response status: ${notificationResponse.status}`)
+
         if (notificationResponse.ok) {
           sent++
           console.log(`✅ Notification sent for ${volunteerAssignments.length} assignment(s) to volunteer ${volunteerId}`)
         } else {
           failed++
           const errorData = await notificationResponse.json()
+          console.log(`  - Error data:`, errorData)
           errors.push(`Volunteer ${volunteerId}: ${errorData.error || 'Unknown error'}`)
           console.error(`❌ Failed to send to volunteer ${volunteerId}:`, errorData)
         }

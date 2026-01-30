@@ -4,13 +4,17 @@
  */
 
 import { test, expect } from '@playwright/test'
+import { getBaseUrl, getTestCredentials } from './helpers/test-config'
+
+const BASE_URL = getBaseUrl()
+const credentials = getTestCredentials()
 
 test.describe('Event Detail Page Access', () => {
   test.beforeEach(async ({ page }) => {
     // Login first
-    await page.goto('https://blue.theoshift.com/auth/signin')
-    await page.fill('input[name="email"]', 'admin@theoshift.local')
-    await page.fill('input[name="password"]', 'AdminPass123!')
+    await page.goto(`${BASE_URL}/auth/signin`)
+    await page.fill('input[name="email"]', credentials.email)
+    await page.fill('input[name="password"]', credentials.password)
     await page.click('button[type="submit"]')
     
     // Wait for redirect after login
@@ -21,7 +25,7 @@ test.describe('Event Detail Page Access', () => {
     const eventId = 'ba89b1c7-4790-418f-a4f5-c400931ef28d'
     
     // Navigate to event detail page
-    const response = await page.goto(`https://blue.theoshift.com/events/${eventId}`)
+    const response = await page.goto(`${BASE_URL}/events/${eventId}`)
     
     // Should not get 404
     expect(response?.status()).not.toBe(404)
@@ -38,7 +42,7 @@ test.describe('Event Detail Page Access', () => {
   test('should display volunteer terminology on event page', async ({ page }) => {
     const eventId = 'ba89b1c7-4790-418f-a4f5-c400931ef28d'
     
-    await page.goto(`https://blue.theoshift.com/events/${eventId}`)
+    await page.goto(`${BASE_URL}/events/${eventId}`)
     
     // Wait for page to load
     await page.waitForLoadState('networkidle')
@@ -54,7 +58,7 @@ test.describe('Event Detail Page Access', () => {
   test('should have working navigation buttons', async ({ page }) => {
     const eventId = 'ba89b1c7-4790-418f-a4f5-c400931ef28d'
     
-    await page.goto(`https://blue.theoshift.com/events/${eventId}`)
+    await page.goto(`${BASE_URL}/events/${eventId}`)
     
     // Should have navigation to volunteers page
     const volunteersLink = page.locator('a[href*="/attendants"], a[href*="/volunteers"]')
@@ -80,7 +84,7 @@ test.describe('Event Detail Page Access', () => {
       }
     })
     
-    await page.goto(`https://blue.theoshift.com/events/${eventId}`)
+    await page.goto(`${BASE_URL}/events/${eventId}`)
     
     // Log any errors found
     if (consoleErrors.length > 0) {

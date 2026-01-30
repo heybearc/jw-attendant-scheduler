@@ -45,7 +45,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             } 
           },
           include: {
-            volunteer: {
+            attendant: {
               select: {
                 id: true,
                 firstName: true,
@@ -207,36 +207,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             assignedBy: session.user?.id || null
           }
         })
-
-        // Send assignment notification (non-blocking)
-        try {
-          const notificationSettings = await prisma.system_settings.findFirst({
-            where: { key: 'notification_settings' }
-          })
-          
-          let sendNotification = true
-          if (notificationSettings?.value) {
-            const settings = JSON.parse(notificationSettings.value as string)
-            sendNotification = settings.assignmentCreated !== false
-          }
-
-          if (sendNotification) {
-            // Call notification endpoint (don't await - non-blocking)
-            fetch(`${process.env.NEXTAUTH_URL}/api/assignments/notify`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                type: 'created',
-                assignmentId: newAssignment.id,
-                eventId: eventId
-              })
-            }).catch(err => {
-              console.error('Failed to send assignment notification:', err)
-            })
-          }
-        } catch (notifyError) {
-          console.error('Notification error (non-blocking):', notifyError)
-        }
 
         return res.status(201).json({
           success: true,

@@ -66,37 +66,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         console.log(`📋 Removing ${assignment.volunteer.firstName} ${assignment.volunteer.lastName} from position ${assignment.positions.name}`)
 
-        // Send cancellation notification before deleting (non-blocking)
-        try {
-          const notificationSettings = await prisma.system_settings.findFirst({
-            where: { key: 'notification_settings' }
-          })
-          
-          let sendNotification = true
-          if (notificationSettings?.value) {
-            const settings = JSON.parse(notificationSettings.value as string)
-            sendNotification = settings.assignmentCancelled !== false
-          }
-
-          if (sendNotification) {
-            // Call notification endpoint (don't await - non-blocking)
-            fetch(`${process.env.NEXTAUTH_URL}/api/assignments/notify`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                type: 'cancelled',
-                assignmentId: assignmentId,
-                eventId: eventId,
-                reason: 'Assignment removed by coordinator'
-              })
-            }).catch(err => {
-              console.error('Failed to send cancellation notification:', err)
-            })
-          }
-        } catch (notifyError) {
-          console.error('Notification error (non-blocking):', notifyError)
-        }
-
         // Delete the assignment
         await prisma.position_assignments.delete({
           where: { id: assignmentId }

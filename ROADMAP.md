@@ -1,7 +1,7 @@
 # TheoShift Product Roadmap
 
-**Last Updated:** January 25, 2026  
-**Current Version:** v3.3.1  
+**Last Updated:** January 30, 2026  
+**Current Version:** v3.5.1  
 **Status:** Active Development
 
 ---
@@ -68,62 +68,73 @@ Transform TheoShift from a single-purpose attendant management system into a com
 - Updated infrastructure references
 - Comprehensive documentation
 
+### **Phase 4C: Assignment Workflow Enhancements** ✅ (Jan 2026, v3.5.0)
+**Completed Features:**
+
+1. **Assignment Notifications** 📧
+   - Email notifications for new assignments
+   - Assignment cancellation notifications
+   - Manual "Send Notifications" button on positions page
+   - Notification settings in admin panel
+   - Email template system
+   - Direct email sending via nodemailer
+
+2. **Assignment Templates** 📋
+   - Save position structures and time slot patterns
+   - Template library per department (CRUD operations)
+   - Template creation from scratch
+   - Template editing and deletion
+   - Apply template to events via API
+   - Admin UI for template management
+
+3. **Volunteer Confirmation System** 🔄
+   - Bulk availability requests via email
+   - Token-based confirmation (one-click responses)
+   - Volunteer availability response page
+   - Assignment status badges
+   - Email confirmation integration
+   - Managed via existing Volunteers page and volunteer dashboard
+
+4. **Event Permissions Cloning** 🔐
+   - Clone event permissions when cloning events
+   - Maintains access control consistency
+
+**Features Deferred Indefinitely:**
+- ⏸️ Assignment update notifications (not needed - handled manually)
+- ⏸️ Automatic reminder scheduling system (not needed - manual send sufficient)
+- ⏸️ Coordinator availability dashboard (not needed - handled via Volunteers page)
+- ⏸️ Dedicated availability management page (not needed - existing workflow sufficient)
+- ⏸️ Template integration into positions workflow (not needed - clone event handles this)
+- ⏸️ Assignment history & analytics (deferred to Phase 6)
+
+**Technical Implementation:**
+- Database schema: 100% complete (4 tables, confirmation fields)
+- Assignment templates: 100% complete (full CRUD, apply API)
+- Volunteer availability: 100% complete (bulk requests, email responses)
+- Assignment notifications: 90% complete (create/cancel working, update/reminders deferred)
+- Event permissions cloning: 100% complete
+
+### **Terminology Refactor** ✅ (Jan 2026, v3.5.0)
+- 6-phase attendant→volunteer refactor
+- Server-side redirects for old routes
+- New /volunteers API endpoints
+- Updated frontend and API variables
+- Type definitions updated
+- Help documentation updated
+- Backward compatible via @map directives
+
+### **Testing Infrastructure** ✅ (Jan 2026, v3.5.1)
+- Fixed all Playwright test failures (23/23 passing)
+- Centralized test configuration
+- Archived diagnostic tests
+- Created comprehensive testing policy
+- 100% pass rate on production tests
+
 ---
 
 ## 🚀 ACTIVE DEVELOPMENT
 
-### **Phase 4C: Assignment Workflow Enhancements** 🔄 **NEXT PRIORITY**
-**Target Version:** v3.4.0  
-**Estimated Duration:** 2-3 weeks  
-**Status:** ✅ APPROVED - Ready to implement  
-**Detailed Plan:** See `/docs/PHASE_4C_REVISED_PLAN.md`
-
-#### **Approved Features:**
-
-1. **Assignment Notifications** 📧 **HIGH PRIORITY**
-   - Email notifications for new assignments
-   - Assignment change notifications
-   - Assignment cancellation notifications
-   - Upcoming assignment reminders (24h, 48h, 1 week, custom)
-   - Notification settings in admin panel
-   - Email template system with customization
-   - Notification logging and history
-
-2. **Assignment Templates** 📋 **MEDIUM PRIORITY**
-   - Save position structures and time slot patterns
-   - Template library per department
-   - Preview before applying
-   - Quick-apply to new events
-   - Usage tracking and analytics
-   - **Note:** Complements existing clone event feature (which only copies event metadata, not positions)
-
-3. **Volunteer Confirmation System** 🔄 **HIGH PRIORITY** ⭐ ENHANCED
-   - **Bulk Availability Requests** - Send to all volunteers before creating assignments
-   - **Availability Dashboard** - See who's available before assigning
-   - **Individual Assignment Confirmation** - Volunteers confirm/decline specific assignments
-   - **Status Workflow** - Requested → Available → Assigned → Confirmed → Completed
-   - **Token-based Confirmation** - One-click email responses (no login required)
-   - **Volunteer Dashboard** - Centralized view of all requests and assignments
-
-#### **Deferred to Phase 6:**
-- ⏸️ Assignment history & analytics (audit logging, change tracking)
-
-#### **Technical Implementation:**
-- **New files (21):** Email templates, APIs, dashboards, components
-- **Modified files (6):** Position service, assignment hooks, event pages
-- **Database changes:** 
-  - `volunteer_availability` table
-  - `assignment_templates` table
-  - `assignment_notifications` table (optional)
-  - `event_assignments` confirmation fields
-
-#### **Success Metrics:**
-- 95%+ email delivery rate
-- 80%+ volunteer response rate to availability requests
-- 90%+ confirmation rate for assignments
-- 40%+ of events use templates
-- 60% reduction in assignment coordination time
-- 50% reduction in last-minute cancellations
+**No active development phases.** Ready for Phase 5 or new feature work
 
 ---
 

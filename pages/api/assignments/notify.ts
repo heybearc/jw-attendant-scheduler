@@ -34,7 +34,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
     
     // Require authentication unless it's an automated reminder with valid API key
-    if (!isAutomatedReminder && !session?.user) {
+    if (!isAutomatedReminder && !session) {
       return res.status(401).json({ error: 'Unauthorized' })
     }
 

@@ -94,13 +94,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
 
     if (!assignment) {
+      console.error('❌ Assignment not found:', assignmentId)
       return res.status(404).json({ error: 'Assignment not found' })
     }
 
+    console.log('✅ Assignment found:', assignmentId)
+    console.log('Volunteer data:', assignment.volunteer ? 'Present' : 'Missing')
+
     const volunteerRecord = assignment.volunteer
     if (!volunteerRecord) {
+      console.error('❌ No volunteer record for assignment:', assignmentId)
       return res.status(400).json({ error: 'Assignment has no associated volunteer' })
     }
+
+    console.log('Volunteer record:', {
+      id: volunteerRecord.id,
+      hasUser: !!volunteerRecord.user,
+      email: volunteerRecord.email,
+      firstName: volunteerRecord.firstName
+    })
 
     // Use volunteer data directly (volunteers have their own email/name fields)
     const volunteer = {
@@ -109,6 +121,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       lastName: volunteerRecord.user?.lastName || volunteerRecord.lastName,
       email: volunteerRecord.user?.email || volunteerRecord.email
     }
+
+    console.log('✅ Volunteer data prepared:', volunteer)
     
     const event = assignment.positions.events
     

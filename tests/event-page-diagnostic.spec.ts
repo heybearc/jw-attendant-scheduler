@@ -4,6 +4,10 @@
  */
 
 import { test, expect } from '@playwright/test'
+import { getBaseUrl, getTestCredentials } from './helpers/test-config'
+
+const BASE_URL = getBaseUrl()
+const credentials = getTestCredentials()
 
 test.describe('Event Page Diagnostic', () => {
   test('check signin page structure', async ({ page }) => {

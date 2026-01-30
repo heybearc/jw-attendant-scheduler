@@ -22,7 +22,7 @@ test.describe('Reproduce 404 Error', () => {
     const eventId = '7a14c6ac-18c3-4c98-9b07-ba853d30f144'
     
     console.log('Step 1: Going to signin page...')
-    await page.goto(`${BASE_URL}/auth/signin')
+    await page.goto(`${BASE_URL}/auth/signin`)
     
     // Take screenshot of signin page
     await page.screenshot({ path: 'test-results/01-signin-page.png' })
@@ -81,7 +81,7 @@ test.describe('Reproduce 404 Error', () => {
     console.log('Testing session persistence...')
     
     // Login
-    await page.goto(`${BASE_URL}/auth/signin')
+    await page.goto(`${BASE_URL}/auth/signin`)
     await page.fill('#email', 'admin@theoshift.local')
     await page.fill('#password', 'AdminPass123!')
     await page.click('button[type="submit"]')
@@ -99,7 +99,7 @@ test.describe('Reproduce 404 Error', () => {
     }
     
     // Try to access event page
-    await page.goto(`${BASE_URL}/events/7a14c6ac-18c3-4c98-9b07-ba853d30f144')
+    await page.goto(`${BASE_URL}/events/7a14c6ac-18c3-4c98-9b07-ba853d30f144`)
     
     console.log('After navigation, URL:', page.url())
     

@@ -23,7 +23,7 @@ test('check session via debug endpoint', async ({ page, context }) => {
   console.log('Session cookie:', sessionCookie?.name, sessionCookie?.value.substring(0, 50))
   
   // Call debug endpoint
-  const response = await page.goto(`${BASE_URL}/api/debug-session')
+  const response = await page.goto(`${BASE_URL}/api/debug-session`)
   const data = await response?.json()
   
   console.log('Debug session response:', JSON.stringify(data, null, 2))

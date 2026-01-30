@@ -9,7 +9,7 @@ test.describe('Phase 4: API Variable Names', () => {
     const context = await browser.newContext()
     const page = await context.newPage()
     
-    await page.goto(`${BASE_URL}/auth/signin')
+    await page.goto(`${BASE_URL}/auth/signin`)
     await page.fill('#email', 'admin@theoshift.local')
     await page.fill('#password', 'AdminPass123!')
     await page.click('button[type="submit"]')

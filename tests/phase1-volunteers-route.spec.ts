@@ -5,7 +5,7 @@ test.describe('Phase 1: Volunteers Route Rename', () => {
   
   test.beforeEach(async ({ page }) => {
     // Login
-    await page.goto(`${BASE_URL}/auth/signin')
+    await page.goto(`${BASE_URL}/auth/signin`)
     await page.fill('#email', 'admin@theoshift.local')
     await page.fill('#password', 'AdminPass123!')
     await page.click('button[type="submit"]')

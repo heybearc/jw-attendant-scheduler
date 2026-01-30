@@ -7,7 +7,7 @@ import { test, expect } from '@playwright/test'
 test.describe('Test Other Event Pages', () => {
   test.beforeEach(async ({ page }) => {
     // Login
-    await page.goto(`${BASE_URL}/auth/signin')
+    await page.goto(`${BASE_URL}/auth/signin`)
     await page.fill('#email', 'admin@theoshift.local')
     await page.fill('#password', 'AdminPass123!')
     await page.click('button[type="submit"]')
@@ -15,7 +15,7 @@ test.describe('Test Other Event Pages', () => {
   })
 
   test('check if /events/select works', async ({ page }) => {
-    await page.goto(`${BASE_URL}/events/select')
+    await page.goto(`${BASE_URL}/events/select`)
     const title = await page.title()
     console.log('Events select page title:', title)
     

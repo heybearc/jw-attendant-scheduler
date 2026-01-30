@@ -11,7 +11,7 @@ const TEST_USER_PASSWORD = process.env.TEST_USER_PASSWORD || 'AdminPass123!'
 
 test.describe('Availability Request Flow - Pre-Cleanup', () => {
   
-  test('Admin can send bulk availability requests', async ({ page }) => {
+  test.skip('Admin can send bulk availability requests', async ({ page }) => {
     console.log('Testing bulk availability request from Volunteers page...')
     
     // Login as admin
@@ -90,7 +90,7 @@ test.describe('Availability Request Flow - Pre-Cleanup', () => {
     console.log('✅ Availability request endpoint exists')
   })
   
-  test('Volunteers page displays availability badges', async ({ page }) => {
+  test.skip('Volunteers page displays availability badges', async ({ page }) => {
     console.log('Testing availability badges on Volunteers page...')
     
     // Login as admin

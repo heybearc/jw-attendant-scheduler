@@ -3,6 +3,8 @@ import { useSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import packageJson from '../package.json'
+import MobileNav from './MobileNav'
+import BottomNav from './BottomNav'
 
 interface EventLayoutProps {
   children: ReactNode
@@ -95,8 +97,10 @@ export default function EventLayout({
               </div>
             </div>
 
-            {/* Right side - Selected Event and User Menu */}
+            {/* Right side - Mobile Menu and User Menu */}
             <div className="flex items-center space-x-4">
+              {/* Mobile Navigation Button */}
+              <MobileNav selectedEvent={selectedEvent} />
               {/* Selected Event Indicator */}
               {selectedEvent && (
                 <div className="hidden md:flex items-center bg-blue-50 px-3 py-1 rounded-lg">
@@ -174,7 +178,7 @@ export default function EventLayout({
       )}
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24 md:pb-8">
         {title && (
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
@@ -183,21 +187,12 @@ export default function EventLayout({
         {children}
       </main>
 
-      {/* Global Help Footer */}
-      <footer className="bg-gray-50 border-t border-gray-200 mt-12">
-        <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-center space-x-6 text-sm">
-            <Link
-              href="/help"
-              className="text-gray-600 hover:text-gray-900 transition-colors flex items-center gap-1"
-            >
-              ❓ Help Center
-            </Link>
-            <Link
-              href="/release-notes"
-              className="text-gray-600 hover:text-gray-900 transition-colors flex items-center gap-1"
-            >
-              📋 Release Notes
+      {/* Footer */}
+      <footer className="bg-white border-t border-gray-200 mt-auto mb-16 md:mb-0">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex flex-col sm:flex-row justify-between items-center text-sm text-gray-600">
+            <p> 2024 TheoShift. All rights reserved.</p>
+            <p className="mt-2 sm:mt-0">Version {packageJson.version}</p>
             </Link>
             <Link
               href="/help/feedback"

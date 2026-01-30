@@ -4,6 +4,11 @@
  */
 
 import { test, expect } from '@playwright/test'
+import { getBaseUrl, getTestCredentials } from './helpers/test-config'
+
+const BASE_URL = getBaseUrl()
+const credentials = getTestCredentials()
+
 
 test.describe('Reproduce 404 Error', () => {
   test('access event page and capture 404 details', async ({ page }) => {

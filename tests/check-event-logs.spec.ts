@@ -3,6 +3,11 @@
  */
 
 import { test } from '@playwright/test'
+import { getBaseUrl, getTestCredentials } from './helpers/test-config'
+
+const BASE_URL = getBaseUrl()
+const credentials = getTestCredentials()
+
 
 test('trigger event page access to see server logs', async ({ page }) => {
   // This test will fail but will trigger server-side logging

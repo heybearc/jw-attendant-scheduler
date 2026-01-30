@@ -1,4 +1,9 @@
 import { test, expect } from '@playwright/test'
+import { getBaseUrl, getTestCredentials } from './helpers/test-config'
+
+const BASE_URL = getBaseUrl()
+const credentials = getTestCredentials()
+
 
 /**
  * Phase 5: Type Definitions Test Suite

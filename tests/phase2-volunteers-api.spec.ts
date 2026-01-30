@@ -1,4 +1,9 @@
 import { test, expect } from '@playwright/test'
+import { getBaseUrl, getTestCredentials } from './helpers/test-config'
+
+const BASE_URL = getBaseUrl()
+const credentials = getTestCredentials()
+
 
 test.describe('Phase 2: Volunteers API Endpoints', () => {
   const eventId = '7a14c6ac-18c3-4c98-9b07-ba853d30f144'

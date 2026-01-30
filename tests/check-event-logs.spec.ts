@@ -11,7 +11,7 @@ test('trigger event page access to see server logs', async ({ page }) => {
   const eventId = 'ba89b1c7-4790-418f-a4f5-c400931ef28d'
   
   try {
-    await page.goto(`https://blue.theoshift.com/events/${eventId}`, {
+    await page.goto(`${BASE_URL}/events/${eventId}`, {
       waitUntil: 'networkidle',
       timeout: 5000
     })

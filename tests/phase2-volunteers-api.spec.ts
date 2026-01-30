@@ -5,7 +5,7 @@ test.describe('Phase 2: Volunteers API Endpoints', () => {
   
   test.beforeEach(async ({ page }) => {
     // Login
-    await page.goto('https://blue.theoshift.com/auth/signin')
+    await page.goto('${BASE_URL}/auth/signin')
     await page.fill('#email', 'admin@theoshift.local')
     await page.fill('#password', 'AdminPass123!')
     await page.click('button[type="submit"]')
@@ -16,7 +16,7 @@ test.describe('Phase 2: Volunteers API Endpoints', () => {
   test('volunteers page loads and displays data', async ({ page }) => {
     console.log('Testing volunteers page loads with new API...')
     
-    await page.goto(`https://blue.theoshift.com/events/${eventId}/volunteers`)
+    await page.goto(`${BASE_URL}/events/${eventId}/volunteers`)
     await page.waitForLoadState('networkidle')
     
     // Check for volunteer table/list
@@ -35,7 +35,7 @@ test.describe('Phase 2: Volunteers API Endpoints', () => {
   test('can add a new volunteer via new API', async ({ page }) => {
     console.log('Testing add volunteer via new /volunteers API...')
     
-    await page.goto(`https://blue.theoshift.com/events/${eventId}/volunteers`)
+    await page.goto(`${BASE_URL}/events/${eventId}/volunteers`)
     await page.waitForLoadState('networkidle')
     
     // Look for Add button
@@ -74,7 +74,7 @@ test.describe('Phase 2: Volunteers API Endpoints', () => {
       }
     })
     
-    await page.goto(`https://blue.theoshift.com/events/${eventId}/volunteers`)
+    await page.goto(`${BASE_URL}/events/${eventId}/volunteers`)
     await page.waitForLoadState('networkidle')
     
     // Give it a moment for API calls
@@ -94,7 +94,7 @@ test.describe('Phase 2: Volunteers API Endpoints', () => {
     console.log('Testing backward compatibility - old /attendants endpoints...')
     
     // The old route should redirect to /volunteers
-    const response = await page.goto(`https://blue.theoshift.com/events/${eventId}/attendants`)
+    const response = await page.goto(`${BASE_URL}/events/${eventId}/attendants`)
     
     console.log('Response status:', response?.status())
     console.log('Final URL:', page.url())

@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 
 test('simple event page test', async ({ page }) => {
   // Login
-  await page.goto('https://blue.theoshift.com/auth/signin')
+  await page.goto('${BASE_URL}/auth/signin')
   await page.fill('#email', 'admin@theoshift.local')
   await page.fill('#password', 'AdminPass123!')
   await page.click('button[type="submit"]')
@@ -12,7 +12,7 @@ test('simple event page test', async ({ page }) => {
   
   // Navigate to event page
   const eventId = '7a14c6ac-18c3-4c98-9b07-ba853d30f144'
-  const response = await page.goto(`https://blue.theoshift.com/events/${eventId}`)
+  const response = await page.goto(`${BASE_URL}/events/${eventId}`)
   
   console.log('Response status:', response?.status())
   console.log('Final URL:', page.url())

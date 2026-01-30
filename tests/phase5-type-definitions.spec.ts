@@ -9,7 +9,7 @@ test.describe('Phase 5: Type Definitions', () => {
   const eventId = '7a14c6ac-18c3-4c98-9b07-ba853d30f144'
   
   test.beforeEach(async ({ page }) => {
-    await page.goto('https://blue.theoshift.com/auth/signin')
+    await page.goto('${BASE_URL}/auth/signin')
     await page.fill('#email', 'admin@theoshift.local')
     await page.fill('#password', 'AdminPass123!')
     await page.click('button[type="submit"]')
@@ -21,7 +21,7 @@ test.describe('Phase 5: Type Definitions', () => {
     console.log('Testing Phase 5: Build verification...')
     
     // If we can load the page, the build succeeded
-    await page.goto(`https://blue.theoshift.com/events/${eventId}/volunteers`)
+    await page.goto(`${BASE_URL}/events/${eventId}/volunteers`)
     await page.waitForLoadState('networkidle')
     
     const pageLoaded = await page.locator('body').count() > 0
@@ -33,7 +33,7 @@ test.describe('Phase 5: Type Definitions', () => {
   test('Volunteers page still works after type changes', async ({ page }) => {
     console.log('Testing Phase 5: Runtime functionality...')
     
-    await page.goto(`https://blue.theoshift.com/events/${eventId}/volunteers`)
+    await page.goto(`${BASE_URL}/events/${eventId}/volunteers`)
     await page.waitForLoadState('networkidle')
     
     // Check that data still loads
@@ -68,7 +68,7 @@ test.describe('Phase 5: Type Definitions', () => {
     ]
     
     for (const testPage of pages) {
-      const response = await page.goto(`https://blue.theoshift.com${testPage.path}`)
+      const response = await page.goto(`${BASE_URL}${testPage.path}`)
       console.log(`${testPage.name} page status:`, response?.status())
       expect(response?.status()).toBe(200)
     }
@@ -79,7 +79,7 @@ test.describe('Phase 5: Type Definitions', () => {
   test('Type changes are compile-time only (no runtime impact)', async ({ page }) => {
     console.log('Testing Phase 5: Type changes are compile-time only...')
     
-    await page.goto(`https://blue.theoshift.com/events/${eventId}/volunteers`)
+    await page.goto(`${BASE_URL}/events/${eventId}/volunteers`)
     await page.waitForLoadState('networkidle')
     
     // Verify JavaScript bundle doesn't contain TypeScript types
@@ -104,7 +104,7 @@ test.describe('Phase 5: Type Definitions', () => {
   test('CRUD operations still work after type changes', async ({ page }) => {
     console.log('Testing Phase 5: CRUD operations...')
     
-    await page.goto(`https://blue.theoshift.com/events/${eventId}/volunteers`)
+    await page.goto(`${BASE_URL}/events/${eventId}/volunteers`)
     await page.waitForLoadState('networkidle')
     
     // Check if we can interact with the page
@@ -129,7 +129,7 @@ test.describe('Phase 5: Type Definitions', () => {
       }
     })
     
-    await page.goto(`https://blue.theoshift.com/events/${eventId}/volunteers`)
+    await page.goto(`${BASE_URL}/events/${eventId}/volunteers`)
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(2000)
     

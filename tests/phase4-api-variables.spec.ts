@@ -9,7 +9,7 @@ test.describe('Phase 4: API Variable Names', () => {
     const context = await browser.newContext()
     const page = await context.newPage()
     
-    await page.goto('https://blue.theoshift.com/auth/signin')
+    await page.goto('${BASE_URL}/auth/signin')
     await page.fill('#email', 'admin@theoshift.local')
     await page.fill('#password', 'AdminPass123!')
     await page.click('button[type="submit"]')
@@ -26,7 +26,7 @@ test.describe('Phase 4: API Variable Names', () => {
   test('GET /api/events/[id]/volunteers returns volunteer data', async ({ request }) => {
     console.log('Testing GET /api/events/[id]/volunteers...')
     
-    const response = await request.get(`https://blue.theoshift.com/api/events/${eventId}/volunteers`, {
+    const response = await request.get(`${BASE_URL}/api/events/${eventId}/volunteers`, {
       headers: {
         'Cookie': authCookie
       }
@@ -72,7 +72,7 @@ test.describe('Phase 4: API Variable Names', () => {
       formsOfService: ['Elder', 'Regular Pioneer']
     }
     
-    const response = await request.post(`https://blue.theoshift.com/api/events/${eventId}/volunteers`, {
+    const response = await request.post(`${BASE_URL}/api/events/${eventId}/volunteers`, {
       headers: {
         'Cookie': authCookie,
         'Content-Type': 'application/json'
@@ -98,7 +98,7 @@ test.describe('Phase 4: API Variable Names', () => {
     console.log('Testing GET /api/events/[id]/volunteers/[volunteerId]...')
     
     // First get list to find a volunteer ID
-    const listResponse = await request.get(`https://blue.theoshift.com/api/events/${eventId}/volunteers`, {
+    const listResponse = await request.get(`${BASE_URL}/api/events/${eventId}/volunteers`, {
       headers: { 'Cookie': authCookie }
     })
     
@@ -111,7 +111,7 @@ test.describe('Phase 4: API Variable Names', () => {
     const volunteerId = listData.data[0].id
     console.log('Testing with volunteer ID:', volunteerId)
     
-    const response = await request.get(`https://blue.theoshift.com/api/events/${eventId}/volunteers/${volunteerId}`, {
+    const response = await request.get(`${BASE_URL}/api/events/${eventId}/volunteers/${volunteerId}`, {
       headers: { 'Cookie': authCookie }
     })
     
@@ -129,7 +129,7 @@ test.describe('Phase 4: API Variable Names', () => {
     console.log('Testing PUT /api/events/[id]/volunteers/[volunteerId]...')
     
     // First get a volunteer to update
-    const listResponse = await request.get(`https://blue.theoshift.com/api/events/${eventId}/volunteers`, {
+    const listResponse = await request.get(`${BASE_URL}/api/events/${eventId}/volunteers`, {
       headers: { 'Cookie': authCookie }
     })
     
@@ -142,7 +142,7 @@ test.describe('Phase 4: API Variable Names', () => {
     const volunteer = listData.data[0]
     const updatedPhone = '555-9999'
     
-    const response = await request.put(`https://blue.theoshift.com/api/events/${eventId}/volunteers/${volunteer.id}`, {
+    const response = await request.put(`${BASE_URL}/api/events/${eventId}/volunteers/${volunteer.id}`, {
       headers: {
         'Cookie': authCookie,
         'Content-Type': 'application/json'
@@ -164,7 +164,7 @@ test.describe('Phase 4: API Variable Names', () => {
   test('API responses use "volunteer" terminology not "attendant"', async ({ request }) => {
     console.log('Testing API responses use correct terminology...')
     
-    const response = await request.get(`https://blue.theoshift.com/api/events/${eventId}/volunteers`, {
+    const response = await request.get(`${BASE_URL}/api/events/${eventId}/volunteers`, {
       headers: { 'Cookie': authCookie }
     })
     

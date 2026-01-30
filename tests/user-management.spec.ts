@@ -1,4 +1,9 @@
 import { test, expect } from '@playwright/test';
+import { getBaseUrl, getTestCredentials } from './helpers/test-config'
+
+const BASE_URL = getBaseUrl()
+const credentials = getTestCredentials()
+
 import { login, navigateTo, waitForDataLoad, isVisible } from './test-helpers';
 
 test.describe('TheoShift - User Management', () => {

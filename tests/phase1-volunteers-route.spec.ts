@@ -5,7 +5,7 @@ test.describe('Phase 1: Volunteers Route Rename', () => {
   
   test.beforeEach(async ({ page }) => {
     // Login
-    await page.goto('https://blue.theoshift.com/auth/signin')
+    await page.goto('${BASE_URL}/auth/signin')
     await page.fill('#email', 'admin@theoshift.local')
     await page.fill('#password', 'AdminPass123!')
     await page.click('button[type="submit"]')
@@ -16,7 +16,7 @@ test.describe('Phase 1: Volunteers Route Rename', () => {
   test('new /volunteers route works', async ({ page }) => {
     console.log('Testing new /volunteers route...')
     
-    const response = await page.goto(`https://blue.theoshift.com/events/${eventId}/volunteers`)
+    const response = await page.goto(`${BASE_URL}/events/${eventId}/volunteers`)
     
     console.log('Response status:', response?.status())
     console.log('Final URL:', page.url())
@@ -46,7 +46,7 @@ test.describe('Phase 1: Volunteers Route Rename', () => {
   test('old /attendants route redirects to /volunteers', async ({ page }) => {
     console.log('Testing old /attendants route redirect...')
     
-    const response = await page.goto(`https://blue.theoshift.com/events/${eventId}/attendants`)
+    const response = await page.goto(`${BASE_URL}/events/${eventId}/attendants`)
     
     console.log('Response status:', response?.status())
     console.log('Final URL:', page.url())
@@ -63,7 +63,7 @@ test.describe('Phase 1: Volunteers Route Rename', () => {
     console.log('Testing navigation links...')
     
     // Go to event detail page
-    await page.goto(`https://blue.theoshift.com/events/${eventId}`)
+    await page.goto(`${BASE_URL}/events/${eventId}`)
     
     // Find the volunteers button
     const volunteersButton = page.locator('a:has-text("Volunteers"), a:has-text("👥")')
@@ -86,7 +86,7 @@ test.describe('Phase 1: Volunteers Route Rename', () => {
   test('volunteers page functionality intact', async ({ page }) => {
     console.log('Testing volunteers page functionality...')
     
-    await page.goto(`https://blue.theoshift.com/events/${eventId}/volunteers`)
+    await page.goto(`${BASE_URL}/events/${eventId}/volunteers`)
     
     // Wait for page to load
     await page.waitForLoadState('networkidle')

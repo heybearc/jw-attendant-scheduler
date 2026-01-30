@@ -5,7 +5,7 @@ import { test, expect } from '@playwright/test'
  * Tests the complete availability request workflow before cleanup
  */
 
-const BASE_URL = process.env.BASE_URL || 'https://blue.theoshift.com'
+const BASE_URL = process.env.BASE_URL || '${BASE_URL}'
 const TEST_USER_EMAIL = process.env.TEST_USER_EMAIL || 'admin@theoshift.local'
 const TEST_USER_PASSWORD = process.env.TEST_USER_PASSWORD || 'AdminPass123!'
 

@@ -9,7 +9,7 @@ test.describe('Complete Refactor: Attendant → Volunteer', () => {
   const eventId = '7a14c6ac-18c3-4c98-9b07-ba853d30f144'
   
   test.beforeEach(async ({ page }) => {
-    await page.goto('https://blue.theoshift.com/auth/signin')
+    await page.goto('${BASE_URL}/auth/signin')
     await page.fill('#email', 'admin@theoshift.local')
     await page.fill('#password', 'AdminPass123!')
     await page.click('button[type="submit"]')
@@ -20,7 +20,7 @@ test.describe('Complete Refactor: Attendant → Volunteer', () => {
   test('Phase 1: /volunteers route exists and works', async ({ page }) => {
     console.log('Testing Phase 1: Route rename...')
     
-    const response = await page.goto(`https://blue.theoshift.com/events/${eventId}/volunteers`)
+    const response = await page.goto(`${BASE_URL}/events/${eventId}/volunteers`)
     expect(response?.status()).toBe(200)
     expect(page.url()).toContain('/volunteers')
     
@@ -33,7 +33,7 @@ test.describe('Complete Refactor: Attendant → Volunteer', () => {
   test('Phase 1: /attendants redirects to /volunteers', async ({ page }) => {
     console.log('Testing Phase 1: Redirect...')
     
-    await page.goto(`https://blue.theoshift.com/events/${eventId}/attendants`)
+    await page.goto(`${BASE_URL}/events/${eventId}/attendants`)
     await page.waitForURL(/\/volunteers/, { timeout: 5000 })
     
     expect(page.url()).toContain('/volunteers')
@@ -45,7 +45,7 @@ test.describe('Complete Refactor: Attendant → Volunteer', () => {
   test('Phase 1: Navigation links point to /volunteers', async ({ page }) => {
     console.log('Testing Phase 1: Navigation links...')
     
-    await page.goto(`https://blue.theoshift.com/events/${eventId}`)
+    await page.goto(`${BASE_URL}/events/${eventId}`)
     
     const volunteersButton = page.locator('a:has-text("Volunteers"), a:has-text("👥")').first()
     await expect(volunteersButton).toBeVisible()
@@ -68,7 +68,7 @@ test.describe('Complete Refactor: Attendant → Volunteer', () => {
       }
     })
     
-    await page.goto(`https://blue.theoshift.com/events/${eventId}/volunteers`)
+    await page.goto(`${BASE_URL}/events/${eventId}/volunteers`)
     await page.waitForLoadState('networkidle')
     
     const hasTable = await page.locator('table, [role="table"]').count() > 0
@@ -80,7 +80,7 @@ test.describe('Complete Refactor: Attendant → Volunteer', () => {
   test('Phase 3: Page uses "volunteer" terminology', async ({ page }) => {
     console.log('Testing Phase 3: Frontend terminology...')
     
-    await page.goto(`https://blue.theoshift.com/events/${eventId}/volunteers`)
+    await page.goto(`${BASE_URL}/events/${eventId}/volunteers`)
     await page.waitForLoadState('networkidle')
     
     const pageContent = await page.content()
@@ -112,7 +112,7 @@ test.describe('Complete Refactor: Attendant → Volunteer', () => {
       }
     })
     
-    await page.goto(`https://blue.theoshift.com/events/${eventId}/volunteers`)
+    await page.goto(`${BASE_URL}/events/${eventId}/volunteers`)
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(1000)
     
@@ -133,7 +133,7 @@ test.describe('Complete Refactor: Attendant → Volunteer', () => {
     console.log('Testing complete workflow...')
     
     // Navigate to event
-    await page.goto(`https://blue.theoshift.com/events/${eventId}`)
+    await page.goto(`${BASE_URL}/events/${eventId}`)
     
     // Click volunteers button
     const volunteersButton = page.locator('a:has-text("Volunteers"), a:has-text("👥")').first()
@@ -155,7 +155,7 @@ test.describe('Complete Refactor: Attendant → Volunteer', () => {
     console.log('Testing backward compatibility...')
     
     // Old route should redirect but still work
-    const response = await page.goto(`https://blue.theoshift.com/events/${eventId}/attendants`)
+    const response = await page.goto(`${BASE_URL}/events/${eventId}/attendants`)
     
     // Should end up on volunteers page
     expect(page.url()).toContain('/volunteers')

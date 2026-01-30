@@ -7,7 +7,7 @@ import { test, expect } from '@playwright/test'
 test.describe('Test Other Event Pages', () => {
   test.beforeEach(async ({ page }) => {
     // Login
-    await page.goto('https://blue.theoshift.com/auth/signin')
+    await page.goto('${BASE_URL}/auth/signin')
     await page.fill('#email', 'admin@theoshift.local')
     await page.fill('#password', 'AdminPass123!')
     await page.click('button[type="submit"]')
@@ -15,7 +15,7 @@ test.describe('Test Other Event Pages', () => {
   })
 
   test('check if /events/select works', async ({ page }) => {
-    await page.goto('https://blue.theoshift.com/events/select')
+    await page.goto('${BASE_URL}/events/select')
     const title = await page.title()
     console.log('Events select page title:', title)
     
@@ -29,7 +29,7 @@ test.describe('Test Other Event Pages', () => {
 
   test('check if /events/[id]/positions works', async ({ page }) => {
     const eventId = '7a14c6ac-18c3-4c98-9b07-ba853d30f144'
-    const response = await page.goto(`https://blue.theoshift.com/events/${eventId}/positions`)
+    const response = await page.goto(`${BASE_URL}/events/${eventId}/positions`)
     
     console.log('Positions page status:', response?.status())
     console.log('Final URL:', page.url())
@@ -44,7 +44,7 @@ test.describe('Test Other Event Pages', () => {
 
   test('check if /events/[id]/attendants works', async ({ page }) => {
     const eventId = '7a14c6ac-18c3-4c98-9b07-ba853d30f144'
-    const response = await page.goto(`https://blue.theoshift.com/events/${eventId}/attendants`)
+    const response = await page.goto(`${BASE_URL}/events/${eventId}/attendants`)
     
     console.log('Attendants page status:', response?.status())
     console.log('Final URL:', page.url())

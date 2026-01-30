@@ -7,7 +7,7 @@ import { test, expect } from '@playwright/test'
 
 test.describe('Event Page Diagnostic', () => {
   test('check signin page structure', async ({ page }) => {
-    await page.goto('https://blue.theoshift.com/auth/signin')
+    await page.goto('${BASE_URL}/auth/signin')
     
     // Take screenshot
     await page.screenshot({ path: 'test-results/signin-page.png', fullPage: true })
@@ -31,7 +31,7 @@ test.describe('Event Page Diagnostic', () => {
   test('check event page directly without login', async ({ page }) => {
     const eventId = 'ba89b1c7-4790-418f-a4f5-c400931ef28d'
     
-    const response = await page.goto(`https://blue.theoshift.com/events/${eventId}`)
+    const response = await page.goto(`${BASE_URL}/events/${eventId}`)
     
     console.log(`Response status: ${response?.status()}`)
     console.log(`Final URL: ${page.url()}`)
@@ -64,7 +64,7 @@ test.describe('Event Page Diagnostic', () => {
     ])
     
     const eventId = 'ba89b1c7-4790-418f-a4f5-c400931ef28d'
-    const response = await page.goto(`https://blue.theoshift.com/events/${eventId}`)
+    const response = await page.goto(`${BASE_URL}/events/${eventId}`)
     
     console.log(`Response status: ${response?.status()}`)
     console.log(`Final URL: ${page.url()}`)

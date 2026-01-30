@@ -34,8 +34,8 @@ test.describe('Availability Request Flow - Pre-Cleanup', () => {
     
     // Navigate to Volunteers page
     const volunteersLink = page.locator('a[href*="/volunteers"]').first()
-    await volunteersLink.click()
-    await page.waitForURL(/\/volunteers/)
+    await volunteersLink.click({ timeout: 10000 })
+    await page.waitForURL(/\/volunteers/, { timeout: 10000 })
     console.log('✅ Navigated to Volunteers page')
     
     // Check for bulk availability request button

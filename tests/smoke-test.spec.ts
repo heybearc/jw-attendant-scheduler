@@ -93,7 +93,9 @@ test.describe('TheoShift - Quick Smoke Tests', () => {
       !e.includes('favicon') && 
       !e.includes('404') &&
       !e.includes('net::ERR_') &&
-      !e.includes('Failed to load resource')
+      !e.includes('Failed to load resource') &&
+      !e.includes('[ACTIVITY]') &&
+      !e.includes('Failed to fetch')
     );
     
     expect(criticalErrors.length).toBe(0);

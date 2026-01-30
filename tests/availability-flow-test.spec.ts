@@ -109,8 +109,8 @@ test.describe('Availability Request Flow - Pre-Cleanup', () => {
     await page.waitForURL(/\/events\/[^/]+$/)
     
     const volunteersLink = page.locator('a[href*="/volunteers"]').first()
-    await volunteersLink.click()
-    await page.waitForURL(/\/volunteers/)
+    await volunteersLink.click({ timeout: 10000 })
+    await page.waitForURL(/\/volunteers/, { timeout: 10000 })
     
     // Check for availability status indicators
     const pageContent = await page.content()

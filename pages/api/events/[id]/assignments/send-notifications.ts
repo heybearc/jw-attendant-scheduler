@@ -95,15 +95,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(405).json({ error: 'Method not allowed' })
     }
 
-    // Check if email is configured
-    const emailConfigured = await isEmailConfigured();
-    if (!emailConfigured) {
-      return res.status(400).json({ 
-        error: 'Email not configured',
-        message: 'SMTP settings must be configured before sending notifications'
-      })
-    }
-
     // Check notification settings
     const settingsRecord = await prisma.system_settings.findFirst({
       where: { key: 'notification_settings' }

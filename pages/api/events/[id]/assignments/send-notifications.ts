@@ -3,6 +3,15 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '../../../../../src/lib/prisma'
 import { isEmailConfigured } from '../../../../../src/lib/email'
+import fs from 'fs'
+
+const logToFile = (message: string) => {
+  try {
+    fs.appendFileSync('/tmp/notification-debug.log', `${new Date().toISOString()} - ${message}\n`)
+  } catch (e) {
+    // Ignore file write errors
+  }
+}
 
 /**
  * Phase 4C Feature #1: Bulk Assignment Notifications
@@ -11,9 +20,12 @@ import { isEmailConfigured } from '../../../../../src/lib/email'
  */
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  logToFile('=== SEND NOTIFICATIONS CALLED ===')
   try {
     const session = await getServerSession(req, res, authOptions)
+    logToFile(`Session: ${session ? 'Present' : 'Missing'}`)
     if (!session) {
+      logToFile('ERROR: No session - returning 401')
       return res.status(401).json({ error: 'Unauthorized' })
     }
 
@@ -86,6 +98,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Get unique volunteers from assignments
     const volunteerIds = [...new Set(assignments.map(a => a.volunteerId))]
     
+    logToFile(`Found ${volunteerIds.length} volunteer(s) for ${assignments.length} assignment(s)`)
+    logToFile(`Volunteer IDs: ${JSON.stringify(volunteerIds)}`)
+    
     process.stderr.write(`📧 Sending notifications to ${volunteerIds.length} volunteer(s) for ${assignments.length} assignment(s)...\n`)
     process.stderr.write(`Volunteer IDs: ${JSON.stringify(volunteerIds)}\n`)
     process.stderr.write(`Sample assignment: ${JSON.stringify(assignments[0])}\n`)
@@ -98,12 +113,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     for (const volunteerId of volunteerIds) {
       const volunteerAssignments = assignments.filter(a => a.volunteerId === volunteerId)
       
+      logToFile(`Processing volunteer ${volunteerId} with ${volunteerAssignments.length} assignment(s)`)
+      logToFile(`First assignment ID: ${volunteerAssignments[0].id}`)
+      
       process.stderr.write(`\n🔄 Processing volunteer ${volunteerId}:\n`)
       process.stderr.write(`  - ${volunteerAssignments.length} assignment(s)\n`)
       process.stderr.write(`  - First assignment ID: ${volunteerAssignments[0].id}\n`)
       
       try {
         // Send notification for first assignment (email will include all assignments for this volunteer)
+        logToFile(`Calling notify API for assignment ${volunteerAssignments[0].id}`)
         process.stderr.write(`  - Calling notify API...\n`)
         const notificationResponse = await fetch(`${process.env.NEXTAUTH_URL}/api/assignments/notify`, {
           method: 'POST',
@@ -115,14 +134,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           })
         })
 
+        logToFile(`Notify API response status: ${notificationResponse.status}`)
         process.stderr.write(`  - Notify API response status: ${notificationResponse.status}\n`)
 
         if (notificationResponse.ok) {
           sent++
+          logToFile(`SUCCESS: Notification sent to volunteer ${volunteerId}`)
           process.stderr.write(`✅ Notification sent for ${volunteerAssignments.length} assignment(s) to volunteer ${volunteerId}\n`)
         } else {
           failed++
           const errorData = await notificationResponse.json()
+          logToFile(`FAILED: ${JSON.stringify(errorData)}`)
           process.stderr.write(`  - Error data: ${JSON.stringify(errorData)}\n`)
           errors.push(`Volunteer ${volunteerId}: ${errorData.error || 'Unknown error'}`)
           process.stderr.write(`❌ Failed to send to volunteer ${volunteerId}: ${JSON.stringify(errorData)}\n`)

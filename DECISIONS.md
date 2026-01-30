@@ -249,6 +249,38 @@
 - Documentation updates tracked in version control
 - Part of /bump checklist, enforced before release
 
+### D-TS-020: Direct Email Sending Pattern for Notifications
+**Date:** 2026-01-30  
+**Context:** Assignment notification system was failing due to session propagation issues when making internal HTTP calls between API endpoints (`/send-notifications` → `/notify`). Needed pragmatic solution for current scale.  
+**Decision:** Send emails directly within endpoints using nodemailer, following the established pattern from `availability-request.ts`. Avoid internal HTTP API calls for notification workflows.  
+
+**Alternatives Considered:**
+1. **Message Queue (Redis/BullMQ)** - Industry standard for scale, but overkill for current volume (<100 emails/day)
+2. **Service Account for Internal APIs** - Adds auth complexity without solving synchronous blocking
+3. **Shared Service Layer** - Good middle ground, deferred to future refactor
+
+**Implementation:**
+- Refactored `send-notifications.ts` to send emails directly via nodemailer
+- Removed HTTP fetch call to `/notify` endpoint
+- Email config loaded from database (`system_settings.email_config`)
+- Fixed SSL/TLS configuration (added `requireTLS: true` for Gmail SMTP)
+- Matches proven pattern from availability-request system
+
+**Consequences:**
+- ✅ Simple and maintainable for current scale
+- ✅ No session/auth propagation issues
+- ✅ Follows existing codebase patterns
+- ✅ Notifications working reliably
+- ⚠️ Synchronous (blocks API response during email send)
+- ⚠️ Potential code duplication if more notification types added
+- 📋 Future: Consider message queue when volume exceeds 100+ emails/day
+- 📋 Future: Extract to shared service layer to reduce duplication
+
+**Related Files:**
+- `pages/api/events/[id]/assignments/send-notifications.ts`
+- `pages/api/events/[id]/availability-request.ts` (reference pattern)
+- `src/lib/assignmentEmails.ts` (email templates)
+
 ---
 
 ## Shared Decisions

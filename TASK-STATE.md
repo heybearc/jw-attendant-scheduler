@@ -2,26 +2,29 @@
 
 **Last updated:** 2026-01-30 (afternoon)  
 **Current branch:** main  
-**Working on:** Phase 4C Documentation - COMPLETE ✅
+**Working on:** Phase 4C Assignment Notifications - COMPLETE ✅
 
 ---
 
 ## Current Task
-**Phase 4C Documentation Complete ✅**
+**Phase 4C Assignment Notifications Complete ✅**
 
 ### What I'm doing right now
-Documented Phase 4C completion status in ROADMAP.md. Phase 4C (Assignment Workflow Enhancements) is complete with certain features deferred indefinitely. Ready for Phase 5 (Oversight Management) or new feature work.
+Completed assignment notifications feature. Reverted automatic notifications to manual-only approach (original design). Coordinators use "Send Notifications" button to send emails when ready, preventing spam during assignment shuffling. Phase 4C is now 100% complete.
 
 ### Recent completions
 
-**Today (2026-01-30 - Afternoon: Phase 4C Documentation):**
+**Today (2026-01-30 - Afternoon: Phase 4C Completion):**
 - ✅ Reviewed git history to identify completed Phase 4C work
 - ✅ Updated ROADMAP.md to move Phase 4C to completed section
 - ✅ Documented completed features (notifications, templates, availability, permissions cloning)
 - ✅ Documented features deferred indefinitely (update notifications, reminders, coordinator dashboards)
 - ✅ Clarified that existing workflows handle deferred features
 - ✅ Updated current version to v3.5.1
-- ✅ Marked Phase 4C as 100% complete (with intentional deferrals)
+- ✅ Completed assignment notifications feature (manual-only)
+- ✅ Reverted automatic notifications (commit 0c566941)
+- ✅ Confirmed manual "Send Notifications" button is correct approach
+- ✅ Phase 4C is now 100% complete with all features working as designed
 
 **Today (2026-01-30 - Morning: Test Suite Cleanup & v3.5.1 Release):**
 - ✅ Fixed all Playwright test failures (was 14 failing, now 0 failing)
@@ -40,6 +43,11 @@ Documented Phase 4C completion status in ROADMAP.md. Phase 4C (Assignment Workfl
 
 **Decisions Added:**
 - Testing policy documented (diagnostic test lifecycle, naming conventions, archival process)
+
+**Commits (Afternoon):**
+- `0c566941` - Revert automatic notifications, keep manual-only approach
+- `4732b53d` - (Reverted) Automatic notifications attempt
+- `1c0df663` - Document Phase 4C completion with intentional deferrals
 
 **Commits:**
 - `579e4827` - Release v3.5.1 - Testing Infrastructure Improvements

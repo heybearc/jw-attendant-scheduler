@@ -82,26 +82,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
         volunteer: {
           include: {
-            user: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                email: true
-              }
-            }
+            user: true
           }
         },
         overseer: {
           include: {
-            user: {
-              select: {
-                firstName: true,
-                lastName: true,
-                email: true,
-                phone: true
-              }
-            }
+            user: true
           }
         }
       }
@@ -111,14 +97,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ error: 'Assignment not found' })
     }
 
-    const attendant = assignment.volunteer
-    if (!attendant?.user) {
-      return res.status(400).json({ error: 'Assignment has no associated user' })
+    const volunteerRecord = assignment.volunteer
+    if (!volunteerRecord) {
+      return res.status(400).json({ error: 'Assignment has no associated volunteer' })
     }
 
-    const volunteer = attendant.user
+    // Use volunteer data directly (volunteers have their own email/name fields)
+    const volunteer = {
+      id: volunteerRecord.user?.id || volunteerRecord.id,
+      firstName: volunteerRecord.user?.firstName || volunteerRecord.firstName,
+      lastName: volunteerRecord.user?.lastName || volunteerRecord.lastName,
+      email: volunteerRecord.user?.email || volunteerRecord.email
+    }
+    
     const event = assignment.positions.events
-    const overseer = assignment.overseer?.user
+    
+    // Overseer data (if exists)
+    const overseer = assignment.overseer ? {
+      firstName: assignment.overseer.user?.firstName || assignment.overseer.firstName,
+      lastName: assignment.overseer.user?.lastName || assignment.overseer.lastName,
+      email: assignment.overseer.user?.email || assignment.overseer.email,
+      phone: assignment.overseer.user?.phone || assignment.overseer.phone
+    } : null
 
     // Format dates
     const eventDate = new Date(event.startDate).toLocaleDateString('en-US', {

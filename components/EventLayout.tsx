@@ -191,27 +191,14 @@ export default function EventLayout({
       <footer className="bg-white border-t border-gray-200 mt-auto mb-16 md:mb-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col sm:flex-row justify-between items-center text-sm text-gray-600">
-            <p> 2024 TheoShift. All rights reserved.</p>
+            <p>© 2024 TheoShift. All rights reserved.</p>
             <p className="mt-2 sm:mt-0">Version {packageJson.version}</p>
-            </Link>
-            <Link
-              href="/help/feedback"
-              className="text-gray-600 hover:text-gray-900 transition-colors flex items-center gap-1"
-            >
-              💬 Send Feedback
-            </Link>
-            <Link
-              href="/help/my-feedback"
-              className="text-gray-600 hover:text-gray-900 transition-colors flex items-center gap-1"
-            >
-              📝 My Feedback
-            </Link>
-          </div>
-          <div className="text-center text-xs text-gray-500 mt-2">
-            TheoShift v{packageJson.version} • Volunteer Coordination Platform
           </div>
         </div>
       </footer>
+
+      {/* Bottom Navigation (Mobile Only) */}
+      <BottomNav selectedEventId={selectedEvent?.id} />
     </div>
   )
 }

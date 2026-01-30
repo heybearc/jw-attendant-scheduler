@@ -82,7 +82,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
         volunteer: {
           include: {
-            users: {
+            user: {
               select: {
                 id: true,
                 firstName: true,
@@ -94,7 +94,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
         overseer: {
           include: {
-            users: {
+            user: {
               select: {
                 firstName: true,
                 lastName: true,
@@ -112,13 +112,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const attendant = assignment.volunteer
-    if (!attendant?.users) {
+    if (!attendant?.user) {
       return res.status(400).json({ error: 'Assignment has no associated user' })
     }
 
-    const volunteer = attendant.users
+    const volunteer = attendant.user
     const event = assignment.positions.events
-    const overseer = assignment.overseer?.users
+    const overseer = assignment.overseer?.user
 
     // Format dates
     const eventDate = new Date(event.startDate).toLocaleDateString('en-US', {

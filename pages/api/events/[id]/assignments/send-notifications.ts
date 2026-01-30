@@ -2,7 +2,8 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '../../../../../src/lib/prisma'
-import { isEmailConfigured } from '../../../../../src/lib/email'
+import nodemailer from 'nodemailer'
+import { generateAssignmentCreatedEmail } from '../../../../../src/lib/assignmentEmails'
 import fs from 'fs'
 
 const logToFile = (message: string) => {
@@ -11,6 +12,50 @@ const logToFile = (message: string) => {
   } catch (e) {
     // Ignore file write errors
   }
+}
+
+// Send email using database configuration (same pattern as availability-request)
+async function sendAssignmentEmail(to: string, subject: string, html: string) {
+  const emailConfig = await prisma.system_settings.findFirst({
+    where: { key: 'email_config' }
+  })
+
+  if (!emailConfig) {
+    throw new Error('Email configuration not found')
+  }
+
+  const { authType, config } = JSON.parse(emailConfig.value)
+
+  let transporter
+  
+  if (authType === 'gmail') {
+    transporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: config.gmailEmail,
+        pass: config.gmailAppPassword
+      }
+    })
+  } else {
+    transporter = nodemailer.createTransport({
+      host: config.smtpServer,
+      port: parseInt(config.smtpPort || '587'),
+      secure: config.smtpSecure || false,
+      auth: {
+        user: config.smtpUser,
+        pass: config.smtpPassword
+      }
+    })
+  }
+
+  await transporter.sendMail({
+    from: `"TheoShift Team" <${config.fromEmail}>`,
+    to,
+    subject,
+    html
+  })
 }
 
 /**
@@ -114,44 +159,92 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const volunteerAssignments = assignments.filter(a => a.volunteerId === volunteerId)
       
       logToFile(`Processing volunteer ${volunteerId} with ${volunteerAssignments.length} assignment(s)`)
-      logToFile(`First assignment ID: ${volunteerAssignments[0].id}`)
-      
-      process.stderr.write(`\n🔄 Processing volunteer ${volunteerId}:\n`)
-      process.stderr.write(`  - ${volunteerAssignments.length} assignment(s)\n`)
-      process.stderr.write(`  - First assignment ID: ${volunteerAssignments[0].id}\n`)
       
       try {
-        // Send notification for first assignment (email will include all assignments for this volunteer)
-        logToFile(`Calling notify API for assignment ${volunteerAssignments[0].id}`)
-        process.stderr.write(`  - Calling notify API...\n`)
-        const notificationResponse = await fetch(`${process.env.NEXTAUTH_URL}/api/assignments/notify`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: 'created',
-            assignmentId: volunteerAssignments[0].id,
-            eventId: eventId
-          })
+        // Get full assignment details with volunteer and event info
+        const assignment = await prisma.position_assignments.findUnique({
+          where: { id: volunteerAssignments[0].id },
+          include: {
+            volunteer: {
+              include: {
+                user: true
+              }
+            },
+            positions: {
+              include: {
+                events: true
+              }
+            },
+            shift: true,
+            overseer: {
+              include: {
+                user: true
+              }
+            }
+          }
         })
 
-        logToFile(`Notify API response status: ${notificationResponse.status}`)
-        process.stderr.write(`  - Notify API response status: ${notificationResponse.status}\n`)
-
-        if (notificationResponse.ok) {
-          sent++
-          logToFile(`SUCCESS: Notification sent to volunteer ${volunteerId}`)
-          process.stderr.write(`✅ Notification sent for ${volunteerAssignments.length} assignment(s) to volunteer ${volunteerId}\n`)
-        } else {
-          failed++
-          const errorData = await notificationResponse.json()
-          logToFile(`FAILED: ${JSON.stringify(errorData)}`)
-          process.stderr.write(`  - Error data: ${JSON.stringify(errorData)}\n`)
-          errors.push(`Volunteer ${volunteerId}: ${errorData.error || 'Unknown error'}`)
-          process.stderr.write(`❌ Failed to send to volunteer ${volunteerId}: ${JSON.stringify(errorData)}\n`)
+        if (!assignment || !assignment.volunteer) {
+          throw new Error('Assignment or volunteer not found')
         }
+
+        const volunteer = assignment.volunteer
+        const event = assignment.positions.events
+        
+        // Get volunteer email (from user if linked, otherwise from volunteer record)
+        const volunteerEmail = volunteer.user?.email || volunteer.email
+        const volunteerFirstName = volunteer.user?.firstName || volunteer.firstName
+        const volunteerLastName = volunteer.user?.lastName || volunteer.lastName
+
+        // Format event date
+        const eventDate = new Date(event.startDate).toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })
+
+        // Format shift times
+        const shiftStart = assignment.shift?.startTime || 'Not specified'
+        const shiftEnd = assignment.shift?.endTime || 'Not specified'
+
+        // Get overseer info if exists
+        const overseer = assignment.overseer
+        const overseerName = overseer ? `${overseer.user?.firstName || overseer.firstName} ${overseer.user?.lastName || overseer.lastName}` : undefined
+        const overseerEmail = overseer ? (overseer.user?.email || overseer.email) : undefined
+        const overseerPhone = overseer ? (overseer.user?.phone || overseer.phone) : undefined
+
+        // Generate email HTML
+        const emailHtml = generateAssignmentCreatedEmail({
+          volunteerFirstName,
+          volunteerLastName,
+          volunteerEmail,
+          eventName: event.name,
+          eventDate,
+          eventLocation: event.location || event.venue || 'Location TBD',
+          positionName: assignment.positions.positionName,
+          positionNumber: assignment.positions.positionNumber,
+          shiftStart,
+          shiftEnd,
+          overseerName,
+          overseerEmail,
+          overseerPhone,
+          eventUrl: `${process.env.NEXTAUTH_URL}/events/${event.id}/positions`
+        })
+
+        // Send email directly (same pattern as availability-request)
+        await sendAssignmentEmail(
+          volunteerEmail,
+          `New Assignment: ${event.name}`,
+          emailHtml
+        )
+
+        sent++
+        logToFile(`SUCCESS: Email sent to ${volunteerEmail}`)
       } catch (error: any) {
         failed++
         errors.push(`Volunteer ${volunteerId}: ${error.message}`)
+        logToFile(`FAILED: ${error.message}`)
         console.error(`❌ Error sending to volunteer ${volunteerId}:`, error)
       }
     }

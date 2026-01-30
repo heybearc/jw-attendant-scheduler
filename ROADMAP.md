@@ -1,7 +1,7 @@
 # TheoShift Product Roadmap
 
 **Last Updated:** January 30, 2026  
-**Current Version:** v3.5.1  
+**Current Version:** v3.5.3  
 **Status:** Active Development
 
 ---
@@ -140,52 +140,57 @@ Transform TheoShift from a single-purpose attendant management system into a com
 
 ## 📅 PLANNED PHASES
 
-### **Phase 5: Oversight Management Module** 📋 **HIGH PRIORITY**
-**Target Version:** v3.5.0  
-**Estimated Duration:** 8-10 weeks  
-**Status:** Specification complete
+### **Phase 5B: Event Oversight Dashboard** 📋 **HIGH PRIORITY** *(REVISED)*
+**Target Version:** v3.6.0  
+**Estimated Duration:** 3-4 weeks  
+**Status:** Specification complete (revised and simplified)
 
 #### **Goals:**
-Dedicated module for managing oversight relationships between Overseers, Overseer Assistants, Keymen, and supervised attendants.
+Simple event-specific oversight dashboard showing which overseers, assistants, and keymen are assigned to positions for each event, helping with event planning and coverage verification.
+
+#### **Key Change from Original Phase 5:**
+**Original:** Complex global oversight management system with teams, hierarchies, and organization-wide tracking  
+**Revised:** Simple event-focused dashboard using existing assignment data
 
 #### **Features:**
 
-1. **Oversight Assignment Management**
-   - Individual and bulk oversight assignments
-   - Event-specific vs global oversight
-   - Delegation chain tracking
-   - Assignment history and audit trail
+1. **Event Oversight Dashboard**
+   - View all overseers assigned to positions in an event
+   - View all assistant overseers and keymen
+   - Coverage statistics (% of positions with oversight)
+   - Visual indicators for coverage gaps
+   - Export to PDF/Excel
 
-2. **Oversight Team Management**
-   - Team creation with leads, assistants, and keymen
-   - Responsibility area definition
-   - Team hierarchies
-   - Load balancing tools
+2. **Oversight Role Filtering**
+   - Filter positions page by oversight roles
+   - Quick view of oversight distribution
+   - Helps with assignment planning
 
-3. **Oversight Dashboard**
-   - Visual relationship mapping
-   - Coverage gap identification
-   - Workload distribution analytics
-   - Team performance metrics
+3. **Oversight Statistics Card**
+   - Small card on event dashboard showing coverage %
+   - Link to full oversight dashboard
+   - Quick visibility of oversight status
 
 4. **Integration Features**
-   - Position assignment blocking for oversight roles
-   - Attendant filtering by oversight status
-   - Event planning integration
-   - Compliance reporting
+   - Uses existing `event_assignments` and `users` tables
+   - No new database tables required
+   - Leverages existing role field (OVERSEER, ASSISTANT_OVERSEER, KEYMAN)
+
+#### **Branding Task (Included):**
+- Logo & favicon design (1-2 days)
+- Professional TheoShift branding
+- Update navigation header and help pages
 
 #### **Database Schema:**
-- `oversight_assignments` table (event-specific and global)
-- `oversight_teams` table
-- Complex many-to-many relationships
-- Performance indexes
+- **No new tables needed!** Uses existing data
+- Query existing `event_assignments` filtered by user roles
+- Simple and maintainable
 
 #### **Success Metrics:**
-- 100% of attendants have appropriate oversight
-- No overseer manages more than 15 attendants
-- 99%+ accuracy in oversight relationships
-- 90%+ event adoption rate
-- 60% reduction in manual coordination
+- 80%+ of coordinators view oversight dashboard before events
+- 90%+ of positions have oversight assigned
+- 50% reduction in "who's the overseer?" questions
+- 70%+ feature adoption rate
 
 ---
 

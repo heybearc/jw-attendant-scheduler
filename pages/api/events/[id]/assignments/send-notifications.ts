@@ -86,9 +86,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Get unique volunteers from assignments
     const volunteerIds = [...new Set(assignments.map(a => a.volunteerId))]
     
-    console.log(`📧 Sending notifications to ${volunteerIds.length} volunteer(s) for ${assignments.length} assignment(s)...`)
-    console.log('Volunteer IDs:', volunteerIds)
-    console.log('Sample assignment:', assignments[0])
+    process.stderr.write(`📧 Sending notifications to ${volunteerIds.length} volunteer(s) for ${assignments.length} assignment(s)...\n`)
+    process.stderr.write(`Volunteer IDs: ${JSON.stringify(volunteerIds)}\n`)
+    process.stderr.write(`Sample assignment: ${JSON.stringify(assignments[0])}\n`)
 
     let sent = 0
     let failed = 0
@@ -98,13 +98,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     for (const volunteerId of volunteerIds) {
       const volunteerAssignments = assignments.filter(a => a.volunteerId === volunteerId)
       
-      console.log(`\n🔄 Processing volunteer ${volunteerId}:`)
-      console.log(`  - ${volunteerAssignments.length} assignment(s)`)
-      console.log(`  - First assignment ID: ${volunteerAssignments[0].id}`)
+      process.stderr.write(`\n🔄 Processing volunteer ${volunteerId}:\n`)
+      process.stderr.write(`  - ${volunteerAssignments.length} assignment(s)\n`)
+      process.stderr.write(`  - First assignment ID: ${volunteerAssignments[0].id}\n`)
       
       try {
         // Send notification for first assignment (email will include all assignments for this volunteer)
-        console.log(`  - Calling notify API...`)
+        process.stderr.write(`  - Calling notify API...\n`)
         const notificationResponse = await fetch(`${process.env.NEXTAUTH_URL}/api/assignments/notify`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -115,17 +115,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           })
         })
 
-        console.log(`  - Notify API response status: ${notificationResponse.status}`)
+        process.stderr.write(`  - Notify API response status: ${notificationResponse.status}\n`)
 
         if (notificationResponse.ok) {
           sent++
-          console.log(`✅ Notification sent for ${volunteerAssignments.length} assignment(s) to volunteer ${volunteerId}`)
+          process.stderr.write(`✅ Notification sent for ${volunteerAssignments.length} assignment(s) to volunteer ${volunteerId}\n`)
         } else {
           failed++
           const errorData = await notificationResponse.json()
-          console.log(`  - Error data:`, errorData)
+          process.stderr.write(`  - Error data: ${JSON.stringify(errorData)}\n`)
           errors.push(`Volunteer ${volunteerId}: ${errorData.error || 'Unknown error'}`)
-          console.error(`❌ Failed to send to volunteer ${volunteerId}:`, errorData)
+          process.stderr.write(`❌ Failed to send to volunteer ${volunteerId}: ${JSON.stringify(errorData)}\n`)
         }
       } catch (error: any) {
         failed++

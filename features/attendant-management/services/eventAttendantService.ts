@@ -144,21 +144,35 @@ class EventAttendantService {
 
   // Bulk operations for event-specific attendants
   async bulkUpdateEventAttendantStatus(eventId: string, attendantIds: string[], isActive: boolean): Promise<{ success: boolean }> {
-    // For now, return success - TODO: implement proper bulk update API
-    return { success: true }
+    const response = await fetch(`${this.getBaseUrl(eventId)}/bulk`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ attendantIds, isActive }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || `Failed to bulk update attendants (${response.status}: ${response.statusText})`)
+    }
+    return response.json()
   }
 
   async bulkDeleteEventAttendants(eventId: string, attendantIds: string[]): Promise<{ success: boolean }> {
-    const deletePromises = attendantIds.map(id => 
-      this.deleteEventAttendant(eventId, id)
-    )
-    
-    try {
-      await Promise.all(deletePromises)
-      return { success: true }
-    } catch (error) {
-      throw new Error(`Failed to bulk delete attendants: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    const response = await fetch(`${this.getBaseUrl(eventId)}/bulk`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ attendantIds }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || `Failed to bulk delete attendants (${response.status}: ${response.statusText})`)
     }
+    return response.json()
   }
 }
 

@@ -112,10 +112,24 @@ async function handleUpdateUser(req: NextApiRequest, res: NextApiResponse, id: s
       }
     })
 
-    // TODO: Send password change notification email if sendResetEmail is true
+    // Send password change notification email if sendResetEmail is true
     if (newPassword && sendResetEmail) {
-      console.log(`Password changed for user ${user.email}, notification email should be sent`)
-      // Email notification would be implemented here
+      try {
+        const { sendPasswordResetEmail } = require('../../../../src/lib/email')
+        const loginUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3001'}/auth/signin`
+        
+        await sendPasswordResetEmail({
+          firstName: user.name?.split(' ')[0] || 'User',
+          email: user.email || '',
+          newPassword: newPassword,
+          loginUrl: loginUrl
+        })
+        
+        console.log(`✅ Password reset email sent to ${user.email}`)
+      } catch (emailError) {
+        console.error('Failed to send password reset email:', emailError)
+        // Don't fail the request if email fails
+      }
     }
 
     return res.status(200).json({

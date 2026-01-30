@@ -74,6 +74,13 @@ export default function EventNavigation({
           👥 View {terminology.volunteer}s
         </Link>
         
+        <Link
+          href={`/events/${eventId}/oversight`}
+          className="w-full flex items-center justify-center px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-sm font-medium transition-colors"
+        >
+          🔍 Oversight Dashboard
+        </Link>
+        
         {/* Conditional Module Actions */}
         {isCountTimesEnabled && (
           <Link

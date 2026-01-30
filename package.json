@@ -1,6 +1,6 @@
 {
   "name": "theoshift",
-  "version": "3.5.3",
+  "version": "3.6.0",
   "private": true,
   "scripts": {
     "dev": "next dev --port 3001",
@@ -34,6 +34,8 @@
     "exceljs": "^4.4.0",
     "formidable": "^3.5.4",
     "gray-matter": "^4.0.3",
+    "jspdf": "^4.0.0",
+    "jspdf-autotable": "^5.0.7",
     "marked": "^16.4.1",
     "next": "14.2.33",
     "next-auth": "^4.24.7",
@@ -41,6 +43,7 @@
     "pdfkit": "^0.15.0",
     "react": "^18",
     "react-dom": "^18",
+    "xlsx": "^0.18.5",
     "zod": "^3.23.8"
   },
   "devDependencies": {

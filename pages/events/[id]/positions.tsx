@@ -195,19 +195,38 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
   const [message, setMessage] = useState('')
   const [showAvailableAttendants, setShowAvailableAttendants] = useState(false)
   const [selectedOverseer, setSelectedOverseer] = useState<string>('all')
+  const [roleFilter, setRoleFilter] = useState<'all' | 'overseers' | 'assistants' | 'keymen'>('all')
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
   
   // Define getFilteredPositionsWithOverseer before using it in exportHook
   const getFilteredPositionsWithOverseer = () => {
-    const filtered = positionsHook.getFilteredPositions()
+    let filtered = positionsHook.getFilteredPositions()
     
-    if (selectedOverseer === 'all') {
-      return filtered
+    // Apply overseer filter
+    if (selectedOverseer !== 'all') {
+      filtered = filtered.filter(position => 
+        position.oversight?.some(o => o.overseer?.id === selectedOverseer)
+      )
     }
     
-    return filtered.filter(position => 
-      position.oversight?.some(o => o.overseer?.id === selectedOverseer)
-    )
+    // Apply role filter (Phase 5B: Oversight Role Filtering)
+    if (roleFilter !== 'all') {
+      filtered = filtered.filter(position => {
+        const assignments = position.assignments || []
+        
+        if (roleFilter === 'overseers') {
+          return assignments.some(a => a.role === 'OVERSEER')
+        } else if (roleFilter === 'assistants') {
+          return assignments.some(a => a.role === 'ASSISTANT_OVERSEER')
+        } else if (roleFilter === 'keymen') {
+          return assignments.some(a => a.role === 'KEYMAN')
+        }
+        
+        return true
+      })
+    }
+    
+    return filtered
   }
   
   const exportHook = useExport({
@@ -848,6 +867,19 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                       </option>
                     )
                   })}
+                </select>
+
+                {/* Phase 5B: Role Filter */}
+                <select
+                  value={roleFilter}
+                  onChange={(e) => setRoleFilter(e.target.value as 'all' | 'overseers' | 'assistants' | 'keymen')}
+                  className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  title="Filter by oversight role"
+                >
+                  <option value="all">All Roles</option>
+                  <option value="overseers">🔵 Overseers Only</option>
+                  <option value="assistants">🟢 Assistants Only</option>
+                  <option value="keymen">🟡 Keymen Only</option>
                 </select>
 
                 {/* Export Buttons */}

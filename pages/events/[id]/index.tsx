@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../../api/auth/[...nextauth]'
 import EventLayout from '../../../components/EventLayout'
 import EventNavigation from '../../../components/EventNavigation'
+import OversightCoverageCard from '../../../components/OversightCoverageCard'
 import { TemplateProvider } from '../../../contexts/TemplateContext'
 import { VolunteerText } from '../../../components/DynamicText'
 import { CustomFieldsDisplay } from '../../../components/CustomFieldsRenderer'
@@ -796,6 +797,9 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
               onExport={handleExportData}
               currentStatus={event.status}
             />
+
+            {/* Phase 5B: Oversight Coverage Card */}
+            <OversightCoverageCard eventId={event.id} />
 
             {/* Event Timeline */}
             <div className="bg-white shadow rounded-lg p-6">

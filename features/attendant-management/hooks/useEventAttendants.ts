@@ -207,15 +207,20 @@ export function useEventAttendants({
       setLoading(true)
       setError(null)
       
-      // For now, just remove from local state
-      // TODO: Implement proper bulk delete API
-      setAttendants(prev => prev.filter(a => !attendantIds.includes(a.id)))
+      const response = await eventAttendantService.bulkDeleteEventAttendants(eventId, attendantIds)
+      
+      if (response.success) {
+        await fetchAttendants()
+      } else {
+        throw new Error('Failed to delete attendants')
+      }
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to delete attendants')
+      throw error
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [eventId, fetchAttendants])
 
   const bulkImport = useCallback(async (data: any) => {
     try {

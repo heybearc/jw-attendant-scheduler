@@ -291,6 +291,221 @@ Theocratic Shift Scheduler
   });
 }
 
+// Generate password reset email HTML template
+export function generatePasswordResetEmail(data: { firstName: string; email: string; newPassword: string; loginUrl: string }): string {
+  return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Password Reset - TheoShift</title>
+    </head>
+    <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f3f4f6;">
+      <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+        <!-- Header -->
+        <div style="background-color: #1e40af; color: white; padding: 30px 20px; text-align: center;">
+          <h1 style="margin: 0; font-size: 28px; font-weight: bold;">🔐 Password Reset</h1>
+          <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">TheoShift Account</p>
+        </div>
+
+        <!-- Main Content -->
+        <div style="padding: 30px 20px;">
+          <h2 style="color: #374151; margin: 0 0 20px 0;">Hello ${data.firstName}!</h2>
+          
+          <p style="color: #6b7280; line-height: 1.6; margin: 0 0 20px 0;">
+            Your TheoShift account password has been reset by an administrator. Below are your new login credentials.
+          </p>
+
+          <!-- New Password -->
+          <div style="background-color: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 20px; margin: 20px 0;">
+            <h3 style="color: #92400e; margin: 0 0 15px 0;">🔑 New Password</h3>
+            <div style="background-color: #ffffff; border: 1px solid #d97706; border-radius: 4px; padding: 12px; font-family: monospace; font-size: 16px; font-weight: bold; color: #92400e; letter-spacing: 1px;">
+              ${data.newPassword}
+            </div>
+            <p style="color: #92400e; margin: 15px 0 0 0; font-size: 14px;">
+              ⚠️ <strong>Important:</strong> Please change this password after logging in for security purposes.
+            </p>
+          </div>
+
+          <!-- Login Instructions -->
+          <div style="margin: 30px 0;">
+            <h3 style="color: #374151; margin: 0 0 15px 0;">Next Steps</h3>
+            <ol style="color: #6b7280; line-height: 1.6; padding-left: 20px;">
+              <li style="margin: 8px 0;">Click the login button below</li>
+              <li style="margin: 8px 0;">Use your email: <strong>${data.email}</strong></li>
+              <li style="margin: 8px 0;">Enter the new password provided above</li>
+              <li style="margin: 8px 0;">Change your password to something secure and memorable</li>
+            </ol>
+          </div>
+
+          <!-- Login Button -->
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${data.loginUrl}" style="display: inline-block; background-color: #1e40af; color: white; text-decoration: none; padding: 15px 30px; border-radius: 8px; font-weight: bold; font-size: 16px;">
+              🚀 Login Now
+            </a>
+          </div>
+
+          <!-- Security Notice -->
+          <div style="background-color: #eff6ff; border: 1px solid #3b82f6; border-radius: 8px; padding: 20px; margin: 20px 0;">
+            <h3 style="color: #1e40af; margin: 0 0 10px 0;">🛡️ Security Notice</h3>
+            <p style="color: #1e40af; margin: 0; font-size: 14px;">
+              If you did not request this password reset, please contact your system administrator immediately.
+            </p>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="background-color: #374151; color: #d1d5db; padding: 20px; text-align: center;">
+          <p style="margin: 0; font-size: 14px;">
+            TheoShift - Volunteer Coordination Platform
+          </p>
+          <p style="margin: 10px 0 0 0; font-size: 12px; opacity: 0.8;">
+            This email was sent automatically. Please do not reply to this email.
+          </p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+// Send password reset email
+export async function sendPasswordResetEmail(data: { firstName: string; email: string; newPassword: string; loginUrl: string }): Promise<void> {
+  const html = generatePasswordResetEmail(data);
+  
+  const subject = `Password Reset - TheoShift Account`;
+  
+  const text = `
+Password Reset - TheoShift Account
+
+Hello ${data.firstName},
+
+Your TheoShift account password has been reset by an administrator.
+
+New Password: ${data.newPassword}
+
+Next Steps:
+1. Visit: ${data.loginUrl}
+2. Login with your email: ${data.email}
+3. Use the new password provided above
+4. Change your password to something secure and memorable
+
+Security Notice:
+If you did not request this password reset, please contact your system administrator immediately.
+
+TheoShift - Volunteer Coordination Platform
+  `;
+
+  await sendEmail({
+    to: data.email,
+    subject,
+    html,
+    text
+  });
+}
+
+// Generate document publish notification email
+export function generateDocumentPublishEmail(data: { firstName: string; documentTitle: string; eventName: string; documentUrl: string }): string {
+  return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>New Document Published - TheoShift</title>
+    </head>
+    <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f3f4f6;">
+      <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+        <div style="background-color: #f59e0b; color: white; padding: 30px 20px; text-align: center;">
+          <h1 style="margin: 0; font-size: 28px; font-weight: bold;">📄 New Document Published</h1>
+          <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">TheoShift</p>
+        </div>
+        <div style="padding: 30px 20px;">
+          <h2 style="color: #374151; margin: 0 0 20px 0;">Hello ${data.firstName}!</h2>
+          <p style="color: #6b7280; line-height: 1.6; margin: 0 0 20px 0;">
+            A new document has been published for <strong>${data.eventName}</strong>.
+          </p>
+          <div style="background-color: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 20px; margin: 20px 0;">
+            <h3 style="color: #92400e; margin: 0 0 10px 0;">📄 ${data.documentTitle}</h3>
+            <p style="color: #92400e; margin: 0; font-size: 14px;">This document is now available for you to view and download.</p>
+          </div>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${data.documentUrl}" style="display: inline-block; background-color: #f59e0b; color: white; text-decoration: none; padding: 15px 30px; border-radius: 8px; font-weight: bold; font-size: 16px;">📥 View Document</a>
+          </div>
+        </div>
+        <div style="background-color: #374151; color: #d1d5db; padding: 20px; text-align: center;">
+          <p style="margin: 0; font-size: 14px;">TheoShift - Volunteer Coordination Platform</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+// Send document publish notification
+export async function sendDocumentPublishEmail(data: { firstName: string; email: string; documentTitle: string; eventName: string; documentUrl: string }): Promise<void> {
+  const html = generateDocumentPublishEmail(data);
+  const subject = `New Document: ${data.documentTitle} - ${data.eventName}`;
+  const text = `New Document Published\n\nHello ${data.firstName},\n\nA new document has been published for ${data.eventName}:\n\n${data.documentTitle}\n\nView it here: ${data.documentUrl}\n\nTheoShift`;
+  await sendEmail({ to: data.email, subject, html, text });
+}
+
+// Generate feedback notification email for admins
+export function generateFeedbackNotificationEmail(data: { feedbackType: string; title: string; description: string; submittedBy: string; priority: string; feedbackUrl: string }): string {
+  const priorityColors: Record<string, string> = {
+    HIGH: '#dc2626',
+    MEDIUM: '#f59e0b',
+    LOW: '#10b981'
+  };
+  const priorityColor = priorityColors[data.priority] || '#6b7280';
+  
+  return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>New Feedback Submitted - TheoShift</title>
+    </head>
+    <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f3f4f6;">
+      <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+        <div style="background-color: #3b82f6; color: white; padding: 30px 20px; text-align: center;">
+          <h1 style="margin: 0; font-size: 28px; font-weight: bold;">💡 New Feedback Submitted</h1>
+          <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">TheoShift Admin</p>
+        </div>
+        <div style="padding: 30px 20px;">
+          <h2 style="color: #374151; margin: 0 0 20px 0;">New ${data.feedbackType} Feedback</h2>
+          <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin: 20px 0;">
+            <div style="margin-bottom: 15px;">
+              <span style="color: #6b7280; font-weight: 500;">Priority:</span>
+              <span style="display: inline-block; margin-left: 10px; padding: 4px 12px; border-radius: 4px; font-weight: bold; font-size: 12px; color: white; background-color: ${priorityColor};">${data.priority}</span>
+            </div>
+            <h3 style="color: #374151; margin: 0 0 10px 0;">${data.title}</h3>
+            <p style="color: #6b7280; line-height: 1.6; margin: 0;">${data.description}</p>
+            <p style="color: #9ca3af; font-size: 14px; margin: 15px 0 0 0;">Submitted by: ${data.submittedBy}</p>
+          </div>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${data.feedbackUrl}" style="display: inline-block; background-color: #3b82f6; color: white; text-decoration: none; padding: 15px 30px; border-radius: 8px; font-weight: bold; font-size: 16px;">📋 View in Admin Panel</a>
+          </div>
+        </div>
+        <div style="background-color: #374151; color: #d1d5db; padding: 20px; text-align: center;">
+          <p style="margin: 0; font-size: 14px;">TheoShift - Volunteer Coordination Platform</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+// Send feedback notification to admins
+export async function sendFeedbackNotificationEmail(data: { adminEmail: string; feedbackType: string; title: string; description: string; submittedBy: string; priority: string; feedbackUrl: string }): Promise<void> {
+  const html = generateFeedbackNotificationEmail(data);
+  const subject = `[${data.priority}] New ${data.feedbackType} Feedback: ${data.title}`;
+  const text = `New Feedback Submitted\n\nType: ${data.feedbackType}\nPriority: ${data.priority}\nTitle: ${data.title}\n\nDescription:\n${data.description}\n\nSubmitted by: ${data.submittedBy}\n\nView in admin panel: ${data.feedbackUrl}\n\nTheoShift`;
+  await sendEmail({ to: data.adminEmail, subject, html, text });
+}
+
 // Check if email is configured
 export async function isEmailConfigured(): Promise<boolean> {
   // Check environment variables first

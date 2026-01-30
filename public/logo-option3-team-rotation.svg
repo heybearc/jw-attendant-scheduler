@@ -1,0 +1,78 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Circle -->
+  <circle cx="100" cy="100" r="95" fill="#1e40af" stroke="#1e3a8a" stroke-width="3"/>
+  
+  <!-- THEOSHIFT Text in Arch at Top -->
+  <defs>
+    <path id="archPath" d="M 25,100 A 75,75 0 0,1 175,100" />
+  </defs>
+  <text font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="white" letter-spacing="3">
+    <textPath href="#archPath" startOffset="50%" text-anchor="middle">
+      THEOSHIFT
+    </textPath>
+  </text>
+  
+  <!-- Three volunteer icons in circular formation (more stylized) -->
+  <g id="volunteers">
+    <!-- Top volunteer -->
+    <g transform="translate(100, 70)">
+      <circle cx="0" cy="0" r="8" fill="#fcd34d"/>
+      <path d="M-6 8 L-6 18 L6 18 L6 8 Z" fill="#fcd34d"/>
+      <path d="M-8 18 L0 26 L8 18 Z" fill="#fcd34d"/>
+    </g>
+    
+    <!-- Bottom-left volunteer -->
+    <g transform="translate(70, 120)">
+      <circle cx="0" cy="0" r="8" fill="#fcd34d"/>
+      <path d="M-6 8 L-6 18 L6 18 L6 8 Z" fill="#fcd34d"/>
+      <path d="M-8 18 L0 26 L8 18 Z" fill="#fcd34d"/>
+    </g>
+    
+    <!-- Bottom-right volunteer -->
+    <g transform="translate(130, 120)">
+      <circle cx="0" cy="0" r="8" fill="#fcd34d"/>
+      <path d="M-6 8 L-6 18 L6 18 L6 8 Z" fill="#fcd34d"/>
+      <path d="M-8 18 L0 26 L8 18 Z" fill="#fcd34d"/>
+    </g>
+  </g>
+  
+  <!-- Smooth curved rotation arrows connecting volunteers -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" fill="#f59e0b">
+      <polygon points="0 0, 10 3, 0 6" />
+    </marker>
+  </defs>
+  
+  <!-- Arrow from top to bottom-right -->
+  <path d="M 108,85 Q 120,95 125,110" 
+        stroke="#f59e0b" 
+        stroke-width="4" 
+        fill="none" 
+        marker-end="url(#arrowhead)"
+        stroke-linecap="round"/>
+  
+  <!-- Arrow from bottom-right to bottom-left -->
+  <path d="M 122,135 Q 100,145 78,135" 
+        stroke="#f59e0b" 
+        stroke-width="4" 
+        fill="none" 
+        marker-end="url(#arrowhead)"
+        stroke-linecap="round"/>
+  
+  <!-- Arrow from bottom-left to top -->
+  <path d="M 75,110 Q 80,95 92,85" 
+        stroke="#f59e0b" 
+        stroke-width="4" 
+        fill="none" 
+        marker-end="url(#arrowhead)"
+        stroke-linecap="round"/>
+  
+  <!-- Center coordination hub -->
+  <circle cx="100" cy="105" r="10" fill="none" stroke="#f59e0b" stroke-width="2.5"/>
+  <circle cx="100" cy="105" r="4" fill="#f59e0b"/>
+  
+  <!-- Subtitle -->
+  <text x="100" y="175" font-family="Arial, sans-serif" font-size="12" font-weight="600" fill="#93c5fd" text-anchor="middle">
+    Volunteer Coordination
+  </text>
+</svg>

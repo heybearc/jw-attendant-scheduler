@@ -404,7 +404,27 @@ export default function EditUserPage() {
                     </p>
                     <button
                       type="button"
-                      onClick={() => {/* TODO: Implement password reset email */}}
+                      onClick={async () => {
+                        if (!confirm('Send password reset email to this user?')) return
+                        try {
+                          const res = await fetch(`/api/admin/users/${id}`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ 
+                              newPassword: Math.random().toString(36).slice(-12),
+                              sendResetEmail: true 
+                            })
+                          })
+                          if (res.ok) {
+                            setSuccess('Password reset email sent successfully!')
+                            setTimeout(() => setSuccess(''), 3000)
+                          } else {
+                            throw new Error('Failed to send email')
+                          }
+                        } catch (err) {
+                          setError('Failed to send password reset email')
+                        }
+                      }}
                       className="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
                     >
                       📧 Send Password Reset Email

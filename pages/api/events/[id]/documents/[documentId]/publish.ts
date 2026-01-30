@@ -113,7 +113,56 @@ async function handlePublishDocument(req: NextApiRequest, res: NextApiResponse, 
       }
     })
 
-    // TODO: Send notifications to attendants (if notification system exists)
+    // Send email notifications to volunteers (fire and forget)
+    if (publishedCount > 0) {
+      // Don't await - send emails in background
+      (async () => {
+        try {
+          const { sendDocumentPublishEmail, isEmailConfigured } = require('../../../../../../src/lib/email')
+          
+          const emailConfigured = await isEmailConfigured()
+          if (!emailConfigured) {
+            console.log('Email not configured, skipping document notifications')
+            return
+          }
+          
+          // Get volunteers with email addresses
+          const volunteers = await prisma.volunteers.findMany({
+            where: {
+              id: publishType === 'all' 
+                ? { in: await prisma.$queryRaw`SELECT "attendantId" FROM event_attendants WHERE "eventId" = ${eventId} AND "isActive" = true` }
+                : { in: attendantIds },
+              email: { not: null }
+            },
+            select: { id: true, firstName: true, email: true }
+          })
+          
+          const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3001'
+          const documentUrl = `${baseUrl}/events/${eventId}/documents`
+          
+          // Send emails
+          for (const volunteer of volunteers) {
+            if (volunteer.email) {
+              try {
+                await sendDocumentPublishEmail({
+                  firstName: volunteer.firstName,
+                  email: volunteer.email,
+                  documentTitle: document.title,
+                  eventName: event.name,
+                  documentUrl: documentUrl
+                })
+              } catch (err) {
+                console.error(`Failed to send email to ${volunteer.email}:`, err)
+              }
+            }
+          }
+          
+          console.log(`✅ Sent ${volunteers.length} document publish notifications`)
+        } catch (emailError) {
+          console.error('Failed to send document notifications:', emailError)
+        }
+      })()
+    }
 
     return res.status(200).json({
       success: true,

@@ -70,9 +70,9 @@ export default function EventLayout({
             {/* Left side - Logo and Navigation */}
             <div className="flex items-center">
               <Link href="/events/select" className="flex items-center">
-                <span className="text-2xl font-bold text-blue-600">📋</span>
-                <span className="ml-2 text-xl font-semibold text-gray-900">
-                  Theocratic Shift Scheduler
+                <img src="/logo.svg" alt="TheoShift Logo" className="h-12 w-12" />
+                <span className="ml-3 text-xl font-semibold text-gray-900">
+                  TheoShift
                 </span>
               </Link>
               
@@ -213,7 +213,7 @@ export default function EventLayout({
             </Link>
           </div>
           <div className="text-center text-xs text-gray-500 mt-2">
-            Theocratic Shift Scheduler v{packageJson.version} • Secure Event Management System
+            TheoShift v{packageJson.version} • Volunteer Coordination Platform
           </div>
         </div>
       </footer>

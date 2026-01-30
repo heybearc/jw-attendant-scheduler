@@ -1,0 +1,68 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Circle -->
+  <circle cx="100" cy="100" r="95" fill="#1e40af" stroke="#1e3a8a" stroke-width="3"/>
+  
+  <!-- THEOSHIFT Text in Arch at Top -->
+  <defs>
+    <path id="archPath" d="M 25,100 A 75,75 0 0,1 175,100" />
+  </defs>
+  <text font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="white" letter-spacing="3">
+    <textPath href="#archPath" startOffset="50%" text-anchor="middle">
+      THEOSHIFT
+    </textPath>
+  </text>
+  
+  <!-- Calendar/Schedule Grid -->
+  <rect x="65" y="75" width="70" height="60" fill="#fcd34d" stroke="#f59e0b" stroke-width="2" rx="4"/>
+  
+  <!-- Calendar header -->
+  <rect x="65" y="75" width="70" height="12" fill="#f59e0b" rx="4"/>
+  
+  <!-- Calendar grid lines (3x3) -->
+  <line x1="88" y1="87" x2="88" y2="135" stroke="#1e40af" stroke-width="1.5"/>
+  <line x1="112" y1="87" x2="112" y2="135" stroke="#1e40af" stroke-width="1.5"/>
+  <line x1="65" y1="103" x2="135" y2="103" stroke="#1e40af" stroke-width="1.5"/>
+  <line x1="65" y1="119" x2="135" y2="119" stroke="#1e40af" stroke-width="1.5"/>
+  
+  <!-- Volunteer dots in calendar cells (showing shifts) -->
+  <circle cx="77" cy="95" r="3" fill="#2563eb"/>
+  <circle cx="100" cy="95" r="3" fill="#2563eb"/>
+  <circle cx="123" cy="95" r="3" fill="#2563eb"/>
+  <circle cx="77" cy="111" r="3" fill="#7c3aed"/>
+  <circle cx="100" cy="111" r="3" fill="#7c3aed"/>
+  <circle cx="123" cy="127" r="3" fill="#dc2626"/>
+  
+  <!-- Circular arrows showing rotation/coordination -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" fill="#f59e0b">
+      <polygon points="0 0, 10 3, 0 6" />
+    </marker>
+  </defs>
+  
+  <!-- Rotation arrows around calendar -->
+  <path d="M 100,65 A 40,40 0 0,1 140,90" 
+        stroke="#f59e0b" 
+        stroke-width="3" 
+        fill="none" 
+        marker-end="url(#arrowhead)"
+        stroke-linecap="round"/>
+  
+  <path d="M 140,120 A 40,40 0 0,1 100,145" 
+        stroke="#f59e0b" 
+        stroke-width="3" 
+        fill="none" 
+        marker-end="url(#arrowhead)"
+        stroke-linecap="round"/>
+  
+  <path d="M 60,120 A 40,40 0 0,1 60,90" 
+        stroke="#f59e0b" 
+        stroke-width="3" 
+        fill="none" 
+        marker-end="url(#arrowhead)"
+        stroke-linecap="round"/>
+  
+  <!-- Subtitle -->
+  <text x="100" y="175" font-family="Arial, sans-serif" font-size="12" font-weight="600" fill="#93c5fd" text-anchor="middle">
+    Volunteer Coordination
+  </text>
+</svg>

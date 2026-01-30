@@ -87,7 +87,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       })
 
-      // TODO: Send email notification to admins
+      // Send email notification to admins (fire and forget)
       console.log('New feedback submitted:', {
         id: feedback.id,
         type: feedback.type,
@@ -95,6 +95,55 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         submittedBy: `${feedback.user.firstName} ${feedback.user.lastName}`,
         priority: feedback.priority
       })
+      
+      // Send email to admins in background
+      (async () => {
+        try {
+          const { sendFeedbackNotificationEmail, isEmailConfigured } = require('../../../src/lib/email')
+          
+          const emailConfigured = await isEmailConfigured()
+          if (!emailConfigured) {
+            console.log('Email not configured, skipping feedback notifications')
+            return
+          }
+          
+          // Get all admin users
+          const admins = await prisma.users.findMany({
+            where: { 
+              role: 'ADMIN',
+              email: { not: null }
+            },
+            select: { email: true }
+          })
+          
+          const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3001'
+          const feedbackUrl = `${baseUrl}/admin/feedback`
+          const submitterName = `${feedback.user.firstName} ${feedback.user.lastName}`
+          
+          // Send to all admins
+          for (const admin of admins) {
+            if (admin.email) {
+              try {
+                await sendFeedbackNotificationEmail({
+                  adminEmail: admin.email,
+                  feedbackType: feedback.type,
+                  title: feedback.title,
+                  description: feedback.description,
+                  submittedBy: submitterName,
+                  priority: feedback.priority,
+                  feedbackUrl: feedbackUrl
+                })
+              } catch (err) {
+                console.error(`Failed to send feedback notification to ${admin.email}:`, err)
+              }
+            }
+          }
+          
+          console.log(`✅ Sent feedback notifications to ${admins.length} admins`)
+        } catch (emailError) {
+          console.error('Failed to send feedback notifications:', emailError)
+        }
+      })()
 
       return res.json({
         success: true,

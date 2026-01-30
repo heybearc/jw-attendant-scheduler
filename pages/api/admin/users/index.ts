@@ -163,11 +163,26 @@ async function handleCreateUser(req: NextApiRequest, res: NextApiResponse) {
       }
     }
 
-    // TODO: Send invitation email if sendInvitation is true
-    // This would integrate with the existing invitation system
-    if (sendInvitation && inviteToken) {
-      console.log(`Invitation token generated for ${email}: ${inviteToken}`)
-      // The invitation email sending would be implemented here
+    // Send invitation email if sendInvitation is true
+    if (sendInvitation && generatedPassword) {
+      try {
+        const { sendInvitationEmail } = require('../../../../src/lib/email')
+        const loginUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3001'}/auth/signin`
+        
+        await sendInvitationEmail({
+          firstName: user.name?.split(' ')[0] || user.name || 'User',
+          lastName: user.name?.split(' ').slice(1).join(' ') || '',
+          email: user.email || email,
+          role: role,
+          tempPassword: generatedPassword,
+          loginUrl: loginUrl
+        })
+        
+        console.log(`✅ Invitation email sent to ${email}`)
+      } catch (emailError) {
+        console.error('Failed to send invitation email:', emailError)
+        // Don't fail the request if email fails
+      }
     }
 
     let message = 'User created successfully'

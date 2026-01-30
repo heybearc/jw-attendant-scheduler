@@ -61,12 +61,11 @@ export default function AdminLayout({ children, title, breadcrumbs = [], userLas
             <div className="flex items-center">
               <Link href="/admin" className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="h-8 w-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                    <span className="text-white font-bold text-sm">JW</span>
-                  </div>
+                  <img src="/logo.svg" alt="TheoShift Logo" className="h-10 w-10" />
                 </div>
                 <div className="ml-3">
-                  <h1 className="text-lg font-semibold text-gray-900">Admin Portal</h1>
+                  <h1 className="text-lg font-semibold text-gray-900">TheoShift</h1>
+                  <p className="text-xs text-gray-500">Admin Portal</p>
                 </div>
               </Link>
             </div>
@@ -222,7 +221,7 @@ export default function AdminLayout({ children, title, breadcrumbs = [], userLas
         {/* Footer with Version */}
         <footer className="bg-white border-t border-gray-200 py-4 px-6 text-sm text-gray-500">
           <div className="flex items-center justify-center space-x-3">
-            <div>Theocratic Shift Scheduler v{packageJson.version} | © 2025 | 
+            <div>TheoShift v{packageJson.version} | © 2025 | 
               <Link href="/release-notes" className="text-blue-600 hover:text-blue-800 ml-1">Release Notes</Link>
             </div>
             <ServerIndicator />

@@ -224,25 +224,35 @@ Event Dashboard
 
 ---
 
-## 🚀 Implementation Timeline
+## 🚀 Implementation Timeline (REVISED - Includes All Tasks)
 
-### **Week 1: Core Dashboard**
-- Day 1-2: Oversight API endpoint
-- Day 3-4: Dashboard page UI
-- Day 5: Coverage statistics and gaps detection
-- Day 6-7: Testing and refinement
+### **Week 1: Logo/Favicon + Core Dashboard**
+- Day 1: Logo & favicon design (professional TheoShift branding)
+- Day 2: Implement logo/favicon across application
+- Day 3-4: Oversight API endpoint
+- Day 5: Dashboard page UI
+- Day 6-7: Coverage statistics and gaps detection
 
-### **Week 2: Integration & Filters**
-- Day 1-2: Oversight coverage card for event dashboard
-- Day 3-4: Role filters on positions page
-- Day 5: Navigation integration
-- Day 6-7: Testing and polish
+### **Week 2: Technical Debt - Email Notifications**
+- Day 1-2: Password reset email implementation
+- Day 3: User invitation email implementation
+- Day 4: Document publish notifications
+- Day 5: Feedback submission notifications
+- Day 6-7: Testing all email notifications
 
-### **Week 3: Export & Documentation**
+### **Week 3: Technical Debt - Bulk Operations + Integration**
+- Day 1-2: Proper bulk update API implementation
+- Day 3: Proper bulk delete API implementation
+- Day 4: Oversight coverage card for event dashboard
+- Day 5: Role filters on positions page
+- Day 6-7: Navigation integration and testing
+
+### **Week 4: Export, Documentation & Deployment**
 - Day 1-2: PDF export functionality
-- Day 3-4: Excel export functionality
-- Day 5: Help documentation
-- Day 6-7: Final testing and deployment
+- Day 3: Excel export functionality
+- Day 4: Help documentation (oversight + updated features)
+- Day 5-6: Comprehensive testing
+- Day 7: Deployment to production
 
 ---
 
@@ -283,7 +293,7 @@ If global oversight management is needed later, it can be added as Phase 9 or 10
 
 ---
 
-## 🎨 Branding Task (Included in Phase 5B)
+## 🎨 Branding Task (Week 1)
 
 ### **Logo & Favicon Design**
 
@@ -296,7 +306,7 @@ If global oversight management is needed later, it can be added as Phase 9 or 10
 4. Add logo to navigation header
 5. Update help pages with logo
 
-**Duration:** 1-2 days (can be done in parallel)
+**Duration:** 1-2 days
 
 **Files to Create:**
 - `/public/logo.svg`
@@ -310,6 +320,79 @@ If global oversight management is needed later, it can be added as Phase 9 or 10
 - `/pages/_app.tsx` - Add logo to header
 - `/public/manifest.json` - Update icons
 - `/pages/_document.tsx` - Update favicon links
+
+---
+
+## 🔧 Technical Debt Tasks (Week 2-3)
+
+### **Email Notifications (Week 2 - 9 TODOs)**
+
+**Goal:** Implement missing email notifications across the application
+
+**Tasks:**
+1. **Password Reset Email** (`/api/admin/users/[id].ts`)
+   - Email template for password reset
+   - Secure token generation
+   - Email sending integration
+
+2. **User Invitation Email** (`/api/admin/users/index.ts`)
+   - Welcome email for new users
+   - Account setup instructions
+   - Login credentials
+
+3. **Password Reset Button** (`/admin/users/[id]/edit.tsx`)
+   - UI button for admins to trigger reset
+   - Confirmation dialog
+   - Success/error feedback
+
+4. **Document Publish Notifications** (`/api/events/[id]/documents/[documentId]/publish.ts`)
+   - Notify relevant users when documents are published
+   - Email template with document details
+   - Link to view document
+
+5. **Feedback Submission Notifications** (`/api/feedback/submit.ts`)
+   - Notify admins of new feedback
+   - Email template with feedback details
+   - Link to view in admin panel
+
+**Duration:** 5-7 days
+
+### **Bulk Operations API (Week 3 - 2 TODOs)**
+
+**Goal:** Implement proper bulk update and delete APIs
+
+**Tasks:**
+1. **Proper Bulk Update API** (`eventAttendantService.ts`)
+   - Replace current workaround with proper API endpoint
+   - Support multiple field updates
+   - Transaction support for data integrity
+   - Validation and error handling
+
+2. **Proper Bulk Delete API** (`useEventAttendants.ts`)
+   - Replace current workaround with proper API endpoint
+   - Cascade delete handling
+   - Confirmation and rollback support
+   - Audit logging
+
+**Duration:** 2-3 days
+
+---
+
+## 📊 Phase 5B Summary (Complete Package)
+
+**What's Included:**
+✅ Event Oversight Dashboard (core feature)  
+✅ Logo & Favicon Design (branding)  
+✅ Email Notifications (9 TODOs)  
+✅ Bulk Operations API (2 TODOs)  
+✅ Export functionality (PDF/Excel)  
+✅ Help documentation  
+
+**What's Deferred:**
+⏸️ Fix remaining 3 test failures (can be done later)
+
+**Estimated Effort:** 4 weeks  
+**Value:** High - delivers core feature + cleans up technical debt + professional branding
 
 ---
 

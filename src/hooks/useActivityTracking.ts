@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useSession } from 'next-auth/react'
 
 const ACTIVITY_UPDATE_INTERVAL = 5 * 60 * 1000 // Update every 5 minutes
-const SESSION_STORAGE_KEY = 'user_session_id'
+const SESSION_STORAGE_KEY = 'user_session_id' // Using localStorage to share across tabs
 
 export function useActivityTracking() {
   const { data: session, status } = useSession()
@@ -11,8 +11,8 @@ export function useActivityTracking() {
 
   useEffect(() => {
     if (status === 'authenticated' && session?.user) {
-      // Get or create session ID
-      let sessionId = sessionStorage.getItem(SESSION_STORAGE_KEY)
+      // Get or create session ID (using localStorage to share across tabs)
+      let sessionId = localStorage.getItem(SESSION_STORAGE_KEY)
       
       if (!sessionId) {
         // Create new session on login
@@ -24,7 +24,7 @@ export function useActivityTracking() {
           .then(res => res.json())
           .then(data => {
             if (data.sessionId) {
-              sessionStorage.setItem(SESSION_STORAGE_KEY, data.sessionId)
+              localStorage.setItem(SESSION_STORAGE_KEY, data.sessionId)
               sessionIdRef.current = data.sessionId
             }
           })
@@ -35,7 +35,7 @@ export function useActivityTracking() {
 
       // Update activity periodically
       const updateActivity = () => {
-        const currentSessionId = sessionStorage.getItem(SESSION_STORAGE_KEY)
+        const currentSessionId = localStorage.getItem(SESSION_STORAGE_KEY)
         if (currentSessionId) {
           fetch('/api/auth/track-activity', {
             method: 'POST',
@@ -64,7 +64,7 @@ export function useActivityTracking() {
       }
     } else if (status === 'unauthenticated') {
       // User logged out - mark session inactive
-      const sessionId = sessionStorage.getItem(SESSION_STORAGE_KEY)
+      const sessionId = localStorage.getItem(SESSION_STORAGE_KEY)
       if (sessionId) {
         fetch('/api/auth/track-activity', {
           method: 'POST',
@@ -75,7 +75,7 @@ export function useActivityTracking() {
           })
         }).catch(err => console.error('[ACTIVITY] Logout tracking failed:', err))
         
-        sessionStorage.removeItem(SESSION_STORAGE_KEY)
+        localStorage.removeItem(SESSION_STORAGE_KEY)
       }
 
       // Clear interval

@@ -33,6 +33,7 @@ async function sendAssignmentEmail(to: string, subject: string, html: string) {
       host: 'smtp.gmail.com',
       port: 587,
       secure: false,
+      requireTLS: true,
       auth: {
         user: config.gmailEmail,
         pass: config.gmailAppPassword
@@ -43,6 +44,7 @@ async function sendAssignmentEmail(to: string, subject: string, html: string) {
       host: config.smtpServer,
       port: parseInt(config.smtpPort || '587'),
       secure: config.smtpSecure || false,
+      requireTLS: !config.smtpSecure,
       auth: {
         user: config.smtpUser,
         pass: config.smtpPassword

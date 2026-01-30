@@ -124,8 +124,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         // Send notification for first assignment (email will include all assignments for this volunteer)
         logToFile(`Calling notify API for assignment ${volunteerAssignments[0].id}`)
         process.stderr.write(`  - Calling notify API...\n`)
-        // Use localhost for internal call to avoid session issues
-        const notificationResponse = await fetch(`http://localhost:3001/api/assignments/notify`, {
+        const notificationResponse = await fetch(`${process.env.NEXTAUTH_URL}/api/assignments/notify`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

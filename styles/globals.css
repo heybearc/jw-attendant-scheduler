@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Global styles for JW Attendant Scheduler */
+/* Global styles for TheoShift */
 * {
   box-sizing: border-box;
   padding: 0;
@@ -44,3 +44,227 @@ a {
     --background-end-rgb: 0, 0, 0;
   }
 } */
+
+/* ========================================
+   MOBILE-FIRST RESPONSIVE UTILITIES
+   ======================================== */
+
+/* Touch-friendly tap targets (minimum 44x44px) */
+@layer utilities {
+  .tap-target {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  .tap-target-lg {
+    min-width: 48px;
+    min-height: 48px;
+  }
+}
+
+/* Mobile-optimized text sizes */
+@layer base {
+  html {
+    font-size: 16px; /* Base font size for mobile */
+  }
+  
+  @media (min-width: 768px) {
+    html {
+      font-size: 16px; /* Keep consistent on tablet+ */
+    }
+  }
+}
+
+/* Prevent text size adjustment on mobile */
+body {
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Mobile-friendly scrolling */
+@layer utilities {
+  .scroll-smooth {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .scroll-snap-x {
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .scroll-snap-child {
+    scroll-snap-align: start;
+  }
+}
+
+/* Hide scrollbars on mobile but keep functionality */
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Mobile table responsiveness */
+@layer components {
+  .mobile-table-wrapper {
+    @apply w-full overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0;
+  }
+  
+  .mobile-table {
+    @apply min-w-full;
+  }
+  
+  @media (max-width: 640px) {
+    .mobile-table-card {
+      @apply block border rounded-lg p-4 mb-4;
+    }
+    
+    .mobile-table-card tr {
+      @apply block mb-2;
+    }
+    
+    .mobile-table-card td {
+      @apply block text-left py-1;
+    }
+    
+    .mobile-table-card td:before {
+      content: attr(data-label);
+      @apply font-semibold mr-2;
+    }
+  }
+}
+
+/* Mobile-friendly forms */
+@layer components {
+  .mobile-input {
+    @apply w-full px-4 py-3 text-base rounded-lg border;
+    min-height: 44px;
+  }
+  
+  .mobile-button {
+    @apply px-6 py-3 text-base font-medium rounded-lg;
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .mobile-button-sm {
+    @apply px-4 py-2 text-sm font-medium rounded-lg;
+    min-height: 36px;
+    min-width: 36px;
+  }
+}
+
+/* Mobile navigation utilities */
+@layer utilities {
+  .mobile-nav-hidden {
+    @apply hidden md:flex;
+  }
+  
+  .mobile-nav-visible {
+    @apply flex md:hidden;
+  }
+  
+  .mobile-menu-open {
+    @apply fixed inset-0 z-50 bg-white overflow-y-auto;
+  }
+}
+
+/* Safe area insets for notched devices */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+  }
+  
+  .safe-top {
+    padding-top: max(0.5rem, env(safe-area-inset-top));
+  }
+  
+  .safe-bottom {
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
+}
+
+/* Mobile-optimized modals */
+@layer components {
+  .mobile-modal {
+    @apply fixed inset-0 z-50 overflow-y-auto;
+  }
+  
+  .mobile-modal-content {
+    @apply bg-white rounded-t-2xl md:rounded-lg;
+    @apply min-h-screen md:min-h-0;
+    @apply mt-0 md:mt-20;
+  }
+}
+
+/* Prevent zoom on input focus (iOS) */
+@media screen and (max-width: 768px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="password"],
+  input[type="number"],
+  input[type="search"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* Mobile-friendly card layouts */
+@layer components {
+  .mobile-card {
+    @apply bg-white rounded-lg shadow-sm p-4 mb-4;
+  }
+  
+  .mobile-card-header {
+    @apply flex items-center justify-between mb-3 pb-3 border-b;
+  }
+  
+  .mobile-card-body {
+    @apply space-y-3;
+  }
+}
+
+/* Loading states for mobile */
+@layer components {
+  .mobile-skeleton {
+    @apply animate-pulse bg-gray-200 rounded;
+  }
+  
+  .mobile-spinner {
+    @apply inline-block w-6 h-6 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin;
+  }
+}
+
+/* Mobile-optimized spacing */
+@layer utilities {
+  .mobile-container {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+  
+  .mobile-section {
+    @apply py-6 sm:py-8 lg:py-12;
+  }
+}
+
+/* Accessibility: Focus visible for keyboard navigation */
+@layer base {
+  *:focus-visible {
+    @apply outline-2 outline-offset-2 outline-blue-600;
+  }
+  
+  button:focus-visible,
+  a:focus-visible {
+    @apply ring-2 ring-blue-600 ring-offset-2;
+  }
+}

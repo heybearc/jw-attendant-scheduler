@@ -320,6 +320,60 @@ body {
   .mobile-card-body {
     @apply space-y-3;
   }
+  
+  /* Mobile dashboard optimization */
+  @media (max-width: 768px) {
+    /* Stack dashboard grids vertically */
+    .dashboard-grid {
+      @apply grid-cols-1 gap-4;
+    }
+    
+    /* Optimize stat cards for mobile */
+    .stat-card {
+      @apply p-4;
+    }
+    
+    .stat-card-grid {
+      @apply grid-cols-2 gap-3;
+    }
+    
+    /* Compact stat display */
+    .stat-value {
+      @apply text-2xl;
+    }
+    
+    .stat-label {
+      @apply text-xs;
+    }
+    
+    /* Full-width action buttons on mobile */
+    .dashboard-actions {
+      @apply flex-col gap-2;
+    }
+    
+    .dashboard-actions button,
+    .dashboard-actions a {
+      @apply w-full justify-center;
+    }
+    
+    /* Optimize charts for mobile */
+    .chart-container {
+      @apply h-48 overflow-x-auto;
+    }
+    
+    /* Hide less important columns in dashboard tables */
+    .dashboard-table th:nth-child(n+4),
+    .dashboard-table td:nth-child(n+4) {
+      @apply hidden;
+    }
+    
+    /* Show first 3 columns only */
+    .dashboard-table th:nth-child(-n+3),
+    .dashboard-table td:nth-child(-n+3) {
+      @apply table-cell;
+    }
+  }
+}
 }
 
 /* Loading states for mobile */

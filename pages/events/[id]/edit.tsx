@@ -879,10 +879,10 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       assemblyOverseerName: eventWithOversight.assemblyoverseername,
       assemblyOverseerPhone: eventWithOversight.assemblyoverseerphone,
       assemblyOverseerEmail: eventWithOversight.assemblyoverseeremail,
-      volunteerOverseerName: eventWithOversight.attendantoverseername,
-      volunteerOverseerPhone: eventWithOversight.attendantoverseerphone,
-      volunteerOverseerEmail: eventWithOversight.attendantoverseeremail,
-      volunteerOverseerAssistants: eventWithOversight.attendantoverseerassistants,
+      volunteerOverseerName: eventWithOversight.volunteerOverseerName,
+      volunteerOverseerPhone: eventWithOversight.volunteerOverseerPhone,
+      volunteerOverseerEmail: eventWithOversight.volunteerOverseerEmail,
+      volunteerOverseerAssistants: eventWithOversight.volunteerOverseerAssistants,
       createdAt: event.createdAt?.toISOString() || null,
       updatedAt: event.updatedAt?.toISOString() || null
     }

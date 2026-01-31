@@ -239,20 +239,71 @@ body {
     @apply bg-white rounded-t-2xl md:rounded-lg;
     @apply min-h-screen md:min-h-0;
     @apply mt-0 md:mt-20;
+    @apply p-6;
   }
-}
-
-/* Prevent zoom on input focus (iOS) */
-@media screen and (max-width: 768px) {
-  input[type="text"],
-  input[type="email"],
-  input[type="tel"],
-  input[type="password"],
-  input[type="number"],
-  input[type="search"],
-  textarea,
-  select {
-    font-size: 16px !important;
+  
+  .mobile-modal-header {
+    @apply flex items-center justify-between mb-4 pb-4 border-b;
+  }
+  
+  .mobile-modal-title {
+    @apply text-xl font-semibold;
+  }
+  
+  .mobile-modal-close {
+    @apply text-gray-400 hover:text-gray-600;
+    @apply w-10 h-10 flex items-center justify-center;
+    @apply rounded-full hover:bg-gray-100;
+  }
+  
+  /* Enhanced modal responsiveness */
+  @media (max-width: 768px) {
+    /* Full-screen modals on mobile */
+    .modal-overlay {
+      @apply fixed inset-0 bg-black bg-opacity-50 z-50;
+    }
+    
+    .modal-container {
+      @apply fixed inset-x-0 bottom-0 top-auto;
+      @apply rounded-t-2xl max-h-[90vh] overflow-y-auto;
+      animation: slideUp 0.3s ease-out;
+    }
+    
+    @keyframes slideUp {
+      from {
+        transform: translateY(100%);
+      }
+      to {
+        transform: translateY(0);
+      }
+    }
+    
+    /* Modal buttons stack vertically on mobile */
+    .modal-actions {
+      @apply flex flex-col gap-3;
+    }
+    
+    .modal-actions button {
+      @apply w-full min-h-[44px];
+    }
+  }
+  
+  /* Touch-friendly dropdowns */
+  @media (max-width: 768px) {
+    select {
+      @apply text-base min-h-[44px] px-4 py-3;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+      background-position: right 0.5rem center;
+      background-repeat: no-repeat;
+      background-size: 1.5em 1.5em;
+      padding-right: 2.5rem;
+    }
+    
+    /* Larger dropdown options */
+    select option {
+      @apply py-3;
+    }
   }
 }
 

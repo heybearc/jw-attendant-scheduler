@@ -45,7 +45,7 @@ export default function SignIn() {
           <div className="text-center mb-8">
             <div className="mx-auto mb-6 flex justify-center">
               <Image
-                src="/logo.svg"
+                src="/logo.png"
                 alt="TheoShift Logo"
                 width={120}
                 height={120}

@@ -5,6 +5,7 @@ import { signOut, useSession } from 'next-auth/react'
 import Link from 'next/link'
 import ReleaseBanner from './ReleaseBanner'
 import ServerIndicator from './ServerIndicator'
+import BottomNav from './BottomNav'
 
 interface AdminLayoutProps {
   children: ReactNode
@@ -230,6 +231,9 @@ export default function AdminLayout({ children, title, breadcrumbs = [], userLas
           </div>
         </main>
       </div>
+      
+      {/* Bottom Navigation (Mobile Only) */}
+      <BottomNav />
     </div>
   )
 }

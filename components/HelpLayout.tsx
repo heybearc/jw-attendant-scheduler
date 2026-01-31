@@ -3,6 +3,7 @@ import { useRouter } from 'next/router'
 import { signOut, useSession } from 'next-auth/react'
 import Link from 'next/link'
 import packageJson from '../package.json'
+import BottomNav from './BottomNav'
 
 interface HelpLayoutProps {
   children: ReactNode
@@ -112,6 +113,9 @@ export default function HelpLayout({ children, title }: HelpLayoutProps) {
           </div>
         </div>
       </footer>
+      
+      {/* Bottom Navigation (Mobile Only) */}
+      <BottomNav />
     </div>
   )
 }

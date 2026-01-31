@@ -93,3 +93,56 @@ Comprehensive audit of all help documentation pages to fix 404 errors and update
 - This is a documentation maintenance task
 - Should be done before next major release
 - Consider adding help pages for new Phase 7 mobile features
+
+---
+
+## Mobile Bottom Navigation Expansion
+
+**Priority:** Medium  
+**Status:** Backlog  
+**Date Added:** 2026-01-31
+
+**Description:**
+Bottom navigation bar was added to EventLayout, AdminLayout, and HelpLayout but may not be appearing consistently on all pages. Need to audit all page layouts and ensure bottom nav appears on all authenticated pages where appropriate.
+
+**Tasks:**
+- Audit all page layouts (check pages without layouts)
+- Verify bottom nav appears on admin pages
+- Verify bottom nav appears on help pages
+- Test on actual mobile devices
+- Consider adding to volunteer-facing pages
+- Ensure proper z-index and positioning
+
+**Related Files:**
+- `/components/BottomNav.tsx`
+- `/components/AdminLayout.tsx`
+- `/components/HelpLayout.tsx`
+- `/components/EventLayout.tsx`
+
+---
+
+## Admin Pages Mobile Optimization
+
+**Priority:** Medium  
+**Status:** Backlog  
+**Date Added:** 2026-01-31
+
+**Description:**
+Admin portal pages need comprehensive mobile optimization. Tables, forms, and complex UI elements need to be responsive and touch-friendly for mobile administrators.
+
+**Tasks:**
+- Optimize admin tables for mobile (users, departments, sessions, etc.)
+- Make admin forms touch-friendly
+- Improve navigation on mobile admin pages
+- Add mobile-specific layouts where needed
+- Test all admin workflows on mobile devices
+- Consider simplified mobile admin views
+
+**Related Files:**
+- `/pages/admin/*.tsx`
+- `/components/AdminLayout.tsx`
+
+**Notes:**
+- Admin pages are currently desktop-focused
+- Mobile admin use case is secondary but still important
+- May require significant refactoring of complex admin components

@@ -454,7 +454,7 @@ export default function VolunteerDashboard() {
   return (
     <>
       <Head>
-        <title>My Dashboard | Theocratic Shift Scheduler</title>
+        <title>Volunteer Dashboard | TheoShift</title>
       </Head>
 
       {/* Profile Verification Modal */}
@@ -523,7 +523,7 @@ export default function VolunteerDashboard() {
               <div className="flex items-center">
                 <span className="text-2xl font-bold text-blue-600">📋</span>
                 <span className="ml-2 text-xl font-semibold text-gray-900">
-                  Theocratic Shift Scheduler
+                  TheoShift
                 </span>
               </div>
               <div className="flex items-center space-x-4">

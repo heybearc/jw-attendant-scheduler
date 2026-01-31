@@ -120,7 +120,7 @@ export default function VolunteerSelectEvent() {
   return (
     <>
       <Head>
-        <title>Select Event | Theocratic Shift Scheduler</title>
+        <title>Select Event | TheoShift</title>
       </Head>
 
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">

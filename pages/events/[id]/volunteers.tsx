@@ -2159,7 +2159,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           include: {
             assignments: {
               include: {
-                volunteer: {
+                attendant: {
                   select: {
                     id: true,
                     firstName: true,

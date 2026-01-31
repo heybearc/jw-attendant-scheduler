@@ -2478,7 +2478,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
           include: {
             assignments: {
               include: {
-                volunteer: {
+                attendant: {
                   select: {
                     id: true,
                     firstName: true,

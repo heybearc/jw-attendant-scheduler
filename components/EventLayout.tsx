@@ -1,10 +1,13 @@
-import { ReactNode } from 'react'
+import { ReactNode, useState } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import packageJson from '../package.json'
 import MobileNav from './MobileNav'
 import BottomNav from './BottomNav'
+import FloatingActionButton from './FloatingActionButton'
+import QuickVolunteerLookup from './QuickVolunteerLookup'
+import QuickAssignmentForm from './QuickAssignmentForm'
 
 interface EventLayoutProps {
   children: ReactNode
@@ -25,6 +28,8 @@ export default function EventLayout({
 }: EventLayoutProps) {
   const { data: session } = useSession()
   const router = useRouter()
+  const [showVolunteerLookup, setShowVolunteerLookup] = useState(false)
+  const [showAssignmentForm, setShowAssignmentForm] = useState(false)
 
   const handleSignOut = () => {
     // Don't specify callbackUrl - let next-auth use the current origin
@@ -197,8 +202,72 @@ export default function EventLayout({
         </div>
       </footer>
 
-      {/* Bottom Navigation (Mobile Only) */}
-      <BottomNav selectedEventId={selectedEvent?.id} />
+      {/* Bottom Navigation for Mobile */}
+      <BottomNav eventId={selectedEvent?.id} />
+
+      {/* Floating Action Button with Quick Actions */}
+      {selectedEvent && (
+        <>
+          <FloatingActionButton
+            primaryAction={{
+              id: 'main',
+              label: 'Quick Actions',
+              icon: '+',
+              onClick: () => {}
+            }}
+            actions={[
+              {
+                id: 'find-volunteer',
+                label: 'Find Volunteer',
+                icon: '🔍',
+                onClick: () => setShowVolunteerLookup(true),
+                color: 'bg-purple-600 hover:bg-purple-700'
+              },
+              {
+                id: 'create-assignment',
+                label: 'Create Assignment',
+                icon: '➕',
+                onClick: () => setShowAssignmentForm(true),
+                color: 'bg-green-600 hover:bg-green-700'
+              },
+              {
+                id: 'view-positions',
+                label: 'View Positions',
+                icon: '📋',
+                onClick: () => router.push(`/events/${selectedEvent.id}/positions`),
+                color: 'bg-orange-600 hover:bg-orange-700'
+              },
+              {
+                id: 'view-volunteers',
+                label: 'View Volunteers',
+                icon: '👥',
+                onClick: () => router.push(`/events/${selectedEvent.id}/volunteers`),
+                color: 'bg-blue-600 hover:bg-blue-700'
+              }
+            ]}
+          />
+
+          <QuickVolunteerLookup
+            isOpen={showVolunteerLookup}
+            onClose={() => setShowVolunteerLookup(false)}
+            eventId={selectedEvent.id}
+            onSelect={(volunteer) => {
+              setShowVolunteerLookup(false)
+              // Could open assignment form with preselected volunteer
+            }}
+          />
+
+          <QuickAssignmentForm
+            isOpen={showAssignmentForm}
+            onClose={() => setShowAssignmentForm(false)}
+            eventId={selectedEvent.id}
+            onSuccess={() => {
+              // Refresh the page or show success message
+              router.reload()
+            }}
+          />
+        </>
+      )}
     </div>
   )
 }

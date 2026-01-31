@@ -89,6 +89,12 @@ export default function HelpPage({ userRole }: HelpPageProps) {
       roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN', 'ATTENDANT']
     },
     {
+      id: 'mobile-features',
+      title: '📱 Mobile Features',
+      description: 'Using TheoShift on mobile devices with touch gestures and optimized layouts',
+      roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN', 'ATTENDANT']
+    },
+    {
       id: 'troubleshooting',
       title: '🔧 Troubleshooting',
       description: 'Common issues and how to resolve them',

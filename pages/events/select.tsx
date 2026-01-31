@@ -131,8 +131,15 @@ export default function EventSelectPage({ events, userLastSeenVersion }: EventSe
 
         {/* Header */}
         <div className="text-center mb-8">
+          <div className="flex justify-center mb-6">
+            <img
+              src="/logo.svg"
+              alt="TheoShift Logo"
+              className="h-24 w-24 drop-shadow-lg"
+            />
+          </div>
           <h1 className="text-4xl font-bold text-white mb-4">
-            🎯 Select Event
+            Select Event
           </h1>
           <p className="text-blue-100 text-lg">
             Choose which event you'd like to work with

@@ -3,7 +3,6 @@ import { signIn, getSession } from 'next-auth/react'
 import { useRouter } from 'next/router'
 import { GetServerSideProps } from 'next'
 import Link from 'next/link'
-import Image from 'next/image'
 
 export default function SignIn() {
   const [email, setEmail] = useState('')
@@ -44,13 +43,10 @@ export default function SignIn() {
           {/* Header */}
           <div className="text-center mb-8">
             <div className="mx-auto mb-6 flex justify-center">
-              <Image
-                src="/logo.png"
+              <img
+                src="/logo.svg"
                 alt="TheoShift Logo"
-                width={120}
-                height={120}
-                priority
-                className="drop-shadow-lg"
+                className="h-32 w-32 drop-shadow-lg"
               />
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>

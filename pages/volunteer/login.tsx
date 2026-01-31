@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
 import Link from 'next/link'
-import Image from 'next/image'
 import { signIn } from 'next-auth/react'
 
 interface VolunteerLoginForm {
@@ -114,13 +113,10 @@ export default function VolunteerLogin() {
           {/* Header */}
           <div className="text-center">
             <div className="mx-auto mb-6 flex justify-center">
-              <Image
-                src="/logo.png"
+              <img
+                src="/logo.svg"
                 alt="TheoShift Logo"
-                width={120}
-                height={120}
-                priority
-                className="drop-shadow-lg"
+                className="h-32 w-32 drop-shadow-lg"
               />
             </div>
             <h2 className="mt-6 text-3xl font-bold text-gray-900">

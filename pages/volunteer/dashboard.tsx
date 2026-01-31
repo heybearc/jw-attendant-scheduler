@@ -5,6 +5,7 @@ import Head from 'next/head'
 import Link from 'next/link'
 import { format, parseISO } from 'date-fns'
 import AnnouncementBanner from '../../components/AnnouncementBanner'
+import MobileVolunteerDashboard from '../../components/MobileVolunteerDashboard'
 
 interface Volunteer {
   id: string
@@ -108,6 +109,19 @@ export default function VolunteerDashboard() {
   const [editingSession, setEditingSession] = useState<string | null>(null)
   const [availabilityRequests, setAvailabilityRequests] = useState<AvailabilityRequest[]>([])
   const [respondingToRequest, setRespondingToRequest] = useState<string | null>(null)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    // Detect mobile on mount and window resize
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   useEffect(() => {
     if (status === 'loading') return
@@ -434,6 +448,14 @@ export default function VolunteerDashboard() {
   }
 
   if (error || !dashboardData) {
+    if (!dashboardData) {
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <p className="text-gray-600">No dashboard data available</p>
+        </div>
+      )
+    }
+
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">

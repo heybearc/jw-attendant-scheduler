@@ -23,7 +23,15 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE_NAME)
       .then((cache) => {
         console.log('[SW] Caching static assets');
-        return cache.addAll(STATIC_CACHE);
+        // Use Promise.allSettled to handle missing files gracefully
+        return Promise.allSettled(
+          STATIC_CACHE.map(url => 
+            cache.add(url).catch(err => {
+              console.warn('[SW] Failed to cache:', url, err);
+              return null;
+            })
+          )
+        );
       })
       .then(() => self.skipWaiting())
   );

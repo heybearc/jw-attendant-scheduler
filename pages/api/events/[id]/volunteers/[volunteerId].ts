@@ -212,21 +212,28 @@ async function handleDeleteVolunteer(req: NextApiRequest, res: NextApiResponse, 
       return res.status(404).json({ error: 'Volunteer not found' })
     }
 
-    // Delete the position assignments first (NEW SYSTEM)
+    // Get all positions for this event to find assignments
+    const eventPositions = await prisma.positions.findMany({
+      where: { eventId },
+      select: { id: true }
+    })
+    
+    const positionIds = eventPositions.map(p => p.id)
+
+    // Delete the position assignments for this volunteer in this event
     await prisma.position_assignments.deleteMany({
       where: {
         volunteerId,
-        positions: {
-          eventId
-        }
+        positionId: { in: positionIds }
       }
     })
 
-    // Optionally delete the volunteer if not associated with other events
+    // Check if volunteer has assignments in other events
     const otherAssignments = await prisma.position_assignments.findMany({
       where: { volunteerId }
     })
 
+    // Only delete the volunteer record if they have no other assignments
     if (otherAssignments.length === 0) {
       await prisma.volunteers.delete({
         where: { id: volunteerId }

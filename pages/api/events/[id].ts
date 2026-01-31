@@ -84,16 +84,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         // Add oversight fields if provided
-        if (circuitOverseerName !== undefined) updateData.circuitoverseername = circuitOverseerName || null
-        if (circuitOverseerPhone !== undefined) updateData.circuitoverseerphone = circuitOverseerPhone || null
-        if (circuitOverseerEmail !== undefined) updateData.circuitoverseeremail = circuitOverseerEmail || null
-        if (assemblyOverseerName !== undefined) updateData.assemblyoverseername = assemblyOverseerName || null
-        if (assemblyOverseerPhone !== undefined) updateData.assemblyoverseerphone = assemblyOverseerPhone || null
-        if (assemblyOverseerEmail !== undefined) updateData.assemblyoverseeremail = assemblyOverseerEmail || null
-        if (attendantOverseerName !== undefined) updateData.attendantoverseername = attendantOverseerName || null
-        if (attendantOverseerPhone !== undefined) updateData.attendantoverseerphone = attendantOverseerPhone || null
-        if (attendantOverseerEmail !== undefined) updateData.attendantoverseeremail = attendantOverseerEmail || null
-        if (attendantOverseerAssistants !== undefined) updateData.attendantoverseerassistants = attendantOverseerAssistants || []
+        if (circuitOverseerName !== undefined) updateData.circuitOverseerName = circuitOverseerName || null
+        if (circuitOverseerPhone !== undefined) updateData.circuitOverseerPhone = circuitOverseerPhone || null
+        if (circuitOverseerEmail !== undefined) updateData.circuitOverseerEmail = circuitOverseerEmail || null
+        if (assemblyOverseerName !== undefined) updateData.assemblyOverseerName = assemblyOverseerName || null
+        if (assemblyOverseerPhone !== undefined) updateData.assemblyOverseerPhone = assemblyOverseerPhone || null
+        if (assemblyOverseerEmail !== undefined) updateData.assemblyOverseerEmail = assemblyOverseerEmail || null
+        if (attendantOverseerName !== undefined) updateData.volunteerOverseerName = attendantOverseerName || null
+        if (attendantOverseerPhone !== undefined) updateData.volunteerOverseerPhone = attendantOverseerPhone || null
+        if (attendantOverseerEmail !== undefined) updateData.volunteerOverseerEmail = attendantOverseerEmail || null
+        if (attendantOverseerAssistants !== undefined) updateData.volunteerOverseerAssistants = attendantOverseerAssistants || []
 
         const event = await prisma.events.update({
           where: { id },

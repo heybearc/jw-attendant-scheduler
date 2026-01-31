@@ -88,8 +88,9 @@ async function handleGetEventVolunteers(req: NextApiRequest, res: NextApiRespons
 
     return res.status(200).json({
       success: true,
-      data: volunteersWithAssignments.map(volunteer => ({
+      volunteers: volunteersWithAssignments.map(volunteer => ({
         id: volunteer.id,
+        name: `${volunteer.firstName} ${volunteer.lastName}`,
         firstName: volunteer.firstName,
         lastName: volunteer.lastName,
         email: volunteer.email,

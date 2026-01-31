@@ -121,17 +121,15 @@ async function handleGetPositions(req: NextApiRequest, res: NextApiResponse, eve
 
     return res.status(200).json({
       success: true,
-      data: {
-        positions,
-        pagination: {
-          page,
-          limit,
-          total,
-          pages
-        },
-        areas: areas.map(a => a.area).filter(Boolean),
-        eventId
-      }
+      positions,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages
+      },
+      areas: areas.map(a => a.area).filter(Boolean),
+      eventId
     })
   } catch (error) {
     console.error('Get positions error:', error)

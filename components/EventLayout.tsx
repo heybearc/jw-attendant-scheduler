@@ -8,6 +8,7 @@ import BottomNav from './BottomNav'
 import FloatingActionButton from './FloatingActionButton'
 import QuickVolunteerLookup from './QuickVolunteerLookup'
 import QuickAssignmentForm from './QuickAssignmentForm'
+import QRScanner from './QRScanner'
 
 interface EventLayoutProps {
   children: ReactNode
@@ -30,6 +31,7 @@ export default function EventLayout({
   const router = useRouter()
   const [showVolunteerLookup, setShowVolunteerLookup] = useState(false)
   const [showAssignmentForm, setShowAssignmentForm] = useState(false)
+  const [showQRScanner, setShowQRScanner] = useState(false)
 
   const handleSignOut = () => {
     // Don't specify callbackUrl - let next-auth use the current origin
@@ -217,6 +219,13 @@ export default function EventLayout({
             }}
             actions={[
               {
+                id: 'scan-qr',
+                label: 'Scan QR Code',
+                icon: '📱',
+                onClick: () => setShowQRScanner(true),
+                color: 'bg-indigo-600 hover:bg-indigo-700'
+              },
+              {
                 id: 'find-volunteer',
                 label: 'Find Volunteer',
                 icon: '🔍',
@@ -265,6 +274,11 @@ export default function EventLayout({
               // Refresh the page or show success message
               router.reload()
             }}
+          />
+
+          <QRScanner
+            isOpen={showQRScanner}
+            onClose={() => setShowQRScanner(false)}
           />
         </>
       )}

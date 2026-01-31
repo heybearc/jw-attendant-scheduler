@@ -8,6 +8,7 @@ import { TemplateProvider } from '../../../contexts/TemplateContext'
 import { VolunteerText } from '../../../components/DynamicText'
 import { CustomFieldsDisplay } from '../../../components/CustomFieldsRenderer'
 import { SafeDate } from '../../../components/SafeDate'
+import EventQRCode from '../../../components/EventQRCode'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
@@ -356,6 +357,7 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
               >
                 ← Back to Events
               </Link>
+              <EventQRCode eventId={event.id} eventName={event.name} />
               <Link
                 href={`/events/${event.id}/count-times`}
                 className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded transition-colors min-h-[44px] touch-manipulation flex items-center justify-center"

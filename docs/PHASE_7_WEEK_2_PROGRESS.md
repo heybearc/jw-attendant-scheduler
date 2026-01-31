@@ -179,4 +179,4 @@
 
 ---
 
-**Week 2 Progress: 80% Complete (Day 1-4 done, Day 5 pending)**
+**Week 2 Progress: 100% Complete (All 5 days done)**

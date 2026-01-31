@@ -26,14 +26,10 @@ export default function HelpLayout({ children, title }: HelpLayoutProps) {
           <div className="flex justify-between h-16">
             <div className="flex items-center">
               <Link href="/" className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="h-8 w-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                    <span className="text-white font-bold text-sm">JW</span>
-                  </div>
-                </div>
+                <img src="/logo.svg" alt="TheoShift Logo" className="h-10 w-10" />
                 <div className="ml-3">
                   <h1 className="text-lg font-semibold text-gray-900">
-                    {title || 'Theocratic Shift Scheduler'}
+                    {title || 'TheoShift'}
                   </h1>
                 </div>
               </Link>
@@ -111,8 +107,8 @@ export default function HelpLayout({ children, title }: HelpLayoutProps) {
       <footer className="bg-white border-t border-gray-200 mt-12">
         <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
           <div className="text-center text-sm text-gray-500">
-            <p>Theocratic Shift Scheduler v{packageJson.version}</p>
-            <p className="mt-1">Secure Event Management System</p>
+            <p>TheoShift v{packageJson.version}</p>
+            <p className="mt-1">Volunteer Coordination Platform</p>
           </div>
         </div>
       </footer>

@@ -13,7 +13,7 @@ export default function HelpPage({ userRole }: HelpPageProps) {
     {
       id: 'getting-started',
       title: '🚀 Getting Started',
-      description: 'Learn the basics of using Theocratic Shift Scheduler',
+      description: 'Learn the basics of using TheoShift',
       roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN', 'ATTENDANT']
     },
     {
@@ -104,7 +104,7 @@ export default function HelpPage({ userRole }: HelpPageProps) {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">📚 Help Center</h1>
           <p className="text-gray-600">
-            Find answers and learn how to use Theocratic Shift Scheduler effectively
+            Find answers and learn how to use TheoShift effectively
           </p>
         </div>
 

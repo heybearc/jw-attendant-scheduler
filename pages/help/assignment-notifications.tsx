@@ -212,7 +212,7 @@ export default function AssignmentNotificationsHelp() {
                   SMTP_PORT=587<br/>
                   SMTP_USER=your-email@gmail.com<br/>
                   SMTP_PASSWORD=your-app-password<br/>
-                  EMAIL_FROM_NAME=Theocratic Shift Scheduler
+                  EMAIL_FROM_NAME=TheoShift
                 </div>
               </div>
 

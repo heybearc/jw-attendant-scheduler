@@ -15,7 +15,7 @@ export default function EventManagementPage({ userRole }: EventManagementProps) 
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">📅 Event Management</h1>
           <p className="text-gray-600">
-            Creating, editing, and managing events in Theocratic Shift Scheduler
+            Creating, editing, and managing events in TheoShift
           </p>
         </div>
 
@@ -23,7 +23,7 @@ export default function EventManagementPage({ userRole }: EventManagementProps) 
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
           <h2 className="text-xl font-semibold text-blue-900 mb-3">Event Management Overview</h2>
           <p className="text-blue-800">
-            Events are the core of the Theocratic Shift Scheduler system. They represent assemblies, conventions, 
+            Events are the core of the TheoShift system. They represent assemblies, conventions, 
             and other gatherings that require volunteer coordination and management.
           </p>
         </div>

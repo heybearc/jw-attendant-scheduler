@@ -15,16 +15,16 @@ export default function GettingStartedPage({ userRole }: GettingStartedProps) {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">🚀 Getting Started</h1>
           <p className="text-gray-600">
-            Learn the basics of using Theocratic Shift Scheduler effectively
+            Learn the basics of using TheoShift effectively
           </p>
         </div>
 
         {/* Overview */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
-          <h2 className="text-xl font-semibold text-blue-900 mb-3">Welcome to Theocratic Shift Scheduler</h2>
+          <h2 className="text-xl font-semibold text-blue-900 mb-3">Welcome to TheoShift</h2>
           <p className="text-blue-800 mb-4">
-            Theocratic Shift Scheduler is a comprehensive event management system designed specifically for 
-            Jehovah's Witness events and assemblies. It helps manage volunteer assignments, track attendance, 
+            TheoShift is a comprehensive volunteer coordination platform designed specifically for 
+            theocratic events and assemblies. It helps manage volunteer assignments, track attendance, 
             and coordinate event logistics efficiently.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

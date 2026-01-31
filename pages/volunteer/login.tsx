@@ -148,9 +148,10 @@ export default function VolunteerLogin() {
                 <input
                   id="firstName"
                   type="text"
+                  autoComplete="given-name"
                   value={formData.firstName}
                   onChange={(e) => handleInputChange('firstName', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
                   placeholder="Enter your first name"
                   required
                 />
@@ -163,9 +164,10 @@ export default function VolunteerLogin() {
                 <input
                   id="lastName"
                   type="text"
+                  autoComplete="family-name"
                   value={formData.lastName}
                   onChange={(e) => handleInputChange('lastName', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
                   placeholder="Enter your last name"
                   required
                 />
@@ -178,9 +180,10 @@ export default function VolunteerLogin() {
                 <input
                   id="congregation"
                   type="text"
+                  autoComplete="organization"
                   value={formData.congregation}
                   onChange={(e) => handleInputChange('congregation', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
                   placeholder="Enter your congregation name"
                   required
                 />
@@ -193,9 +196,11 @@ export default function VolunteerLogin() {
                 <input
                   id="pin"
                   type="password"
+                  inputMode="numeric"
+                  autoComplete="off"
                   value={formData.pin}
                   onChange={(e) => handleInputChange('pin', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
                   placeholder="Enter your 4-digit PIN"
                   maxLength={4}
                   pattern="[0-9]{4}"

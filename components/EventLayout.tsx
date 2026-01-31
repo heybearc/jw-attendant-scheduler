@@ -203,7 +203,7 @@ export default function EventLayout({
       </footer>
 
       {/* Bottom Navigation for Mobile */}
-      <BottomNav eventId={selectedEvent?.id} />
+      <BottomNav selectedEventId={selectedEvent?.id} />
 
       {/* Floating Action Button with Quick Actions */}
       {selectedEvent && (

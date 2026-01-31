@@ -88,12 +88,6 @@ interface Event {
       lastName: string
       email: string
     } | null
-    users?: {
-      id: string
-      firstName: string
-      lastName: string
-      email: string
-    } | null
   }>
   positions: Array<{
     id: string
@@ -898,14 +892,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         event_volunteers: {
           include: {
             volunteer: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                email: true
-              }
-            },
-            users: {
               select: {
                 id: true,
                 firstName: true,

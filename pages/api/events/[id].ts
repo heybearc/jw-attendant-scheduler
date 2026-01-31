@@ -63,8 +63,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           // APEX GUARDIAN: Oversight Management Fields
           circuitOverseerName, circuitOverseerPhone, circuitOverseerEmail,
           assemblyOverseerName, assemblyOverseerPhone, assemblyOverseerEmail,
-          attendantOverseerName, attendantOverseerPhone, attendantOverseerEmail,
-          attendantOverseerAssistants
+          volunteerOverseerName, volunteerOverseerPhone, volunteerOverseerEmail,
+          volunteerOverseerAssistants
         } = req.body
 
         // APEX GUARDIAN: Build update data dynamically to avoid Prisma type issues
@@ -90,10 +90,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (assemblyOverseerName !== undefined) updateData.assemblyOverseerName = assemblyOverseerName || null
         if (assemblyOverseerPhone !== undefined) updateData.assemblyOverseerPhone = assemblyOverseerPhone || null
         if (assemblyOverseerEmail !== undefined) updateData.assemblyOverseerEmail = assemblyOverseerEmail || null
-        if (attendantOverseerName !== undefined) updateData.volunteerOverseerName = attendantOverseerName || null
-        if (attendantOverseerPhone !== undefined) updateData.volunteerOverseerPhone = attendantOverseerPhone || null
-        if (attendantOverseerEmail !== undefined) updateData.volunteerOverseerEmail = attendantOverseerEmail || null
-        if (attendantOverseerAssistants !== undefined) updateData.volunteerOverseerAssistants = attendantOverseerAssistants || []
+        if (volunteerOverseerName !== undefined) updateData.volunteerOverseerName = volunteerOverseerName || null
+        if (volunteerOverseerPhone !== undefined) updateData.volunteerOverseerPhone = volunteerOverseerPhone || null
+        if (volunteerOverseerEmail !== undefined) updateData.volunteerOverseerEmail = volunteerOverseerEmail || null
+        if (volunteerOverseerAssistants !== undefined) updateData.volunteerOverseerAssistants = volunteerOverseerAssistants || []
 
         const event = await prisma.events.update({
           where: { id },

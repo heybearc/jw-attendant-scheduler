@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { format, parseISO } from 'date-fns'
 import AnnouncementBanner from '../../components/AnnouncementBanner'
 import MobileVolunteerDashboard from '../../components/MobileVolunteerDashboard'
+import MobileVolunteerDashboard from '../../components/MobileVolunteerDashboard'
 
 interface Volunteer {
   id: string
@@ -473,6 +474,29 @@ export default function VolunteerDashboard() {
     )
   }
 
+  // Mobile View
+  if (isMobile) {
+    return (
+      <>
+        <Head>
+          <title>My Dashboard - {dashboardData.event.name}</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+        </Head>
+        <MobileVolunteerDashboard
+          volunteer={dashboardData.volunteer}
+          event={dashboardData.event}
+          assignments={dashboardData.assignments}
+          oversightContacts={dashboardData.oversightContacts}
+          activeCountSessions={dashboardData.activeCountSessions}
+          availabilityRequests={availabilityRequests}
+          onAvailabilityResponse={handleAvailabilityResponse}
+          onRefresh={loadDashboard}
+        />
+      </>
+    )
+  }
+
+  // Desktop View
   return (
     <>
       <Head>

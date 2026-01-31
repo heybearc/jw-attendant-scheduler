@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '../../../../../src/lib/prisma'
-import { checkEventAccess, canManageVolunteers } from '../../../../../src/lib/eventAccess'
+import { checkEventAccess, canManageAttendants } from '../../../../../src/lib/eventAccess'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { id: eventId, volunteerId } = req.query
@@ -50,7 +50,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return await handleGetVolunteer(req, res, eventId, volunteerId)
     } else if (req.method === 'PUT' || req.method === 'DELETE') {
       // Only OVERSEER+ can manage volunteers
-      const canManage = await canManageVolunteers(user.id, eventId)
+      const canManage = await canManageAttendants(user.id, eventId)
       if (!canManage) {
         return res.status(403).json({ error: 'You do not have permission to manage volunteers' })
       }

@@ -140,6 +140,42 @@ body {
       @apply font-semibold mr-2;
     }
   }
+  
+  /* Enhanced mobile table card layout */
+  @media (max-width: 768px) {
+    .mobile-card-table thead {
+      @apply sr-only;
+    }
+    
+    .mobile-card-table tbody tr {
+      @apply block mb-4 border border-gray-200 rounded-lg bg-white shadow-sm;
+    }
+    
+    .mobile-card-table tbody td {
+      @apply block text-left px-4 py-3 border-b border-gray-100 last:border-b-0;
+    }
+    
+    .mobile-card-table tbody td:before {
+      content: attr(data-label);
+      @apply block text-xs font-semibold text-gray-500 uppercase mb-1;
+    }
+    
+    /* Hide checkbox column on mobile */
+    .mobile-card-table tbody td.mobile-hide {
+      @apply hidden;
+    }
+  }
+  
+  /* Horizontal scroll indicator */
+  .scroll-indicator {
+    @apply relative;
+  }
+  
+  .scroll-indicator:after {
+    content: '';
+    @apply absolute right-0 top-0 bottom-0 w-8 pointer-events-none;
+    background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.9));
+  }
 }
 
 /* Mobile-friendly forms */

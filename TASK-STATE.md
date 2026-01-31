@@ -1,30 +1,41 @@
 # TheoShift Task State
 
-**Last updated:** 2026-01-30 (afternoon)  
+**Last updated:** 2026-01-31 (early morning)  
 **Current branch:** main  
-**Working on:** Phase 4C Assignment Notifications - COMPLETE ✅
+**Working on:** Phase 7 Mobile Optimization - Week 2 (Mobile Navigation) 📱
 
 ---
 
 ## Current Task
-**Phase 4C Assignment Notifications Complete ✅**
+**Phase 7 Week 2: Mobile Navigation & Touch Optimization - IN PROGRESS**
 
 ### What I'm doing right now
-Completed assignment notifications feature. Reverted automatic notifications to manual-only approach (original design). Coordinators use "Send Notifications" button to send emails when ready, preventing spam during assignment shuffling. Phase 4C is now 100% complete.
+Building mobile-first navigation system for TheoShift. Week 2 Day 1-2 complete with hamburger menu and bottom navigation bar. Next: form optimization and touch gestures. All changes deployed to main, ready for STANDBY testing.
 
 ### Recent completions
 
-**Today (2026-01-30 - Afternoon: Phase 4C Completion):**
-- ✅ Reviewed git history to identify completed Phase 4C work
-- ✅ Updated ROADMAP.md to move Phase 4C to completed section
-- ✅ Documented completed features (notifications, templates, availability, permissions cloning)
-- ✅ Documented features deferred indefinitely (update notifications, reminders, coordinator dashboards)
-- ✅ Clarified that existing workflows handle deferred features
-- ✅ Updated current version to v3.5.1
-- ✅ Completed assignment notifications feature (manual-only)
-- ✅ Reverted automatic notifications (commit 0c566941)
-- ✅ Confirmed manual "Send Notifications" button is correct approach
-- ✅ Phase 4C is now 100% complete with all features working as designed
+**Today (2026-01-31 - Early Morning: Phase 7 Week 2 Day 1-2):**
+- ✅ Created MobileNav component (hamburger menu with slide-out drawer)
+- ✅ Created BottomNav component (fixed bottom navigation bar)
+- ✅ Integrated mobile navigation into EventLayout
+- ✅ Added TheoShift logo to main login page (replaced padlock icon)
+- ✅ Touch-friendly 44px tap targets throughout
+- ✅ Safe area insets for iPhone notch and home indicator
+- ✅ Auto-close menu on route change
+- ✅ Body scroll lock when menu open
+- ✅ Role-based navigation filtering
+- ✅ Context-aware deep linking
+- ✅ Created Phase 7 Week 2 progress tracking document
+
+**Yesterday (2026-01-30 - Full Day: Phase 7 Week 1 Complete):**
+- ✅ Resolved deployment mismatch (BLUE updated to v3.6.0)
+- ✅ Fixed HAProxy routing (theoshift.com → GREEN)
+- ✅ Fixed MCP server ACL detection
+- ✅ Added comprehensive mobile-first CSS utilities
+- ✅ Deployed Phase 7 Week 1 to BLUE standby
+- ✅ Ran /test-release workflow (4 passing, 19 expected failures)
+- ✅ Created PWA usage guide for users
+- ✅ Phase 7 Week 1 complete and tested
 
 **Today (2026-01-30 - Morning: Test Suite Cleanup & v3.5.1 Release):**
 - ✅ Fixed all Playwright test failures (was 14 failing, now 0 failing)
@@ -231,29 +242,25 @@ Completed assignment notifications feature. Reverted automatic notifications to 
 - Repository significantly cleaner and organized
 
 ### Next steps
-1. **Phase 4C is complete** - All core features implemented
-   - Assignment notifications (create/cancel)
-   - Assignment templates (full CRUD)
-   - Volunteer availability system
-   - Event permissions cloning
-   - Certain features intentionally deferred (handled by existing workflows)
+1. **Continue Phase 7 Week 2 (40% complete)**
+   - Day 3-4: Form optimization (input types, autocomplete, touch controls)
+   - Day 5: Touch gestures (swipe, pull-to-refresh, long-press)
+   - Deploy to STANDBY for testing
+   - Test on actual mobile devices
 
-2. **Ready for Phase 5: Oversight Management Module**
-   - 8-10 week effort
-   - High priority feature
-   - Specification already complete
-   - See ROADMAP.md for details
+2. **Phase 7 Week 3-4 (Pending)**
+   - Week 3: Component responsiveness and dashboard optimization
+   - Week 4: Performance optimization and final polish
 
-3. **Or pursue other work:**
-   - Additional feature development
-   - Performance optimizations
-   - User feedback implementation
-   - Control plane improvements
+3. **Deploy and Release**
+   - Test all mobile features on iPhone and Android
+   - Run /test-release workflow
+   - Version bump to v3.7.0
+   - Deploy to production via /release workflow
 
-4. **Housekeeping:**
-   - Consider re-enabling skipped tests when features are implemented
-   - Monitor production for any issues from v3.5.1 release
-   - Remove legacy ACLs after Feb 1, 2026 (domain migration complete)
+4. **Future Phases**
+   - Phase 5: Oversight Management Module (8-10 weeks)
+   - Or other feature work based on priorities
 
 ---
 
@@ -285,4 +292,4 @@ Completed assignment notifications feature. Reverted automatic notifications to 
 ---
 
 ## Exact Next Command
-**Phase 4C is complete.** Review ROADMAP.md Phase 5 (Oversight Management Module) or identify other feature work. All environments synced at v3.5.1, testing infrastructure stable, ready for new development.
+**Continue Phase 7 Week 2 Day 3-4:** Implement form optimization - add proper input types (tel, email, date), autocomplete attributes, and touch-friendly form controls. Reference `/docs/PHASE_7_MOBILE_OPTIMIZATION.md` for detailed requirements.

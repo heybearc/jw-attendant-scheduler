@@ -79,7 +79,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           location,
           status,
           capacity: capacity ? parseInt(capacity) : null,
-          attendantsNeeded: attendantsNeeded ? parseInt(attendantsNeeded) : null,
+          volunteersNeeded: attendantsNeeded ? parseInt(attendantsNeeded) : null,
           updatedAt: new Date()
         }
 

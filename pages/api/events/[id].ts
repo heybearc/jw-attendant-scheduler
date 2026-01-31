@@ -83,13 +83,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           updatedAt: new Date()
         }
 
-        // Add oversight fields if provided
-        if (circuitOverseerName !== undefined) updateData.circuitOverseerName = circuitOverseerName || null
-        if (circuitOverseerPhone !== undefined) updateData.circuitOverseerPhone = circuitOverseerPhone || null
-        if (circuitOverseerEmail !== undefined) updateData.circuitOverseerEmail = circuitOverseerEmail || null
-        if (assemblyOverseerName !== undefined) updateData.assemblyOverseerName = assemblyOverseerName || null
-        if (assemblyOverseerPhone !== undefined) updateData.assemblyOverseerPhone = assemblyOverseerPhone || null
-        if (assemblyOverseerEmail !== undefined) updateData.assemblyOverseerEmail = assemblyOverseerEmail || null
+        // Add oversight fields if provided (note: circuit/assembly use lowercase in schema)
+        if (circuitOverseerName !== undefined) updateData.circuitoverseername = circuitOverseerName || null
+        if (circuitOverseerPhone !== undefined) updateData.circuitoverseerphone = circuitOverseerPhone || null
+        if (circuitOverseerEmail !== undefined) updateData.circuitoverseeremail = circuitOverseerEmail || null
+        if (assemblyOverseerName !== undefined) updateData.assemblyoverseername = assemblyOverseerName || null
+        if (assemblyOverseerPhone !== undefined) updateData.assemblyoverseerphone = assemblyOverseerPhone || null
+        if (assemblyOverseerEmail !== undefined) updateData.assemblyoverseeremail = assemblyOverseerEmail || null
         if (volunteerOverseerName !== undefined) updateData.volunteerOverseerName = volunteerOverseerName || null
         if (volunteerOverseerPhone !== undefined) updateData.volunteerOverseerPhone = volunteerOverseerPhone || null
         if (volunteerOverseerEmail !== undefined) updateData.volunteerOverseerEmail = volunteerOverseerEmail || null

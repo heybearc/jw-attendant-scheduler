@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../api/auth/[...nextauth]'
 import AdminLayout from '../../components/AdminLayout'
 import Link from 'next/link'
+import { getLatestRelease } from '../../src/lib/releaseNotes'
 
 interface AdminDashboardProps {
   user: {
@@ -17,9 +18,10 @@ interface AdminDashboardProps {
     activeSessions: number
   }
   userLastSeenVersion?: string | null
+  releaseSummary?: string
 }
 
-export default function AdminDashboard({ user, stats, userLastSeenVersion }: AdminDashboardProps) {
+export default function AdminDashboard({ user, stats, userLastSeenVersion, releaseSummary }: AdminDashboardProps) {
   const adminModules = [
     {
       title: 'User Management',
@@ -96,7 +98,7 @@ export default function AdminDashboard({ user, stats, userLastSeenVersion }: Adm
   ]
 
   return (
-    <AdminLayout title="Admin Dashboard" userLastSeenVersion={userLastSeenVersion}>
+    <AdminLayout title="Admin Dashboard" userLastSeenVersion={userLastSeenVersion} releaseSummary={releaseSummary}>
       {/* Welcome Section */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-6 text-white mb-8">
         <h2 className="text-2xl font-bold mb-2">Welcome back, {user.name}!</h2>
@@ -229,6 +231,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       })
     ])
 
+    // Get latest release info for banner
+    const latestRelease = getLatestRelease()
+
     return {
       props: {
         user: {
@@ -243,6 +248,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           activeSessions,
         },
         userLastSeenVersion: currentUser?.lastSeenReleaseVersion || null,
+        releaseSummary: latestRelease?.summary || null,
       },
     }
   } catch (error) {

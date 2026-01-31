@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { format, parseISO } from 'date-fns'
 import ReleaseBanner from '../../components/ReleaseBanner'
 import packageJson from '../../package.json'
+import { getLatestRelease } from '../../src/lib/releaseNotes'
 
 interface Event {
   id: string
@@ -25,9 +26,10 @@ interface Event {
 interface EventSelectPageProps {
   events: Event[]
   userLastSeenVersion?: string | null
+  releaseSummary?: string
 }
 
-export default function EventSelectPage({ events, userLastSeenVersion }: EventSelectPageProps) {
+export default function EventSelectPage({ events, userLastSeenVersion, releaseSummary }: EventSelectPageProps) {
   const { data: session } = useSession()
   const router = useRouter()
   const [error, setError] = useState('')
@@ -107,6 +109,7 @@ export default function EventSelectPage({ events, userLastSeenVersion }: EventSe
       <ReleaseBanner 
         currentVersion={packageJson.version}
         userLastSeenVersion={userLastSeenVersion}
+        releaseSummary={releaseSummary}
       />
       <div className="container mx-auto px-4 py-8">
         {/* Top Navigation */}
@@ -380,10 +383,14 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     select: { lastSeenReleaseVersion: true }
   })
 
+  // Get latest release info for banner
+  const latestRelease = getLatestRelease()
+
   return {
     props: {
-      events,
-      userLastSeenVersion: currentUser?.lastSeenReleaseVersion || null
+      events: eventsWithCounts,
+      userLastSeenVersion: currentUser?.lastSeenReleaseVersion || null,
+      releaseSummary: latestRelease?.summary || null
     }
   }
 }

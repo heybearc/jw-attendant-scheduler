@@ -5,9 +5,10 @@ import Link from 'next/link'
 interface ReleaseBannerProps {
   currentVersion: string
   userLastSeenVersion?: string | null
+  releaseSummary?: string
 }
 
-export default function ReleaseBanner({ currentVersion, userLastSeenVersion }: ReleaseBannerProps) {
+export default function ReleaseBanner({ currentVersion, userLastSeenVersion, releaseSummary }: ReleaseBannerProps) {
   const { data: session } = useSession()
   const [dismissed, setDismissed] = useState(false)
 
@@ -45,7 +46,7 @@ export default function ReleaseBanner({ currentVersion, userLastSeenVersion }: R
             <p className="ml-3 font-medium">
               <span className="md:hidden">New in v{currentVersion}!</span>
               <span className="hidden md:inline">
-                🎉 New in v{currentVersion}: Hierarchical events with child event views and simplified department management!
+                🎉 New in v{currentVersion}: {releaseSummary || 'Check out the latest features and improvements!'}
               </span>
             </p>
           </div>

@@ -12,9 +12,10 @@ interface AdminLayoutProps {
   title?: string
   breadcrumbs?: Array<{ label: string; href?: string }>
   userLastSeenVersion?: string | null
+  releaseSummary?: string
 }
 
-export default function AdminLayout({ children, title, breadcrumbs = [], userLastSeenVersion }: AdminLayoutProps) {
+export default function AdminLayout({ children, title, breadcrumbs = [], userLastSeenVersion, releaseSummary }: AdminLayoutProps) {
   const router = useRouter()
   const { data: session } = useSession()
 
@@ -53,6 +54,7 @@ export default function AdminLayout({ children, title, breadcrumbs = [], userLas
       <ReleaseBanner 
         currentVersion={packageJson.version}
         userLastSeenVersion={userLastSeenVersion}
+        releaseSummary={releaseSummary}
       />
       
       {/* Top Navigation Bar */}

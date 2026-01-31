@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { format, parseISO } from 'date-fns'
 import AnnouncementBanner from '../../components/AnnouncementBanner'
 import MobileVolunteerDashboard from '../../components/MobileVolunteerDashboard'
-import MobileVolunteerDashboard from '../../components/MobileVolunteerDashboard'
 
 interface Volunteer {
   id: string

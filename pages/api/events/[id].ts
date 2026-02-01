@@ -59,7 +59,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method === "PUT") {
       try {
         const { 
-          name, description, eventType, startDate, endDate, startTime, endTime, location, status, capacity, attendantsNeeded,
+          name, description, eventType, startDate, endDate, startTime, endTime, location, status, capacity, attendantsNeeded, volunteersNeeded,
           // APEX GUARDIAN: Oversight Management Fields
           circuitOverseerName, circuitOverseerPhone, circuitOverseerEmail,
           assemblyOverseerName, assemblyOverseerPhone, assemblyOverseerEmail,
@@ -79,7 +79,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           location,
           status,
           capacity: capacity ? parseInt(capacity) : null,
-          volunteersNeeded: attendantsNeeded ? parseInt(attendantsNeeded) : null,
+          volunteersNeeded: (volunteersNeeded || attendantsNeeded) ? parseInt(volunteersNeeded || attendantsNeeded) : null,
           updatedAt: new Date()
         }
 

@@ -89,7 +89,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         endTime: originalEvent.endTime,
         location: originalEvent.location,
         capacity: originalEvent.capacity,
-        attendantsNeeded: originalEvent.attendantsNeeded,
+        volunteersNeeded: originalEvent.volunteersNeeded,
         status: 'UPCOMING',
         createdBy: user.id,
         departmentTemplateId: originalEvent.departmentTemplateId,

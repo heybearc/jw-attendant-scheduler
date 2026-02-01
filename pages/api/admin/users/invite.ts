@@ -13,14 +13,69 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ success: false, error: 'Unauthorized' })
     }
 
-    if (req.method !== 'POST') {
+    if (req.method === 'GET') {
+      return await handleGetInvitations(req, res)
+    } else if (req.method === 'POST') {
+      return await handleCreateInvitation(req, res, session)
+    } else {
       return res.status(405).json({ success: false, error: 'Method not allowed' })
     }
-
-    return await handleCreateInvitation(req, res, session)
   } catch (error) {
     console.error('Invitation API error:', error)
     return res.status(500).json({ success: false, error: 'Internal server error' })
+  }
+}
+
+async function handleGetInvitations(req: NextApiRequest, res: NextApiResponse) {
+  try {
+    const invitations = await prisma.users.findMany({
+      where: {
+        inviteToken: { not: null },
+        inviteExpiry: { gte: new Date() }
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        inviteExpiry: true,
+        createdAt: true,
+        createdBy: true
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    })
+
+    const invitationsWithCreator = await Promise.all(
+      invitations.map(async (inv) => {
+        const creator = inv.createdBy ? await prisma.users.findUnique({
+          where: { id: inv.createdBy },
+          select: { firstName: true, lastName: true, email: true }
+        }) : null
+
+        return {
+          id: inv.id,
+          email: inv.email,
+          firstName: inv.firstName,
+          lastName: inv.lastName,
+          role: inv.role,
+          status: 'PENDING',
+          expiresAt: inv.inviteExpiry,
+          createdAt: inv.createdAt,
+          invitedByUser: creator || { firstName: 'Unknown', lastName: '', email: '' }
+        }
+      })
+    )
+
+    return res.status(200).json({
+      success: true,
+      data: { invitations: invitationsWithCreator }
+    })
+  } catch (error) {
+    console.error('Get invitations error:', error)
+    return res.status(500).json({ success: false, error: 'Failed to fetch invitations' })
   }
 }
 

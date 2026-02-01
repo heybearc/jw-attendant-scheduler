@@ -16,7 +16,7 @@ interface Document {
   fileSize: number
   uploadedBy: string
   uploadedAt: string
-  publishedTo: 'all' | 'individual'
+  publishedTo: 'all' | 'individual' | 'none'
   publishedCount: number
   description?: string
 }
@@ -416,7 +416,7 @@ export default function EventDocumentsPage({ eventId, event, documents, attendan
                         >
                           👁️ View
                         </a>
-                        {document.publishedTo !== 'none' && document.publishedCount > 0 ? (
+                        {(document.publishedCount > 0 || document.publishedTo !== 'none') ? (
                           <button
                             onClick={() => handleUnpublishDocument(document.id)}
                             className="px-3 py-1 bg-yellow-600 hover:bg-yellow-700 text-white text-sm rounded transition-colors"

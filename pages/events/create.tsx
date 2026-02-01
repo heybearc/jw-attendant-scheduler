@@ -86,9 +86,10 @@ export default function CreateEventPage() {
         }
         
         if (eventsData.success && eventsData.data.events) {
-          // Filter out events that already have children (to prevent circular references)
+          // Filter out events that are already children (to prevent nested hierarchies)
+          // Allow events with existing children to have more children added
           const eligibleParentEvents = eventsData.data.events.filter((event: any) => 
-            !event.childEventsCount || event.childEventsCount === 0
+            !event.parentEventId
           )
           setEvents(eligibleParentEvents)
         }

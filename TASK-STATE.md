@@ -1,8 +1,8 @@
 # TheoShift Task State
 
-**Last updated:** 2026-02-01 (end of day - final)  
+**Last updated:** 2026-02-01 (mid-day)  
 **Current branch:** main  
-**Working on:** Phase 7 Complete - MCP Bug Fixed 🎉
+**Working on:** Bug Fixes & Terminology Cleanup
 
 ---
 
@@ -10,11 +10,19 @@
 **Phase 7 Week 5: Performance & Polish - COMPLETE ✅**
 
 ### What I'm doing right now
-Phase 7 Mobile Optimization complete and deployed to production. v3.8.0 released with mobile volunteer dashboard, performance improvements, and bug fixes. Both environments synced. MCP traffic switching bug identified, root cause found, and fix promoted to control plane. Ready for next phase of work.
+Fixed critical user management page bug and completed ATTENDANT to VOLUNTEER terminology refactor. All changes deployed to STANDBY (BLUE) for testing. MCP traffic switching bug verified fixed. HAProxy legacy domain cleanup complete.
 
 ### Recent completions
 
-**Today (2026-02-01 - Full Day: v3.8.0 Production Release + MCP Bug Fix):**
+**Today (2026-02-01 - Afternoon: Bug Fixes & Cleanup):**
+- ✅ Fixed user management page (attendants → volunteer relation)
+- ✅ Completed ATTENDANT → VOLUNTEER terminology refactor (67 occurrences, 33 files)
+- ✅ Tested MCP traffic switching (verified bug is fixed)
+- ✅ Cleaned up HAProxy legacy jw_attendant references
+- ✅ Deployed all fixes to STANDBY (BLUE) for testing
+- ✅ Corrected deployment process (always deploy to STANDBY first)
+
+**Today (2026-02-01 - Morning: v3.8.0 Production Release + MCP Bug Fix):**
 - ✅ Completed Phase 7 Week 5 (Performance & Polish)
 - ✅ Version bumped to v3.8.0 with comprehensive release notes
 - ✅ Fixed outdated test expectations (route changes)

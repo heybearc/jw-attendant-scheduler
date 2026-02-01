@@ -316,6 +316,21 @@
 - Safer deployments with automated traffic switching
 - Fix distributed via Cloudy-Work control plane to all app repos
 
+### D-TS-023: Always Deploy to STANDBY First
+**Date:** 2026-02-01  
+**Context:** Accidentally deployed directly to production (GREEN/LIVE) instead of STANDBY (BLUE) during bug fix  
+**Decision:** NEVER deploy directly to production - ALWAYS deploy to STANDBY first, test, then use `/release` workflow  
+**Deployment Process:**
+1. Deploy to STANDBY (BLUE - 10.92.3.24)
+2. Test on STANDBY thoroughly
+3. Use `/release` workflow to switch traffic
+4. Use `/sync` to update old LIVE with new code  
+**Consequences:**
+- Zero-downtime deployments
+- Production protected from untested code
+- Blue-green deployment pattern enforced
+- Safer release process
+
 ---
 
 ## Shared Decisions

@@ -145,6 +145,33 @@ export default function EventDocumentsPage({ eventId, event, documents, attendan
     }
   }
 
+  const handleUnpublishDocument = async (documentId: string) => {
+    if (!confirm('Are you sure you want to unpublish this document? It will be removed from all volunteer dashboards.')) {
+      return
+    }
+
+    setLoading(true)
+    setError('')
+    try {
+      const response = await fetch(`/api/events/${eventId}/documents/${documentId}/unpublish`, {
+        method: 'POST'
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setSuccess(result.message || 'Document unpublished successfully')
+        router.reload()
+      } else {
+        setError(result.error || 'Failed to unpublish document')
+      }
+    } catch (error) {
+      setError('An error occurred while unpublishing')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleDeleteDocument = async (documentId: string) => {
     if (!confirm('Are you sure you want to delete this document? This action cannot be undone.')) {
       return
@@ -389,15 +416,24 @@ export default function EventDocumentsPage({ eventId, event, documents, attendan
                         >
                           👁️ View
                         </a>
-                        <button
-                          onClick={() => {
-                            setSelectedDocument(document)
-                            setShowPublishModal(true)
-                          }}
-                          className="px-3 py-1 bg-orange-600 hover:bg-orange-700 text-white text-sm rounded transition-colors"
-                        >
-                          📤 Publish
-                        </button>
+                        {document.publishedTo !== 'none' && document.publishedCount > 0 ? (
+                          <button
+                            onClick={() => handleUnpublishDocument(document.id)}
+                            className="px-3 py-1 bg-yellow-600 hover:bg-yellow-700 text-white text-sm rounded transition-colors"
+                          >
+                            📥 Unpublish
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              setSelectedDocument(document)
+                              setShowPublishModal(true)
+                            }}
+                            className="px-3 py-1 bg-orange-600 hover:bg-orange-700 text-white text-sm rounded transition-colors"
+                          >
+                            📤 Publish
+                          </button>
+                        )}
                         <button
                           onClick={() => handleDeleteDocument(document.id)}
                           className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition-colors"

@@ -9,7 +9,7 @@ import crypto from 'crypto'
 const assignmentSchema = z.object({
   volunteerId: z.string().min(1, 'Volunteer ID is required'),
   positionId: z.string().min(1, 'Position ID is required'),
-  role: z.enum(['ATTENDANT', 'OVERSEER', 'KEYMAN']).optional().default('ATTENDANT'),
+  role: z.enum(['VOLUNTEER', 'OVERSEER', 'KEYMAN']).optional().default('VOLUNTEER'),
   shiftId: z.string().min(1, 'Shift ID is required for all assignments'),
   notes: z.string().optional()
 })
@@ -177,11 +177,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
         
         // For regular attendants, limit to 1 per shift
-        if (validatedData.role === 'ATTENDANT') {
+        if (validatedData.role === 'VOLUNTEER') {
           const existingAttendants = await prisma.position_assignments.count({
             where: { 
               shiftId: validatedData.shiftId,
-              role: 'ATTENDANT'
+              role: 'VOLUNTEER'
             }
           })
           

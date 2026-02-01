@@ -20,7 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         positionNumber: 22,
         positionName: 'Station 22 - Inside Entrance Near Parking Lot - Morning 1',
         description: 'Inside entrance near parking lot - Morning shift',
-        department: 'ATTENDANT',
+        department: 'VOLUNTEER',
         isActive: true,
         maxAttendants: 1,
         minAttendants: 1
@@ -30,7 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         positionNumber: 15,
         positionName: 'Station 15 - Main Auditorium - Morning 2', 
         description: 'Main auditorium oversight - Morning shift',
-        department: 'ATTENDANT',
+        department: 'VOLUNTEER',
         isActive: true,
         maxAttendants: 1,
         minAttendants: 1
@@ -40,7 +40,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         positionNumber: 10,
         positionName: 'Station 10 - Information Desk',
         description: 'Information and assistance desk',
-        department: 'ATTENDANT', 
+        department: 'VOLUNTEER', 
         isActive: true,
         maxAttendants: 2,
         minAttendants: 1
@@ -50,7 +50,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         positionNumber: 5,
         positionName: 'Station 5 - Platform Oversight',
         description: 'Platform and stage area oversight',
-        department: 'ATTENDANT',
+        department: 'VOLUNTEER',
         isActive: true,
         maxAttendants: 1,
         minAttendants: 1

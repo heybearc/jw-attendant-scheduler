@@ -22,7 +22,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         name: 'Station 22 - Inside Entrance Near Parking Lot - Morning 1',
         description: 'Inside entrance near parking lot',
         location: 'Near Parking Lot',
-        department: 'ATTENDANT',
+        department: 'VOLUNTEER',
         isActive: true
       },
       {
@@ -31,7 +31,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         name: 'Station 15 - Main Auditorium - Morning 2',
         description: 'Main auditorium oversight',
         location: 'Main Auditorium',
-        department: 'ATTENDANT',
+        department: 'VOLUNTEER',
         isActive: true
       }
     ]

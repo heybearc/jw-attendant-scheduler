@@ -35,7 +35,7 @@ export default function GettingStartedPage({ userRole }: GettingStartedProps) {
                 {userRole === 'OVERSEER' && 'You can manage events, assign volunteers, and oversee event operations.'}
                 {userRole === 'ASSISTANT_OVERSEER' && 'You can assist with event management and volunteer coordination.'}
                 {userRole === 'KEYMAN' && 'You can manage specific areas and coordinate with volunteers in your section.'}
-                {userRole === 'ATTENDANT' && 'You can view your assignments, check in for events, and manage your personal information.'}
+                {userRole === 'VOLUNTEER' && 'You can view your assignments, check in for events, and manage your personal information.'}
               </p>
             </div>
             <div className="bg-white rounded-lg p-4">
@@ -151,7 +151,7 @@ export default function GettingStartedPage({ userRole }: GettingStartedProps) {
               </div>
             )}
 
-            {userRole === 'ATTENDANT' && (
+            {userRole === 'VOLUNTEER' && (
               <div className="space-y-6">
                 <div className="bg-white border border-gray-200 rounded-lg p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-3">1. View Your Assignments</h3>
@@ -247,7 +247,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
   return {
     props: {
-      userRole: session.user?.role || 'ATTENDANT',
+      userRole: session.user?.role || 'VOLUNTEER',
     },
   }
 }

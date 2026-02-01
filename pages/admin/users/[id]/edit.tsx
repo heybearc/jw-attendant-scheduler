@@ -41,7 +41,7 @@ export default function EditUserPage() {
     firstName: '',
     lastName: '',
     email: '',
-    role: 'ATTENDANT',
+    role: 'VOLUNTEER',
     isActive: true,
     linkedVolunteerId: ''
   })
@@ -259,7 +259,7 @@ export default function EditUserPage() {
                   value={formData.role}
                   onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                 >
-                  <option value="ATTENDANT">Volunteer</option>
+                  <option value="VOLUNTEER">Volunteer</option>
                   <option value="KEYMAN">Keyman</option>
                   <option value="ASSISTANT_OVERSEER">Assistant Overseer</option>
                   <option value="OVERSEER">Overseer</option>

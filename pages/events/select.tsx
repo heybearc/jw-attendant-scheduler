@@ -314,7 +314,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   }
 
   // CRITICAL: Volunteers should NEVER access this page - redirect to volunteer portal
-  if (session.user?.role === 'ATTENDANT') {
+  if (session.user?.role === 'VOLUNTEER') {
     return {
       redirect: {
         destination: '/volunteer/dashboard',

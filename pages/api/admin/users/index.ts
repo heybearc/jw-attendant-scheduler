@@ -93,7 +93,7 @@ async function handleCreateUser(req: NextApiRequest, res: NextApiResponse) {
     firstName, 
     lastName, 
     email, 
-    role = 'ATTENDANT', 
+    role = 'VOLUNTEER', 
     isActive = true, 
     linkedAttendantId, 
     passwordOption = 'invitation',

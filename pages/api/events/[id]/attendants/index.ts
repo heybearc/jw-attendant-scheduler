@@ -156,7 +156,7 @@ async function handleCreateEventAttendant(req: NextApiRequest, res: NextApiRespo
         id: require('crypto').randomUUID(),
         eventId: eventId,
         attendantId: attendant.id,
-        role: 'ATTENDANT',
+        role: 'VOLUNTEER',
         isActive: true,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -261,7 +261,7 @@ async function handleBulkImportEventAttendants(req: NextApiRequest, res: NextApi
                 id: require('crypto').randomUUID(),
                 eventId: eventId,
                 attendantId: existingAttendant.id,
-                role: 'ATTENDANT',
+                role: 'VOLUNTEER',
                 isActive: true,
                 createdAt: new Date(),
                 updatedAt: new Date()
@@ -309,7 +309,7 @@ async function handleBulkImportEventAttendants(req: NextApiRequest, res: NextApi
               id: require('crypto').randomUUID(),
               eventId: eventId,
               attendantId: newAttendant.id,
-              role: 'ATTENDANT',
+              role: 'VOLUNTEER',
               isActive: true,
               createdAt: new Date(),
               updatedAt: new Date()

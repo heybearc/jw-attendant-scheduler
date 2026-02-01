@@ -30,7 +30,7 @@ export default function InviteUsersPage() {
     email: '',
     firstName: '',
     lastName: '',
-    role: 'ATTENDANT',
+    role: 'VOLUNTEER',
     message: ''
   })
   const [error, setError] = useState('')
@@ -78,7 +78,7 @@ export default function InviteUsersPage() {
           email: '',
           firstName: '',
           lastName: '',
-          role: 'ATTENDANT',
+          role: 'VOLUNTEER',
           message: ''
         })
         fetchInvitations() // Refresh the list
@@ -216,7 +216,7 @@ export default function InviteUsersPage() {
                 value={formData.role}
                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
               >
-                <option value="ATTENDANT">Volunteer</option>
+                <option value="VOLUNTEER">Volunteer</option>
                 <option value="KEYMAN">Keyman</option>
                 <option value="ASSISTANT_OVERSEER">Assistant Overseer</option>
                 <option value="OVERSEER">Overseer</option>

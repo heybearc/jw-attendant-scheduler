@@ -559,7 +559,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
   return {
     props: {
-      userRole: session.user?.role || 'ATTENDANT',
+      userRole: session.user?.role || 'VOLUNTEER',
     },
   }
 }

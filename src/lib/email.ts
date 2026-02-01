@@ -241,7 +241,7 @@ function getRoleDescription(role: string): string {
       return 'You can assist with event management and attendant coordination.';
     case 'KEYMAN':
       return 'You are responsible for facility access, setup, and key management.';
-    case 'ATTENDANT':
+    case 'VOLUNTEER':
       return 'You can view your assignments and participate in assigned Kingdom Hall events.';
     default:
       return 'You have been granted access to the Theocratic Shift Scheduler system.';

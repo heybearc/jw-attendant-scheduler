@@ -20,7 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           positions: {
             eventId: eventId as string
           },
-          role: 'ATTENDANT'
+          role: 'VOLUNTEER'
         }
       })
 

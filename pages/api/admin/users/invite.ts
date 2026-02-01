@@ -25,7 +25,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 }
 
 async function handleCreateInvitation(req: NextApiRequest, res: NextApiResponse, session: any) {
-  const { email, firstName, lastName, role = 'ATTENDANT', message } = req.body
+  const { email, firstName, lastName, role = 'VOLUNTEER', message } = req.body
 
   if (!email || !firstName || !lastName) {
     return res.status(400).json({ success: false, error: 'Email, first name, and last name are required' })

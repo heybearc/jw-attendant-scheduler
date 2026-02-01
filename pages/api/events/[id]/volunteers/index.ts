@@ -156,7 +156,7 @@ async function handleCreateEventVolunteer(req: NextApiRequest, res: NextApiRespo
         eventId: eventId,
         volunteerId: volunteer.id,
         departmentId: '',
-        role: 'ATTENDANT',
+        role: 'VOLUNTEER',
         isActive: true,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -262,7 +262,7 @@ async function handleBulkImportEventVolunteers(req: NextApiRequest, res: NextApi
                 eventId: eventId,
                 volunteerId: existingVolunteer.id,
                 departmentId: '',
-                role: 'ATTENDANT',
+                role: 'VOLUNTEER',
                 isActive: true,
                 createdAt: new Date(),
                 updatedAt: new Date()
@@ -311,7 +311,7 @@ async function handleBulkImportEventVolunteers(req: NextApiRequest, res: NextApi
               eventId: eventId,
               volunteerId: newVolunteer.id,
               departmentId: '',
-              role: 'ATTENDANT',
+              role: 'VOLUNTEER',
               isActive: true,
               createdAt: new Date(),
               updatedAt: new Date()

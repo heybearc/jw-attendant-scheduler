@@ -14,7 +14,7 @@ export default function HelpPage({ userRole }: HelpPageProps) {
       id: 'getting-started',
       title: '🚀 Getting Started',
       description: 'Learn the basics of using TheoShift',
-      roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN', 'ATTENDANT']
+      roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN', 'VOLUNTEER']
     },
     {
       id: 'user-management',
@@ -68,7 +68,7 @@ export default function HelpPage({ userRole }: HelpPageProps) {
       id: 'volunteer-portal',
       title: '🏠 Volunteer Portal',
       description: 'Using the personal dashboard and viewing assignments',
-      roles: ['ATTENDANT']
+      roles: ['VOLUNTEER']
     },
     {
       id: 'session-management',
@@ -86,19 +86,19 @@ export default function HelpPage({ userRole }: HelpPageProps) {
       id: 'assignment-notifications',
       title: '📧 Assignment Notifications',
       description: 'Automatic email notifications for assignments',
-      roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN', 'ATTENDANT']
+      roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN', 'VOLUNTEER']
     },
     {
       id: 'mobile-features',
       title: '📱 Mobile Features',
       description: 'Using TheoShift on mobile devices with touch gestures and optimized layouts',
-      roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN', 'ATTENDANT']
+      roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN', 'VOLUNTEER']
     },
     {
       id: 'troubleshooting',
       title: '🔧 Troubleshooting',
       description: 'Common issues and how to resolve them',
-      roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN', 'ATTENDANT']
+      roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN', 'VOLUNTEER']
     }
   ]
 
@@ -206,7 +206,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
   return {
     props: {
-      userRole: session.user?.role || 'ATTENDANT',
+      userRole: session.user?.role || 'VOLUNTEER',
     },
   }
 }

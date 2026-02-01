@@ -27,7 +27,7 @@ export default function BulkUsersPage() {
   const roles = [
     { value: 'ADMIN', label: 'Administrator' },
     { value: 'OVERSEER', label: 'Overseer' },
-    { value: 'ATTENDANT', label: 'Volunteer' },
+    { value: 'VOLUNTEER', label: 'Volunteer' },
   ];
 
   const parseBulkText = () => {
@@ -54,7 +54,7 @@ export default function BulkUsersPage() {
         return;
       }
 
-      const [firstName, lastName, email, role = 'ATTENDANT'] = parts;
+      const [firstName, lastName, email, role = 'VOLUNTEER'] = parts;
       
       if (!firstName || !lastName || !email) {
         setError(`Line ${i + 1}: Missing required fields`);

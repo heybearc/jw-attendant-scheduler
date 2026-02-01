@@ -281,6 +281,25 @@
 - `pages/api/events/[id]/availability-request.ts` (reference pattern)
 - `src/lib/assignmentEmails.ts` (email templates)
 
+### D-TS-020: Manual HAProxy Traffic Switching Required
+**Date:** 2026-02-01  
+**Context:** MCP `switch_traffic` tool reports success but doesn't actually update HAProxy configuration during v3.8.0 release  
+**Decision:** Use manual SSH commands to switch traffic until MCP server is fixed  
+**Consequences:**
+- Manual sed command required: `sed -i 's/use_backend theoshift_blue/use_backend theoshift_green/' /etc/haproxy/haproxy.cfg`
+- Must manually update state file after switch
+- Verify actual HAProxy routing with grep, not just MCP status
+- MCP server bug needs investigation and fix
+
+### D-TS-021: Use theoshift.com as Primary Production URL
+**Date:** 2026-02-01  
+**Context:** Confusion during release using attendant.cloudigan.net instead of theoshift.com  
+**Decision:** Always reference theoshift.com as the production URL, not legacy domain  
+**Consequences:**
+- Clearer communication about production status
+- Avoid confusion with legacy domain names
+- Update all documentation and workflows to use theoshift.com
+
 ---
 
 ## Shared Decisions

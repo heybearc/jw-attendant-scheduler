@@ -500,9 +500,11 @@ export default function VolunteerDashboard() {
           assignments={dashboardData.assignments}
           oversightContacts={dashboardData.oversightContacts}
           activeCountSessions={dashboardData.activeCountSessions}
+          documents={dashboardData.documents}
           availabilityRequests={availabilityRequests}
           onAvailabilityResponse={handleAvailabilityResponse}
           onRefresh={loadDashboard}
+          onSignOut={() => signOut({ callbackUrl: '/volunteer/login' })}
         />
       </>
     )

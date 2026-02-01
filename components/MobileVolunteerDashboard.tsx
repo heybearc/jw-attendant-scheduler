@@ -46,6 +46,17 @@ interface CountSession {
   status: string
 }
 
+interface Document {
+  id: string
+  title: string
+  description?: string
+  fileName: string
+  fileSize: number
+  fileType: string
+  fileUrl: string
+  publishedAt: string
+}
+
 interface AvailabilityRequest {
   id: string
   eventId: string
@@ -67,9 +78,11 @@ interface MobileVolunteerDashboardProps {
   assignments: Assignment[]
   oversightContacts: OversightContact[]
   activeCountSessions?: CountSession[]
+  documents?: Document[]
   availabilityRequests: AvailabilityRequest[]
   onAvailabilityResponse: (requestId: string, status: string) => Promise<void>
   onRefresh?: () => Promise<void>
+  onSignOut?: () => void
 }
 
 export default function MobileVolunteerDashboard({
@@ -78,11 +91,13 @@ export default function MobileVolunteerDashboard({
   assignments,
   oversightContacts,
   activeCountSessions = [],
+  documents = [],
   availabilityRequests,
   onAvailabilityResponse,
-  onRefresh
+  onRefresh,
+  onSignOut
 }: MobileVolunteerDashboardProps) {
-  const [activeTab, setActiveTab] = useState<'assignments' | 'availability' | 'contacts'>('assignments')
+  const [activeTab, setActiveTab] = useState<'assignments' | 'availability' | 'contacts' | 'documents'>('assignments')
   const [expandedAssignment, setExpandedAssignment] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
   const [respondingToRequest, setRespondingToRequest] = useState<string | null>(null)
@@ -141,21 +156,35 @@ export default function MobileVolunteerDashboard({
               <h1 className="text-xl font-bold">Hi, {volunteer.firstName}! 👋</h1>
               <p className="text-sm text-blue-100 mt-1">{volunteer.congregation}</p>
             </div>
-            <button
-              onClick={handlePullToRefresh}
-              disabled={refreshing}
-              className="p-2 bg-white bg-opacity-20 rounded-full hover:bg-opacity-30 transition-all disabled:opacity-50"
-              aria-label="Refresh"
-            >
-              <svg 
-                className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={handlePullToRefresh}
+                disabled={refreshing}
+                className="p-2 bg-white bg-opacity-20 rounded-full hover:bg-opacity-30 transition-all disabled:opacity-50"
+                aria-label="Refresh"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-            </button>
+                <svg 
+                  className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </button>
+              {onSignOut && (
+                <button
+                  onClick={onSignOut}
+                  className="p-2 bg-white bg-opacity-20 rounded-full hover:bg-opacity-30 transition-all"
+                  aria-label="Sign Out"
+                  title="Sign Out"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                </button>
+              )}
+            </div>
           </div>
           
           {/* Event Info Card */}
@@ -208,6 +237,21 @@ export default function MobileVolunteerDashboard({
             }`}
           >
             👥 Contacts
+          </button>
+          <button
+            onClick={() => setActiveTab('documents')}
+            className={`flex-1 py-3 text-sm font-medium transition-all ${
+              activeTab === 'documents'
+                ? 'bg-white bg-opacity-20 border-b-2 border-white'
+                : 'text-blue-100 hover:bg-white hover:bg-opacity-10'
+            }`}
+          >
+            📄 Documents
+            {documents.length > 0 && (
+              <span className="ml-1 px-2 py-0.5 bg-white bg-opacity-30 rounded-full text-xs">
+                {documents.length}
+              </span>
+            )}
           </button>
         </div>
       </div>
@@ -485,6 +529,59 @@ export default function MobileVolunteerDashboard({
                   ))}
                 </div>
               </div>
+            )}
+          </div>
+        )}
+
+        {/* Documents Tab */}
+        {activeTab === 'documents' && (
+          <div className="space-y-3">
+            {documents.length === 0 ? (
+              <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+                <div className="text-5xl mb-3">📄</div>
+                <p className="text-gray-600 font-medium">No documents available</p>
+                <p className="text-sm text-gray-500 mt-2">
+                  Documents will appear here when published by your overseer
+                </p>
+              </div>
+            ) : (
+              documents.map((doc) => (
+                <div key={doc.id} className="bg-white rounded-lg shadow-sm overflow-hidden">
+                  <div className="p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-900">{doc.title}</h3>
+                        {doc.description && (
+                          <p className="text-sm text-gray-600 mt-1">{doc.description}</p>
+                        )}
+                      </div>
+                      <span className="text-2xl ml-2">
+                        {doc.fileType.includes('pdf') ? '📄' : 
+                         doc.fileType.includes('image') ? '🖼️' : 
+                         doc.fileType.includes('video') ? '🎥' : '📎'}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center text-xs text-gray-500 space-x-3 mb-3">
+                      <span>📁 {doc.fileName}</span>
+                      <span>📏 {(doc.fileSize / 1024).toFixed(0)} KB</span>
+                    </div>
+                    
+                    <div className="text-xs text-gray-500 mb-3">
+                      Published {new Date(doc.publishedAt).toLocaleDateString()}
+                    </div>
+                    
+                    <a
+                      href={doc.fileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white text-center rounded-lg font-medium transition-colors touch-manipulation"
+                    >
+                      👁️ View Document
+                    </a>
+                  </div>
+                </div>
+              ))
             )}
           </div>
         )}

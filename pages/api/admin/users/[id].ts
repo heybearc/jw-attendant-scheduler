@@ -39,7 +39,7 @@ async function handleGetUser(req: NextApiRequest, res: NextApiResponse, id: stri
     const user = await prisma.users.findUnique({
       where: { id },
       include: {
-        attendants: {
+        volunteer: {
           select: {
             id: true,
             firstName: true,
@@ -102,7 +102,7 @@ async function handleUpdateUser(req: NextApiRequest, res: NextApiResponse, id: s
         updatedAt: new Date()
       },
       include: {
-        attendants: {
+        volunteer: {
           select: {
             id: true,
             firstName: true,

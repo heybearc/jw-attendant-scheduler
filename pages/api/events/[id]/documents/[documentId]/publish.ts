@@ -53,54 +53,54 @@ async function handlePublishDocument(req: NextApiRequest, res: NextApiResponse, 
     let publishedCount = 0
 
     if (publishType === 'all') {
-      // Get all attendants for this event using raw query
-      const eventAttendants = await prisma.$queryRaw`
-        SELECT ea."attendantId", a."firstName", a."lastName"
-        FROM event_attendants ea
-        JOIN attendants a ON ea."attendantId" = a.id
-        WHERE ea."eventId" = ${eventId}
-        AND ea."isActive" = true
+      // Get all volunteers for this event using raw query
+      const eventVolunteers = await prisma.$queryRaw`
+        SELECT ev."volunteerId", v."firstName", v."lastName"
+        FROM event_volunteers ev
+        JOIN volunteers v ON ev."volunteerId" = v.id
+        WHERE ev."eventId" = ${eventId}
+        AND ev."isActive" = true
       ` as any[]
 
-      publishedCount = eventAttendants.length
+      publishedCount = eventVolunteers.length
 
-      // Create document_publications records for all attendants
-      for (const attendant of eventAttendants) {
+      // Create document_publications records for all volunteers
+      for (const volunteer of eventVolunteers) {
         await prisma.$executeRaw`
           INSERT INTO document_publications (id, "documentId", "attendantId", "publishedAt")
-          VALUES (${randomUUID()}, ${documentId}, ${attendant.attendantId}, NOW())
+          VALUES (${randomUUID()}, ${documentId}, ${volunteer.volunteerId}, NOW())
           ON CONFLICT ("documentId", "attendantId") DO NOTHING
         `
       }
       
-      console.log(`Published document ${documentId} to all ${publishedCount} attendants in event ${eventId}`)
+      console.log(`Published document ${documentId} to all ${publishedCount} volunteers in event ${eventId}`)
     } else {
-      // Verify attendants exist and are part of this event
-      const eventAttendants = await prisma.$queryRaw`
-        SELECT ea."attendantId", a."firstName", a."lastName"
-        FROM event_attendants ea
-        JOIN attendants a ON ea."attendantId" = a.id
-        WHERE ea."eventId" = ${eventId}
-        AND ea."attendantId" = ANY(${attendantIds})
-        AND ea."isActive" = true
+      // Verify volunteers exist and are part of this event
+      const eventVolunteers = await prisma.$queryRaw`
+        SELECT ev."volunteerId", v."firstName", v."lastName"
+        FROM event_volunteers ev
+        JOIN volunteers v ON ev."volunteerId" = v.id
+        WHERE ev."eventId" = ${eventId}
+        AND ev."volunteerId" = ANY(${attendantIds})
+        AND ev."isActive" = true
       ` as any[]
 
-      if (eventAttendants.length !== attendantIds.length) {
-        return res.status(400).json({ success: false, error: 'Some attendants are not part of this event' })
+      if (eventVolunteers.length !== attendantIds.length) {
+        return res.status(400).json({ success: false, error: 'Some volunteers are not part of this event' })
       }
 
-      publishedCount = eventAttendants.length
+      publishedCount = eventVolunteers.length
 
-      // Create document_publications records for selected attendants
-      for (const attendant of eventAttendants) {
+      // Create document_publications records for selected volunteers
+      for (const volunteer of eventVolunteers) {
         await prisma.$executeRaw`
           INSERT INTO document_publications (id, "documentId", "attendantId", "publishedAt")
-          VALUES (${randomUUID()}, ${documentId}, ${attendant.attendantId}, NOW())
+          VALUES (${randomUUID()}, ${documentId}, ${volunteer.volunteerId}, NOW())
           ON CONFLICT ("documentId", "attendantId") DO NOTHING
         `
       }
       
-      console.log(`Published document ${documentId} to ${publishedCount} selected attendants in event ${eventId}`)
+      console.log(`Published document ${documentId} to ${publishedCount} selected volunteers in event ${eventId}`)
     }
 
     // Update document record with publish status
@@ -127,11 +127,13 @@ async function handlePublishDocument(req: NextApiRequest, res: NextApiResponse, 
           }
           
           // Get volunteers with email addresses
+          const volunteerIds = publishType === 'all' 
+            ? (await prisma.$queryRaw`SELECT "volunteerId" FROM event_volunteers WHERE "eventId" = ${eventId} AND "isActive" = true` as any[]).map((v: any) => v.volunteerId)
+            : attendantIds
+          
           const volunteers = await prisma.volunteers.findMany({
             where: {
-              id: publishType === 'all' 
-                ? { in: await prisma.$queryRaw`SELECT "attendantId" FROM event_attendants WHERE "eventId" = ${eventId} AND "isActive" = true` }
-                : { in: attendantIds },
+              id: { in: volunteerIds },
               email: { not: null }
             },
             select: { id: true, firstName: true, email: true }

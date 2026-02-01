@@ -12,7 +12,7 @@ interface User {
   email: string
   role: string
   isActive: boolean
-  attendants?: {
+  volunteer?: {
     id: string
     firstName: string
     lastName: string
@@ -73,7 +73,7 @@ export default function EditUserPage() {
           email: userData.email,
           role: userData.role,
           isActive: userData.isActive,
-          linkedVolunteerId: userData.attendants?.id || ''
+          linkedVolunteerId: userData.volunteer?.id || ''
         })
       } else {
         setError(result.error || 'Failed to fetch user')
@@ -94,7 +94,7 @@ export default function EditUserPage() {
         setAvailableVolunteers(result.data.attendants)
       }
     } catch (error) {
-      console.error('Failed to fetch available attendants:', error)
+      console.error('Failed to fetch available volunteers:', error)
     }
   }
 
@@ -293,16 +293,16 @@ export default function EditUserPage() {
                 value={formData.linkedVolunteerId}
                 onChange={(e) => setFormData({ ...formData, linkedVolunteerId: e.target.value })}
               >
-                <option value="">No attendant linked</option>
-                {/* Show currently linked attendant if exists */}
-                {user?.attendants && (
-                  <option key={user.attendants.id} value={user.attendants.id}>
-                    {user.attendants.firstName} {user.attendants.lastName} (Currently Linked)
+                <option value="">No volunteer linked</option>
+                {/* Show currently linked volunteer if exists */}
+                {user?.volunteer && (
+                  <option key={user.volunteer.id} value={user.volunteer.id}>
+                    {user.volunteer.firstName} {user.volunteer.lastName} (Currently Linked)
                   </option>
                 )}
-                {/* Show available attendants (excluding current if already shown) */}
+                {/* Show available volunteers (excluding current if already shown) */}
                 {availableVolunteers
-                  .filter(att => att.id !== user?.attendants?.id)
+                  .filter(att => att.id !== user?.volunteer?.id)
                   .map((attendant) => (
                     <option key={attendant.id} value={attendant.id}>
                       {attendant.firstName} {attendant.lastName} ({attendant.congregation})
@@ -310,7 +310,7 @@ export default function EditUserPage() {
                   ))}
               </select>
               <p className="mt-1 text-sm text-gray-500">
-                Link this user account to an existing attendant record for role-based access
+                Link this user account to an existing volunteer record for role-based access
               </p>
             </div>
 
@@ -462,14 +462,14 @@ export default function EditUserPage() {
         </div>
 
         {/* Current Volunteer Link Status */}
-        {user.attendants && (
+        {user.volunteer && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
             <h3 className="text-lg font-medium text-green-900 mb-2">Currently Linked Volunteer</h3>
             <p className="text-green-700">
-              This user is linked to: <strong>{user.attendants.firstName} {user.attendants.lastName}</strong>
+              This user is linked to: <strong>{user.volunteer.firstName} {user.volunteer.lastName}</strong>
             </p>
             <p className="text-sm text-green-600 mt-1">
-              The user will have role-based access based on their attendant record and assignments.
+              The user will have role-based access based on their volunteer record and assignments.
             </p>
           </div>
         )}

@@ -300,6 +300,22 @@
 - Avoid confusion with legacy domain names
 - Update all documentation and workflows to use theoshift.com
 
+### D-TS-022: MCP Traffic Switch Bug Fixed
+**Date:** 2026-02-01  
+**Context:** MCP switch_traffic tool was using legacy backend names (jw_attendant) that didn't match actual HAProxy config (theoshift). Tool reported success but HAProxy config remained unchanged, creating dangerous state mismatch.  
+**Decision:** Updated MCP server configuration in Cloudy-Work control plane to use correct backend and ACL names  
+**Root Cause:** Configuration mismatch - MCP expected `jw_attendant_blue/green` and `is_jw_attendant`, but HAProxy has `theoshift_blue/green` and `is_theoshift`  
+**Fix Applied:**
+- Updated `haproxyBackend` from `jw_attendant` to `theoshift` (line 37)
+- Updated `isCondition` from `is_jw_attendant` to `is_theoshift` (line 480-482)
+- Also fixed LDC Tools condition from `is_ldc` to `is_ldc_tools`  
+**Consequences:**
+- Traffic switching now works correctly via MCP
+- Manual workaround no longer needed
+- State file and HAProxy config stay in sync
+- Safer deployments with automated traffic switching
+- Fix distributed via Cloudy-Work control plane to all app repos
+
 ---
 
 ## Shared Decisions

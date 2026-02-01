@@ -1,8 +1,8 @@
 # TheoShift Task State
 
-**Last updated:** 2026-02-01 (end of day)  
+**Last updated:** 2026-02-01 (end of day - final)  
 **Current branch:** main  
-**Working on:** Phase 7 Complete - v3.8.0 Released to Production 🎉
+**Working on:** Phase 7 Complete - MCP Bug Fixed 🎉
 
 ---
 
@@ -10,11 +10,11 @@
 **Phase 7 Week 5: Performance & Polish - COMPLETE ✅**
 
 ### What I'm doing right now
-Phase 7 Mobile Optimization complete and deployed to production. v3.8.0 released with mobile volunteer dashboard, performance improvements, and bug fixes. Both environments synced. Ready for next phase of work.
+Phase 7 Mobile Optimization complete and deployed to production. v3.8.0 released with mobile volunteer dashboard, performance improvements, and bug fixes. Both environments synced. MCP traffic switching bug identified, root cause found, and fix promoted to control plane. Ready for next phase of work.
 
 ### Recent completions
 
-**Today (2026-02-01 - Mid-Day: v3.8.0 Production Release):**
+**Today (2026-02-01 - Full Day: v3.8.0 Production Release + MCP Bug Fix):**
 - ✅ Completed Phase 7 Week 5 (Performance & Polish)
 - ✅ Version bumped to v3.8.0 with comprehensive release notes
 - ✅ Fixed outdated test expectations (route changes)
@@ -26,6 +26,12 @@ Phase 7 Mobile Optimization complete and deployed to production. v3.8.0 released
 - ✅ Both environments running v3.8.0
 - ✅ Documented MCP switch_traffic bug (D-TS-020)
 - ✅ Documented production URL standard (D-TS-021)
+- ✅ Investigated MCP traffic switching bug (root cause found)
+- ✅ Created control plane runbook for manual workaround
+- ✅ Tested MCP switch_traffic to confirm bug still exists
+- ✅ Identified configuration mismatch (jw_attendant vs theoshift)
+- ✅ Promoted fix to control plane via PROMOTE-TO-CONTROL-PLANE.md
+- ✅ Fix applied in Cloudy-Work control plane (D-TS-022)
 
 **Phase 7 Complete Features:**
 - Mobile volunteer dashboard (4 tabs: Assignments, Availability, Contacts, Documents)

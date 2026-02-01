@@ -138,7 +138,7 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse, userId: stri
       include: {
         _count: {
           select: {
-            event_attendants: true,
+            event_volunteers: true,
             positions: true,
             ...(includeChildCount ? { childEvents: true } : {})
           }
@@ -199,7 +199,7 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse, userId: stri
           endTime: event.endTime,
           createdAt: event.createdAt?.toISOString() || null,
           updatedAt: event.updatedAt?.toISOString() || null,
-          attendantsCount: event._count?.event_attendants || 0,
+          attendantsCount: event._count?.event_volunteers || 0,
           positionsCount: event._count?.positions || 0,
           childEventsCount: includeChildCount ? (event._count?.childEvents || 0) : undefined,
           userRole: permission?.role || 'VIEWER',
@@ -209,7 +209,7 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse, userId: stri
       currentEvent: currentEvent ? {
         ...currentEvent,
         status: currentEvent.status,
-        attendantsCount: currentEvent._count?.event_attendants || 0,
+        attendantsCount: currentEvent._count?.event_volunteers || 0,
         positionsCount: currentEvent._count?.positions || 0
       } : null,
       pagination: {
@@ -268,7 +268,7 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse, userId: str
     include: {
       _count: {
         select: {
-          event_attendants: true,
+          event_volunteers: true,
           positions: true
         }
       }

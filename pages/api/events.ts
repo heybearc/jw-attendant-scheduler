@@ -60,7 +60,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             positions: {
               select: { id: true }
             },
-            event_attendants: {
+            event_volunteers: {
               select: { id: true }
             },
             position_assignments: {

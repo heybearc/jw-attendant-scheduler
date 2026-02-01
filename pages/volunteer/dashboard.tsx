@@ -16,8 +16,7 @@ const MobileVolunteerDashboard = dynamic(() => import('../../components/MobileVo
         <p className="text-gray-600">Loading dashboard...</p>
       </div>
     </div>
-  ),
-  ssr: false
+  )
 })
 
 interface Volunteer {

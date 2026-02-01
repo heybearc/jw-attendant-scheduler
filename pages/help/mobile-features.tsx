@@ -12,7 +12,49 @@ export default function MobileFeaturesHelp() {
 
         <hr />
 
-        <h2>🧭 Mobile Navigation</h2>
+        <h2>📱 Mobile Volunteer Dashboard</h2>
+        
+        <p>
+          Volunteers can access a beautiful, touch-optimized dashboard designed specifically for mobile devices. 
+          Login at <code>/volunteer/login</code> to access your personalized dashboard.
+        </p>
+
+        <h3>Dashboard Features</h3>
+        <p>The mobile volunteer dashboard includes 4 main tabs:</p>
+        <ul>
+          <li><strong>📋 Assignments:</strong> View all your position assignments for the event</li>
+          <li><strong>📅 Availability:</strong> Respond to availability requests from overseers</li>
+          <li><strong>👥 Contacts:</strong> Quick access to oversight contacts with one-tap call/email</li>
+          <li><strong>📄 Documents:</strong> View all published event documents</li>
+        </ul>
+
+        <h3>Header Actions</h3>
+        <ul>
+          <li><strong>Refresh Button:</strong> Reload the latest data (circular arrow icon)</li>
+          <li><strong>Sign Out Button:</strong> Logout from your account (logout icon)</li>
+        </ul>
+
+        <div className="bg-blue-50 border-l-4 border-blue-400 p-4 my-4">
+          <p className="font-semibold text-blue-800">💡 Tip</p>
+          <p className="text-blue-700 mb-0">
+            All buttons and touch targets are at least 44px tall for easy tapping on mobile devices.
+          </p>
+        </div>
+
+        <h3>Documents Tab</h3>
+        <p>
+          View all documents published to you by event overseers:
+        </p>
+        <ul>
+          <li>See document title, description, and publication date</li>
+          <li>View file size and type (PDF, images, videos)</li>
+          <li>One-tap to open and view documents</li>
+          <li>Document count badge shows number of available documents</li>
+        </ul>
+
+        <hr />
+
+        <h2>🧭 Mobile Navigation (Admin)</h2>
         
         <h3>Bottom Navigation Bar</h3>
         <p>

@@ -75,6 +75,7 @@ export default function VolunteerLogin() {
     <>
       <Head>
         <title>Volunteer Login | TheoShift</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
       </Head>
 
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -116,8 +117,9 @@ export default function VolunteerLogin() {
                 </label>
                 <input
                   id="firstName"
+                  name="firstName"
                   type="text"
-                  autoComplete="given-name"
+                  autoComplete="off"
                   value={formData.firstName}
                   onChange={(e) => handleInputChange('firstName', e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
@@ -132,8 +134,9 @@ export default function VolunteerLogin() {
                 </label>
                 <input
                   id="lastName"
+                  name="lastName"
                   type="text"
-                  autoComplete="family-name"
+                  autoComplete="off"
                   value={formData.lastName}
                   onChange={(e) => handleInputChange('lastName', e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
@@ -148,8 +151,9 @@ export default function VolunteerLogin() {
                 </label>
                 <input
                   id="congregation"
+                  name="congregation"
                   type="text"
-                  autoComplete="organization"
+                  autoComplete="off"
                   value={formData.congregation}
                   onChange={(e) => handleInputChange('congregation', e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
@@ -164,6 +168,7 @@ export default function VolunteerLogin() {
                 </label>
                 <input
                   id="pin"
+                  name="pin"
                   type="password"
                   inputMode="numeric"
                   autoComplete="off"

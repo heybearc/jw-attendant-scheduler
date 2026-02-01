@@ -38,59 +38,28 @@ export default function VolunteerLogin() {
 
     try {
       console.log('🔵 Signing in with NextAuth...')
+      
+      // Use NextAuth's built-in redirect to event selection page
       const result = await signIn('volunteer-pin', {
         firstName: formData.firstName,
         lastName: formData.lastName,
         congregation: formData.congregation,
         pin: formData.pin,
-        redirect: false
+        callbackUrl: '/volunteer/select-event',
+        redirect: true
       })
 
+      // If we get here, there was an error (redirect: true navigates away on success)
       console.log('🔵 SignIn result:', result)
-
+      
       if (result?.error) {
         console.log('❌ Login failed:', result.error)
         setError('Invalid credentials. Please check your information.')
-      } else if (result?.ok) {
-        console.log('✅ Login successful, fetching session...')
-        
-        // Get session to retrieve user ID
-        const sessionResponse = await fetch('/api/auth/session')
-        const sessionData = await sessionResponse.json()
-        
-        if (sessionData?.user?.id) {
-          // Fetch events to determine redirect
-          const eventsResponse = await fetch(`/api/volunteer/events?volunteerId=${sessionData.user.id}`)
-          const eventsData = await eventsResponse.json()
-          
-          if (eventsData.success && eventsData.data.events) {
-            const events = eventsData.data.events
-            
-            if (events.length === 1) {
-              // Single event - store it and go to dashboard
-              localStorage.setItem('selectedEventId', events[0].id)
-              window.location.href = '/volunteer/dashboard'
-            } else if (events.length > 1) {
-              // Multiple events - go to select page
-              window.location.href = '/volunteer/select-event'
-            } else {
-              // No events
-              setError('No active events found. Please contact your overseer.')
-              setLoading(false)
-            }
-          } else {
-            // Fallback to dashboard
-            window.location.href = '/volunteer/dashboard'
-          }
-        } else {
-          // Fallback to dashboard
-          window.location.href = '/volunteer/dashboard'
-        }
+        setLoading(false)
       }
     } catch (error) {
       console.error('❌ Exception during login:', error)
       setError('An error occurred. Please try again.')
-    } finally {
       setLoading(false)
     }
   }

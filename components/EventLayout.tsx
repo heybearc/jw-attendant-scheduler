@@ -5,10 +5,16 @@ import { useRouter } from 'next/router'
 import packageJson from '../package.json'
 import MobileNav from './MobileNav'
 import BottomNav from './BottomNav'
+import dynamic from 'next/dynamic'
 import FloatingActionButton from './FloatingActionButton'
 import QuickVolunteerLookup from './QuickVolunteerLookup'
 import QuickAssignmentForm from './QuickAssignmentForm'
-import QRScanner from './QRScanner'
+
+// Lazy load QR scanner (only loaded when needed)
+const QRScanner = dynamic(() => import('./QRScanner'), {
+  loading: () => <div className="flex items-center justify-center p-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>,
+  ssr: false
+})
 
 interface EventLayoutProps {
   children: ReactNode

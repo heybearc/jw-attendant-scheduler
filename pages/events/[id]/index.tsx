@@ -8,10 +8,16 @@ import { TemplateProvider } from '../../../contexts/TemplateContext'
 import { VolunteerText } from '../../../components/DynamicText'
 import { CustomFieldsDisplay } from '../../../components/CustomFieldsRenderer'
 import { SafeDate } from '../../../components/SafeDate'
-import EventQRCode from '../../../components/EventQRCode'
+import dynamic from 'next/dynamic'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
+
+// Lazy load QR code component (reduces initial bundle size)
+const EventQRCode = dynamic(() => import('../../../components/EventQRCode'), {
+  loading: () => <div className="animate-pulse bg-gray-200 h-8 w-32 rounded"></div>,
+  ssr: false
+})
 import { format, parseISO } from 'date-fns'
 import { ModuleConfig, Terminology, PositionTemplate, CustomField } from '../../../types/departmentTemplate'
 

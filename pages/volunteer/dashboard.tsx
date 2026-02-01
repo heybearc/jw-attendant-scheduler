@@ -4,8 +4,21 @@ import { useSession, signOut } from 'next-auth/react'
 import Head from 'next/head'
 import Link from 'next/link'
 import { format, parseISO } from 'date-fns'
+import dynamic from 'next/dynamic'
 import AnnouncementBanner from '../../components/AnnouncementBanner'
-import MobileVolunteerDashboard from '../../components/MobileVolunteerDashboard'
+
+// Lazy load mobile dashboard (only loaded on mobile devices)
+const MobileVolunteerDashboard = dynamic(() => import('../../components/MobileVolunteerDashboard'), {
+  loading: () => (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p className="text-gray-600">Loading dashboard...</p>
+      </div>
+    </div>
+  ),
+  ssr: false
+})
 
 interface Volunteer {
   id: string

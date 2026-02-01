@@ -64,22 +64,23 @@ async function handleGetUser(req: NextApiRequest, res: NextApiResponse, id: stri
 }
 
 async function handleUpdateUser(req: NextApiRequest, res: NextApiResponse, id: string) {
-  const { firstName, lastName, email, role, isActive, linkedAttendantId, newPassword, sendResetEmail } = req.body
+  const { firstName, lastName, email, role, isActive, linkedVolunteerId, newPassword, sendResetEmail } = req.body
 
   try {
-    // Handle attendant linking/unlinking
-    if (linkedAttendantId !== undefined) {
-      if (linkedAttendantId) {
-        // Link to new attendant
+    // Handle volunteer linking/unlinking
+    if (linkedVolunteerId !== undefined) {
+      // First, unlink any volunteers currently linked to this user
+      await prisma.volunteers.updateMany({
+        where: { userId: id },
+        data: { userId: null }
+      })
+
+      if (linkedVolunteerId) {
+        // Then link the new volunteer to this user
+        // Also unlink this volunteer from any other user first
         await prisma.volunteers.update({
-          where: { id: linkedAttendantId },
+          where: { id: linkedVolunteerId },
           data: { userId: id }
-        })
-      } else {
-        // Unlink current attendant
-        await prisma.volunteers.updateMany({
-          where: { userId: id },
-          data: { userId: null }
         })
       }
     }

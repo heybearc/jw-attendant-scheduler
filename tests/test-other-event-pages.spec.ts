@@ -39,26 +39,34 @@ test.describe('Test Other Event Pages', () => {
     console.log('Positions page status:', response?.status())
     console.log('Final URL:', page.url())
     
+    // Positions page should load successfully
+    expect(response?.status()).toBe(200)
+    
+    // Should have positions in the title or content
+    const title = await page.title()
     const bodyText = await page.textContent('body')
-    if (bodyText?.includes('404')) {
-      console.log('❌ /events/[id]/positions returns 404')
-    } else {
-      console.log('✅ /events/[id]/positions works')
-    }
+    const hasPositions = title.toLowerCase().includes('position') || bodyText?.toLowerCase().includes('position')
+    
+    expect(hasPositions).toBeTruthy()
+    console.log('✅ /events/[id]/positions works')
   })
 
-  test('check if /events/[id]/attendants works', async ({ page }) => {
+  test('check if /events/[id]/volunteers works (renamed from attendants)', async ({ page }) => {
     const eventId = '7a14c6ac-18c3-4c98-9b07-ba853d30f144'
-    const response = await page.goto(`${BASE_URL}/events/${eventId}/attendants`)
+    const response = await page.goto(`${BASE_URL}/events/${eventId}/volunteers`)
     
-    console.log('Attendants page status:', response?.status())
+    console.log('Volunteers page status:', response?.status())
     console.log('Final URL:', page.url())
     
+    // Volunteers page should load successfully (was renamed from attendants)
+    expect(response?.status()).toBe(200)
+    
+    // Should have volunteers in the title or content
+    const title = await page.title()
     const bodyText = await page.textContent('body')
-    if (bodyText?.includes('404')) {
-      console.log('❌ /events/[id]/attendants returns 404')
-    } else {
-      console.log('✅ /events/[id]/attendants works')
-    }
+    const hasVolunteers = title.toLowerCase().includes('volunteer') || bodyText?.toLowerCase().includes('volunteer')
+    
+    expect(hasVolunteers).toBeTruthy()
+    console.log('✅ /events/[id]/volunteers works (renamed from attendants)')
   })
 })

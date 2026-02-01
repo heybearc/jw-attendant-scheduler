@@ -17,7 +17,7 @@ interface User {
   inviteToken: string | null
   passwordHash: string | null
   createdAt: string
-  attendants?: {
+  volunteer?: {
     id: string
     firstName: string
     lastName: string
@@ -269,12 +269,12 @@ export default function UsersPage({ users: initialUsers, pagination: initialPagi
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {user.attendants ? (
+                          {user.volunteer ? (
                             <span className="text-green-600">
-                              ✅ {user.attendants.firstName} {user.attendants.lastName}
+                              ✅ {user.volunteer.firstName} {user.volunteer.lastName}
                             </span>
                           ) : (
-                            <span className="text-gray-400">No attendant linked</span>
+                            <span className="text-gray-400">No volunteer linked</span>
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -461,7 +461,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         skip,
         take: limitNum,
         include: {
-          attendants: {
+          volunteer: {
             select: {
               id: true,
               firstName: true,

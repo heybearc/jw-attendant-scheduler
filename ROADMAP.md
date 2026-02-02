@@ -1,8 +1,10 @@
 # TheoShift Product Roadmap
 
-**Last Updated:** January 30, 2026  
-**Current Version:** v3.6.0  
-**Status:** Stable - No active development phases
+**Last Updated:** February 2, 2026  
+**Current Version:** v3.8.2 (production)  
+**Status:** Active - Permissions refactor in testing, planning Phase 8
+
+> **📋 For detailed priorities and short-term tasks, see [`PRIORITIES.md`](./PRIORITIES.md)**
 
 ---
 
@@ -173,9 +175,75 @@ Transform TheoShift from a single-purpose attendant management system into a com
 
 ---
 
+### **Phase 7: Mobile Optimization** ✅ (Jan 2026, v3.8.0)
+**Completed Features:**
+
+1. **Mobile Volunteer Dashboard**
+   - 4 tabs: Assignments, Availability, Contacts, Documents
+   - Documents tab for viewing published documents
+   - Sign out button in header
+   - Touch-optimized UI (44px minimum targets)
+
+2. **Progressive Web App (PWA)**
+   - Install to home screen capability
+   - Offline support with service worker
+   - App manifest for native-like experience
+   - PWA usage guide for users
+
+3. **Performance Optimization**
+   - 54% bundle size reduction on event pages
+   - Lazy loading for QR codes and mobile components
+   - Loading skeletons and touch feedback
+   - Chrome mobile login fixes
+   - Volunteer redirect fixes
+
+4. **Mobile Navigation**
+   - Hamburger menu with slide-out drawer
+   - Fixed bottom navigation bar
+   - Auto-close menu on route change
+   - Body scroll lock when menu open
+   - Role-based navigation filtering
+   - Context-aware deep linking
+
+**Technical Implementation:**
+- Mobile-first CSS utilities
+- Safe area insets for iPhone notch
+- Touch-friendly 44px tap targets
+- Responsive layouts across all pages
+- All features tested and verified
+
+---
+
+### **Permissions Refactor** 🚧 (Feb 2026, v3.9.0 - In Testing)
+**Status:** Code deployed to STANDBY, database migrated, awaiting testing and release
+
+**What Changed:**
+- Simplified from 5 roles to 3 roles
+- OWNER → ADMIN (full control)
+- MANAGER/OVERSEER/KEYMAN → COORDINATOR (day-to-day management)
+- VIEWER → VIEWER (read-only, unchanged)
+- Removed ~100 lines of scope-checking logic
+- Removed scope-based restrictions
+
+**Database Migration:**
+- 13 OWNER → ADMIN records migrated
+- 8 MANAGER → COORDINATOR records migrated
+- 0 OVERSEER/KEYMAN (none existed)
+
+**Benefits:**
+- Clearer role separation
+- Matches actual usage patterns
+- Easier to explain and understand
+- Simpler codebase
+
+---
+
 ## 🚀 ACTIVE DEVELOPMENT
 
-**No active development phases.** All planned features through Phase 5B complete.
+### **Current Work:**
+- Testing permissions refactor on STANDBY
+- Planning Phase 8 features
+- Help documentation audit
 
 ---
 
@@ -286,48 +354,12 @@ Current reporting capabilities are sufficient for user needs:
 
 ---
 
-### **Phase 7: Mobile Optimization** 📱 **PLANNED**
-**Target Version:** v3.7.0  
-**Estimated Duration:** 5-6 weeks  
-**Status:** Research phase
-
-#### **Features:**
-
-1. **Mobile UI Enhancements**
-   - Touch-friendly controls
-   - Mobile-optimized navigation
-   - Responsive tables and grids
-   - Gesture support (swipe, pinch)
-
-2. **Progressive Web App (PWA)**
-   - Install to home screen
-   - Push notifications
-   - Offline data access
-   - Background sync
-
-3. **Mobile-Specific Features**
-   - Quick check-in interface
-   - Mobile volunteer lookup
-   - QR code scanning for check-in
-   - Location-based features
-
-4. **Performance Optimization**
-   - Optimized for mobile networks
-   - Reduced data usage
-   - Fast load times (<3 seconds)
-   - Cached resources
-
-#### **Success Metrics:**
-- 50% of users access via mobile
-- 4.5+ rating on mobile usability
-- <3 second load time on mobile networks
-
----
-
-### **Phase 8: Advanced Attendant Features** 👥 **PLANNED**
-**Target Version:** v3.8.0  
+### **Phase 8: Advanced Volunteer Features** 👥 **PLANNED**
+**Target Version:** v3.10.0+  
 **Estimated Duration:** 4-5 weeks  
-**Status:** Specification in progress
+**Status:** Specification phase - awaiting prioritization
+
+**Note:** See `PRIORITIES.md` for detailed priority breakdown and short-term tasks
 
 #### **Features:**
 
@@ -478,8 +510,11 @@ None currently identified.
 | Q1 2026 | v3.4.0 | Assignment Workflows (Phase 4C) | ✅ Complete |
 | Q1 2026 | v3.5.x | Session Management & Terminology | ✅ Complete |
 | Q1 2026 | v3.6.0 | Oversight Dashboard & Branding (Phase 5B) | ✅ Complete |
-| Q2 2026+ | v3.7.0+ | Mobile Optimization (Phase 7) | 📅 Future |
-| Q3 2026+ | v3.8.0+ | Advanced Features (Phase 8) | 📅 Future |
+| Q1 2026 | v3.7.0-v3.8.0 | Mobile Optimization (Phase 7) | ✅ Complete |
+| Q1 2026 | v3.8.1-v3.8.2 | Bug Fixes & Polish | ✅ Complete |
+| Q1 2026 | v3.9.0 | Permissions Refactor | 🚧 In Testing |
+| Q1 2026 | v3.10.0 | Help Docs + Mobile Polish | 📅 Planned |
+| Q2 2026+ | v3.11.0+ | Advanced Features (Phase 8) | 📅 Future |
 
 ---
 
@@ -544,8 +579,10 @@ For roadmap questions, feature requests, or feedback:
 
 ---
 
-**This is the authoritative roadmap for TheoShift. All other roadmap documents have been archived.**
+**This is the authoritative strategic roadmap for TheoShift. All other roadmap documents have been archived.**
 
-**Next Review:** February 25, 2026  
+**For tactical priorities and backlog items, see:** `PRIORITIES.md`
+
+**Next Review:** February 9, 2026  
 **Maintained By:** Development Team  
-**Version:** 2.0 (Unified)
+**Version:** 2.1 (Updated Feb 2, 2026)

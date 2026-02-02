@@ -1,20 +1,29 @@
 # TheoShift Task State
 
-**Last updated:** 2026-02-02 (9:06 AM)  
+**Last updated:** 2026-02-02 (9:45 AM)  
 **Current branch:** main  
-**Working on:** Context Management & Planning
+**Working on:** Priorities Planning & Permissions Refactor Testing
 
 ---
 
 ## Current Task
-**Phase 7 Complete - Planning Next Phase** - IN PROGRESS
+**Priorities Planning & Permissions Refactor Testing** - IN PROGRESS
 
 ### What I'm doing right now
-Phase 7 (Performance & Polish) is complete and deployed to production. MCP traffic switching bug fixed in control plane. Legacy domain migration complete (theoshift.com). Currently managing Windsurf context (was at 95%) and planning next development phase. HAProxy legacy jw_attendant references cleaned up.
+Created consolidated PRIORITIES.md document gathering all bugs, feedback, backlog items, and roadmap into single source of truth. Updated ROADMAP.md to reflect Phase 7 completion (v3.8.0) and current status (v3.8.2). Permissions refactor deployed to STANDBY and ready for testing. Next: test permissions on STANDBY and release v3.9.0.
 
 ### Recent completions
 
-**Today (2026-02-02 - Morning):**
+**Today (2026-02-02 - Late Morning):**
+- ✅ Resolved Windsurf command execution failures (IDE restart)
+- ✅ Documented command execution issue (D-TS-025)
+- ✅ Deployed permissions refactor to STANDBY (BLUE)
+- ✅ Ran database migration on STANDBY (21 records migrated)
+- ✅ Created PRIORITIES.md (consolidated all planning docs)
+- ✅ Updated ROADMAP.md (Phase 7 complete, v3.8.2 current)
+- ✅ Verified only one active roadmap exists
+
+**Today (2026-02-02 - Early Morning):**
 - ✅ Completed Phase 7 Week 5 (Performance & Polish)
 - ✅ Version bumped to v3.8.0 with comprehensive release notes
 - ✅ Fixed outdated test expectations (route changes)
@@ -299,20 +308,24 @@ Phase 7 (Performance & Polish) is complete and deployed to production. MCP traff
 - Repository significantly cleaner and organized
 
 ### Next steps
-1. **Test MCP Server Fixes (requires Windsurf restart)**
-   - Restart Windsurf to reload MCP server with bug fixes
-   - Test traffic switching to verify HAProxy config updates correctly
-   - Verify theoshift.com domain routing works correctly
+1. **Test Permissions Refactor on STANDBY**
+   - Visit http://blue.theoshift.com/events/[event-id]/permissions
+   - Verify role dropdown shows only 3 options (ADMIN, COORDINATOR, VIEWER)
+   - Test granting/editing/removing permissions
+   - Verify permission checks work correctly
 
-2. **Plan Next Development Phase**
-   - Review ROADMAP.md for Phase 5 (Oversight Management)
-   - Evaluate other priorities (mobile features, user feedback)
-   - Create implementation plan for chosen phase
+2. **Release v3.9.0 (Permissions Refactor)**
+   - Run `/bump` to create v3.9.0 release notes
+   - Run `/test-release` to verify STANDBY
+   - Run `/release` to switch traffic
+   - Run database migration on LIVE (GREEN)
+   - Run `/sync` to update STANDBY
 
-3. **User Testing & Feedback**
-   - Monitor production for issues with v3.8.0
-   - Collect user feedback on mobile features
-   - Address any bugs or UX issues
+3. **Execute Short-Term Priorities**
+   - See PRIORITIES.md for detailed task list
+   - Focus on help documentation audit (Medium priority)
+   - Email content refinement (Medium priority)
+   - Mobile navigation expansion (Medium priority)
 
 ---
 
@@ -345,4 +358,6 @@ Phase 7 (Performance & Polish) is complete and deployed to production. MCP traff
 ---
 
 ## Exact Next Command
-**Deploy permissions refactor manually:** Follow the step-by-step deployment guide in PERMISSIONS-REFACTOR-STATUS.md. Start with committing code changes, then run database migration, then deploy to both servers with Prisma regeneration. All manual commands are documented due to command execution issues.
+**Test permissions refactor on STANDBY:** Visit http://blue.theoshift.com in browser, log in as admin, navigate to an event's permissions page, and verify the 3-role system works correctly. Then run `/bump` to create v3.9.0 release.
+
+**For detailed priorities:** See PRIORITIES.md for complete task breakdown and strategic planning.

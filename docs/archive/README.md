@@ -9,6 +9,25 @@ This directory contains completed phase documentation, refactoring logs, and his
 - `PHASE_4C_*.md` - Phase 4C implementation and testing (completed)
 - `PHASE_6_*.md` - Phase 6 verification (completed)
 
+### Planning Documents (Archived 2026-02-02)
+**Consolidated into IMPLEMENTATION-PLAN.md per D-022**
+
+- **BACKLOG.md** - Consolidated into IMPLEMENTATION-PLAN.md
+- **ROADMAP.md** - Consolidated into IMPLEMENTATION-PLAN.md  
+- **PRIORITIES.md** - Consolidated into IMPLEMENTATION-PLAN.md
+- **PHASE_4C_REVISED_PLAN.md** - Phase 4C completed (v3.4.0), historical reference only
+- **PHASE_5B_REVISED_PLAN.md** - Phase 5B completed (v3.6.0), historical reference only
+- **PHASE_7_WEEK_2_PROGRESS.md** - Phase 7 progress tracking (completed)
+- **PHASE_7_WEEK_3_PROGRESS.md** - Phase 7 progress tracking (completed)
+- **PHASE_7_WEEK_4_PROGRESS.md** - Phase 7 progress tracking (completed)
+- **PHASE_7_WEEK_5_PROGRESS.md** - Phase 7 progress tracking (completed)
+- **PHASE_7_WEEK_5_DAY3_TESTING.md** - Phase 7 testing notes (completed)
+- **SECOND_AUDIT_FINDINGS.md** - Repository audit from Jan 24, 2026 (completed)
+
+**Reason:** D-022 (Single Implementation Plan Standard) requires all repos to maintain a single `IMPLEMENTATION-PLAN.md` file containing all work items (backlog, roadmap, bugs, feedback). This eliminates context fragmentation and improves workflow efficiency. Historical phase plans and progress tracking are archived for reference but not used for active planning.
+
+**See:** `.cloudy-work/_cloudy-ops/policy/implementation-plan-standard.md` for details.
+
 ### Refactoring Documentation (Completed)
 - `REFACTORING_*.md` - Code refactoring logs and summaries (completed)
 

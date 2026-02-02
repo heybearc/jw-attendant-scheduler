@@ -50,16 +50,42 @@
 
 ## 💡 User Feedback & Feature Requests
 
-### From Users (via feedback system)
-- [ ] Photo management for volunteers (effort: L) - Upload and display volunteer photos, photo-based selection interface, integration with user profile photos
-- [ ] Skills & certifications tracking (effort: XL) - Track volunteer skills, certifications, expiration dates, training completion, skill-based assignment recommendations
-- [ ] Communication tools (effort: XL) - In-app messaging, group messaging by department, announcement system, SMS integration (optional)
-- [ ] Enhanced bulk operations (effort: M) - Bulk photo uploads, bulk certification updates, bulk skill assignments, advanced bulk export options
+**Total: 22 items from production feedback system**
 
-### From App (Analytics/Observations)
-- [ ] Help pages returning 404 errors (effort: M) - Some help pages not accessible, needs comprehensive audit of all 17+ help pages
-- [ ] Mobile admin experience needs improvement (effort: L) - Admin pages are desktop-focused, need responsive tables, touch-friendly forms, mobile-specific layouts
-- [ ] Feedback system database implementation (effort: M) - Frontend exists but needs database schema (Feedback table) and full backend integration for persistent storage
+### 🔴 Open - High/Urgent Priority (2 items)
+- [ ] **FB-001:** Attendant Overseer Assistants labels (BUG, HIGH) - Need this setup more professionally in the event settings. *Submitted: 2025-12-22*
+- [ ] **FB-007:** Attendant view - Include a way to view attendant information without going to edit screen (BUG, MEDIUM) - Maybe expand row when attendant is selected or pop-up window. *Submitted: 2025-10-28*
+
+### 🟡 Open - Medium Priority (4 items)
+- [ ] **FB-003:** Attendant view - Complete schedule visibility (FEATURE, MEDIUM) - Attendant ability to see complete schedule for their station so they know who is there before and after their scheduled shift. *Submitted: 2025-11-03*
+- [ ] **FB-004:** Search by name feature (FEATURE, MEDIUM) - Type in a brother's name and have all his assignments pop up from the attendant page. *Submitted: 2025-11-02*
+- [ ] **FB-012:** Positions Page - Bulk Edit Enhancement (ENHANCEMENT, MEDIUM) - Bulk edit to assign shifts AND oversight mappings in same motion, preserve selection until window closes. *Submitted: 2025-10-24*
+- [ ] **FB-017:** Positions Page - Conflict Management (ENHANCEMENT, MEDIUM) - Highlight conflicts when scheduling manually, dynamic suggestion card to help placement without conflicts. *Submitted: 2025-10-24*
+
+### ✅ Resolved/Closed (16 items)
+- [x] **FB-002:** Active Sessions Page showing old stale sessions (BUG, MEDIUM, RESOLVED) - Troubleshoot why this is happening. *Submitted: 2025-12-21*
+- [x] **FB-005:** Action drop down not working (BUG, URGENT, RESOLVED) - Can't get Action drop down menu to expand. *Submitted: 2025-10-29*
+- [x] **FB-006:** Add comment malfunction (BUG, MEDIUM, RESOLVED) - Unable to respond to questions. *Submitted: 2025-10-28*
+- [x] **FB-008:** Submit Feedback not working (BUG, MEDIUM, CLOSED) - Testing. *Submitted: 2025-10-28*
+- [x] **FB-009:** Event Attendants Page - Pagination (BUG, URGENT, RESOLVED) - Need to show 10/20/50/100/all in list. *Submitted: 2025-10-24*
+- [x] **FB-010:** Event Attendants page - Filter not sticking (BUG, MEDIUM, RESOLVED) - Lost filter after editing attendant properties. *Submitted: 2025-10-24*
+- [x] **FB-011:** Positions Page - Station Active/Inactive in Edit Field (BUG, HIGH, RESOLVED) - No way to individually edit station to make inactive, must use bulk edit. *Submitted: 2025-10-24*
+- [x] **FB-013:** Check Attendant DB Structure (BUG, MEDIUM, RESOLVED) - Global attendants table vs event_attendants table clarification needed. *Submitted: 2025-10-24*
+- [x] **FB-014:** Positions Page - Clear All Assignments Button (ENHANCEMENT, MEDIUM, RESOLVED) - Button to clear all assignments, button to clear all shifts. *Submitted: 2025-10-24*
+- [x] **FB-015:** Positions Page - Filtering and Exporting (FEATURE, MEDIUM, RESOLVED) - Export all positions, filter and export based on Oversight. *Submitted: 2025-10-24*
+- [x] **FB-016:** Positions Page - Shift add Manual name stick (BUG, MEDIUM, RESOLVED) - Shift name doesn't stick when added via bulk edit or manual create. *Submitted: 2025-10-24*
+- [x] **FB-018:** Filtering change - Sort attendants by overseer and keyman (ENHANCEMENT, MEDIUM, RESOLVED) *Submitted: 2025-10-23*
+- [x] **FB-019:** Positions Edit - Assistant Overseer Cannot Edit positions (BUG, HIGH, RESOLVED) - Fix permissions as Assistant Overseer not in Event. *Submitted: 2025-10-22*
+- [x] **FB-020:** File upload feature test (ENHANCEMENT, MEDIUM, RESOLVED) *Submitted: 2025-10-19*
+- [x] **FB-021:** File upload feature (ENHANCEMENT, MEDIUM, RESOLVED) *Submitted: 2025-10-19*
+- [x] **FB-022:** Test final (BUG, MEDIUM, RESOLVED) - Testing. *Submitted: 2025-10-19*
+
+### 📊 Summary Statistics
+- **Total Feedback Items:** 22
+- **Open:** 6 (27%)
+- **Resolved/Closed:** 16 (73%)
+- **By Type:** 12 Bugs, 5 Enhancements, 5 Features
+- **By Priority:** 2 Urgent, 4 High, 16 Medium
 
 ---
 

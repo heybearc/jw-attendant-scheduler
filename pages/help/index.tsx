@@ -29,6 +29,12 @@ export default function HelpPage({ userRole }: HelpPageProps) {
       roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN']
     },
     {
+      id: 'event-permissions',
+      title: '🔐 Event Permissions',
+      description: 'Understanding and managing who can access your events',
+      roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN']
+    },
+    {
       id: 'volunteer-management',
       title: '👥 Volunteer Management',
       description: 'Finding, filtering, and managing volunteers',

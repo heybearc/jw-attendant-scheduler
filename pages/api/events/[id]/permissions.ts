@@ -27,7 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ success: false, error: 'User not found' })
     }
 
-    // Check if user can manage permissions (must be OWNER)
+    // Check if user can manage permissions (must be ADMIN)
     const canManage = await canManagePermissions(user.id, eventId)
 
     if (req.method === 'GET') {
@@ -59,11 +59,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
     }
 
-    // All other methods require OWNER permission
+    // All other methods require ADMIN permission
     if (!canManage) {
       return res.status(403).json({ 
         success: false, 
-        error: 'Only event owners can manage permissions' 
+        error: 'Only event admins can manage permissions' 
       })
     }
 
@@ -131,11 +131,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         })
       }
 
-      // Don't allow removing the last OWNER
-      const ownerCount = await prisma.event_permissions.count({
+      // Don't allow removing the last ADMIN
+      const adminCount = await prisma.event_permissions.count({
         where: {
           eventId,
-          role: 'OWNER'
+          role: 'ADMIN'
         }
       })
 
@@ -143,10 +143,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         where: { userId_eventId: { userId, eventId } }
       })
 
-      if (permissionToDelete?.role === 'OWNER' && ownerCount <= 1) {
+      if (permissionToDelete?.role === 'ADMIN' && adminCount <= 1) {
         return res.status(400).json({
           success: false,
-          error: 'Cannot remove the last owner'
+          error: 'Cannot remove the last admin'
         })
       }
 

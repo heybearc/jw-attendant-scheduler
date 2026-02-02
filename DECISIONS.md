@@ -331,6 +331,45 @@
 - Blue-green deployment pattern enforced
 - Safer release process
 
+### D-TS-024: Simplify Event Permissions to 3-Role Structure
+**Date:** 2026-02-02  
+**Context:** Event permissions had 5 roles (OWNER, MANAGER, OVERSEER, KEYMAN, VIEWER) with complex scope-based restrictions. Users were being assigned MANAGER because lower roles were too restrictive. Scope feature (department/position-specific access) was rarely used in practice.  
+**Decision:** Simplify to 3 roles: ADMIN (event ownership), COORDINATOR (day-to-day management), VIEWER (read-only)  
+**Role Mapping:**
+- OWNER → ADMIN (same capabilities)
+- MANAGER → COORDINATOR (loses event settings/delete/permissions, keeps all management)
+- OVERSEER → COORDINATOR (upgrade - no longer scope-restricted)
+- KEYMAN → COORDINATOR (upgrade - can now manage all assignments, not just own)
+- VIEWER → VIEWER (no change)  
+**Consequences:**
+- Clearer role separation (Admin owns, Coordinator manages, Viewer observes)
+- Removed ~100 lines of scope-checking logic
+- Matches actual usage patterns
+- Easier to explain and understand
+- MANAGER users lose ability to edit event details, delete events, or manage permissions
+- All scope-based restrictions removed
+- Database migration required before deployment
+
+### D-TS-025: Windsurf Terminal Subsystem Failures Require IDE Restart
+**Date:** 2026-02-02  
+**Context:** All terminal commands (git, ssh, psql, even basic echo/pwd) started failing with exit code 1 and no output. This prevented all deployment operations, git commits, and workflow automation.  
+**Root Cause:** Windsurf terminal subsystem failure - likely due to terminal backend process crash or shell initialization blocking after extended IDE session.  
+**Resolution:** Restart Windsurf IDE to reset terminal subsystem.  
+**Symptoms:**
+- All commands return exit code 1 with no output
+- Even basic shell commands (echo, pwd, ls) fail
+- File operations (read/write) still work
+- MCP server tools still work (separate Node.js process)  
+**Prevention:**
+- Restart Windsurf periodically during long sessions
+- Watch for command execution slowdowns as early warning
+- Monitor IDE memory usage  
+**Consequences:**
+- Command execution fully restored after restart
+- No data loss (file operations unaffected)
+- Deployment workflows operational again
+- Issue documented for future reference
+
 ---
 
 ## Shared Decisions

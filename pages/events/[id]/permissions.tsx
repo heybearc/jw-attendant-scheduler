@@ -148,10 +148,8 @@ export default function EventPermissionsPage() {
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
-      case 'OWNER': return 'bg-red-100 text-red-800'
-      case 'MANAGER': return 'bg-orange-100 text-orange-800'
-      case 'OVERSEER': return 'bg-yellow-100 text-yellow-800'
-      case 'KEYMAN': return 'bg-green-100 text-green-800'
+      case 'ADMIN': return 'bg-red-100 text-red-800'
+      case 'COORDINATOR': return 'bg-orange-100 text-orange-800'
       case 'VIEWER': return 'bg-blue-100 text-blue-800'
       default: return 'bg-gray-100 text-gray-800'
     }
@@ -173,7 +171,7 @@ export default function EventPermissionsPage() {
         <div className="max-w-4xl mx-auto p-6">
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <p className="text-yellow-800">
-              You don't have permission to manage event permissions. Only event owners can manage permissions.
+              You don't have permission to manage event permissions. Only event admins can manage permissions.
             </p>
           </div>
         </div>
@@ -231,10 +229,8 @@ export default function EventPermissionsPage() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                 >
                   <option value="VIEWER">Viewer - Read-only access</option>
-                  <option value="KEYMAN">Keyman - Can edit own assignments</option>
-                  <option value="OVERSEER">Overseer - Can manage within scope</option>
-                  <option value="MANAGER">Manager - Full event management</option>
-                  <option value="OWNER">Owner - Full control</option>
+                  <option value="COORDINATOR">Coordinator - Full event management</option>
+                  <option value="ADMIN">Admin - Full control + event settings</option>
                 </select>
               </div>
               <div className="flex space-x-3">
@@ -293,10 +289,8 @@ export default function EventPermissionsPage() {
                           className="px-2 py-1 border border-gray-300 rounded text-sm"
                         >
                           <option value="VIEWER">VIEWER</option>
-                          <option value="KEYMAN">KEYMAN</option>
-                          <option value="OVERSEER">OVERSEER</option>
-                          <option value="MANAGER">MANAGER</option>
-                          <option value="OWNER">OWNER</option>
+                          <option value="COORDINATOR">COORDINATOR</option>
+                          <option value="ADMIN">ADMIN</option>
                         </select>
                         <button
                           onClick={() => handleEditRole(permission.userId, newRole)}
@@ -356,10 +350,8 @@ export default function EventPermissionsPage() {
         <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
           <h3 className="font-semibold text-blue-900 mb-2">Permission Roles</h3>
           <ul className="text-sm text-blue-800 space-y-1">
-            <li><strong>OWNER:</strong> Full control - can delete event and manage permissions</li>
-            <li><strong>MANAGER:</strong> Can manage attendants, positions, and assignments</li>
-            <li><strong>OVERSEER:</strong> Can manage within their scope (or full if no scope)</li>
-            <li><strong>KEYMAN:</strong> Can only see and edit their assigned positions</li>
+            <li><strong>ADMIN:</strong> Full control - can edit event details, delete event, and manage permissions</li>
+            <li><strong>COORDINATOR:</strong> Can manage volunteers, positions, assignments, and documents</li>
             <li><strong>VIEWER:</strong> Read-only access (for training/observation)</li>
           </ul>
         </div>

@@ -743,10 +743,8 @@ enum DocumentCategory {
 }
 
 enum EventPermissionRole {
-  OWNER
-  MANAGER
-  OVERSEER
-  KEYMAN
+  ADMIN
+  COORDINATOR
   VIEWER
 }
 

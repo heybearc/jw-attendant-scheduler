@@ -1,6 +1,6 @@
 import { prisma } from './prisma'
 
-export type EventPermissionRole = 'OWNER' | 'MANAGER' | 'OVERSEER' | 'KEYMAN' | 'VIEWER'
+export type EventPermissionRole = 'ADMIN' | 'COORDINATOR' | 'VIEWER'
 export type EventScopeType = 'DEPARTMENT' | 'STATION_RANGE' | 'POSITION'
 
 export interface EventPermission {
@@ -27,7 +27,7 @@ export async function checkEventAccess(
 
   if (user?.role === 'ADMIN') {
     return {
-      role: 'OWNER',
+      role: 'ADMIN',
       scopeType: null,
       scopeIds: undefined
     }
@@ -40,10 +40,8 @@ export async function checkEventAccess(
   if (!permission) return null
 
   const roleHierarchy: Record<EventPermissionRole, number> = {
-    OWNER: 5,
-    MANAGER: 4,
-    OVERSEER: 3,
-    KEYMAN: 2,
+    ADMIN: 3,
+    COORDINATOR: 2,
     VIEWER: 1
   }
 
@@ -59,160 +57,112 @@ export async function checkEventAccess(
 }
 
 /**
- * Check if user can manage attendants (add/remove/edit)
- * Only OWNER, MANAGER, and OVERSEER (no scope) can manage attendants
+ * Check if user can manage volunteers (add/remove/edit)
+ * Only ADMIN and COORDINATOR can manage volunteers
  */
 export async function canManageAttendants(
   userId: string,
   eventId: string
 ): Promise<boolean> {
-  const permission = await checkEventAccess(userId, eventId, 'OVERSEER')
+  const permission = await checkEventAccess(userId, eventId, 'COORDINATOR')
   if (!permission) return false
 
-  // OWNER, MANAGER, OVERSEER (no scope) can manage attendants
-  return ['OWNER', 'MANAGER'].includes(permission.role) ||
-    (permission.role === 'OVERSEER' && !permission.scopeType)
+  // ADMIN and COORDINATOR can manage volunteers
+  return ['ADMIN', 'COORDINATOR'].includes(permission.role)
 }
 
 /**
  * Check if user can manage a specific position
+ * ADMIN and COORDINATOR can manage all positions
  */
 export async function canManagePosition(
   userId: string,
   eventId: string,
   positionId: string
 ): Promise<boolean> {
-  const permission = await checkEventAccess(userId, eventId, 'OVERSEER')
+  const permission = await checkEventAccess(userId, eventId, 'COORDINATOR')
   if (!permission) return false
 
-  // OWNER and MANAGER can manage all positions
-  if (['OWNER', 'MANAGER'].includes(permission.role)) return true
-
-  // OVERSEER with no scope can manage all positions
-  if (permission.role === 'OVERSEER' && !permission.scopeType) return true
-
-  // OVERSEER with scope - check if position is in scope
-  if (permission.role === 'OVERSEER' && permission.scopeType) {
-    const position = await prisma.positions.findUnique({
-      where: { id: positionId },
-      select: { area: true, id: true }
-    })
-
-    if (!position) return false
-
-    if (permission.scopeType === 'POSITION') {
-      return permission.scopeIds?.includes(positionId) || false
-    }
-
-    if (permission.scopeType === 'DEPARTMENT') {
-      return permission.scopeIds?.includes(position.area || '') || false
-    }
-
-    // STATION_RANGE logic would go here if needed
-  }
-
-  return false
+  // ADMIN and COORDINATOR can manage all positions
+  return ['ADMIN', 'COORDINATOR'].includes(permission.role)
 }
 
 /**
  * Check if user can edit a specific assignment
+ * ADMIN and COORDINATOR can edit all assignments
  */
 export async function canEditAssignment(
   userId: string,
   eventId: string,
   assignmentId: string
 ): Promise<boolean> {
-  const permission = await checkEventAccess(userId, eventId, 'KEYMAN')
+  const permission = await checkEventAccess(userId, eventId, 'COORDINATOR')
   if (!permission) return false
 
-  // OWNER, MANAGER, OVERSEER (no scope) can edit all assignments
-  if (['OWNER', 'MANAGER'].includes(permission.role)) return true
-  if (permission.role === 'OVERSEER' && !permission.scopeType) return true
-
-  // Get assignment details
-  const assignment = await prisma.position_assignments.findUnique({
-    where: { id: assignmentId },
-    include: { position: true }
-  })
-
-  if (!assignment) return false
-
-  // KEYMAN can only edit their own assignments
-  if (permission.role === 'KEYMAN') {
-    const eventAttendant = await prisma.event_attendants.findFirst({
-      where: {
-        eventId,
-        userId
-      }
-    })
-    return assignment.attendantId === eventAttendant?.id
-  }
-
-  // OVERSEER with scope - check if position is in scope
-  if (permission.role === 'OVERSEER' && permission.scopeType) {
-    return canManagePosition(userId, eventId, assignment.positionId)
-  }
-
-  return false
+  // ADMIN and COORDINATOR can edit all assignments
+  return ['ADMIN', 'COORDINATOR'].includes(permission.role)
 }
 
 /**
- * Check if user can manage event settings (edit/delete event)
+ * Check if user can manage event settings (edit event details)
+ * Only ADMIN can edit event settings
  */
 export async function canManageEvent(
   userId: string,
   eventId: string
 ): Promise<boolean> {
-  const permission = await checkEventAccess(userId, eventId, 'MANAGER')
+  const permission = await checkEventAccess(userId, eventId, 'ADMIN')
   if (!permission) return false
 
-  return ['OWNER', 'MANAGER'].includes(permission.role)
+  return permission.role === 'ADMIN'
 }
 
 /**
  * Check if user can delete an event
+ * Only ADMIN can delete events
  */
 export async function canDeleteEvent(
   userId: string,
   eventId: string
 ): Promise<boolean> {
-  const permission = await checkEventAccess(userId, eventId, 'OWNER')
+  const permission = await checkEventAccess(userId, eventId, 'ADMIN')
   if (!permission) return false
 
-  return permission.role === 'OWNER'
+  return permission.role === 'ADMIN'
 }
 
 /**
  * Check if user can manage event permissions (invite/remove users)
- * ADMIN users automatically have permission
+ * Only ADMIN can manage permissions
+ * System ADMIN users automatically have permission
  */
 export async function canManagePermissions(
   userId: string,
   eventId: string
 ): Promise<boolean> {
-  const permission = await checkEventAccess(userId, eventId, 'OWNER')
+  const permission = await checkEventAccess(userId, eventId, 'ADMIN')
   if (!permission) {
     console.log('❌ canManagePermissions: No permission found for user', userId, 'event', eventId)
     return false
   }
 
   console.log('✅ canManagePermissions: User has role', permission.role)
-  return permission.role === 'OWNER'
+  return permission.role === 'ADMIN'
 }
 
 /**
  * Check if user can upload/manage documents
+ * ADMIN and COORDINATOR can manage documents
  */
 export async function canManageDocuments(
   userId: string,
   eventId: string
 ): Promise<boolean> {
-  const permission = await checkEventAccess(userId, eventId, 'OVERSEER')
+  const permission = await checkEventAccess(userId, eventId, 'COORDINATOR')
   if (!permission) return false
 
-  // OWNER, MANAGER, OVERSEER (no scope) can manage documents
-  return ['OWNER', 'MANAGER'].includes(permission.role) ||
-    (permission.role === 'OVERSEER' && !permission.scopeType)
+  // ADMIN and COORDINATOR can manage documents
+  return ['ADMIN', 'COORDINATOR'].includes(permission.role)
 }
 
 /**
@@ -247,7 +197,7 @@ export async function getUserEvents(userId: string) {
 
       return allEvents.map((event: any) => ({
         ...event,
-        userRole: 'OWNER',
+        userRole: 'ADMIN',
         scopeType: null,
         scopeIds: null
       }))

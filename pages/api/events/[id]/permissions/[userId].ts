@@ -41,7 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method === 'PUT') {
       const { role } = req.body
 
-      if (!role || !['VIEWER', 'KEYMAN', 'OVERSEER', 'MANAGER', 'OWNER'].includes(role)) {
+      if (!role || !['VIEWER', 'COORDINATOR', 'ADMIN'].includes(role)) {
         return res.status(400).json({ success: false, error: 'Invalid role' })
       }
 
@@ -57,19 +57,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(404).json({ success: false, error: 'Permission not found' })
       }
 
-      // If demoting from OWNER, ensure at least one OWNER remains
-      if (existingPermission.role === 'OWNER' && role !== 'OWNER') {
-        const ownerCount = await prisma.event_permissions.count({
+      // If demoting from ADMIN, ensure at least one ADMIN remains
+      if (existingPermission.role === 'ADMIN' && role !== 'ADMIN') {
+        const adminCount = await prisma.event_permissions.count({
           where: { 
             eventId,
-            role: 'OWNER' 
+            role: 'ADMIN' 
           }
         })
 
-        if (ownerCount <= 1) {
+        if (adminCount <= 1) {
           return res.status(400).json({ 
             success: false, 
-            error: 'Cannot remove the last OWNER. At least one OWNER must remain.' 
+            error: 'Cannot remove the last ADMIN. At least one ADMIN must remain.' 
           })
         }
       }

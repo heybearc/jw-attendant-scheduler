@@ -36,7 +36,7 @@
 ## 🐛 Known Bugs
 
 ### Critical (Fix Immediately)
-None currently identified.
+- [ ] **React error loop in production** (effort: L) - Recurring minified React errors #425 and #418 causing infinite error boundary loops. Caught by APEX GUARDIAN error boundary. Errors occur in production build, need to reproduce in dev mode with non-minified React to identify root cause. **Impact:** Console spam, potential performance degradation. **Frequency:** Intermittent but recurring across releases.
 
 ### Non-Critical (Backlog)
 - [ ] Position management test expects event selection (effort: S) - Pre-existing test failure, non-blocking

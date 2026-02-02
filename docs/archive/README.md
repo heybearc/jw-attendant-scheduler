@@ -17,6 +17,7 @@ This directory contains completed phase documentation, refactoring logs, and his
 - `VOLUNTEER_DEPARTMENTS_PHASE_2_STATUS.md` - Phase 2 volunteer departments
 - `DEPLOYMENT_v3.0.3_STANDBY.md` - v3.0.3 deployment notes
 - `RELEASE_NOTES_v3.0.3.md` - v3.0.3 release notes
+- `D-022_MIGRATION.md` - D-022 migration documentation
 
 ### Testing Documentation (Historical)
 - `TEST-RELEASE-REPORT.md` - Historical test release reports

@@ -360,4 +360,4 @@ Created consolidated PRIORITIES.md document gathering all bugs, feedback, backlo
 ## Exact Next Command
 **Test permissions refactor on STANDBY:** Visit http://blue.theoshift.com in browser, log in as admin, navigate to an event's permissions page, and verify the 3-role system works correctly. Then run `/bump` to create v3.9.0 release.
 
-**For detailed priorities:** See PRIORITIES.md for complete task breakdown and strategic planning.
+**For work items and priorities:** See IMPLEMENTATION-PLAN.md for complete backlog, roadmap, bugs, and feature requests (D-022).

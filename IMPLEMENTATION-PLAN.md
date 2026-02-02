@@ -50,14 +50,16 @@
 
 ## 💡 User Feedback & Feature Requests
 
-### From Users
-- [ ] Photo management for volunteers (effort: L) - Upload and display volunteer photos, photo-based selection interface
-- [ ] Skills & certifications tracking (effort: XL) - Track volunteer skills, certifications, expiration dates, training completion
-- [ ] Communication tools (effort: XL) - In-app messaging, group messaging by department, announcement system
+### From Users (via feedback system)
+- [ ] Photo management for volunteers (effort: L) - Upload and display volunteer photos, photo-based selection interface, integration with user profile photos
+- [ ] Skills & certifications tracking (effort: XL) - Track volunteer skills, certifications, expiration dates, training completion, skill-based assignment recommendations
+- [ ] Communication tools (effort: XL) - In-app messaging, group messaging by department, announcement system, SMS integration (optional)
+- [ ] Enhanced bulk operations (effort: M) - Bulk photo uploads, bulk certification updates, bulk skill assignments, advanced bulk export options
 
 ### From App (Analytics/Observations)
-- [ ] Help pages returning 404 errors (effort: M) - Some help pages not accessible, needs audit
-- [ ] Mobile admin experience needs improvement (effort: L) - Admin pages are desktop-focused, mobile use case secondary but important
+- [ ] Help pages returning 404 errors (effort: M) - Some help pages not accessible, needs comprehensive audit of all 17+ help pages
+- [ ] Mobile admin experience needs improvement (effort: L) - Admin pages are desktop-focused, need responsive tables, touch-friendly forms, mobile-specific layouts
+- [ ] Feedback system database implementation (effort: M) - Frontend exists but needs database schema (Feedback table) and full backend integration for persistent storage
 
 ---
 

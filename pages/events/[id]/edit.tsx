@@ -106,6 +106,37 @@ export default function EditEventPage({ event }: EditEventPageProps) {
 
   const [errors, setErrors] = useState<Partial<EventFormData>>({})
   const [submitting, setSubmitting] = useState(false)
+  
+  // Parse assistants from JSON string for UI management
+  const [assistants, setAssistants] = useState<Array<{name: string, phone: string, email: string}>>(() => {
+    try {
+      return JSON.parse(formData.volunteerOverseerAssistants)
+    } catch {
+      return []
+    }
+  })
+
+  // Sync assistants array back to formData when it changes
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      volunteerOverseerAssistants: JSON.stringify(assistants)
+    }))
+  }, [assistants])
+
+  const addAssistant = () => {
+    setAssistants([...assistants, { name: '', phone: '', email: '' }])
+  }
+
+  const removeAssistant = (index: number) => {
+    setAssistants(assistants.filter((_, i) => i !== index))
+  }
+
+  const updateAssistant = (index: number, field: 'name' | 'phone' | 'email', value: string) => {
+    setAssistants(assistants.map((assistant, i) => 
+      i === index ? { ...assistant, [field]: value } : assistant
+    ))
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target
@@ -754,22 +785,71 @@ export default function EditEventPage({ event }: EditEventPageProps) {
                 </span>
                 Volunteer Overseer Assistants
               </h4>
-              <div>
-                <label htmlFor="volunteerOverseerAssistants" className="block text-sm font-medium text-gray-700 mb-1">
-                  Assistants (JSON Format)
-                </label>
-                <textarea
-                  id="volunteerOverseerAssistants"
-                  name="volunteerOverseerAssistants"
-                  rows={3}
-                  value={formData.volunteerOverseerAssistants}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder='[{&quot;name&quot;: &quot;Assistant Name&quot;, &quot;phone&quot;: &quot;555-0123&quot;, &quot;email&quot;: &quot;assistant@example.com&quot;}]'
-                />
-                <p className="mt-1 text-xs text-gray-500">
-                  Enter assistants as JSON array. Example: [{'{'}"name": "John Doe", "phone": "555-0123", "email": "john@example.com"{'}'}]
-                </p>
+              
+              <div className="space-y-4">
+                {assistants.map((assistant, index) => (
+                  <div key={index} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <div className="flex justify-between items-center mb-3">
+                      <span className="text-sm font-medium text-gray-700">Assistant {index + 1}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeAssistant(index)}
+                        className="text-red-600 hover:text-red-800 text-sm font-medium"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Name</label>
+                        <input
+                          type="text"
+                          value={assistant.name}
+                          onChange={(e) => updateAssistant(index, 'name', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                          placeholder="Full Name"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Phone</label>
+                        <input
+                          type="tel"
+                          value={assistant.phone}
+                          onChange={(e) => updateAssistant(index, 'phone', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                          placeholder="555-0123"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Email</label>
+                        <input
+                          type="email"
+                          value={assistant.email}
+                          onChange={(e) => updateAssistant(index, 'email', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                          placeholder="email@example.com"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                
+                <button
+                  type="button"
+                  onClick={addAssistant}
+                  className="w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-500 hover:text-blue-600 transition-colors flex items-center justify-center"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Add Assistant
+                </button>
+                
+                {assistants.length === 0 && (
+                  <p className="text-sm text-gray-500 text-center py-4">
+                    No assistants added yet. Click "Add Assistant" to add one.
+                  </p>
+                )}
               </div>
             </div>
           </div>

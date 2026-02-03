@@ -59,7 +59,7 @@ export default function HelpPage({ userRole }: HelpPageProps) {
       roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN']
     },
     {
-      id: 'assignments',
+      id: 'managing-assignments',
       title: '📋 Managing Assignments',
       description: 'How to assign volunteers to positions and manage schedules',
       roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN']

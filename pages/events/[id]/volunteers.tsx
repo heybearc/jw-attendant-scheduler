@@ -54,6 +54,8 @@ interface VolunteerStats {
   inactive: number
 }
 
+type Attendant = Volunteer
+
 interface EventVolunteersPageProps {
   eventId: string
   event: Event
@@ -90,6 +92,9 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
   const [bulkRequestDeadline, setBulkRequestDeadline] = useState('')
   const [bulkRequestMessage, setBulkRequestMessage] = useState('')
   const [sendingBulkRequest, setSendingBulkRequest] = useState(false)
+  
+  // View details modal state (FB-007)
+  const [viewingAttendant, setViewingAttendant] = useState<Attendant | null>(null)
   
   // Helper functions for dropdown management
   const toggleDropdown = (attendantId: string) => {
@@ -1415,6 +1420,15 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                                 </button>
                                 <button
                                   onClick={() => {
+                                    setViewingAttendant(attendant)
+                                    closeDropdown(attendant.id)
+                                  }}
+                                  className="block w-full text-left px-3 py-1 text-xs text-blue-600 hover:bg-blue-50"
+                                >
+                                  View Details
+                                </button>
+                                <button
+                                  onClick={() => {
                                     handleEditAttendant(attendant)
                                     closeDropdown(attendant.id)
                                   }}
@@ -2100,6 +2114,174 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                     className="px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-md min-h-[44px] touch-manipulation order-1 sm:order-2"
                   >
                     Save Status
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* View Details Modal (FB-007) */}
+        {viewingAttendant && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div className="relative top-10 mx-auto p-6 border max-w-3xl w-full mx-4 shadow-lg rounded-md bg-white">
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-xl font-semibold text-gray-900">
+                  Volunteer Details
+                </h3>
+                <button
+                  onClick={() => setViewingAttendant(null)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Basic Information */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-3">Basic Information</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs text-gray-500">Name</label>
+                      <p className="text-sm font-medium text-gray-900">
+                        {viewingAttendant.firstName} {viewingAttendant.lastName}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500">Email</label>
+                      <p className="text-sm text-gray-900">{viewingAttendant.email}</p>
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500">Phone</label>
+                      <p className="text-sm text-gray-900">{viewingAttendant.phone || 'Not provided'}</p>
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500">Congregation</label>
+                      <p className="text-sm text-gray-900">{viewingAttendant.congregation}</p>
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500">Status</label>
+                      <p className="text-sm">
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                          viewingAttendant.isActive 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {viewingAttendant.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500">Verification Status</label>
+                      <p className="text-sm">
+                        {viewingAttendant.profileVerifiedAt ? (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            ✓ Verified
+                          </span>
+                        ) : viewingAttendant.profileVerificationRequired ? (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                            Verification Required
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            Not Required
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Forms of Service */}
+                {viewingAttendant.formsOfService && (
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="text-sm font-semibold text-gray-700 mb-3">Forms of Service</h4>
+                    <div className="flex flex-wrap gap-2">
+                      <VolunteerBadges formsOfService={viewingAttendant.formsOfService} />
+                    </div>
+                  </div>
+                )}
+
+                {/* Oversight Information */}
+                {(viewingAttendant.overseer || viewingAttendant.keyman) && (
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="text-sm font-semibold text-gray-700 mb-3">Oversight</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {viewingAttendant.overseer && (
+                        <div>
+                          <label className="text-xs text-gray-500">Overseer</label>
+                          <p className="text-sm text-gray-900">
+                            {viewingAttendant.overseer.firstName} {viewingAttendant.overseer.lastName}
+                          </p>
+                        </div>
+                      )}
+                      {viewingAttendant.keyman && (
+                        <div>
+                          <label className="text-xs text-gray-500">Keyman</label>
+                          <p className="text-sm text-gray-900">
+                            {viewingAttendant.keyman.firstName} {viewingAttendant.keyman.lastName}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Availability Status */}
+                {viewingAttendant.availability && (
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="text-sm font-semibold text-gray-700 mb-3">Availability</h4>
+                    <div className="space-y-2">
+                      <div>
+                        <label className="text-xs text-gray-500">Status</label>
+                        <p className="text-sm">
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                            viewingAttendant.availability.status === 'AVAILABLE' ? 'bg-green-100 text-green-800' :
+                            viewingAttendant.availability.status === 'NOT_AVAILABLE' ? 'bg-red-100 text-red-800' :
+                            viewingAttendant.availability.status === 'PARTIAL' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {viewingAttendant.availability.status.replace('_', ' ')}
+                          </span>
+                        </p>
+                      </div>
+                      {viewingAttendant.availability.notes && (
+                        <div>
+                          <label className="text-xs text-gray-500">Notes</label>
+                          <p className="text-sm text-gray-900">{viewingAttendant.availability.notes}</p>
+                        </div>
+                      )}
+                      {viewingAttendant.availability.respondedAt && (
+                        <div>
+                          <label className="text-xs text-gray-500">Responded</label>
+                          <p className="text-sm text-gray-900">
+                            {new Date(viewingAttendant.availability.respondedAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex justify-end gap-3 pt-4 border-t">
+                  <button
+                    onClick={() => setViewingAttendant(null)}
+                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                  >
+                    Close
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleEditAttendant(viewingAttendant)
+                      setViewingAttendant(null)
+                    }}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  >
+                    Edit Volunteer
                   </button>
                 </div>
               </div>

@@ -60,6 +60,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       try {
         const { 
           name, description, eventType, startDate, endDate, startTime, endTime, location, status, capacity, attendantsNeeded, volunteersNeeded,
+          departmentTemplateId,
           // APEX GUARDIAN: Oversight Management Fields
           circuitOverseerName, circuitOverseerPhone, circuitOverseerEmail,
           assemblyOverseerName, assemblyOverseerPhone, assemblyOverseerEmail,
@@ -81,6 +82,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           capacity: capacity ? parseInt(capacity) : null,
           volunteersNeeded: (volunteersNeeded || attendantsNeeded) ? parseInt(volunteersNeeded || attendantsNeeded) : null,
           updatedAt: new Date()
+        }
+
+        // Add department template if provided (can be null to clear)
+        if (departmentTemplateId !== undefined) {
+          updateData.departmentTemplateId = departmentTemplateId || null
         }
 
         // Add oversight fields if provided (note: circuit/assembly use lowercase in schema)

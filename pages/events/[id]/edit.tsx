@@ -26,6 +26,7 @@ interface EventFormData {
   capacity: string
   volunteersNeeded: string
   status: string
+  departmentTemplateId: string
   // APEX GUARDIAN: Oversight Management Fields
   circuitOverseerName: string
   circuitOverseerPhone: string
@@ -52,6 +53,7 @@ interface Event {
   capacity?: number
   volunteersNeeded?: number
   status: string
+  departmentTemplateId?: string
   createdAt: string
   updatedAt: string
   // APEX GUARDIAN: Oversight Management Fields
@@ -67,11 +69,18 @@ interface Event {
   volunteerOverseerAssistants?: any[] // JSONB array
 }
 
-interface EditEventPageProps {
-  event: Event
+interface DepartmentTemplate {
+  id: string
+  name: string
+  icon: string | null
 }
 
-export default function EditEventPage({ event }: EditEventPageProps) {
+interface EditEventPageProps {
+  event: Event
+  departmentTemplates: DepartmentTemplate[]
+}
+
+export default function EditEventPage({ event, departmentTemplates }: EditEventPageProps) {
   const router = useRouter()
   const eventId = event.id
   const [loading, setLoading] = useState(false)
@@ -91,6 +100,7 @@ export default function EditEventPage({ event }: EditEventPageProps) {
     capacity: event.capacity ? event.capacity.toString() : '',
     volunteersNeeded: event.volunteersNeeded ? event.volunteersNeeded.toString() : '',
     status: event.status || 'UPCOMING',
+    departmentTemplateId: event.departmentTemplateId || '',
     // APEX GUARDIAN: Oversight Management Fields
     circuitOverseerName: event.circuitOverseerName || '',
     circuitOverseerPhone: event.circuitOverseerPhone || '',
@@ -228,7 +238,7 @@ export default function EditEventPage({ event }: EditEventPageProps) {
     setSuccess('')
 
     try {
-      const submitData = {
+      const submitData: any = {
         name: formData.name,
         description: formData.description || undefined,
         eventType: formData.eventType,
@@ -258,6 +268,15 @@ export default function EditEventPage({ event }: EditEventPageProps) {
             return []
           }
         })()
+      }
+
+      // Only add departmentTemplateId if it has a valid non-empty value
+      const deptId = formData.departmentTemplateId?.trim()
+      if (deptId && deptId !== '') {
+        submitData.departmentTemplateId = deptId
+      } else {
+        // Explicitly set to null to clear the template
+        submitData.departmentTemplateId = null
       }
 
       const response = await fetch(`/api/events/${eventId}`, {
@@ -460,6 +479,29 @@ export default function EditEventPage({ event }: EditEventPageProps) {
                     </option>
                   ))}
                 </select>
+              </div>
+
+              <div>
+                <label htmlFor="departmentTemplateId" className="block text-sm font-medium text-gray-700 mb-1">
+                  Department Template
+                </label>
+                <select
+                  id="departmentTemplateId"
+                  name="departmentTemplateId"
+                  value={formData.departmentTemplateId}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                >
+                  <option value="">No template (all features enabled)</option>
+                  {departmentTemplates.map(template => (
+                    <option key={template.id} value={template.id}>
+                      {template.icon} {template.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-xs text-gray-500">
+                  Templates control which features are available for this event
+                </p>
               </div>
 
               <div className="md:col-span-2">
@@ -937,6 +979,17 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       return { notFound: true }
     }
 
+    // Fetch department templates for the dropdown
+    const departmentTemplates = await prisma.department_templates.findMany({
+      where: { isActive: true },
+      select: {
+        id: true,
+        name: true,
+        icon: true
+      },
+      orderBy: { sortOrder: 'asc' }
+    })
+
     // Transform event data for frontend compatibility
     const eventWithOversight = event as any // Type assertion for new oversight fields
     const transformedEvent = {
@@ -953,6 +1006,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       volunteersNeeded: event.volunteersNeeded,
       status: event.status,
       // APEX GUARDIAN: Oversight Management Fields (using database field names)
+      departmentTemplateId: event.departmentTemplateId || '',
       circuitOverseerName: eventWithOversight.circuitoverseername,
       circuitOverseerPhone: eventWithOversight.circuitoverseerphone,
       circuitOverseerEmail: eventWithOversight.circuitoverseeremail,
@@ -970,6 +1024,11 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     return {
       props: {
         event: transformedEvent,
+        departmentTemplates: departmentTemplates.map(t => ({
+          id: t.id,
+          name: t.name,
+          icon: t.icon
+        }))
       },
     }
   } catch (error) {

@@ -1016,8 +1016,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     // Transform event data for frontend compatibility
     const transformedEvent = {
       ...event,
-      startDate: event.startDate ? format(event.startDate, 'yyyy-MM-dd') + 'T00:00:00' : null,
-      endDate: event.endDate ? format(event.endDate, 'yyyy-MM-dd') + 'T00:00:00' : null,
+      startDate: event.startDate ? format(event.startDate, 'yyyy-MM-dd') + 'T12:00:00' : null,
+      endDate: event.endDate ? format(event.endDate, 'yyyy-MM-dd') + 'T12:00:00' : null,
       createdAt: event.createdAt?.toISOString() || null,
       updatedAt: event.updatedAt?.toISOString() || null,
       totalShiftsNeeded,

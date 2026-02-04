@@ -659,8 +659,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         eventId: id as string,
         event: {
           ...event,
-          startDate: event.startDate ? event.startDate.toISOString().split('T')[0] + 'T00:00:00' : null,
-          endDate: event.endDate ? event.endDate.toISOString().split('T')[0] + 'T00:00:00' : null,
+          startDate: event.startDate ? event.startDate.toISOString().split('T')[0] + 'T12:00:00' : null,
+          endDate: event.endDate ? event.endDate.toISOString().split('T')[0] + 'T12:00:00' : null,
         },
         documents,
         attendants

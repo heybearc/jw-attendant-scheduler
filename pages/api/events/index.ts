@@ -275,13 +275,13 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse, userId: str
     }
   })
 
-  // Grant OWNER permission to the creator
+  // Grant ADMIN permission to the creator
   await prisma.event_permissions.create({
     data: {
       id: crypto.randomUUID(),
       userId,
       eventId,
-      role: 'OWNER',
+      role: 'ADMIN',
       createdAt: new Date(),
       updatedAt: new Date()
     }
@@ -291,7 +291,7 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse, userId: str
     success: true,
     data: {
       ...event,
-      userRole: 'OWNER',
+      userRole: 'ADMIN',
       userScopeType: null
     },
     message: 'Event created successfully'

@@ -7,11 +7,14 @@
 
 ## 🎯 Active Work (This Week)
 
-**Current Focus:** Testing permissions refactor on STANDBY, planning Phase 8 features
+**Current Focus:** Bug fixes and feedback items for v3.10.0
 
-- [ ] Test permissions refactor on STANDBY (effort: M)
-- [ ] Plan Phase 8 features and priorities (effort: S)
-- [ ] Help documentation audit (effort: L)
+- [x] **CRITICAL:** Fix event creation bug (OWNER → ADMIN role) - DEPLOYED TO LIVE
+- [x] Help documentation audit - 4 missing pages created, broken link fixed
+- [x] FB-001: Professional UI for Overseer Assistants
+- [x] FB-007: View Details modal for volunteers
+- [ ] Complete remaining feedback items (FB-003, FB-004, FB-012, FB-017)
+- [ ] Prepare v3.10.0 release
 
 ---
 
@@ -19,7 +22,6 @@
 
 ### High Priority
 - [ ] Email content refinement for assignment notifications (effort: M) - Improve clarity, tone, and user experience of notification emails
-- [ ] Help documentation audit and update (effort: L) - Fix 404 errors, update for Phase 4C/5B/7 features, update terminology
 
 ### Medium Priority
 - [ ] Mobile bottom navigation expansion (effort: M) - Ensure bottom nav appears consistently on all authenticated pages
@@ -36,9 +38,13 @@
 ## 🐛 Known Bugs
 
 ### Critical (Fix Immediately)
-- [ ] **React error loop in production** (effort: L) - Recurring minified React errors #425 and #418 causing infinite error boundary loops. Caught by APEX GUARDIAN error boundary. Errors occur in production build, need to reproduce in dev mode with non-minified React to identify root cause. **Impact:** Console spam, potential performance degradation. **Frequency:** Intermittent but recurring across releases.
+- None currently
+
+### Recently Fixed
+- [x] **Event creation failing with 500 error** (CRITICAL, FIXED 2026-02-04) - Event creation API was using deprecated OWNER role instead of ADMIN after v3.9.0 permissions refactor. Fixed and deployed to LIVE immediately.
 
 ### Non-Critical (Backlog)
+- [ ] **React error loop in production** (effort: L) - Recurring minified React errors #425 and #418 causing infinite error boundary loops. Caught by APEX GUARDIAN error boundary. Errors occur in production build, need to reproduce in dev mode with non-minified React to identify root cause. **Impact:** Console spam, potential performance degradation. **Frequency:** Intermittent but recurring across releases. **Status:** Monitoring, non-blocking.
 - [ ] Position management test expects event selection (effort: S) - Pre-existing test failure, non-blocking
 - [ ] Refactoring validation test expects event selection (effort: S) - Pre-existing test failure, non-blocking
 - [ ] User management test CSS selector syntax error (effort: S) - Pre-existing test failure, non-blocking
@@ -52,9 +58,8 @@
 
 **Total: 22 items from production feedback system**
 
-### 🔴 Open - High/Urgent Priority (2 items)
-- [ ] **FB-001:** Attendant Overseer Assistants labels (BUG, HIGH) - Need this setup more professionally in the event settings. *Submitted: 2025-12-22*
-- [ ] **FB-007:** Attendant view - Include a way to view attendant information without going to edit screen (BUG, MEDIUM) - Maybe expand row when attendant is selected or pop-up window. *Submitted: 2025-10-28*
+### 🔴 Open - High/Urgent Priority (0 items)
+- None currently
 
 ### 🟡 Open - Medium Priority (4 items)
 - [ ] **FB-003:** Attendant view - Complete schedule visibility (FEATURE, MEDIUM) - Attendant ability to see complete schedule for their station so they know who is there before and after their scheduled shift. *Submitted: 2025-11-03*
@@ -62,7 +67,9 @@
 - [ ] **FB-012:** Positions Page - Bulk Edit Enhancement (ENHANCEMENT, MEDIUM) - Bulk edit to assign shifts AND oversight mappings in same motion, preserve selection until window closes. *Submitted: 2025-10-24*
 - [ ] **FB-017:** Positions Page - Conflict Management (ENHANCEMENT, MEDIUM) - Highlight conflicts when scheduling manually, dynamic suggestion card to help placement without conflicts. *Submitted: 2025-10-24*
 
-### ✅ Resolved/Closed (16 items)
+### ✅ Resolved/Closed (18 items)
+- [x] **FB-001:** Attendant Overseer Assistants labels (BUG, HIGH, RESOLVED 2026-02-04) - Replaced raw JSON textarea with professional UI featuring individual fields for name, phone, email with add/remove buttons. *Submitted: 2025-12-22*
+- [x] **FB-007:** Attendant view without edit screen (BUG, MEDIUM, RESOLVED 2026-02-04) - Added "View Details" button to actions dropdown with read-only modal showing all volunteer information. *Submitted: 2025-10-28*
 - [x] **FB-002:** Active Sessions Page showing old stale sessions (BUG, MEDIUM, RESOLVED) - Troubleshoot why this is happening. *Submitted: 2025-12-21*
 - [x] **FB-005:** Action drop down not working (BUG, URGENT, RESOLVED) - Can't get Action drop down menu to expand. *Submitted: 2025-10-29*
 - [x] **FB-006:** Add comment malfunction (BUG, MEDIUM, RESOLVED) - Unable to respond to questions. *Submitted: 2025-10-28*
@@ -82,10 +89,10 @@
 
 ### 📊 Summary Statistics
 - **Total Feedback Items:** 22
-- **Open:** 6 (27%)
-- **Resolved/Closed:** 16 (73%)
+- **Open:** 4 (18%)
+- **Resolved/Closed:** 18 (82%)
 - **By Type:** 12 Bugs, 5 Enhancements, 5 Features
-- **By Priority:** 2 Urgent, 4 High, 16 Medium
+- **By Priority:** 0 Urgent, 2 High (open), 20 Medium
 
 ---
 

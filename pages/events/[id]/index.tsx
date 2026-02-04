@@ -189,6 +189,67 @@ function CountTimesLink({ eventId }: { eventId: string }) {
   )
 }
 
+function CountTimesSummary({ event }: { event: Event }) {
+  const moduleConfig = useModuleConfig()
+  const isCountTimesEnabled = moduleConfig?.countTimes !== false
+
+  if (!isCountTimesEnabled) return null
+
+  return (
+    <div className="bg-white shadow-lg rounded-xl p-6 border border-gray-200">
+      <div className="flex items-center mb-6">
+        <div className="w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center mr-4">
+          <span className="text-2xl">📈</span>
+        </div>
+        <h3 className="text-xl font-bold text-gray-900">Count Times Summary</h3>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div className="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-lg p-6 text-center">
+          <div className="text-3xl font-bold text-purple-600">
+            {event.countStats?.peakAttendance ?? '--'}
+          </div>
+          <div className="text-sm text-purple-600 font-medium mt-2">Peak Attendance</div>
+        </div>
+        {event.countStats?.currentSessionTally && (
+          <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-lg p-6 text-center">
+            <div className="text-3xl font-bold text-green-600">
+              {event.countStats.currentSessionTally}
+            </div>
+            <div className="text-sm text-green-600 font-medium mt-2">Current Session</div>
+          </div>
+        )}
+      </div>
+      
+      {/* Session Breakdown */}
+      {event.countStats?.sessionBreakdown && event.countStats.sessionBreakdown.length > 0 && (
+        <div className="mt-6">
+          <h4 className="text-sm font-semibold text-gray-700 mb-3">Session Breakdown</h4>
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {event.countStats.sessionBreakdown.map((session) => (
+              <div key={session.id} className="flex items-center justify-between bg-gray-50 rounded-lg p-3 border border-gray-200">
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900">{session.sessionName}</div>
+                  <div className="text-xs text-gray-500">
+                    <SafeDate dateString={session.countTime} format="datetime" /> • {session.positionsReported} positions
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-lg font-bold text-purple-600">{session.totalCount}</div>
+                  <div className="text-xs text-gray-500">Total</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+        </div>
+      )}
+      
+      <CountTimesLink eventId={event.id} />
+    </div>
+  )
+}
+
 export default function EventDetailsPage({ event, canEdit, canDelete, canManageContent }: EventDetailsPageProps) {
   const router = useRouter()
   
@@ -709,57 +770,7 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
             </div>
 
             {/* Count Times Summary */}
-            <div className="bg-white shadow-lg rounded-xl p-6 border border-gray-200">
-              <div className="flex items-center mb-6">
-                <div className="w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center mr-4">
-                  <span className="text-2xl">📈</span>
-                </div>
-                <h3 className="text-xl font-bold text-gray-900">Count Times Summary</h3>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div className="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-lg p-6 text-center">
-                  <div className="text-3xl font-bold text-purple-600">
-                    {event.countStats?.peakAttendance ?? '--'}
-                  </div>
-                  <div className="text-sm text-purple-600 font-medium mt-2">Peak Attendance</div>
-                </div>
-                {event.countStats?.currentSessionTally && (
-                  <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-lg p-6 text-center">
-                    <div className="text-3xl font-bold text-green-600">
-                      {event.countStats.currentSessionTally}
-                    </div>
-                    <div className="text-sm text-green-600 font-medium mt-2">Current Session</div>
-                  </div>
-                )}
-              </div>
-              
-              {/* Session Breakdown */}
-              {event.countStats?.sessionBreakdown && event.countStats.sessionBreakdown.length > 0 && (
-                <div className="mt-6">
-                  <h4 className="text-sm font-semibold text-gray-700 mb-3">Session Breakdown</h4>
-                  <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {event.countStats.sessionBreakdown.map((session) => (
-                      <div key={session.id} className="flex items-center justify-between bg-gray-50 rounded-lg p-3 border border-gray-200">
-                        <div className="flex-1">
-                          <div className="font-medium text-gray-900">{session.sessionName}</div>
-                          <div className="text-xs text-gray-500">
-                            <SafeDate dateString={session.countTime} format="datetime" /> • {session.positionsReported} positions
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-lg font-bold text-purple-600">{session.totalCount}</div>
-                          <div className="text-xs text-gray-500">Total</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  
-                </div>
-              )}
-              
-              <CountTimesLink eventId={event.id} />
-            </div>
+            <CountTimesSummary event={event} />
           </div>
 
           {/* Sidebar */}

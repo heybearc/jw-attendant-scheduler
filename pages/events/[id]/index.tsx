@@ -4,7 +4,7 @@ import { authOptions } from '../../api/auth/[...nextauth]'
 import EventLayout from '../../../components/EventLayout'
 import EventNavigation from '../../../components/EventNavigation'
 import OversightCoverageCard from '../../../components/OversightCoverageCard'
-import { TemplateProvider } from '../../../contexts/TemplateContext'
+import { TemplateProvider, useModuleConfig } from '../../../contexts/TemplateContext'
 import { VolunteerText } from '../../../components/DynamicText'
 import { CustomFieldsDisplay } from '../../../components/CustomFieldsRenderer'
 import { SafeDate } from '../../../components/SafeDate'
@@ -115,6 +115,78 @@ interface EventDetailsPageProps {
   canEdit: boolean
   canDelete: boolean
   canManageContent: boolean // Can create positions, attendants, count sessions
+}
+
+function EventCommandCenter({ event, canEdit }: { event: Event; canEdit: boolean }) {
+  const moduleConfig = useModuleConfig()
+  const isCountTimesEnabled = moduleConfig?.countTimes !== false
+  const isLanyardsEnabled = moduleConfig?.lanyards !== false
+
+  return (
+    <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3">
+      <Link
+        href="/events"
+        className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-3 px-4 rounded transition-colors min-h-[44px] touch-manipulation flex items-center justify-center"
+      >
+        ← Back to Events
+      </Link>
+      <EventQRCode eventId={event.id} eventName={event.name} />
+      {isCountTimesEnabled && (
+        <Link
+          href={`/events/${event.id}/count-times`}
+          className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded transition-colors min-h-[44px] touch-manipulation flex items-center justify-center"
+        >
+          📊 Count Times
+        </Link>
+      )}
+      <Link
+        href={`/events/${event.id}/volunteers`}
+        className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded transition-colors min-h-[44px] touch-manipulation flex items-center justify-center"
+      >
+        👥 <VolunteerText plural />
+      </Link>
+      <Link
+        href={`/events/${event.id}/positions`}
+        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded transition-colors min-h-[44px] touch-manipulation flex items-center justify-center"
+      >
+        📋 Positions
+      </Link>
+      {isLanyardsEnabled && (
+        <Link
+          href={`/events/${event.id}/lanyards`}
+          className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-4 rounded transition-colors min-h-[44px] touch-manipulation flex items-center justify-center"
+        >
+          🏷️ Lanyards
+        </Link>
+      )}
+      {canEdit && (
+        <Link
+          href={`/events/${event.id}/edit`}
+          className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-4 rounded transition-colors min-h-[44px] touch-manipulation flex items-center justify-center"
+        >
+          ✏️ Edit Event
+        </Link>
+      )}
+    </div>
+  )
+}
+
+function CountTimesLink({ eventId }: { eventId: string }) {
+  const moduleConfig = useModuleConfig()
+  const isCountTimesEnabled = moduleConfig?.countTimes !== false
+
+  if (!isCountTimesEnabled) return null
+
+  return (
+    <div className="text-center mt-6">
+      <Link
+        href={`/events/${eventId}/count-times`}
+        className="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
+      >
+        📊 View Detailed Count Reports →
+      </Link>
+    </div>
+  )
 }
 
 export default function EventDetailsPage({ event, canEdit, canDelete, canManageContent }: EventDetailsPageProps) {
@@ -356,47 +428,7 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
                 {getEventTypeLabel(event.eventType)} • <SafeDate dateString={event.startDate} format="full" />
               </p>
             </div>
-            <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3">
-              <Link
-                href="/events"
-                className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-3 px-4 rounded transition-colors min-h-[44px] touch-manipulation flex items-center justify-center"
-              >
-                ← Back to Events
-              </Link>
-              <EventQRCode eventId={event.id} eventName={event.name} />
-              <Link
-                href={`/events/${event.id}/count-times`}
-                className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded transition-colors min-h-[44px] touch-manipulation flex items-center justify-center"
-              >
-                📊 Count Times
-              </Link>
-              <Link
-                href={`/events/${event.id}/volunteers`}
-                className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded transition-colors min-h-[44px] touch-manipulation flex items-center justify-center"
-              >
-                👥 <VolunteerText plural />
-              </Link>
-              <Link
-                href={`/events/${event.id}/positions`}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded transition-colors min-h-[44px] touch-manipulation flex items-center justify-center"
-              >
-                📋 Positions
-              </Link>
-              <Link
-                href={`/events/${event.id}/lanyards`}
-                className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-4 rounded transition-colors min-h-[44px] touch-manipulation flex items-center justify-center"
-              >
-                🏷️ Lanyards
-              </Link>
-              {canEdit && (
-                <Link
-                  href={`/events/${event.id}/edit`}
-                  className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-4 rounded transition-colors min-h-[44px] touch-manipulation flex items-center justify-center"
-                >
-                  ✏️ Edit Event
-                </Link>
-              )}
-            </div>
+            <EventCommandCenter event={event} canEdit={canEdit} />
           </div>
         </div>
 
@@ -726,14 +758,7 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
                 </div>
               )}
               
-              <div className="text-center mt-6">
-                <Link
-                  href={`/events/${event.id}/count-times`}
-                  className="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
-                >
-                  📊 View Detailed Count Reports →
-                </Link>
-              </div>
+              <CountTimesLink eventId={event.id} />
             </div>
           </div>
 

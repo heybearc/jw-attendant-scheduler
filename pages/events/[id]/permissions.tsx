@@ -25,14 +25,16 @@ export default function EventPermissionsPage() {
   const [success, setSuccess] = useState('')
   const [canManage, setCanManage] = useState(false)
   const [showInviteForm, setShowInviteForm] = useState(false)
-  const [inviteEmail, setInviteEmail] = useState('')
+  const [selectedUserId, setSelectedUserId] = useState('')
   const [inviteRole, setInviteRole] = useState('VIEWER')
   const [editingUser, setEditingUser] = useState<string | null>(null)
   const [newRole, setNewRole] = useState('')
+  const [availableUsers, setAvailableUsers] = useState<Array<{id: string, email: string, firstName: string, lastName: string}>>([])
 
   useEffect(() => {
     if (eventId && status === 'authenticated') {
       loadPermissions()
+      loadAvailableUsers()
     }
   }, [eventId, status])
 
@@ -56,27 +58,36 @@ export default function EventPermissionsPage() {
     }
   }
 
-  const handleInviteUser = async (e: React.FormEvent) => {
+  const loadAvailableUsers = async () => {
+    try {
+      const response = await fetch('/api/users')
+      const data = await response.json()
+      
+      if (data.success) {
+        setAvailableUsers(data.data)
+      }
+    } catch (err) {
+      console.error('Failed to load users:', err)
+    }
+  }
+
+  const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setSuccess('')
 
+    if (!selectedUserId) {
+      setError('Please select a user')
+      return
+    }
+
     try {
-      // First, find the user by email
-      const userResponse = await fetch(`/api/users?email=${encodeURIComponent(inviteEmail)}`)
-      const userData = await userResponse.json()
-
-      if (!userData.success || !userData.data) {
-        setError('User not found. They must have an account first.')
-        return
-      }
-
       // Grant permission
       const response = await fetch(`/api/events/${eventId}/permissions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: userData.data.id,
+          userId: selectedUserId,
           role: inviteRole
         })
       })
@@ -84,16 +95,17 @@ export default function EventPermissionsPage() {
       const data = await response.json()
 
       if (data.success) {
-        setSuccess(`Successfully granted ${inviteRole} permission to ${inviteEmail}`)
+        const selectedUser = availableUsers.find(u => u.id === selectedUserId)
+        setSuccess(`Successfully granted ${inviteRole} permission to ${selectedUser?.firstName} ${selectedUser?.lastName}`)
         setShowInviteForm(false)
-        setInviteEmail('')
+        setSelectedUserId('')
         setInviteRole('VIEWER')
         loadPermissions()
       } else {
         setError(data.error || 'Failed to grant permission')
       }
     } catch (err) {
-      setError('Failed to invite user')
+      setError('Failed to add user')
       console.error(err)
     }
   }
@@ -201,23 +213,33 @@ export default function EventPermissionsPage() {
           </div>
         )}
 
-        {/* Invite User Form */}
+        {/* Add User Form */}
         {showInviteForm && (
           <div className="mb-6 bg-white shadow rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Invite User</h3>
-            <form onSubmit={handleInviteUser} className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Add User</h3>
+            <form onSubmit={handleAddUser} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  User Email
+                  Select User
                 </label>
-                <input
-                  type="email"
-                  value={inviteEmail}
-                  onChange={(e) => setInviteEmail(e.target.value)}
+                <select
+                  value={selectedUserId}
+                  onChange={(e) => setSelectedUserId(e.target.value)}
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  placeholder="user@example.com"
-                />
+                >
+                  <option value="">-- Select a user --</option>
+                  {availableUsers
+                    .filter(user => !permissions.some(p => p.userId === user.id))
+                    .map(user => (
+                      <option key={user.id} value={user.id}>
+                        {user.firstName} {user.lastName} ({user.email})
+                      </option>
+                    ))}
+                </select>
+                {availableUsers.filter(user => !permissions.some(p => p.userId === user.id)).length === 0 && (
+                  <p className="text-sm text-gray-500 mt-1">All users already have access to this event</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -237,6 +259,7 @@ export default function EventPermissionsPage() {
                 <button
                   type="submit"
                   className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
+                  disabled={!selectedUserId}
                 >
                   Grant Permission
                 </button>
@@ -260,7 +283,7 @@ export default function EventPermissionsPage() {
                 onClick={() => setShowInviteForm(true)}
                 className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 text-sm"
               >
-                + Invite User
+                + Add User
               </button>
             )}
           </div>

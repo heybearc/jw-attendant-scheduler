@@ -56,12 +56,16 @@
 
 ## 💡 User Feedback & Feature Requests
 
-**Total: 22 items from production feedback system**
+**Total: 27 items from production feedback system**
 
-### 🔴 Open - High/Urgent Priority (0 items)
-- None currently
+### 🔴 Open - High/Urgent Priority (1 item)
+- [ ] **FB-023:** Template enforcement update (ENHANCEMENT, HIGH) - Hide buttons/menu items for modules that are turned off in department templates. Ensure template settings properly control UI visibility. *Submitted: 2026-02-04*
 
-### 🟡 Open - Medium Priority (4 items)
+### 🟡 Open - Medium Priority (8 items)
+- [ ] **FB-024:** Positions page layout update (BUG, MEDIUM) - Clean up button layout, improve mobile responsiveness, consider better UI approach across all pages. Big buttons are problematic on mobile. *Submitted: 2026-02-04*
+- [ ] **FB-025:** Location library (ENHANCEMENT, MEDIUM) - Track previously used locations with addresses, Google Maps integration, search/autocomplete when creating events to avoid retyping same information. *Submitted: 2026-02-04*
+- [ ] **FB-026:** Feedback notifications banner (ENHANCEMENT, MEDIUM) - Implement feedback notifications banner like LDC Tools, add paste screenshot capability to feedback form. *Submitted: 2026-02-04*
+- [ ] **FB-027:** Event selection page organization (ENHANCEMENT, MEDIUM) - Better organization for admins viewing all events, add search functionality, improve parent/child relationship visualization with connectors/expanders. Clarify if parent event admins automatically get admin access to child events. *Submitted: 2026-02-04*
 - [ ] **FB-003:** Attendant view - Complete schedule visibility (FEATURE, MEDIUM) - Attendant ability to see complete schedule for their station so they know who is there before and after their scheduled shift. *Submitted: 2025-11-03*
 - [ ] **FB-004:** Search by name feature (FEATURE, MEDIUM) - Type in a brother's name and have all his assignments pop up from the attendant page. *Submitted: 2025-11-02*
 - [ ] **FB-012:** Positions Page - Bulk Edit Enhancement (ENHANCEMENT, MEDIUM) - Bulk edit to assign shifts AND oversight mappings in same motion, preserve selection until window closes. *Submitted: 2025-10-24*
@@ -88,11 +92,11 @@
 - [x] **FB-022:** Test final (BUG, MEDIUM, RESOLVED) - Testing. *Submitted: 2025-10-19*
 
 ### 📊 Summary Statistics
-- **Total Feedback Items:** 22
-- **Open:** 4 (18%)
-- **Resolved/Closed:** 18 (82%)
-- **By Type:** 12 Bugs, 5 Enhancements, 5 Features
-- **By Priority:** 0 Urgent, 2 High (open), 20 Medium
+- **Total Feedback Items:** 27
+- **Open:** 9 (33%)
+- **Resolved/Closed:** 18 (67%)
+- **By Type:** 13 Bugs, 9 Enhancements, 5 Features
+- **By Priority:** 0 Urgent, 1 High, 26 Medium
 
 ---
 

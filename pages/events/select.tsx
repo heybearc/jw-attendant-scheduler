@@ -227,10 +227,12 @@ export default function EventSelectPage({ events, userLastSeenVersion, releaseSu
                       <div className="flex items-center text-sm text-gray-600">
                         <span className="mr-2">📅</span>
                         {(() => {
-                          // Use date-fns for consistent SSR/client formatting
+                          // Parse date without timezone conversion
                           try {
-                            const start = format(parseISO(event.startDate), 'MMM d, yyyy')
-                            const end = format(parseISO(event.endDate), 'MMM d, yyyy')
+                            const startPart = event.startDate.split('T')[0]
+                            const endPart = event.endDate.split('T')[0]
+                            const start = format(parseISO(startPart + 'T12:00:00'), 'MMM d, yyyy')
+                            const end = format(parseISO(endPart + 'T12:00:00'), 'MMM d, yyyy')
                             return `${start} - ${end}`
                           } catch {
                             return 'Invalid date range'

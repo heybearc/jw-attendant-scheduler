@@ -119,8 +119,8 @@ interface EventDetailsPageProps {
 
 function EventCommandCenter({ event, canEdit }: { event: Event; canEdit: boolean }) {
   const moduleConfig = useModuleConfig()
-  const isCountTimesEnabled = moduleConfig?.countTimes !== false
-  const isLanyardsEnabled = moduleConfig?.lanyards !== false
+  const isCountTimesEnabled = moduleConfig?.countTimes === true
+  const isLanyardsEnabled = moduleConfig?.lanyards === true
 
   return (
     <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3">
@@ -173,7 +173,7 @@ function EventCommandCenter({ event, canEdit }: { event: Event; canEdit: boolean
 
 function CountTimesLink({ eventId }: { eventId: string }) {
   const moduleConfig = useModuleConfig()
-  const isCountTimesEnabled = moduleConfig?.countTimes !== false
+  const isCountTimesEnabled = moduleConfig?.countTimes === true
 
   if (!isCountTimesEnabled) return null
 
@@ -191,7 +191,7 @@ function CountTimesLink({ eventId }: { eventId: string }) {
 
 function CountTimesSummary({ event }: { event: Event }) {
   const moduleConfig = useModuleConfig()
-  const isCountTimesEnabled = moduleConfig?.countTimes !== false
+  const isCountTimesEnabled = moduleConfig?.countTimes === true
 
   if (!isCountTimesEnabled) return null
 

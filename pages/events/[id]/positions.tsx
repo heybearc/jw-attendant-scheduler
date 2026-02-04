@@ -839,84 +839,201 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                   Manage positions and roles for {event?.name}
                 </p>
               </div>
-              <div className="flex space-x-3">
-                <Link
-                  href={`/events/${eventId}`}
-                  className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors"
-                >
-                  ← Back to Event
-                </Link>
+              {/* Mobile-Responsive Button Layout */}
+              <div className="space-y-3">
+                {/* Row 1: Navigation & Primary Actions */}
+                <div className="flex flex-wrap gap-2">
+                  <Link
+                    href={`/events/${eventId}`}
+                    className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    ← Back
+                  </Link>
 
-                {/* Overseer Filter */}
-                <select
-                  value={selectedOverseer}
-                  onChange={(e) => setSelectedOverseer(e.target.value)}
-                  className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="all">All Overseers</option>
-                  {Array.from(new Set(
-                    positions
-                      .map(p => p.oversight?.[0]?.overseer)
-                      .filter(Boolean)
-                      .map(o => JSON.stringify({ id: o!.id, name: `${o!.firstName} ${o!.lastName}` }))
-                  )).map(overseerStr => {
-                    const overseer = JSON.parse(overseerStr)
-                    return (
-                      <option key={overseer.id} value={overseer.id}>
-                        {overseer.name}
-                      </option>
-                    )
-                  })}
-                </select>
+                  {canManageContent && (
+                    <button
+                      onClick={handleAutoAssignOversightAware}
+                      disabled={isSubmitting || getUnassignedCount() === 0}
+                      className={`px-4 py-2 rounded-lg text-sm font-bold text-white transition-all ${
+                        isSubmitting 
+                          ? 'bg-blue-500 cursor-not-allowed' 
+                          : getUnassignedCount() === 0
+                            ? 'bg-green-500 hover:bg-green-600'
+                            : 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600'
+                      }`}
+                      title={`Auto-assign ${getUnassignedCount()} available volunteers`}
+                    >
+                      {isSubmitting ? (
+                        <span className="flex items-center gap-2">
+                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                          Assigning...
+                        </span>
+                      ) : getUnassignedCount() === 0 ? (
+                        <span>🎉 All Assigned</span>
+                      ) : (
+                        <span>🚨 Auto-Assign ({getUnassignedCount()})</span>
+                      )}
+                    </button>
+                  )}
 
-                {/* Phase 5B: Role Filter */}
-                <select
-                  value={roleFilter}
-                  onChange={(e) => setRoleFilter(e.target.value as 'all' | 'overseers' | 'assistants' | 'keymen')}
-                  className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  title="Filter by oversight role"
-                >
-                  <option value="all">All Roles</option>
-                  <option value="overseers">🔵 Overseers Only</option>
-                  <option value="assistants">🟢 Assistants Only</option>
-                  <option value="keymen">🟡 Keymen Only</option>
-                </select>
+                  <button
+                    onClick={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                    title={viewMode === 'list' ? 'Switch to Grid View' : 'Switch to List View'}
+                  >
+                    {viewMode === 'list' ? '📊 Grid' : '📋 List'}
+                  </button>
 
-                {/* Export Buttons */}
-                <button
-                  onClick={handleExportPDF}
-                  disabled={isExporting}
-                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-                >
-                  <span>📄</span>
-                  <span>{isExporting ? 'Exporting...' : 'PDF'}</span>
-                </button>
-                <button
-                  onClick={handleExportExcel}
-                  disabled={isExporting}
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-                >
-                  <span>📊</span>
-                  <span>{isExporting ? 'Exporting...' : 'Excel'}</span>
-                </button>
-                
-                {/* Bulk Operations */}
+                  <button
+                    onClick={() => {
+                      const newState = !showInactive
+                      setShowInactive(newState)
+                      localStorage.setItem(`showInactive-event-${eventId}`, newState.toString())
+                      const url = new URL(window.location.href)
+                      if (newState) {
+                        url.searchParams.set('showInactive', 'true')
+                      } else {
+                        url.searchParams.delete('showInactive')
+                      }
+                      window.history.replaceState({}, '', url.toString())
+                    }}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      showInactive 
+                        ? 'bg-purple-600 hover:bg-purple-700 text-white' 
+                        : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                    }`}
+                    title={showInactive ? 'Hide inactive' : 'Show inactive'}
+                  >
+                    👁️ {showInactive ? 'Hide' : 'Show'} Inactive
+                  </button>
+                </div>
+
+                {/* Row 2: Filters */}
+                <div className="flex flex-wrap gap-2">
+                  <select
+                    value={selectedOverseer}
+                    onChange={(e) => setSelectedOverseer(e.target.value)}
+                    className="bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="all">All Overseers</option>
+                    {Array.from(new Set(
+                      positions
+                        .map(p => p.oversight?.[0]?.overseer)
+                        .filter(Boolean)
+                        .map(o => JSON.stringify({ id: o!.id, name: `${o!.firstName} ${o!.lastName}` }))
+                    )).map(overseerStr => {
+                      const overseer = JSON.parse(overseerStr)
+                      return (
+                        <option key={overseer.id} value={overseer.id}>
+                          {overseer.name}
+                        </option>
+                      )
+                    })}
+                  </select>
+
+                  <select
+                    value={roleFilter}
+                    onChange={(e) => setRoleFilter(e.target.value as 'all' | 'overseers' | 'assistants' | 'keymen')}
+                    className="bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    title="Filter by oversight role"
+                  >
+                    <option value="all">All Roles</option>
+                    <option value="overseers">🔵 Overseers</option>
+                    <option value="assistants">🟢 Assistants</option>
+                    <option value="keymen">🟡 Keymen</option>
+                  </select>
+                </div>
+
+                {/* Row 3: Export & Management Actions */}
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={handleExportPDF}
+                    disabled={isExporting}
+                    className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 flex items-center gap-1"
+                  >
+                    <span>📄</span>
+                    <span>{isExporting ? 'Exporting...' : 'PDF'}</span>
+                  </button>
+                  <button
+                    onClick={handleExportExcel}
+                    disabled={isExporting}
+                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 flex items-center gap-1"
+                  >
+                    <span>📊</span>
+                    <span>{isExporting ? 'Exporting...' : 'Excel'}</span>
+                  </button>
+                  
+                  {canManageContent && (
+                    <button
+                      onClick={async () => {
+                        if (!confirm('📧 Send assignment notifications to all volunteers?\n\nThis will send an email to each volunteer with their current assignments.\n\nContinue?')) {
+                          return
+                        }
+                        try {
+                          const response = await fetch(`/api/events/${eventId}/assignments/send-notifications`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' }
+                          })
+                          const data = await response.json()
+                          if (response.ok && data.success) {
+                            if (data.failed > 0) {
+                              alert(`⚠️ ${data.message}\n\nErrors:\n${data.errors?.join('\n') || 'Unknown errors'}`)
+                            } else {
+                              alert(`✅ ${data.message}`)
+                            }
+                          } else {
+                            alert(`❌ ${data.error || data.message || 'Failed to send notifications'}`)
+                          }
+                        } catch (error) {
+                          alert(`❌ Failed to send notifications: ${error.message}`)
+                        }
+                      }}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                      title="Send email notifications"
+                    >
+                      📧 Notify
+                    </button>
+                  )}
+                  
+                  {canManageContent && (
+                    <button
+                      onClick={async () => {
+                        if (!confirm('⚠️ Clear ALL assignments?\n\nThis cannot be undone.')) return
+                        try {
+                          const success = await positionService.clearAllAssignments()
+                          if (success) {
+                            alert('✅ Cleared all assignments')
+                            router.reload()
+                          } else {
+                            alert('Failed to clear assignments')
+                          }
+                        } catch (error) {
+                          alert('Failed to clear assignments')
+                        }
+                      }}
+                      className="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                      title="Clear all assignments"
+                    >
+                      🧹 Clear
+                    </button>
+                  )}
+                </div>
+
+                {/* Row 4: Bulk Operations (when items selected) */}
                 {canManageContent && selectedPositions.size > 0 && (
-                  <div className="flex items-center space-x-2 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+                  <div className="flex flex-wrap items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
                     <span className="text-sm text-blue-700 font-medium">
                       {selectedPositions.size} selected
                     </span>
                     <button
                       onClick={() => setShowTemplateModal(true)}
-                      disabled={selectedPositions.size === 0}
                       className="text-xs bg-green-100 hover:bg-green-200 text-green-700 px-2 py-1 rounded"
-                      title="Apply shift template to selected positions"
+                      title="Apply shift template"
                     >
-                      📅 Apply Template
+                      📅 Template
                     </button>
                     <button
                       onClick={handleBulkDelete}
-                      disabled={selectedPositions.size === 0}
                       className="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-2 py-1 rounded"
                     >
                       Delete
@@ -934,147 +1051,6 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                       Clear
                     </button>
                   </div>
-                )}
-                
-                {canManageContent && (
-                  <button
-                    onClick={handleAutoAssignOversightAware}
-                    disabled={isSubmitting || getUnassignedCount() === 0}
-                    className={`relative px-6 py-3 rounded-lg font-bold text-white transition-all duration-300 transform hover:scale-105 shadow-lg ${
-                      isSubmitting 
-                        ? 'bg-blue-500 cursor-not-allowed' 
-                        : getUnassignedCount() === 0
-                          ? 'bg-green-500 hover:bg-green-600'
-                          : 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 animate-pulse'
-                    }`}
-                    title={`Auto-assign ${getUnassignedCount()} available volunteers with oversight awareness`}
-                  >
-                    <div className="flex items-center space-x-2">
-                      {isSubmitting ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                          <span>Assigning...</span>
-                        </>
-                      ) : getUnassignedCount() === 0 ? (
-                        <>
-                          <span>🎉</span>
-                          <span>ALL ASSIGNED!</span>
-                        </>
-                      ) : (
-                        <>
-                          <span>🚨</span>
-                          <span>SMART AUTO-ASSIGN</span>
-                          <span className="bg-white bg-opacity-20 px-2 py-1 rounded-full text-sm">
-                            {getUnassignedCount()}
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  </button>
-                )}
-                
-                <button
-                  onClick={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                  title={viewMode === 'list' ? 'Switch to Grid View' : 'Switch to List View'}
-                >
-                  {viewMode === 'list' ? '📊 Grid View' : '📋 List View'}
-                </button>
-                
-                <button
-                  onClick={() => {
-                    const newState = !showInactive
-                    setShowInactive(newState)
-                    
-                    // Save to localStorage
-                    localStorage.setItem(`showInactive-event-${eventId}`, newState.toString())
-                    
-                    // Update URL without page reload
-                    const url = new URL(window.location.href)
-                    if (newState) {
-                      url.searchParams.set('showInactive', 'true')
-                    } else {
-                      url.searchParams.delete('showInactive')
-                    }
-                    window.history.replaceState({}, '', url.toString())
-                  }}
-                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                    showInactive 
-                      ? 'bg-purple-600 hover:bg-purple-700 text-white' 
-                      : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                  }`}
-                  title={showInactive ? 'Hide inactive positions' : 'Show inactive positions'}
-                >
-                  👁️ {showInactive ? 'Hide Inactive' : 'Show Inactive'}
-                </button>
-                {canManageContent && (
-                  <button
-                    onClick={async () => {
-                      if (!confirm('📧 Send assignment notifications to all volunteers?\n\nThis will send an email to each volunteer with their current assignments.\n\nContinue?')) {
-                        return
-                      }
-                      try {
-                        console.log('Sending notifications to:', `/api/events/${eventId}/assignments/send-notifications`)
-                        const response = await fetch(`/api/events/${eventId}/assignments/send-notifications`, {
-                          method: 'POST',
-                          headers: {
-                            'Content-Type': 'application/json'
-                          }
-                        })
-                        
-                        console.log('Response status:', response.status)
-                        const data = await response.json()
-                        console.log('Response data:', data)
-                        
-                        if (data.errors && data.errors.length > 0) {
-                          console.error('Notification errors:', data.errors)
-                        }
-                        
-                        if (response.ok && data.success) {
-                          if (data.failed > 0) {
-                            alert(`⚠️ ${data.message}\n\nErrors:\n${data.errors?.join('\n') || 'Unknown errors'}`)
-                          } else {
-                            alert(`✅ ${data.message}`)
-                          }
-                        } else {
-                          alert(`❌ ${data.error || data.message || 'Failed to send notifications'}`)
-                        }
-                      } catch (error) {
-                        console.error('Send notifications error:', error)
-                        alert(`❌ Failed to send notifications: ${error.message}`)
-                      }
-                    }}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                    title="Send email notifications to all volunteers with assignments"
-                  >
-                    📧 Send Notifications
-                  </button>
-                )}
-                
-                {canManageContent && (
-                  <button
-                    onClick={async () => {
-                      if (!confirm('⚠️ Clear ALL assignments from ALL positions?\n\nThis will remove all attendant assignments but keep positions and shifts intact.\n\nThis action cannot be undone.')) {
-                        return
-                      }
-                      try {
-                        const success = await positionService.clearAllAssignments()
-                      if (success) {
-                          alert('✅ Cleared all assignments')
-                          router.reload()
-                        } else {
-                          alert('Failed to clear assignments')
-                        }
-                      } catch (error) {
-                        console.error('Clear assignments error:', error)
-                        alert('Failed to clear assignments')
-                      }
-                    }}
-                    className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                    title="Remove all attendant assignments from all positions"
-                  >
-                    🧹 Clear All Assignments
-                  </button>
                 )}
                 
                 {canManageContent && (

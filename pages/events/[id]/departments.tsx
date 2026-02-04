@@ -522,8 +522,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         eventId: id,
         event: {
           ...event,
-          startDate: event.startDate.toISOString(),
-          endDate: event.endDate.toISOString()
+          startDate: event.startDate ? event.startDate.toISOString().split('T')[0] + 'T00:00:00' : null,
+          endDate: event.endDate ? event.endDate.toISOString().split('T')[0] + 'T00:00:00' : null
         },
         canManageContent
       }

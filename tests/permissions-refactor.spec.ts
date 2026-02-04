@@ -19,7 +19,7 @@ test.describe('Permissions Refactor - 3 Role System', () => {
     await page.fill('input[name="email"]', process.env.TEST_USER_EMAIL || 'admin@theoshift.local');
     await page.fill('input[name="password"]', process.env.TEST_USER_PASSWORD || 'password');
     await page.click('button[type="submit"]');
-    await page.waitForURL('**/dashboard');
+    await page.waitForURL('**/events/select');
   });
 
   test('PR-1: Permissions page loads and shows 3-role dropdown', async ({ page }) => {

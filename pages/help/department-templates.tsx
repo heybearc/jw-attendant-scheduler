@@ -178,9 +178,22 @@ export default function DepartmentTemplatesPage({ userRole }: DepartmentTemplate
             <div className="space-y-4">
               <div className="bg-white border border-gray-200 rounded-lg p-6">
                 <h3 className="font-semibold text-gray-900 mb-2">Can I change the template after creating an event?</h3>
-                <p className="text-gray-600">
-                  Contact your system administrator if you need to change an event's department template.
+                <p className="text-gray-600 mb-3">
+                  Yes! Event administrators can assign or change department templates on existing events.
                 </p>
+                <div className="bg-gray-50 rounded p-4 text-sm text-gray-700">
+                  <p className="font-semibold mb-2">How to change a template:</p>
+                  <ol className="list-decimal list-inside space-y-1">
+                    <li>Go to the event page</li>
+                    <li>Click "Edit Event"</li>
+                    <li>Find the "Department Template" dropdown</li>
+                    <li>Select a new template or choose "No template"</li>
+                    <li>Save your changes</li>
+                  </ol>
+                  <p className="mt-3 text-gray-600">
+                    The event will immediately show or hide features based on the new template settings.
+                  </p>
+                </div>
               </div>
 
               <div className="bg-white border border-gray-200 rounded-lg p-6">

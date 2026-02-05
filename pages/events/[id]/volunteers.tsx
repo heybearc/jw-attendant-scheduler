@@ -7,7 +7,6 @@ import FilterPresets from '../../../components/FilterPresets'
 import { VolunteerBadges } from '../../../components/VolunteerBadges'
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
-import Link from 'next/link'
 
 interface Event {
   id: string
@@ -63,13 +62,10 @@ interface EventVolunteersPageProps {
   event: Event
   attendants: Attendant[]
   canManageContent: boolean
-  canEdit: boolean
-  canDelete: boolean
-  canManagePermissions: boolean
   stats: VolunteerStats
 }
 
-export default function EventVolunteersPage({ eventId, event, attendants: initialAttendants, canManageContent, canEdit, canDelete, canManagePermissions, stats }: EventVolunteersPageProps) {
+export default function EventAttendantsPage({ eventId, event, attendants, canManageContent, stats }: EventVolunteersPageProps) {
   const router = useRouter()
   const [showAddModal, setShowAddModal] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
@@ -904,30 +900,33 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
   }
 
   return (
-    <TemplateProvider
-      moduleConfig={null}
-      terminology={null}
-      positionTemplates={null}
-      departmentTemplateName={undefined}
+    <EventLayout 
+      title={`${event.name} - Volunteers | Theocratic Shift Scheduler`}
+      breadcrumbs={[
+        { label: 'Events', href: '/events' },
+        { label: event.name, href: `/events/${eventId}` },
+        { label: 'Attendants' }
+      ]}
+      selectedEvent={{
+        id: eventId,
+        name: event.name,
+        status: event.status
+      }}
     >
-      <EventPageLayout
-        event={{
-          id: eventId,
-          name: event.name,
-          status: event.status,
-          eventType: event.eventType,
-          startDate: event.startDate
-        }}
-        currentPage="volunteers"
-        canEdit={canEdit}
-        canDelete={canDelete}
-        canManagePermissions={canManagePermissions}
-      >
-        <div className="max-w-7xl mx-auto">
-          {/* Action Toolbar */}
-          <div className="mb-6">
-            <div className="flex justify-between items-center mb-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-6">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Event Volunteers</h2>
               <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-3">
+                <button 
+                  onClick={() => router.push(`/events/${eventId}`)}
+                  disabled={loading}
+                  className="bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white font-bold py-3 px-4 rounded transition-colors min-h-[44px] touch-manipulation"
+                >
+                  ← Back to Event
+                </button>
                 {canManageContent && (
                   <div className="flex space-x-3">
                     <button 
@@ -2283,21 +2282,20 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                     }}
                     className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                   >
-                  Edit Volunteer
+                    Edit Volunteer
                   </button>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </EventPageLayout>
-    </TemplateProvider>
+        )}
+      </div>
+    </EventLayout>
   )
 }
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const session = await getServerSession(context.req, context.res, authOptions)
-  // ... (rest of the code remains the same)
   
   if (!session) {
     return {

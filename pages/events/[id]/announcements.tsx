@@ -38,9 +38,13 @@ interface EventAnnouncementsPageProps {
   canEdit: boolean
   canDelete: boolean
   canManagePermissions: boolean
+  moduleConfig?: any
+  terminology?: any
+  positionTemplates?: any
+  departmentTemplateName?: string
 }
 
-export default function EventAnnouncementsPage({ eventId, event, announcements, canManage, canEdit, canDelete, canManagePermissions }: EventAnnouncementsPageProps) {
+export default function EventAnnouncementsPage({ eventId, event, announcements, canManage, canEdit, canDelete, canManagePermissions, moduleConfig, terminology, positionTemplates, departmentTemplateName }: EventAnnouncementsPageProps) {
   const router = useRouter()
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -155,6 +159,10 @@ export default function EventAnnouncementsPage({ eventId, event, announcements, 
       canEdit={canEdit}
       canDelete={canDelete}
       canManagePermissions={canManagePermissions}
+      moduleConfig={moduleConfig}
+      terminology={terminology}
+      positionTemplates={positionTemplates}
+      departmentTemplateName={departmentTemplateName}
     >
         <div className="max-w-7xl mx-auto">
           {/* Header */}
@@ -396,12 +404,21 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
     const event = await prisma.events.findUnique({
       where: { id: id as string },
-      select: { 
+      select: {
         id: true, 
         name: true,
         status: true,
         eventType: true,
-        startDate: true
+        startDate: true,
+        departmentTemplate: {
+          select: {
+            id: true,
+            name: true,
+            moduleConfig: true,
+            terminology: true,
+            positionTemplates: true
+          }
+        }
       }
     })
 

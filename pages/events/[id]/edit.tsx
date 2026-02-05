@@ -117,7 +117,6 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
   })
 
   const [errors, setErrors] = useState<Partial<EventFormData>>({})
-  const [submitting, setSubmitting] = useState(false)
   
   // Parse assistants from JSON string for UI management
   const [assistants, setAssistants] = useState<Array<{name: string, phone: string, email: string}>>(() => {

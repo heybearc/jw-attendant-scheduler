@@ -120,10 +120,10 @@ export default function EventQRCode({ eventId, eventName, size = 200 }: EventQRC
       {/* QR Code Button */}
       <button
         onClick={() => setShowModal(true)}
-        className="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+        className="inline-flex items-center gap-2 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors"
       >
-        <span className="mr-2">📱</span>
-        Event QR Code
+        <span>📱</span>
+        <span>Event QR Code</span>
       </button>
 
       {/* QR Code Modal */}

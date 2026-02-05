@@ -147,7 +147,7 @@ function EventCommandCenter({ event, canEdit, onStatusChange, onClone, onDelete 
         {event.status === 'UPCOMING' && onStatusChange && (
           <button
             onClick={() => onStatusChange('CURRENT')}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-semibold transition-colors"
+            className="inline-flex items-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-semibold transition-colors"
           >
             🚀 Start Event
           </button>
@@ -155,7 +155,7 @@ function EventCommandCenter({ event, canEdit, onStatusChange, onClone, onDelete 
         {event.status === 'CURRENT' && onStatusChange && (
           <button
             onClick={() => onStatusChange('COMPLETED')}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-colors"
+            className="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-colors"
           >
             ✅ Complete Event
           </button>

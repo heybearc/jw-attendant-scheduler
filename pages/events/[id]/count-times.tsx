@@ -1,7 +1,8 @@
 import { GetServerSideProps } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../api/auth/[...nextauth]'
-import EventLayout from '../../../components/EventLayout'
+import EventPageLayout from '../../../components/EventPageLayout'
+import { TemplateProvider } from '../../../contexts/TemplateContext'
 import CreateCountSessionModal from '../../../components/CreateCountSessionModal'
 import EditCountSessionModal from '../../../components/EditCountSessionModal'
 import { useEffect, useState } from 'react'
@@ -52,6 +53,9 @@ interface CountSession {
 interface Event {
   id: string
   name: string
+  status: string
+  eventType: string
+  startDate: string
 }
 
 interface CountStats {
@@ -65,10 +69,13 @@ interface EventCountTimesPageProps {
   event: Event
   countSessions: CountSession[]
   canManageContent: boolean
+  canEdit: boolean
+  canDelete: boolean
+  canManagePermissions: boolean
   stats: CountStats
 }
 
-export default function EventCountTimesPage({ eventId, event, countSessions, canManageContent, stats }: EventCountTimesPageProps) {
+export default function EventCountTimesPage({ eventId, event, countSessions, canManageContent, canEdit, canDelete, canManagePermissions, stats }: EventCountTimesPageProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -131,74 +138,45 @@ export default function EventCountTimesPage({ eventId, event, countSessions, can
     router.reload() // Refresh page to show updated data
   }
 
-  if (loading) {
-    return (
-      <EventLayout 
-        title="Count Times"
-        breadcrumbs={[
-          { label: 'Events', href: '/events' },
-          { label: event?.name || 'Loading...', href: `/events/${eventId}` },
-          { label: 'Count Times' }
-        ]}
-      >
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <p className="ml-3 text-gray-600">Loading count times...</p>
-        </div>
-      </EventLayout>
-    )
-  }
-
-  if (error || !event) {
-    return (
-      <EventLayout 
-        title="Count Times"
-        breadcrumbs={[
-          { label: 'Events', href: '/events' },
-          { label: 'Error' }
-        ]}
-      >
-        <div className="bg-red-50 border border-red-200 rounded-lg p-8 text-center">
-          <p className="text-red-700">{error || 'Event not found'}</p>
-          <Link
-            href="/events"
-            className="mt-4 inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors"
-          >
-            ← Back to Events
-          </Link>
-        </div>
-      </EventLayout>
-    )
+  if (loading || error || !event) {
+    return null
   }
 
   return (
-    <EventLayout 
-      title="Count Times"
-      breadcrumbs={[
-        { label: 'Events', href: '/events' },
-        { label: event.name, href: `/events/${eventId}` },
-        { label: 'Count Times' }
-      ]}
-      selectedEvent={{
-        id: event.id,
-        name: event.name
-      }}
+    <TemplateProvider
+      moduleConfig={null}
+      terminology={null}
+      positionTemplates={null}
+      departmentTemplateName={undefined}
     >
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Count Times</h1>
-              <p className="text-gray-600">Manage attendance counting sessions for this event</p>
-            </div>
-            <div className="flex space-x-3">
-              <Link
-                href={`/events/${eventId}`}
-                className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded transition-colors"
-              >
-                ← Back to Event
-              </Link>
+      <EventPageLayout
+        event={{
+          id: event.id,
+          name: event.name,
+          status: event.status,
+          eventType: event.eventType,
+          startDate: event.startDate
+        }}
+        currentPage="count-times"
+        canEdit={canEdit}
+        canDelete={canDelete}
+        canManagePermissions={canManagePermissions}
+      >
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Count Times</h1>
+                <p className="text-gray-600">Manage attendance counting sessions for this event</p>
+              </div>
+              <div className="flex space-x-3">
+                <Link
+                  href={`/events/${eventId}`}
+                  className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded transition-colors"
+                >
+                  ← Back to Event
+                </Link>
               {canManageContent && (
                 <button
                   onClick={() => setShowCreateModal(true)}
@@ -357,7 +335,8 @@ export default function EventCountTimesPage({ eventId, event, countSessions, can
           />
         )}
       </div>
-    </EventLayout>
+      </EventPageLayout>
+    </TemplateProvider>
   )
 }
 
@@ -441,7 +420,10 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     // Transform event data
     const event = {
       id: eventData.id,
-      name: eventData.name
+      name: eventData.name,
+      status: eventData.status,
+      eventType: eventData.eventType,
+      startDate: eventData.startDate?.toISOString() || new Date().toISOString()
     }
 
     // Transform count sessions data
@@ -470,9 +452,12 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     }))
 
     // Check event-specific permissions
-    const { canManageAttendants } = await import('../../../src/lib/eventAccess')
+    const { canManageAttendants, canManageEvent, canDeleteEvent, canManagePermissions } = await import('../../../src/lib/eventAccess')
     const userId = session.user?.id || ''
     const canManageContent = await canManageAttendants(userId, id as string)
+    const canEdit = await canManageEvent(userId, id as string)
+    const canDelete = await canDeleteEvent(userId, id as string)
+    const canManagePerms = await canManagePermissions(userId, id as string)
 
     return {
       props: {
@@ -480,6 +465,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         event,
         countSessions,
         canManageContent,
+        canEdit,
+        canDelete,
+        canManagePermissions: canManagePerms,
         stats: {
           total: countSessions.length,
           active: countSessions.filter(s => s.isActive).length,

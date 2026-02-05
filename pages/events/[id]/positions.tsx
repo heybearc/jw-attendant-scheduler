@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { useSession } from 'next-auth/react'
-import Head from 'next/head'
 import Link from 'next/link'
+import EventPageLayout from '../../../components/EventPageLayout'
+import { TemplateProvider } from '../../../contexts/TemplateContext'
 import BulkPositionCreator from '../../../components/BulkPositionCreator'
 import PositionTemplateModal from '../../../components/PositionTemplateModal'
 import PositionGridView from '../../../components/PositionGridView'
@@ -18,7 +19,7 @@ import { useExport } from '../../../hooks/useExport'
 import CreatePositionModal from '../../../components/CreatePositionModal'
 import ShiftModal from '../../../components/ShiftModal'
 import OverseerModal from '../../../components/OverseerModal'
-import { GetServerSideProps } from 'next'
+import { GetServerSideProps, GetServerSidePropsContext } from 'next'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../../api/auth/[...nextauth]'
 import crypto from 'crypto'
@@ -107,6 +108,8 @@ interface Event {
   departmentTemplate?: {
     id: string
     name: string
+    moduleConfig?: any
+    terminology?: any
     positionTemplates?: Array<{
       id: string
       name: string
@@ -151,6 +154,8 @@ interface Volunteer {
   } | null
 }
 
+type Attendant = Volunteer
+
 interface EventPositionsProps {
   eventId: string
   event: Event
@@ -158,9 +163,12 @@ interface EventPositionsProps {
   attendants: Attendant[]
   stats: Stats
   canManageContent: boolean
+  canEdit: boolean
+  canDelete: boolean
+  canManagePermissions: boolean
 }
 
-export default function EventPositionsPage({ eventId, event, positions: initialPositions, attendants, stats, canManageContent }: EventPositionsProps) {
+export default function EventPositionsPage({ eventId, event, positions: initialPositions, attendants, stats, canManageContent, canEdit, canDelete, canManagePermissions }: EventPositionsProps) {
   const router = useRouter()
   
   // Initialize services
@@ -800,57 +808,33 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
     window.location.reload()
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading positions...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!session) {
+  if (loading || !session) {
     return null
   }
 
   return (
-    <>
-      <Head>
-        <title>{event?.name ? `${event.name} - Positions` : 'Event Positions'} | Theocratic Shift Scheduler</title>
-      </Head>
-
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Header */}
-          <div className="mb-8">
-            <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-4">
-              <Link href="/events" className="hover:text-gray-700">Events</Link>
-              <span>›</span>
-              <Link href={`/events/${eventId}`} className="hover:text-gray-700">
-                {event?.name || 'Event'}
-              </Link>
-              <span>›</span>
-              <span className="text-gray-900">Positions</span>
-            </nav>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">Event Positions</h1>
-                <p className="text-gray-600 mt-2">
-                  Manage positions and roles for {event?.name}
-                </p>
-              </div>
-              {/* Professional Action Toolbar */}
-              <div className="flex flex-wrap items-center gap-2">
-                {/* Primary Actions */}
-                <Link
-                  href={`/events/${eventId}`}
-                  className="inline-flex items-center px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  ← Back
-                </Link>
+    <TemplateProvider
+      moduleConfig={event.departmentTemplate?.moduleConfig || null}
+      terminology={event.departmentTemplate?.terminology || null}
+      positionTemplates={event.departmentTemplate?.positionTemplates || null}
+      departmentTemplateName={event.departmentTemplate?.name}
+    >
+      <EventPageLayout
+        event={{
+          id: event.id,
+          name: event.name,
+          status: event.status,
+          eventType: event.eventType,
+          startDate: event.startDate
+        }}
+        currentPage="positions"
+        canEdit={canEdit}
+        canDelete={canDelete}
+        canManagePermissions={canManagePermissions}
+      >
+        <div className="space-y-6">
+          {/* Action Toolbar */}
+          <div className="flex flex-wrap items-center gap-2">
 
                 {canManageContent && (
                   <button
@@ -2433,8 +2417,9 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
             </div>
           </div>
         )}
-      </div>
-    </>
+        </div>
+      </EventPageLayout>
+    </TemplateProvider>
   )
 }
 
@@ -2665,9 +2650,12 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     })
 
     // Check event-specific permissions
-    const { canManageAttendants } = await import('../../../src/lib/eventAccess')
+    const { canManageAttendants, canManageEvent, canDeleteEvent, canManagePermissions } = await import('../../../src/lib/eventAccess')
     const userId = session.user?.id || ''
     const canManageContent = await canManageAttendants(userId, id as string)
+    const canEdit = await canManageEvent(userId, id as string)
+    const canDelete = await canDeleteEvent(userId, id as string)
+    const canManagePerms = await canManagePermissions(userId, id as string)
 
     return {
       props: {
@@ -2680,7 +2668,10 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
           active: positionsWithOversight.filter((p: any) => p.isActive).length,
           assigned: positionsWithOversight.filter((p: any) => p.assignments && p.assignments.length > 0).length
         },
-        canManageContent
+        canManageContent,
+        canEdit,
+        canDelete,
+        canManagePermissions: canManagePerms
       }
     }
 

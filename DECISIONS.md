@@ -52,12 +52,19 @@
 **Date:** 2026-02-05  
 **Context:** Event pages had inconsistent navigation with redundant titles and no unified tab system  
 **Decision:** Create EventPageLayout component with unified header, toolbar, and workflow-based tabs  
+**Status:** ✅ COMPLETE - Deployed to STANDBY
+**Implementation:**
+- Converted 8 event pages to use EventPageLayout
+- Removed ~500 lines of duplicate navigation code
+- Unified tab order: Overview → Positions → Volunteers → Oversight → Count Times → Lanyards → Documents → Announcements → Permissions
+- Permission-based tab visibility (Permissions tab only for ADMINs)
+- Template-based tab visibility (Count Times/Lanyards based on moduleConfig)
 **Consequences:**
 - Consistent navigation across all event pages
-- Workflow-based tab order (Overview to Permissions)
-- Permission-based and template-based tab visibility
+- Workflow-based tab order improves UX
+- Easier maintenance (single component vs 8 duplicates)
 - Clone/Delete moved to Settings Danger Zone
-- Requires careful page-by-page conversion
+- All pages now support canEdit, canDelete, canManagePermissions props
 
 ### D-TS-005: Standardize Admin Credentials
 **Date:** 2026-01-24  

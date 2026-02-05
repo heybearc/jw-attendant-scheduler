@@ -150,6 +150,13 @@ export default async function handler(
         ? Math.round((coverageCount / totalPositions) * 100) 
         : 0
 
+      // Check event-specific permissions
+      const { canManageEvent, canDeleteEvent, canManagePermissions } = await import('../../../../src/lib/eventAccess')
+      const userId = session.user?.id || ''
+      const canEdit = await canManageEvent(userId, eventId)
+      const canDelete = await canDeleteEvent(userId, eventId)
+      const canManagePerms = await canManagePermissions(userId, eventId)
+
       // Format response
       const response = {
         event: {
@@ -159,6 +166,11 @@ export default async function handler(
           eventType: event.eventType,
           startDate: event.startDate?.toISOString() || '',
           departmentTemplate: event.departmentTemplate
+        },
+        permissions: {
+          canEdit,
+          canDelete,
+          canManagePermissions: canManagePerms
         },
         statistics: {
           totalPositions,

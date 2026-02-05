@@ -48,6 +48,11 @@ interface OversightData {
       positionTemplates?: any
     } | null
   }
+  permissions: {
+    canEdit: boolean
+    canDelete: boolean
+    canManagePermissions: boolean
+  }
   statistics: {
     totalPositions: number
     positionsWithOversight: number
@@ -99,7 +104,7 @@ export default function EventOversightDashboard() {
     return null
   }
 
-  const { event, statistics, overseers, assistantOverseers, keymen, coverageGaps } = oversightData
+  const { event, permissions, statistics, overseers, assistantOverseers, keymen, coverageGaps } = oversightData
 
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString)
@@ -123,9 +128,9 @@ export default function EventOversightDashboard() {
         startDate: event.startDate || new Date().toISOString()
       }}
       currentPage="oversight"
-      canEdit={false}
-      canDelete={false}
-      canManagePermissions={false}
+      canEdit={permissions.canEdit}
+      canDelete={permissions.canDelete}
+      canManagePermissions={permissions.canManagePermissions}
       moduleConfig={event.departmentTemplate?.moduleConfig || null}
       terminology={event.departmentTemplate?.terminology || null}
       positionTemplates={event.departmentTemplate?.positionTemplates || null}

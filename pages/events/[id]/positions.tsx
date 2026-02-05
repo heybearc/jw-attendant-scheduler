@@ -3,6 +3,7 @@ import { useRouter } from 'next/router'
 import { useSession } from 'next-auth/react'
 import Head from 'next/head'
 import Link from 'next/link'
+import EventPageWrapper from '../../../components/EventPageWrapper'
 import BulkPositionCreator from '../../../components/BulkPositionCreator'
 import PositionTemplateModal from '../../../components/PositionTemplateModal'
 import PositionGridView from '../../../components/PositionGridView'
@@ -18,7 +19,7 @@ import { useExport } from '../../../hooks/useExport'
 import CreatePositionModal from '../../../components/CreatePositionModal'
 import ShiftModal from '../../../components/ShiftModal'
 import OverseerModal from '../../../components/OverseerModal'
-import { GetServerSideProps } from 'next'
+import { GetServerSideProps, GetServerSidePropsContext } from 'next'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../../api/auth/[...nextauth]'
 import crypto from 'crypto'
@@ -150,6 +151,8 @@ interface Volunteer {
     role: string
   } | null
 }
+// Type alias for Attendant
+type Attendant = Volunteer
 
 interface EventPositionsProps {
   eventId: string
@@ -158,10 +161,11 @@ interface EventPositionsProps {
   attendants: Attendant[]
   stats: Stats
   canManageContent: boolean
+  canEdit: boolean
+  canDelete: boolean
+  canManagePermissions: boolean
 }
-
-export default function EventPositionsPage({ eventId, event, positions: initialPositions, attendants, stats, canManageContent }: EventPositionsProps) {
-  const router = useRouter()
+export default function EventPositionsPage({ eventId, event, positions: initialPositions, attendants, stats, canManageContent, canEdit, canDelete, canManagePermissions }: EventPositionsProps) {
   
   // Initialize services
   const positionService = React.useMemo(() => createPositionService(eventId), [eventId])
@@ -251,6 +255,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
     selectedPositions,
     setSelectedPositions,
     isSubmitting,
+    setIsSubmitting,
     handleDelete,
     handleActivate,
     handleDeactivate,
@@ -816,42 +821,22 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
   }
 
   return (
-    <>
+    <EventPageWrapper
+      event={event}
+      currentPage="positions"
+      canEdit={canEdit}
+      canDelete={canDelete}
+      canManagePermissions={canManagePermissions}
+    >
       <Head>
         <title>{event?.name ? `${event.name} - Positions` : 'Event Positions'} | Theocratic Shift Scheduler</title>
       </Head>
 
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Header */}
           <div className="mb-8">
-            <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-4">
-              <Link href="/events" className="hover:text-gray-700">Events</Link>
-              <span>›</span>
-              <Link href={`/events/${eventId}`} className="hover:text-gray-700">
-                {event?.name || 'Event'}
-              </Link>
-              <span>›</span>
-              <span className="text-gray-900">Positions</span>
-            </nav>
-
             <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">Event Positions</h1>
-                <p className="text-gray-600 mt-2">
-                  Manage positions and roles for {event?.name}
-                </p>
-              </div>
-              {/* Professional Action Toolbar */}
               <div className="flex flex-wrap items-center gap-2">
-                {/* Primary Actions */}
-                <Link
-                  href={`/events/${eventId}`}
-                  className="inline-flex items-center px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  ← Back
-                </Link>
-
                 {canManageContent && (
                   <button
                     onClick={handleAutoAssignOversightAware}
@@ -2434,7 +2419,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
           </div>
         )}
       </div>
-    </>
+    </EventPageWrapper>
   )
 }
 
@@ -2471,6 +2456,15 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
         },
       }
     }
+
+    const canManage = session.user?.role === 'ADMIN' || session.user?.role === 'OVERSEER'
+
+    // Check event-specific permissions
+    const { canManageEvent, canDeleteEvent, canManagePermissions } = await import('../../../src/lib/eventAccess')
+    const sessionUserId = session.user?.id || ''
+    const canEdit = await canManageEvent(sessionUserId, context.params!.id as string)
+    const canDelete = await canDeleteEvent(sessionUserId, context.params!.id as string)
+    const canManagePerms = await canManagePermissions(sessionUserId, context.params!.id as string)
 
     // APEX GUARDIAN: Full SSR data fetching for positions tab
     const { id } = context.params!
@@ -2669,7 +2663,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     const userId = session.user?.id || ''
     const canManageContent = await canManageAttendants(userId, id as string)
 
-    return {
+       return {
       props: {
         eventId: id as string,
         event,
@@ -2680,7 +2674,10 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
           active: positionsWithOversight.filter((p: any) => p.isActive).length,
           assigned: positionsWithOversight.filter((p: any) => p.assignments && p.assignments.length > 0).length
         },
-        canManageContent
+        canManageContent,
+        canEdit,
+        canDelete,
+        canManagePermissions: canManagePerms
       }
     }
 

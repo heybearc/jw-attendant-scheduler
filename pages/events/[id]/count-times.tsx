@@ -389,7 +389,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     // If event has a department template with moduleConfig, check if countTimes is disabled
     if (event?.departmentTemplate?.moduleConfig) {
       const moduleConfig = event.departmentTemplate.moduleConfig as any
-      const moduleConfig = eventTemplate.departmentTemplate.moduleConfig as any
       if (moduleConfig.countTimes === false) {
         // Count Times module is disabled for this event
         return {

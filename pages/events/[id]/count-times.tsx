@@ -71,6 +71,7 @@ interface CountStats {
 }
 
 interface CountTimesPageProps {
+  eventId: string
   event: Event
   sessions: CountSession[]
   canManageContent: boolean
@@ -84,7 +85,7 @@ interface CountTimesPageProps {
   departmentTemplateName?: string
 }
 
-export default function CountTimesPage({ event, sessions, canManageContent, canEdit, canDelete, canManagePermissions, stats, moduleConfig, terminology, positionTemplates, departmentTemplateName }: CountTimesPageProps) {
+export default function CountTimesPage({ eventId, event, sessions, canManageContent, canEdit, canDelete, canManagePermissions, stats, moduleConfig, terminology, positionTemplates, departmentTemplateName }: CountTimesPageProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')

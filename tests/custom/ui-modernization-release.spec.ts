@@ -6,11 +6,7 @@ test.describe('UI Modernization Release - Volunteers & Positions Pages', () => {
     await page.fill('input[type="email"]', process.env.TEST_USER_EMAIL || '')
     await page.fill('input[type="password"]', process.env.TEST_USER_PASSWORD || '')
     await page.click('button[type="submit"]')
-    await page.waitForURL('**/events/select')
-    
-    const firstEventCard = page.locator('.bg-white.rounded-lg.shadow').first()
-    await firstEventCard.click()
-    await page.waitForLoadState('networkidle')
+    await page.waitForURL('**/events/select', { timeout: 10000 })
   })
 
   test.describe('Volunteers Page Modernization', () => {

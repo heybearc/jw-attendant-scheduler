@@ -48,6 +48,17 @@
 - Clear separation between active and historical documentation
 - Archive includes README for context
 
+### D-TS-026: Unified Event Navigation with EventPageLayout
+**Date:** 2026-02-05  
+**Context:** Event pages had inconsistent navigation with redundant titles and no unified tab system  
+**Decision:** Create EventPageLayout component with unified header, toolbar, and workflow-based tabs  
+**Consequences:**
+- Consistent navigation across all event pages
+- Workflow-based tab order (Overview to Permissions)
+- Permission-based and template-based tab visibility
+- Clone/Delete moved to Settings Danger Zone
+- Requires careful page-by-page conversion
+
 ### D-TS-005: Standardize Admin Credentials
 **Date:** 2026-01-24  
 **Context:** Admin password was inconsistent between documentation (admin123) and production standard (AdminPass123!)  

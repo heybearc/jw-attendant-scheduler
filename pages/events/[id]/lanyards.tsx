@@ -444,6 +444,10 @@ export default function EventLanyardsPage({ eventId, event, lanyards, attendants
         canEdit={canEdit}
         canDelete={canDelete}
         canManagePermissions={canManagePermissions}
+        moduleConfig={moduleConfig}
+        terminology={terminology}
+        positionTemplates={positionTemplates}
+        departmentTemplateName={departmentTemplateName}
       >
         {/* Export Information Form - Visible on screen and in print */}
       <div className="max-w-7xl mx-auto mb-6">

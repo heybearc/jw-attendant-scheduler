@@ -55,6 +55,13 @@ interface Event {
   status: string
   eventType: string
   startDate: string
+  departmentTemplate?: {
+    id: string
+    name: string
+    moduleConfig?: any
+    terminology?: any
+    positionTemplates?: any
+  } | null
 }
 
 interface CountStats {
@@ -63,18 +70,21 @@ interface CountStats {
   completed: number
 }
 
-interface EventCountTimesPageProps {
-  eventId: string
+interface CountTimesPageProps {
   event: Event
-  countSessions: CountSession[]
+  sessions: CountSession[]
   canManageContent: boolean
   canEdit: boolean
   canDelete: boolean
   canManagePermissions: boolean
   stats: CountStats
+  moduleConfig?: any
+  terminology?: any
+  positionTemplates?: any
+  departmentTemplateName?: string
 }
 
-export default function EventCountTimesPage({ eventId, event, countSessions, canManageContent, canEdit, canDelete, canManagePermissions, stats }: EventCountTimesPageProps) {
+export default function CountTimesPage({ event, sessions, canManageContent, canEdit, canDelete, canManagePermissions, stats, moduleConfig, terminology, positionTemplates, departmentTemplateName }: CountTimesPageProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -154,6 +164,10 @@ export default function EventCountTimesPage({ eventId, event, countSessions, can
       canEdit={canEdit}
       canDelete={canDelete}
       canManagePermissions={canManagePermissions}
+      moduleConfig={moduleConfig}
+      terminology={terminology}
+      positionTemplates={positionTemplates}
+      departmentTemplateName={departmentTemplateName}
     >
         <div className="max-w-7xl mx-auto">
           {/* Header */}
@@ -380,6 +394,15 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     const eventData = await prisma.events.findUnique({
       where: { id: id as string },
       include: {
+        departmentTemplate: {
+          select: {
+            id: true,
+            name: true,
+            moduleConfig: true,
+            terminology: true,
+            positionTemplates: true
+          }
+        },
         count_sessions: {
           include: {
             position_counts: {
@@ -415,7 +438,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       name: eventData.name,
       status: eventData.status,
       eventType: eventData.eventType,
-      startDate: eventData.startDate?.toISOString() || new Date().toISOString()
+      startDate: eventData.startDate?.toISOString() || new Date().toISOString(),
+      departmentTemplate: eventData.departmentTemplate
     }
 
     // Transform count sessions data
@@ -464,7 +488,11 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           total: countSessions.length,
           active: countSessions.filter(s => s.isActive).length,
           completed: countSessions.filter(s => s.status === 'COMPLETED').length
-        }
+        },
+        moduleConfig: eventData.departmentTemplate?.moduleConfig || null,
+        terminology: eventData.departmentTemplate?.terminology || null,
+        positionTemplates: eventData.departmentTemplate?.positionTemplates || null,
+        departmentTemplateName: eventData.departmentTemplate?.name || undefined
       }
     }
   } catch (error) {

@@ -25,13 +25,17 @@ interface EventLayoutProps {
     name: string
     status?: string
   }
+  hideSidebar?: boolean
+  hideTitle?: boolean
 }
 
 export default function EventLayout({ 
   children, 
   title = 'Theocratic Shift Scheduler',
   breadcrumbs = [],
-  selectedEvent
+  selectedEvent,
+  hideSidebar = false,
+  hideTitle = false
 }: EventLayoutProps) {
   const { data: session } = useSession()
   const router = useRouter()
@@ -192,7 +196,7 @@ export default function EventLayout({
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24 md:pb-8">
-        {title && (
+        {title && !hideTitle && (
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
           </div>

@@ -576,6 +576,7 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
     >
       <EventLayout 
         title={event.name}
+        hideTitle={true}
         breadcrumbs={[
           { label: 'Events', href: '/events' },
           { label: event.name }
@@ -941,18 +942,6 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
                 </div>
               )}
             </div>
-
-            {/* Phase 3B: Dynamic Event Navigation */}
-            <EventNavigation
-              eventId={event.id}
-              canEdit={canEdit}
-              canDelete={canDelete}
-              onStatusChange={handleStatusChange}
-              onDelete={handleDeleteEvent}
-              onClone={handleCloneEvent}
-              onExport={handleExportData}
-              currentStatus={event.status}
-            />
 
             {/* Phase 5B: Oversight Coverage Card */}
             <OversightCoverageCard eventId={event.id} />

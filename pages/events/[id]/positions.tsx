@@ -845,69 +845,96 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="mb-8">
-            <div className="flex items-center justify-between">
+            {/* Professional Action Toolbar */}
+            <div className="flex items-center justify-between gap-4">
               <div className="flex flex-wrap items-center gap-2">
+                {/* Primary Actions */}
                 {canManageContent && (
+                  <>
+                    <button
+                      onClick={() => setShowCreateModal(true)}
+                      className="inline-flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors"
+                    >
+                      <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      Create
+                    </button>
+                    <button
+                      onClick={() => setShowBulkCreator(true)}
+                      className="inline-flex items-center px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-md transition-colors"
+                    >
+                      <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      Bulk Create
+                    </button>
+                  </>
+                )}
+                
+                {/* Auto-Assign - Only show when needed */}
+                {canManageContent && getUnassignedCount() > 0 && (
                   <button
                     onClick={handleAutoAssignOversightAware}
-                    disabled={isSubmitting || getUnassignedCount() === 0}
-                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all ${
-                      isSubmitting 
-                        ? 'bg-blue-500 cursor-not-allowed' 
-                        : getUnassignedCount() === 0
-                          ? 'bg-green-500 hover:bg-green-600'
-                          : 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600'
-                    }`}
+                    disabled={isSubmitting}
+                    className="inline-flex items-center px-3 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 text-white text-sm font-medium rounded-md transition-colors"
                   >
                     {isSubmitting ? (
                       <>
-                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1.5"></div>
                         <span>Assigning...</span>
                       </>
-                    ) : getUnassignedCount() === 0 ? (
-                      <span>🎉 All Assigned</span>
                     ) : (
-                      <span>🚨 Auto-Assign ({getUnassignedCount()})</span>
+                      <>
+                        <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        Auto-Assign ({getUnassignedCount()})
+                      </>
                     )}
                   </button>
                 )}
-
-                <button
-                  onClick={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
-                  className="inline-flex items-center px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  {viewMode === 'list' ? '📊 Grid' : '📋 List'}
-                </button>
-
-                <button
-                  onClick={() => {
-                    const newState = !showInactive
-                    setShowInactive(newState)
-                    localStorage.setItem(`showInactive-event-${eventId}`, newState.toString())
-                    const url = new URL(window.location.href)
-                    if (newState) {
-                      url.searchParams.set('showInactive', 'true')
-                    } else {
-                      url.searchParams.delete('showInactive')
-                    }
-                    window.history.replaceState({}, '', url.toString())
-                  }}
-                  className={`inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    showInactive 
-                      ? 'bg-purple-600 text-white hover:bg-purple-700' 
-                      : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  👁️ {showInactive ? 'Hide' : 'Show'} Inactive
-                </button>
-
+                
+                {/* View Toggle */}
+                <div className="flex border border-gray-300 rounded-md overflow-hidden">
+                  <button
+                    onClick={() => setViewMode('list')}
+                    className={`px-3 py-2 text-sm font-medium transition-colors ${
+                      viewMode === 'list'
+                        ? 'bg-gray-100 text-gray-900'
+                        : 'bg-white text-gray-600 hover:bg-gray-50'
+                    }`}
+                    title="List View"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => setViewMode('grid')}
+                    className={`px-3 py-2 text-sm font-medium border-l border-gray-300 transition-colors ${
+                      viewMode === 'grid'
+                        ? 'bg-gray-100 text-gray-900'
+                        : 'bg-white text-gray-600 hover:bg-gray-50'
+                    }`}
+                    title="Grid View"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                    </svg>
+                  </button>
+                </div>
+                
                 {/* Filters Dropdown */}
                 <div className="relative inline-block">
                   <button
                     onClick={() => setShowFiltersMenu(!showFiltersMenu)}
-                    className="inline-flex items-center gap-1 px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                    className="inline-flex items-center gap-1 px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                   >
-                    🔍 Filters
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                    </svg>
+                    Filters
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
@@ -946,198 +973,202 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                             className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                           >
                             <option value="all">All Roles</option>
-                            <option value="overseers">🔵 Overseers</option>
-                            <option value="assistants">🟢 Assistants</option>
-                            <option value="keymen">🟡 Keymen</option>
+                            <option value="overseers">Overseers</option>
+                            <option value="assistants">Assistants</option>
+                            <option value="keymen">Keymen</option>
                           </select>
+                        </div>
+                        <div className="pt-2 border-t border-gray-200">
+                          <button
+                            onClick={() => {
+                              const newState = !showInactive
+                              setShowInactive(newState)
+                              localStorage.setItem(`showInactive-event-${eventId}`, newState.toString())
+                              const url = new URL(window.location.href)
+                              if (newState) {
+                                url.searchParams.set('showInactive', 'true')
+                              } else {
+                                url.searchParams.delete('showInactive')
+                              }
+                              window.history.replaceState({}, '', url.toString())
+                            }}
+                            className="w-full text-left px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded flex items-center gap-2"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={showInactive}
+                              onChange={() => {}}
+                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            />
+                            <span>Show Inactive</span>
+                          </button>
                         </div>
                       </div>
                     </div>
                   )}
                 </div>
 
-                {/* Export Dropdown */}
+                {/* More Menu */}
                 <div className="relative inline-block">
                   <button
-                    onClick={() => setShowExportMenu(!showExportMenu)}
-                    className="inline-flex items-center gap-1 px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                    onClick={() => setShowActionsMenu(!showActionsMenu)}
+                    className="inline-flex items-center gap-1 px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                   >
-                    📥 Export
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                     </svg>
+                    More
                   </button>
-                  {showExportMenu && (
-                    <div className="absolute left-0 mt-2 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                  {showActionsMenu && (
+                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
                       <button
-                        onClick={() => { handleExportPDF(); setShowExportMenu(false); }}
+                        onClick={() => { handleExportPDF(); setShowActionsMenu(false); }}
                         disabled={isExporting}
                         className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50 flex items-center gap-2"
                       >
-                        <span>📄</span>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
                         <span>{isExporting ? 'Exporting...' : 'Export PDF'}</span>
                       </button>
                       <button
-                        onClick={() => { handleExportExcel(); setShowExportMenu(false); }}
+                        onClick={() => { handleExportExcel(); setShowActionsMenu(false); }}
                         disabled={isExporting}
                         className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50 flex items-center gap-2"
                       >
-                        <span>📊</span>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
                         <span>{isExporting ? 'Exporting...' : 'Export Excel'}</span>
                       </button>
+                      {canManageContent && (
+                        <>
+                          <div className="border-t border-gray-200 my-1"></div>
+                          {event.departmentTemplate?.positionTemplates && 
+                           (event.departmentTemplate.positionTemplates as any[]).length > 0 && (
+                            <button
+                              onClick={() => { setShowTemplateModal(true); setShowActionsMenu(false); }}
+                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                              <span>Create from Template</span>
+                            </button>
+                          )}
+                          <button
+                            onClick={async () => {
+                              setShowActionsMenu(false)
+                              if (!confirm('📧 Send assignment notifications to all volunteers?\n\nThis will send an email to each volunteer with their current assignments.\n\nContinue?')) return
+                              try {
+                                const response = await fetch(`/api/events/${eventId}/assignments/send-notifications`, {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' }
+                                })
+                                const data = await response.json()
+                                if (response.ok && data.success) {
+                                  alert(data.failed > 0 ? `⚠️ ${data.message}\n\nErrors:\n${data.errors?.join('\n') || 'Unknown errors'}` : `✅ ${data.message}`)
+                                } else {
+                                  alert(`❌ ${data.error || data.message || 'Failed to send notifications'}`)
+                                }
+                              } catch (error) {
+                                alert(`❌ Failed to send notifications: ${error.message}`)
+                              }
+                            }}
+                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                            <span>Send Notifications</span>
+                          </button>
+                          <div className="border-t border-gray-200 my-1"></div>
+                          <button
+                            onClick={async () => {
+                              setShowActionsMenu(false)
+                              if (!confirm('⚠️ Clear ALL shifts from ALL positions?\n\nThis will remove all shifts AND their assignments.\n\nThis action cannot be undone.')) return
+                              try {
+                                const success = await positionService.clearAllShifts()
+                                if (success) {
+                                  alert('✅ Cleared all shifts and assignments')
+                                  router.reload()
+                                } else {
+                                  alert('Failed to clear shifts')
+                                }
+                              } catch (error) {
+                                console.error('Clear shifts error:', error)
+                                alert('Failed to clear shifts')
+                              }
+                            }}
+                            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            <span>Clear All Shifts</span>
+                          </button>
+                          <button
+                            onClick={async () => {
+                              setShowActionsMenu(false)
+                              if (!confirm('⚠️ Clear ALL assignments?\n\nThis cannot be undone.')) return
+                              try {
+                                const success = await positionService.clearAllAssignments()
+                                if (success) {
+                                  alert('✅ Cleared all assignments')
+                                  router.reload()
+                                } else {
+                                  alert('Failed to clear assignments')
+                                }
+                              } catch (error) {
+                                alert('Failed to clear assignments')
+                              }
+                            }}
+                            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            <span>Clear All Assignments</span>
+                          </button>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
-
-                {/* Actions Dropdown (Admin only) */}
-                {canManageContent && (
-                  <div className="relative inline-block">
-                    <button
-                      onClick={() => setShowActionsMenu(!showActionsMenu)}
-                      className="inline-flex items-center gap-1 px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      ⚙️ Actions
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
-                    {showActionsMenu && (
-                      <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
-                        <button
-                          onClick={async () => {
-                            setShowActionsMenu(false)
-                            if (!confirm('📧 Send assignment notifications to all volunteers?\n\nThis will send an email to each volunteer with their current assignments.\n\nContinue?')) return
-                            try {
-                              const response = await fetch(`/api/events/${eventId}/assignments/send-notifications`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' }
-                              })
-                              const data = await response.json()
-                              if (response.ok && data.success) {
-                                alert(data.failed > 0 ? `⚠️ ${data.message}\n\nErrors:\n${data.errors?.join('\n') || 'Unknown errors'}` : `✅ ${data.message}`)
-                              } else {
-                                alert(`❌ ${data.error || data.message || 'Failed to send notifications'}`)
-                              }
-                            } catch (error) {
-                              alert(`❌ Failed to send notifications: ${error.message}`)
-                            }
-                          }}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-                        >
-                          <span>📧</span>
-                          <span>Send Notifications</span>
-                        </button>
-                        <button
-                          onClick={async () => {
-                            setShowActionsMenu(false)
-                            if (!confirm('⚠️ Clear ALL assignments?\n\nThis cannot be undone.')) return
-                            try {
-                              const success = await positionService.clearAllAssignments()
-                              if (success) {
-                                alert('✅ Cleared all assignments')
-                                router.reload()
-                              } else {
-                                alert('Failed to clear assignments')
-                              }
-                            } catch (error) {
-                              alert('Failed to clear assignments')
-                            }
-                          }}
-                          className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                        >
-                          <span>🧹</span>
-                          <span>Clear All Assignments</span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Bulk Operations Bar (contextual) */}
-                {canManageContent && selectedPositions.size > 0 && (
-                  <div className="flex items-center gap-2 ml-auto bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
-                    <span className="text-sm text-blue-700 font-medium">
-                      {selectedPositions.size} selected
-                    </span>
-                    <button
-                      onClick={() => setShowTemplateModal(true)}
-                      className="text-xs bg-green-100 hover:bg-green-200 text-green-700 px-2 py-1 rounded font-medium"
-                    >
-                      📅 Template
-                    </button>
-                    <button
-                      onClick={handleBulkDelete}
-                      className="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-2 py-1 rounded font-medium"
-                    >
-                      Delete
-                    </button>
-                    <button
-                      onClick={() => setShowBulkEditModal(true)}
-                      className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded font-medium"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => setSelectedPositions(new Set())}
-                      className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded font-medium"
-                    >
-                      Clear
-                    </button>
-                  </div>
-                )}
-                
-                {canManageContent && (
-                  <button
-                    onClick={async () => {
-                      if (!confirm('⚠️ Clear ALL shifts from ALL positions?\n\nThis will remove all shifts AND their assignments.\n\nThis action cannot be undone.')) {
-                        return
-                      }
-                      try {
-                        const success = await positionService.clearAllShifts()
-                      if (success) {
-                        alert('✅ Cleared all shifts and assignments')
-                        router.reload()
-                      } else {
-                        alert('Failed to clear shifts')
-                      }
-                    } catch (error) {
-                      console.error('Clear shifts error:', error)
-                      alert('Failed to clear shifts')
-                    }
-                  }}
-                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                  title="Remove all shifts and their assignments from all positions"
-                >
-                  🗑️ Clear All Shifts
-                </button>
-                )}
-                
-                {canManageContent && (
-                  <>
-                    {event.departmentTemplate?.positionTemplates && 
-                     (event.departmentTemplate.positionTemplates as any[]).length > 0 && (
-                      <button
-                        onClick={() => setShowTemplateModal(true)}
-                        className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                      >
-                        📋 Create from Template
-                      </button>
-                    )}
-                    <button
-                      onClick={() => setShowBulkCreator(true)}
-                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                    >
-                      🚀 Bulk Create
-                    </button>
-                    <button
-                      onClick={() => setShowCreateModal(true)}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-                    >
-                      + Create Position
-                    </button>
-                  </>
-                )}
               </div>
+
+              {/* Bulk Operations Bar (contextual) */}
+              {canManageContent && selectedPositions.size > 0 && (
+                <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+                  <span className="text-sm text-blue-700 font-medium">
+                    {selectedPositions.size} selected
+                  </span>
+                  <button
+                    onClick={() => setShowTemplateModal(true)}
+                    className="text-xs bg-white hover:bg-gray-50 text-blue-700 px-2 py-1 rounded font-medium border border-blue-300"
+                  >
+                    Template
+                  </button>
+                  <button
+                    onClick={() => setShowBulkEditModal(true)}
+                    className="text-xs bg-white hover:bg-gray-50 text-blue-700 px-2 py-1 rounded font-medium border border-blue-300"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={handleBulkDelete}
+                    className="text-xs bg-white hover:bg-gray-50 text-red-600 px-2 py-1 rounded font-medium border border-red-300"
+                  >
+                    Delete
+                  </button>
+                  <button
+                    onClick={() => setSelectedPositions(new Set())}
+                    className="text-xs bg-white hover:bg-gray-50 text-gray-700 px-2 py-1 rounded font-medium border border-gray-300"
+                  >
+                    Clear
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 

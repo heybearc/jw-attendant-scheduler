@@ -48,7 +48,10 @@ interface EventDocumentsPageProps {
   eventId: string
   event: Event
   documents: Document[]
-  attendants: Attendant[]
+  canEdit: boolean
+  canDelete: boolean
+  canManagePermissions: boolean
+  attendants: Volunteer[]
 }
 
 export default function EventDocumentsPage({ eventId, event, documents, attendants }: EventDocumentsPageProps) {
@@ -236,9 +239,9 @@ export default function EventDocumentsPage({ eventId, event, documents, attendan
       <EventPageWrapper
         event={event}
         currentPage="documents"
-        canEdit={true}
-        canDelete={false}
-        canManagePermissions={false}
+        canEdit={canEdit}
+        canDelete={canDelete}
+        canManagePermissions={canManagePermissions}
         moduleConfig={event.departmentTemplate?.moduleConfig || null}
         terminology={event.departmentTemplate?.terminology || null}
         positionTemplates={event.departmentTemplate?.positionTemplates || null}
@@ -614,6 +617,13 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         notFound: true,
       }
     }
+
+    // Check event-specific permissions
+    const { canManageEvent, canDeleteEvent, canManagePermissions } = await import('../../../src/lib/eventAccess')
+    const userId = session.user?.id || ''
+    const canEdit = await canManageEvent(userId, id as string)
+    const canDelete = await canDeleteEvent(userId, id as string)
+    const canManagePerms = await canManagePermissions(userId, id as string)
 
     // Fetch documents from database
     const docs = await prisma.event_documents.findMany({

@@ -285,12 +285,32 @@ export class PositionService {
     sendNotification?: boolean
   }): Promise<boolean> {
     try {
+      // If shiftId is provided but no times, fetch the shift details
+      let shiftStart = data.shiftStart
+      let shiftEnd = data.shiftEnd
+      
+      if (data.shiftId && (!shiftStart || !shiftEnd)) {
+        const position = await this.getPosition(data.positionId)
+        const shift = position?.shifts?.find((s: any) => s.id === data.shiftId)
+        if (shift) {
+          shiftStart = new Date(shift.startTime)
+          shiftEnd = new Date(shift.endTime)
+        }
+      }
+      
+      // Fallback to current time if still no times (shouldn't happen)
+      if (!shiftStart || !shiftEnd) {
+        const now = new Date()
+        shiftStart = shiftStart || now
+        shiftEnd = shiftEnd || new Date(now.getTime() + 3600000) // +1 hour
+      }
+      
       // API expects userId, not attendantId
       const apiData = {
         userId: data.attendantId,
         positionId: data.positionId,
-        shiftStart: data.shiftStart?.toISOString() || new Date().toISOString(),
-        shiftEnd: data.shiftEnd?.toISOString() || new Date().toISOString(),
+        shiftStart: shiftStart.toISOString(),
+        shiftEnd: shiftEnd.toISOString(),
         notes: data.notes
       }
       

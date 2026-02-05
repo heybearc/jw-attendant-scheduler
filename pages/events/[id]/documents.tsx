@@ -1,8 +1,7 @@
 import { GetServerSideProps } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../api/auth/[...nextauth]'
-import EventPageLayout from '../../../components/EventPageLayout'
-import { TemplateProvider } from '../../../contexts/TemplateContext'
+import EventPageWrapper from '../../../components/EventPageWrapper'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
@@ -234,19 +233,17 @@ export default function EventDocumentsPage({ eventId, event, documents, attendan
         <title>Documents - {event?.name} | Theocratic Shift Scheduler</title>
       </Head>
 
-      <TemplateProvider
+      <EventPageWrapper
+        event={event}
+        currentPage="documents"
+        canEdit={true}
+        canDelete={false}
+        canManagePermissions={false}
         moduleConfig={event.departmentTemplate?.moduleConfig || null}
         terminology={event.departmentTemplate?.terminology || null}
         positionTemplates={event.departmentTemplate?.positionTemplates || null}
         departmentTemplateName={event.departmentTemplate?.name}
       >
-        <EventPageLayout
-          event={event}
-          currentPage="documents"
-          canEdit={true}
-          canDelete={false}
-          canManagePermissions={false}
-        >
           <div className="max-w-7xl mx-auto">
             <div className="mb-6">
               <div className="flex items-center justify-between">
@@ -554,8 +551,7 @@ export default function EventDocumentsPage({ eventId, event, documents, attendan
             </div>
           </div>
         )}
-        </EventPageLayout>
-      </TemplateProvider>
+      </EventPageWrapper>
     </>
   )
 }

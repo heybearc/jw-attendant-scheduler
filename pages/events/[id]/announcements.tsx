@@ -1,8 +1,7 @@
 import { GetServerSideProps } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../api/auth/[...nextauth]'
-import EventPageLayout from '../../../components/EventPageLayout'
-import { TemplateProvider } from '../../../contexts/TemplateContext'
+import EventPageWrapper from '../../../components/EventPageWrapper'
 import { useState } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
@@ -144,25 +143,19 @@ export default function EventAnnouncementsPage({ eventId, event, announcements, 
   }
 
   return (
-    <TemplateProvider
-      moduleConfig={null}
-      terminology={null}
-      positionTemplates={null}
-      departmentTemplateName={undefined}
+    <EventPageWrapper
+      event={{
+        id: event.id,
+        name: event.name,
+        status: event.status,
+        eventType: event.eventType,
+        startDate: event.startDate
+      }}
+      currentPage="announcements"
+      canEdit={canEdit}
+      canDelete={canDelete}
+      canManagePermissions={canManagePermissions}
     >
-      <EventPageLayout
-        event={{
-          id: event.id,
-          name: event.name,
-          status: event.status,
-          eventType: event.eventType,
-          startDate: event.startDate
-        }}
-        currentPage="announcements"
-        canEdit={canEdit}
-        canDelete={canDelete}
-        canManagePermissions={canManagePermissions}
-      >
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-6">
@@ -381,8 +374,7 @@ export default function EventAnnouncementsPage({ eventId, event, announcements, 
           </div>
         )}
       </div>
-      </EventPageLayout>
-    </TemplateProvider>
+    </EventPageWrapper>
   )
 }
 

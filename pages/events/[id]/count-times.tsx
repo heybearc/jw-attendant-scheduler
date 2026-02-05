@@ -1,8 +1,7 @@
 import { GetServerSideProps } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../api/auth/[...nextauth]'
-import EventPageLayout from '../../../components/EventPageLayout'
-import { TemplateProvider } from '../../../contexts/TemplateContext'
+import EventPageWrapper from '../../../components/EventPageWrapper'
 import CreateCountSessionModal from '../../../components/CreateCountSessionModal'
 import EditCountSessionModal from '../../../components/EditCountSessionModal'
 import { useEffect, useState } from 'react'
@@ -143,25 +142,19 @@ export default function EventCountTimesPage({ eventId, event, countSessions, can
   }
 
   return (
-    <TemplateProvider
-      moduleConfig={null}
-      terminology={null}
-      positionTemplates={null}
-      departmentTemplateName={undefined}
+    <EventPageWrapper
+      event={{
+        id: event.id,
+        name: event.name,
+        status: event.status,
+        eventType: event.eventType,
+        startDate: event.startDate
+      }}
+      currentPage="count-times"
+      canEdit={canEdit}
+      canDelete={canDelete}
+      canManagePermissions={canManagePermissions}
     >
-      <EventPageLayout
-        event={{
-          id: event.id,
-          name: event.name,
-          status: event.status,
-          eventType: event.eventType,
-          startDate: event.startDate
-        }}
-        currentPage="count-times"
-        canEdit={canEdit}
-        canDelete={canDelete}
-        canManagePermissions={canManagePermissions}
-      >
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-6">
@@ -335,8 +328,7 @@ export default function EventCountTimesPage({ eventId, event, countSessions, can
           />
         )}
       </div>
-      </EventPageLayout>
-    </TemplateProvider>
+    </EventPageWrapper>
   )
 }
 

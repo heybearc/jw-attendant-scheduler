@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { useSession } from 'next-auth/react'
-import EventPageLayout from '../../../components/EventPageLayout'
-import { TemplateProvider } from '../../../contexts/TemplateContext'
+import EventPageWrapper from '../../../components/EventPageWrapper'
 import Link from 'next/link'
 import { exportOversightToPDF, exportOversightToExcel } from '../../../src/lib/exportUtils'
 
@@ -108,25 +107,19 @@ export default function EventOversightDashboard() {
   }
 
   return (
-    <TemplateProvider
-      moduleConfig={null}
-      terminology={null}
-      positionTemplates={null}
-      departmentTemplateName={undefined}
+    <EventPageWrapper
+      event={{
+        id: event.id,
+        name: event.name,
+        status: event.status,
+        eventType: event.eventType || 'ASSEMBLY',
+        startDate: event.startDate || new Date().toISOString()
+      }}
+      currentPage="oversight"
+      canEdit={false}
+      canDelete={false}
+      canManagePermissions={false}
     >
-      <EventPageLayout
-        event={{
-          id: event.id,
-          name: event.name,
-          status: event.status,
-          eventType: event.eventType || 'ASSEMBLY',
-          startDate: event.startDate || new Date().toISOString()
-        }}
-        currentPage="oversight"
-        canEdit={false}
-        canDelete={false}
-        canManagePermissions={false}
-      >
         {/* Header */}
         <div className="mb-8 flex justify-between items-start">
           <div>
@@ -435,7 +428,6 @@ export default function EventOversightDashboard() {
             Manage Positions
           </Link>
         </div>
-      </EventPageLayout>
-    </TemplateProvider>
+    </EventPageWrapper>
   )
 }

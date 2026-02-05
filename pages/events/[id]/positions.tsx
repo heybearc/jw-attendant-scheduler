@@ -108,6 +108,8 @@ interface Event {
   departmentTemplate?: {
     id: string
     name: string
+    moduleConfig?: any
+    terminology?: any
     positionTemplates?: Array<{
       id: string
       name: string
@@ -164,8 +166,12 @@ interface EventPositionsProps {
   canEdit: boolean
   canDelete: boolean
   canManagePermissions: boolean
+  moduleConfig?: any
+  terminology?: any
+  positionTemplates?: any
+  departmentTemplateName?: string
 }
-export default function EventPositionsPage({ eventId, event, positions: initialPositions, attendants, stats, canManageContent, canEdit, canDelete, canManagePermissions }: EventPositionsProps) {
+export default function EventPositionsPage({ eventId, event, positions: initialPositions, attendants, stats, canManageContent, canEdit, canDelete, canManagePermissions, moduleConfig, terminology, positionTemplates, departmentTemplateName }: EventPositionsProps) {
   
   // Initialize services
   const positionService = React.useMemo(() => createPositionService(eventId), [eventId])
@@ -827,6 +833,10 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
       canEdit={canEdit}
       canDelete={canDelete}
       canManagePermissions={canManagePermissions}
+      moduleConfig={moduleConfig}
+      terminology={terminology}
+      positionTemplates={positionTemplates}
+      departmentTemplateName={departmentTemplateName}
     >
       <Head>
         <title>{event?.name ? `${event.name} - Positions` : 'Event Positions'} | Theocratic Shift Scheduler</title>
@@ -2479,6 +2489,8 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
           select: {
             id: true,
             name: true,
+            moduleConfig: true,
+            terminology: true,
             positionTemplates: true
           }
         },
@@ -2647,7 +2659,14 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
       eventType: eventData.eventType,
       startDate: eventData.startDate?.toISOString() || null,
       endDate: eventData.endDate?.toISOString() || null,
-      status: eventData.status
+      status: eventData.status,
+      departmentTemplate: eventData.departmentTemplate ? {
+        id: eventData.departmentTemplate.id,
+        name: eventData.departmentTemplate.name,
+        moduleConfig: eventData.departmentTemplate.moduleConfig,
+        terminology: eventData.departmentTemplate.terminology,
+        positionTemplates: eventData.departmentTemplate.positionTemplates
+      } : null
     }
 
     // Transform positions data - REMOVED: Using positionsWithOversight directly instead
@@ -2677,7 +2696,11 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
         canManageContent,
         canEdit,
         canDelete,
-        canManagePermissions: canManagePerms
+        canManagePermissions: canManagePerms,
+        moduleConfig: eventData.departmentTemplate?.moduleConfig || null,
+        terminology: eventData.departmentTemplate?.terminology || null,
+        positionTemplates: eventData.departmentTemplate?.positionTemplates || null,
+        departmentTemplateName: eventData.departmentTemplate?.name || undefined
       }
     }
 

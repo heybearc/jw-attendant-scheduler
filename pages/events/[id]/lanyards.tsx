@@ -27,6 +27,13 @@ interface Event {
   startDate: string
   endDate: string
   status: string
+  departmentTemplate?: {
+    id: string
+    name: string
+    moduleConfig?: any
+    terminology?: any
+    positionTemplates?: any
+  } | null
 }
 
 interface Volunteer {
@@ -65,9 +72,13 @@ interface EventLanyardsPageProps {
   canEdit: boolean
   canDelete: boolean
   canManagePermissions: boolean
+  moduleConfig?: any
+  terminology?: any
+  positionTemplates?: any
+  departmentTemplateName?: string
 }
 
-export default function EventLanyardsPage({ eventId, event, lanyards, attendants, lanyardSettings, stats, canEdit, canDelete, canManagePermissions }: EventLanyardsPageProps) {
+export default function EventLanyardsPage({ eventId, event, lanyards, attendants, lanyardSettings, stats, canEdit, canDelete, canManagePermissions, moduleConfig, terminology, positionTemplates, departmentTemplateName }: EventLanyardsPageProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -341,6 +352,10 @@ export default function EventLanyardsPage({ eventId, event, lanyards, attendants
         canEdit={canEdit}
         canDelete={canDelete}
         canManagePermissions={canManagePermissions}
+        moduleConfig={moduleConfig}
+        terminology={terminology}
+        positionTemplates={positionTemplates}
+        departmentTemplateName={departmentTemplateName}
       >
         <div className="max-w-7xl mx-auto">
           <div className="animate-pulse">
@@ -360,6 +375,10 @@ export default function EventLanyardsPage({ eventId, event, lanyards, attendants
         canEdit={canEdit}
         canDelete={canDelete}
         canManagePermissions={canManagePermissions}
+        moduleConfig={moduleConfig}
+        terminology={terminology}
+        positionTemplates={positionTemplates}
+        departmentTemplateName={departmentTemplateName}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="bg-red-50 border-l-4 border-red-400 p-6 rounded-lg shadow-sm">
@@ -983,7 +1002,11 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       select: {
         departmentTemplate: {
           select: {
-            moduleConfig: true
+            id: true,
+            name: true,
+            moduleConfig: true,
+            terminology: true,
+            positionTemplates: true
           }
         }
       }
@@ -1048,7 +1071,14 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       eventType: eventData.eventType,
       startDate: eventData.startDate?.toISOString() || null,
       endDate: eventData.endDate?.toISOString() || null,
-      status: eventData.status
+      status: eventData.status,
+      departmentTemplate: eventTemplate?.departmentTemplate ? {
+        id: eventTemplate.departmentTemplate.id,
+        name: eventTemplate.departmentTemplate.name,
+        moduleConfig: eventTemplate.departmentTemplate.moduleConfig,
+        terminology: eventTemplate.departmentTemplate.terminology,
+        positionTemplates: eventTemplate.departmentTemplate.positionTemplates
+      } : null
     }
     
     console.log('🔍 LANYARDS: Event transformed successfully')
@@ -1113,14 +1143,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       props: {
         eventId: id as string,
         event,
-        lanyards,
-        attendants,
-        lanyardSettings: eventData.lanyard_settings ? {
-          id: eventData.lanyard_settings.id,
-          totalLanyards: eventData.lanyard_settings.totalLanyards,
-          availableLanyards: eventData.lanyard_settings.availableLanyards,
-          isActive: eventData.lanyard_settings.isActive
-        } : null,
+        lanyards: lanyards,
+        attendants: attendants,
+        lanyardSettings: eventData.lanyard_settings || null,
         stats: {
           total: lanyards.length,
           available: lanyards.filter(l => !l.isCheckedOut).length,
@@ -1128,7 +1153,11 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         },
         canEdit,
         canDelete,
-        canManagePermissions: canManagePerms
+        canManagePermissions: canManagePerms,
+        moduleConfig: eventTemplate?.departmentTemplate?.moduleConfig || null,
+        terminology: eventTemplate?.departmentTemplate?.terminology || null,
+        positionTemplates: eventTemplate?.departmentTemplate?.positionTemplates || null,
+        departmentTemplateName: eventTemplate?.departmentTemplate?.name || undefined
       }
     }
   } catch (error) {

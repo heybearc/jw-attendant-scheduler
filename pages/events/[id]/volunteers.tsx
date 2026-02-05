@@ -14,6 +14,13 @@ interface Event {
   startDate: string
   endDate: string
   status: string
+  departmentTemplate?: {
+    id: string
+    name: string
+    moduleConfig?: any
+    terminology?: any
+    positionTemplates?: any
+  } | null
 }
 
 interface Volunteer {
@@ -65,9 +72,13 @@ interface EventVolunteersPageProps {
   canDelete: boolean
   canManagePermissions: boolean
   stats: VolunteerStats
+  moduleConfig?: any
+  terminology?: any
+  positionTemplates?: any
+  departmentTemplateName?: string
 }
 
-export default function EventAttendantsPage({ eventId, event, attendants, canManageContent, canEdit, canDelete, canManagePermissions, stats }: EventVolunteersPageProps) {
+export default function EventAttendantsPage({ eventId, event, attendants, canManageContent, canEdit, canDelete, canManagePermissions, stats, moduleConfig, terminology, positionTemplates, departmentTemplateName }: EventVolunteersPageProps) {
   const router = useRouter()
   const [showAddModal, setShowAddModal] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
@@ -914,6 +925,10 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
       canEdit={canEdit}
       canDelete={canDelete}
       canManagePermissions={canManagePermissions}
+      moduleConfig={moduleConfig}
+      terminology={terminology}
+      positionTemplates={positionTemplates}
+      departmentTemplateName={departmentTemplateName}
     >
       <div className="max-w-7xl mx-auto">
         {/* Header */}
@@ -2333,6 +2348,15 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     const eventData = await prisma.events.findUnique({
       where: { id: id as string },
       include: {
+        departmentTemplate: {
+          select: {
+            id: true,
+            name: true,
+            moduleConfig: true,
+            terminology: true,
+            positionTemplates: true
+          }
+        },
         positions: {
           include: {
             assignments: {
@@ -2548,37 +2572,54 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       });
     });
     
-    const attendants = Array.from(attendantMap.values())
+    const attendants = Array.from(attendantMap.values());
 
-    // Check event-specific permissions
-    const { canManageAttendants, canManageEvent, canDeleteEvent, canManagePermissions } = await import('../../../src/lib/eventAccess')
-    const userId = session.user?.id || ''
-    const canManageContent = await canManageAttendants(userId, id as string)
-    const canEdit = await canManageEvent(userId, id as string)
-    const canDelete = await canDeleteEvent(userId, id as string)
-    const canManagePerms = await canManagePermissions(userId, id as string)
+    const { canManageAttendants, canManageEvent, canDeleteEvent, canManagePermissions } = await import('../../../src/lib/eventAccess');
+    const userId = session.user?.id || '';
+    const canManageContent = await canManageAttendants(userId, id as string);
+    const canEdit = await canManageEvent(userId, id as string);
+    const canDelete = await canDeleteEvent(userId, id as string);
+    const canManagePerms = await canManagePermissions(userId, id as string);
 
     return {
       props: {
         eventId: id as string,
-        event,
-        attendants,
+        event: {
+          id: eventData.id,
+          name: eventData.name,
+          eventType: eventData.eventType,
+          startDate: eventData.startDate?.toISOString() || '',
+          endDate: eventData.endDate?.toISOString() || '',
+          status: eventData.status,
+          departmentTemplate: eventData.departmentTemplate ? {
+            id: eventData.departmentTemplate.id,
+            name: eventData.departmentTemplate.name,
+            moduleConfig: eventData.departmentTemplate.moduleConfig,
+            terminology: eventData.departmentTemplate.terminology,
+            positionTemplates: eventData.departmentTemplate.positionTemplates
+          } : null
+        },
+        attendants: attendants,
         canManageContent,
         canEdit,
         canDelete,
         canManagePermissions: canManagePerms,
         stats: {
-          total: allAttendants.length,
-          active: allAttendants.filter(a => a.isActive).length,
-          inactive: allAttendants.filter(a => !a.isActive).length
-        }
+          total: attendants.length,
+          active: attendants.filter(a => a.isActive).length,
+          inactive: attendants.filter(a => !a.isActive).length
+        },
+        moduleConfig: eventData.departmentTemplate?.moduleConfig || null,
+        terminology: eventData.departmentTemplate?.terminology || null,
+        positionTemplates: eventData.departmentTemplate?.positionTemplates || null,
+        departmentTemplateName: eventData.departmentTemplate?.name || undefined
       }
-    }
+    };
   } catch (error) {
-    const fs = require('fs')
-    const errorMsg = error instanceof Error ? error.message : 'Unknown'
-    const errorStack = error instanceof Error ? error.stack : 'No stack'
-    fs.appendFileSync('/tmp/attendants-debug.log', `\n🔍 ATTENDANTS ERROR: ${errorMsg}\nStack: ${errorStack}\n`)
-    return { notFound: true }
+    const fs = require('fs');
+    const errorMsg = error instanceof Error ? error.message : 'Unknown';
+    const errorStack = error instanceof Error ? error.stack : 'No stack';
+    fs.appendFileSync('/tmp/attendants-debug.log', `\n🔍 ATTENDANTS ERROR: ${errorMsg}\nStack: ${errorStack}\n`);
+    return { notFound: true };
   }
 }

@@ -82,13 +82,6 @@ export default function EventPageLayout({
 
         {/* Action Toolbar */}
         <div className="flex flex-wrap items-center gap-2">
-          <Link
-            href="/events"
-            className="inline-flex items-center px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-          >
-            ← Back
-          </Link>
-
           <EventQRCode eventId={event.id} eventName={event.name} />
 
           {/* Status Actions */}
@@ -256,6 +249,16 @@ export default function EventPageLayout({
               }`}
             >
               📢 Announcements
+            </Link>
+            <Link
+              href={`/events/${event.id}/permissions`}
+              className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${
+                currentPage === 'permissions'
+                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-600 hover:text-gray-900 hover:border-gray-300 border-b-2 border-transparent'
+              }`}
+            >
+              🔐 Permissions
             </Link>
           </nav>
         </div>

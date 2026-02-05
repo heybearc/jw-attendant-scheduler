@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { useSession } from 'next-auth/react'
-import EventLayout from '../../../components/EventLayout'
+import EventPageLayout from '../../../components/EventPageLayout'
+import { TemplateProvider } from '../../../contexts/TemplateContext'
 import Link from 'next/link'
 import { exportOversightToPDF, exportOversightToExcel } from '../../../src/lib/exportUtils'
 
@@ -37,6 +38,9 @@ interface OversightData {
   event: {
     id: string
     name: string
+    status: string
+    eventType: string
+    startDate: string
   }
   statistics: {
     totalPositions: number
@@ -85,40 +89,8 @@ export default function EventOversightDashboard() {
     fetchOversightData()
   }, [eventId])
 
-  if (status === 'loading' || loading) {
-    return (
-      <EventLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading oversight dashboard...</p>
-          </div>
-        </div>
-      </EventLayout>
-    )
-  }
-
-  if (error) {
-    return (
-      <EventLayout>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <h3 className="text-red-800 font-semibold">Error Loading Oversight Data</h3>
-            <p className="text-red-600 mt-2">{error}</p>
-          </div>
-        </div>
-      </EventLayout>
-    )
-  }
-
-  if (!oversightData) {
-    return (
-      <EventLayout>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <p className="text-gray-600">No oversight data available.</p>
-        </div>
-      </EventLayout>
-    )
+  if (status === 'loading' || loading || error || !oversightData) {
+    return null
   }
 
   const { event, statistics, overseers, assistantOverseers, keymen, coverageGaps } = oversightData
@@ -136,15 +108,25 @@ export default function EventOversightDashboard() {
   }
 
   return (
-    <EventLayout
-      title={`Oversight Dashboard - ${event.name}`}
-      breadcrumbs={[
-        { label: 'Events', href: '/events/select' },
-        { label: event.name, href: `/events/${event.id}` },
-        { label: 'Oversight' }
-      ]}
+    <TemplateProvider
+      moduleConfig={null}
+      terminology={null}
+      positionTemplates={null}
+      departmentTemplateName={undefined}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <EventPageLayout
+        event={{
+          id: event.id,
+          name: event.name,
+          status: event.status,
+          eventType: event.eventType || 'ASSEMBLY',
+          startDate: event.startDate || new Date().toISOString()
+        }}
+        currentPage="oversight"
+        canEdit={false}
+        canDelete={false}
+        canManagePermissions={false}
+      >
         {/* Header */}
         <div className="mb-8 flex justify-between items-start">
           <div>
@@ -453,7 +435,7 @@ export default function EventOversightDashboard() {
             Manage Positions
           </Link>
         </div>
-      </div>
-    </EventLayout>
+      </EventPageLayout>
+    </TemplateProvider>
   )
 }

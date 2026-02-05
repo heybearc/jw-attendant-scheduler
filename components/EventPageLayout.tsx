@@ -59,10 +59,6 @@ export default function EventPageLayout({
     <EventLayout
       title={event.name}
       hideTitle={true}
-      breadcrumbs={[
-        { label: 'Events', href: '/events' },
-        { label: event.name }
-      ]}
       selectedEvent={{
         id: event.id,
         name: event.name,
@@ -70,15 +66,6 @@ export default function EventPageLayout({
       }}
     >
       <div className="space-y-6">
-        {/* Event Header */}
-        <div>
-          <div className="flex items-center flex-wrap gap-3 mb-4">
-            <h1 className="text-3xl font-bold text-gray-900">{event.name}</h1>
-            <span className={`px-3 py-1 text-sm rounded-full ${getStatusBadge(event.status)}`}>
-              {event.status}
-            </span>
-          </div>
-        </div>
 
         {/* Action Toolbar */}
         <div className="flex flex-wrap items-center gap-2">

@@ -1,7 +1,8 @@
 import { GetServerSideProps } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../api/auth/[...nextauth]'
-import EventLayout from '../../../components/EventLayout'
+import EventPageLayout from '../../../components/EventPageLayout'
+import { TemplateProvider } from '../../../contexts/TemplateContext'
 import FilterPresets from '../../../components/FilterPresets'
 import { VolunteerBadges } from '../../../components/VolunteerBadges'
 import React, { useState, useEffect } from 'react'
@@ -2289,7 +2290,8 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
           </div>
         )}
       </div>
-    </EventLayout>
+      </EventPageLayout>
+    </TemplateProvider>
   )
 }
 

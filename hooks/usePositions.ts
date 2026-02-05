@@ -20,6 +20,7 @@ interface UsePositionsReturn {
   setEditingPosition: (position: Position | null) => void
   setShowInactive: (show: boolean) => void
   setSelectedPositions: (positions: Set<string>) => void
+  setIsSubmitting: (submitting: boolean) => void
   
   handleDelete: (positionId: string) => Promise<void>
   handleActivate: (positionId: string) => Promise<void>
@@ -215,6 +216,7 @@ export function usePositions({ eventId, initialPositions }: UsePositionsProps): 
     setEditingPosition,
     setShowInactive,
     setSelectedPositions,
+    setIsSubmitting,
     
     handleDelete,
     handleActivate,

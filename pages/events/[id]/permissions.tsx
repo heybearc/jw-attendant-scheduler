@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { useSession } from 'next-auth/react'
-import EventLayout from '../../../components/EventLayout'
+import EventPageLayout from '../../../components/EventPageLayout'
+import { TemplateProvider } from '../../../contexts/TemplateContext'
 
 interface EventPermission {
   id: string
@@ -30,13 +31,27 @@ export default function EventPermissionsPage() {
   const [editingUser, setEditingUser] = useState<string | null>(null)
   const [newRole, setNewRole] = useState('')
   const [availableUsers, setAvailableUsers] = useState<Array<{id: string, email: string, firstName: string, lastName: string}>>([])
+  const [event, setEvent] = useState<any>(null)
 
   useEffect(() => {
     if (eventId && status === 'authenticated') {
+      loadEvent()
       loadPermissions()
       loadAvailableUsers()
     }
   }, [eventId, status])
+
+  const loadEvent = async () => {
+    try {
+      const response = await fetch(`/api/events/${eventId}`)
+      const data = await response.json()
+      if (data.success) {
+        setEvent(data.data)
+      }
+    } catch (err) {
+      console.error('Error loading event:', err)
+    }
+  }
 
   const loadPermissions = async () => {
     try {
@@ -167,36 +182,53 @@ export default function EventPermissionsPage() {
     }
   }
 
-  if (status === 'loading' || loading) {
+  if (status === 'loading' || loading || !event) {
     return (
-      <EventLayout>
-        <div className="flex justify-center items-center h-64">
-          <div className="text-gray-600">Loading permissions...</div>
-        </div>
-      </EventLayout>
+      <div className="flex justify-center items-center h-64">
+        <div className="text-gray-600">Loading permissions...</div>
+      </div>
     )
   }
 
   if (!canManage) {
     return (
-      <EventLayout>
-        <div className="max-w-4xl mx-auto p-6">
+      <TemplateProvider
+        moduleConfig={event.departmentTemplate?.moduleConfig || null}
+        terminology={event.departmentTemplate?.terminology || null}
+        positionTemplates={event.departmentTemplate?.positionTemplates || null}
+        departmentTemplateName={event.departmentTemplate?.name}
+      >
+        <EventPageLayout
+          event={event}
+          currentPage="permissions"
+          canEdit={false}
+          canDelete={false}
+        >
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <p className="text-yellow-800">
               You don't have permission to manage event permissions. Only event admins can manage permissions.
             </p>
           </div>
-        </div>
-      </EventLayout>
+        </EventPageLayout>
+      </TemplateProvider>
     )
   }
 
   return (
-    <EventLayout>
-      <div className="max-w-4xl mx-auto p-6">
+    <TemplateProvider
+      moduleConfig={event.departmentTemplate?.moduleConfig || null}
+      terminology={event.departmentTemplate?.terminology || null}
+      positionTemplates={event.departmentTemplate?.positionTemplates || null}
+      departmentTemplateName={event.departmentTemplate?.name}
+    >
+      <EventPageLayout
+        event={event}
+        currentPage="permissions"
+        canEdit={canManage}
+        canDelete={false}
+      >
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Event Permissions</h1>
-          <p className="text-gray-600 mt-2">
+          <p className="text-gray-600">
             Manage who has access to this event and what they can do
           </p>
         </div>
@@ -378,16 +410,7 @@ export default function EventPermissionsPage() {
             <li><strong>VIEWER:</strong> Read-only access (for training/observation)</li>
           </ul>
         </div>
-
-        <div className="mt-6">
-          <button
-            onClick={() => router.push(`/events/${eventId}`)}
-            className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-          >
-            Back to Event
-          </button>
-        </div>
-      </div>
-    </EventLayout>
+      </EventPageLayout>
+    </TemplateProvider>
   )
 }

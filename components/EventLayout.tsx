@@ -52,16 +52,10 @@ export default function EventLayout({
 
   const navigationItems = [
     {
-      label: 'Events',
-      href: '/events',
-      icon: '📅',
-      roles: ['ADMIN', 'OVERSEER', 'ATTENDANT']
-    },
-    {
       label: 'Event Selection',
       href: '/events/select',
       icon: '🎯',
-      roles: ['ADMIN', 'OVERSEER', 'ATTENDANT']
+      roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN', 'VOLUNTEER']
     }
   ]
 

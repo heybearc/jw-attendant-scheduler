@@ -54,7 +54,7 @@ interface EventDocumentsPageProps {
   attendants: Volunteer[]
 }
 
-export default function EventDocumentsPage({ eventId, event, documents, attendants }: EventDocumentsPageProps) {
+export default function EventDocumentsPage({ eventId, event, documents, canEdit, canDelete, canManagePermissions, attendants }: EventDocumentsPageProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -679,6 +679,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           endDate: event.endDate ? event.endDate.toISOString().split('T')[0] + 'T12:00:00' : null,
         },
         documents,
+        canEdit,
+        canDelete,
+        canManagePermissions: canManagePerms,
         attendants
       },
     }

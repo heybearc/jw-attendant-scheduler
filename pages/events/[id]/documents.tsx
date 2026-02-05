@@ -595,7 +595,18 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     
     // Fetch event
     const event = await prisma.events.findUnique({
-      where: { id: id as string }
+      where: { id: id as string },
+      include: {
+        departmentTemplate: {
+          select: {
+            id: true,
+            name: true,
+            moduleConfig: true,
+            terminology: true,
+            positionTemplates: true
+          }
+        }
+      }
     })
 
     if (!event) {

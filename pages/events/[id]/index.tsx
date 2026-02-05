@@ -117,56 +117,168 @@ interface EventDetailsPageProps {
   canManageContent: boolean // Can create positions, attendants, count sessions
 }
 
-function EventCommandCenter({ event, canEdit }: { event: Event; canEdit: boolean }) {
+function EventCommandCenter({ event, canEdit, onStatusChange, onClone, onDelete }: { 
+  event: Event; 
+  canEdit: boolean;
+  onStatusChange?: (status: string) => void;
+  onClone?: () => void;
+  onDelete?: () => void;
+}) {
   const moduleConfig = useModuleConfig()
   const isCountTimesEnabled = moduleConfig?.countTimes === true
   const isLanyardsEnabled = moduleConfig?.lanyards === true
+  const [showMoreMenu, setShowMoreMenu] = useState(false)
+  const router = useRouter()
 
   return (
-    <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3">
-      <Link
-        href="/events"
-        className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-3 px-4 rounded transition-colors min-h-[44px] touch-manipulation flex items-center justify-center"
-      >
-        ← Back to Events
-      </Link>
-      <EventQRCode eventId={event.id} eventName={event.name} />
-      {isCountTimesEnabled && (
+    <div className="space-y-4">
+      {/* Action Toolbar */}
+      <div className="flex flex-wrap items-center gap-2">
         <Link
-          href={`/events/${event.id}/count-times`}
-          className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded transition-colors min-h-[44px] touch-manipulation flex items-center justify-center"
+          href="/events"
+          className="inline-flex items-center px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
         >
-          📊 Count Times
+          ← Back
         </Link>
-      )}
-      <Link
-        href={`/events/${event.id}/volunteers`}
-        className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded transition-colors min-h-[44px] touch-manipulation flex items-center justify-center"
-      >
-        👥 <VolunteerText plural />
-      </Link>
-      <Link
-        href={`/events/${event.id}/positions`}
-        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded transition-colors min-h-[44px] touch-manipulation flex items-center justify-center"
-      >
-        📋 Positions
-      </Link>
-      {isLanyardsEnabled && (
-        <Link
-          href={`/events/${event.id}/lanyards`}
-          className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-4 rounded transition-colors min-h-[44px] touch-manipulation flex items-center justify-center"
-        >
-          🏷️ Lanyards
-        </Link>
-      )}
-      {canEdit && (
-        <Link
-          href={`/events/${event.id}/edit`}
-          className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-4 rounded transition-colors min-h-[44px] touch-manipulation flex items-center justify-center"
-        >
-          ✏️ Edit Event
-        </Link>
-      )}
+
+        <EventQRCode eventId={event.id} eventName={event.name} />
+
+        {/* Status Actions */}
+        {event.status === 'UPCOMING' && onStatusChange && (
+          <button
+            onClick={() => onStatusChange('CURRENT')}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-semibold transition-colors"
+          >
+            🚀 Start Event
+          </button>
+        )}
+        {event.status === 'CURRENT' && onStatusChange && (
+          <button
+            onClick={() => onStatusChange('COMPLETED')}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-colors"
+          >
+            ✅ Complete Event
+          </button>
+        )}
+
+        {canEdit && (
+          <Link
+            href={`/events/${event.id}/edit`}
+            className="inline-flex items-center px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            ⚙️ Settings
+          </Link>
+        )}
+
+        {/* More Actions Dropdown */}
+        <div className="relative inline-block ml-auto">
+          <button
+            onClick={() => setShowMoreMenu(!showMoreMenu)}
+            className="inline-flex items-center gap-1 px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            ⋯ More
+          </button>
+          {showMoreMenu && (
+            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+              {onClone && (
+                <button
+                  onClick={() => { onClone(); setShowMoreMenu(false); }}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                >
+                  <span>�</span>
+                  <span>Clone Event</span>
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  router.push(`/events/${event.id}/permissions`);
+                  setShowMoreMenu(false);
+                }}
+                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+              >
+                <span>🔐</span>
+                <span>Permissions</span>
+              </button>
+              {event.status === 'COMPLETED' && onStatusChange && (
+                <button
+                  onClick={() => { onStatusChange('ARCHIVED'); setShowMoreMenu(false); }}
+                  className="w-full text-left px-4 py-2 text-sm text-yellow-700 hover:bg-yellow-50 flex items-center gap-2"
+                >
+                  <span>📦</span>
+                  <span>Archive Event</span>
+                </button>
+              )}
+              {onDelete && (
+                <button
+                  onClick={() => { onDelete(); setShowMoreMenu(false); }}
+                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 border-t border-gray-200"
+                >
+                  <span>🗑️</span>
+                  <span>Delete Event</span>
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="border-b border-gray-200 overflow-x-auto">
+        <nav className="flex gap-1 min-w-max">
+          <Link
+            href={`/events/${event.id}`}
+            className="px-4 py-2 text-sm font-medium text-blue-600 border-b-2 border-blue-600 whitespace-nowrap"
+          >
+            Overview
+          </Link>
+          <Link
+            href={`/events/${event.id}/positions`}
+            className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:border-gray-300 border-b-2 border-transparent whitespace-nowrap"
+          >
+            📋 Positions
+          </Link>
+          <Link
+            href={`/events/${event.id}/volunteers`}
+            className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:border-gray-300 border-b-2 border-transparent whitespace-nowrap"
+          >
+            👥 <VolunteerText plural />
+          </Link>
+          <Link
+            href={`/events/${event.id}/oversight`}
+            className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:border-gray-300 border-b-2 border-transparent whitespace-nowrap"
+          >
+            🔍 Oversight
+          </Link>
+          {isCountTimesEnabled && (
+            <Link
+              href={`/events/${event.id}/count-times`}
+              className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:border-gray-300 border-b-2 border-transparent whitespace-nowrap"
+            >
+              📊 Count Times
+            </Link>
+          )}
+          {isLanyardsEnabled && (
+            <Link
+              href={`/events/${event.id}/lanyards`}
+              className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:border-gray-300 border-b-2 border-transparent whitespace-nowrap"
+            >
+              🏷️ Lanyards
+            </Link>
+          )}
+          <Link
+            href={`/events/${event.id}/documents`}
+            className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:border-gray-300 border-b-2 border-transparent whitespace-nowrap"
+          >
+            📄 Documents
+          </Link>
+          <Link
+            href={`/events/${event.id}/announcements`}
+            className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:border-gray-300 border-b-2 border-transparent whitespace-nowrap"
+          >
+            📢 Announcements
+          </Link>
+        </nav>
+      </div>
     </div>
   )
 }
@@ -489,7 +601,13 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
                 {getEventTypeLabel(event.eventType)} • <SafeDate dateString={event.startDate} format="full" />
               </p>
             </div>
-            <EventCommandCenter event={event} canEdit={canEdit} />
+            <EventCommandCenter 
+              event={event} 
+              canEdit={canEdit}
+              onStatusChange={handleStatusChange}
+              onClone={handleCloneEvent}
+              onDelete={canDelete ? handleDeleteEvent : undefined}
+            />
           </div>
         </div>
 

@@ -285,10 +285,19 @@ export class PositionService {
     sendNotification?: boolean
   }): Promise<boolean> {
     try {
+      // API expects userId, not attendantId
+      const apiData = {
+        userId: data.attendantId,
+        positionId: data.positionId,
+        shiftStart: data.shiftStart?.toISOString() || new Date().toISOString(),
+        shiftEnd: data.shiftEnd?.toISOString() || new Date().toISOString(),
+        notes: data.notes
+      }
+      
       const response = await fetch(`/api/event-assignments/${this.eventId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        body: JSON.stringify(apiData)
       })
 
       if (!response.ok) {

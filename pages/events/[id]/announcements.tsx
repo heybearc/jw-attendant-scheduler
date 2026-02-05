@@ -172,12 +172,6 @@ export default function EventAnnouncementsPage({ eventId, event, announcements, 
                 <p className="text-gray-600">Manage banner announcements for volunteers</p>
               </div>
               <div className="flex space-x-3">
-                <Link
-                  href={`/events/${eventId}`}
-                  className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded transition-colors"
-                >
-                  ← Back to Event
-                </Link>
                 {canManage && (
                 <button
                   onClick={() => {

@@ -66,7 +66,7 @@ export default function EventPageLayout({
       selectedEvent={{
         id: event.id,
         name: event.name,
-        status: event.status.toLowerCase() as any
+        status: (event.status || 'DRAFT').toLowerCase() as any
       }}
     >
       <div className="space-y-6">

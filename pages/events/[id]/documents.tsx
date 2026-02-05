@@ -254,13 +254,7 @@ export default function EventDocumentsPage({ eventId, event, documents, attendan
                   Upload and publish documents to volunteers for {event?.name}
                 </p>
               </div>
-              <div className="flex space-x-3">
-                <Link
-                  href={`/events/${eventId}`}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  ← Back to Event
-                </Link>
+              <div className="flex justify-end">
                 <button
                   type="button"
                   onClick={() => setShowUploadForm(true)}

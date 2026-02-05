@@ -1,24 +1,16 @@
 import { GetServerSideProps } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../api/auth/[...nextauth]'
-import EventLayout from '../../../components/EventLayout'
-import EventNavigation from '../../../components/EventNavigation'
+import EventPageLayout from '../../../components/EventPageLayout'
 import OversightCoverageCard from '../../../components/OversightCoverageCard'
 import { TemplateProvider, useModuleConfig } from '../../../contexts/TemplateContext'
 import { VolunteerText } from '../../../components/DynamicText'
 import { CustomFieldsDisplay } from '../../../components/CustomFieldsRenderer'
 import { SafeDate } from '../../../components/SafeDate'
-import dynamic from 'next/dynamic'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-
-// Lazy load QR code component (reduces initial bundle size)
-const EventQRCode = dynamic(() => import('../../../components/EventQRCode'), {
-  loading: () => <div className="animate-pulse bg-gray-200 h-8 w-32 rounded"></div>,
-  ssr: false
-})
-import { format, parseISO } from 'date-fns'
+import { format } from 'date-fns'
 import { ModuleConfig, Terminology, PositionTemplate, CustomField } from '../../../types/departmentTemplate'
 
 interface Event {
@@ -107,6 +99,7 @@ interface Event {
   _count: {
     event_volunteers: number
     positions: number
+    assignments: number
   }
 }
 
@@ -114,191 +107,8 @@ interface EventDetailsPageProps {
   event: Event
   canEdit: boolean
   canDelete: boolean
-  canManageContent: boolean // Can create positions, attendants, count sessions
-}
-
-function EventCommandCenter({ event, canEdit, onStatusChange, onClone, onDelete }: { 
-  event: Event; 
-  canEdit: boolean;
-  onStatusChange?: (status: string) => void;
-  onClone?: () => void;
-  onDelete?: () => void;
-}) {
-  const moduleConfig = useModuleConfig()
-  const isCountTimesEnabled = moduleConfig?.countTimes === true
-  const isLanyardsEnabled = moduleConfig?.lanyards === true
-  const [showMoreMenu, setShowMoreMenu] = useState(false)
-  const router = useRouter()
-
-  return (
-    <div className="space-y-4">
-      {/* Action Toolbar */}
-      <div className="flex flex-wrap items-center gap-2">
-        <Link
-          href="/events"
-          className="inline-flex items-center px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-        >
-          ← Back
-        </Link>
-
-        <EventQRCode eventId={event.id} eventName={event.name} />
-
-        {/* Status Actions */}
-        {event.status === 'UPCOMING' && onStatusChange && (
-          <button
-            onClick={() => onStatusChange('CURRENT')}
-            className="inline-flex items-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-semibold transition-colors"
-          >
-            🚀 Start Event
-          </button>
-        )}
-        {event.status === 'CURRENT' && onStatusChange && (
-          <button
-            onClick={() => onStatusChange('COMPLETED')}
-            className="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-colors"
-          >
-            ✅ Complete Event
-          </button>
-        )}
-
-        {canEdit && (
-          <Link
-            href={`/events/${event.id}/edit`}
-            className="inline-flex items-center px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-          >
-            ⚙️ Settings
-          </Link>
-        )}
-
-        {/* More Actions Dropdown */}
-        <div className="relative inline-block ml-auto">
-          <button
-            onClick={() => setShowMoreMenu(!showMoreMenu)}
-            className="inline-flex items-center gap-1 px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-          >
-            ⋯ More
-          </button>
-          {showMoreMenu && (
-            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
-              {onClone && (
-                <button
-                  onClick={() => { onClone(); setShowMoreMenu(false); }}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-                >
-                  <span>�</span>
-                  <span>Clone Event</span>
-                </button>
-              )}
-              <button
-                onClick={() => {
-                  router.push(`/events/${event.id}/permissions`);
-                  setShowMoreMenu(false);
-                }}
-                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-              >
-                <span>🔐</span>
-                <span>Permissions</span>
-              </button>
-              {event.status === 'COMPLETED' && onStatusChange && (
-                <button
-                  onClick={() => { onStatusChange('ARCHIVED'); setShowMoreMenu(false); }}
-                  className="w-full text-left px-4 py-2 text-sm text-yellow-700 hover:bg-yellow-50 flex items-center gap-2"
-                >
-                  <span>📦</span>
-                  <span>Archive Event</span>
-                </button>
-              )}
-              {onDelete && (
-                <button
-                  onClick={() => { onDelete(); setShowMoreMenu(false); }}
-                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 border-t border-gray-200"
-                >
-                  <span>🗑️</span>
-                  <span>Delete Event</span>
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Tab Navigation */}
-      <div className="border-b border-gray-200 overflow-x-auto">
-        <nav className="flex gap-1 min-w-max">
-          <Link
-            href={`/events/${event.id}`}
-            className="px-4 py-2 text-sm font-medium text-blue-600 border-b-2 border-blue-600 whitespace-nowrap"
-          >
-            Overview
-          </Link>
-          <Link
-            href={`/events/${event.id}/positions`}
-            className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:border-gray-300 border-b-2 border-transparent whitespace-nowrap"
-          >
-            📋 Positions
-          </Link>
-          <Link
-            href={`/events/${event.id}/volunteers`}
-            className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:border-gray-300 border-b-2 border-transparent whitespace-nowrap"
-          >
-            👥 <VolunteerText plural />
-          </Link>
-          <Link
-            href={`/events/${event.id}/oversight`}
-            className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:border-gray-300 border-b-2 border-transparent whitespace-nowrap"
-          >
-            🔍 Oversight
-          </Link>
-          {isCountTimesEnabled && (
-            <Link
-              href={`/events/${event.id}/count-times`}
-              className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:border-gray-300 border-b-2 border-transparent whitespace-nowrap"
-            >
-              📊 Count Times
-            </Link>
-          )}
-          {isLanyardsEnabled && (
-            <Link
-              href={`/events/${event.id}/lanyards`}
-              className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:border-gray-300 border-b-2 border-transparent whitespace-nowrap"
-            >
-              🏷️ Lanyards
-            </Link>
-          )}
-          <Link
-            href={`/events/${event.id}/documents`}
-            className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:border-gray-300 border-b-2 border-transparent whitespace-nowrap"
-          >
-            📄 Documents
-          </Link>
-          <Link
-            href={`/events/${event.id}/announcements`}
-            className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:border-gray-300 border-b-2 border-transparent whitespace-nowrap"
-          >
-            📢 Announcements
-          </Link>
-        </nav>
-      </div>
-    </div>
-  )
-}
-
-function CountTimesLink({ eventId }: { eventId: string }) {
-  const moduleConfig = useModuleConfig()
-  const isCountTimesEnabled = moduleConfig?.countTimes === true
-
-  if (!isCountTimesEnabled) return null
-
-  return (
-    <div className="text-center mt-6">
-      <Link
-        href={`/events/${eventId}/count-times`}
-        className="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
-      >
-        📊 View Detailed Count Reports →
-      </Link>
-    </div>
-  )
+  canManageContent: boolean
+  canManagePermissions: boolean
 }
 
 function CountTimesSummary({ event }: { event: Event }) {
@@ -353,16 +163,22 @@ function CountTimesSummary({ event }: { event: Event }) {
               </div>
             ))}
           </div>
-          
         </div>
       )}
       
-      <CountTimesLink eventId={event.id} />
+      <div className="text-center mt-6">
+        <Link
+          href={`/events/${event.id}/count-times`}
+          className="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
+        >
+          📊 View Detailed Count Reports →
+        </Link>
+      </div>
     </div>
   )
 }
 
-export default function EventDetailsPage({ event, canEdit, canDelete, canManageContent }: EventDetailsPageProps) {
+export default function EventDetailsPage({ event, canEdit, canDelete, canManageContent, canManagePermissions }: EventDetailsPageProps) {
   const router = useRouter()
   
   // APEX GUARDIAN: Remove client-side fetching, use server-side props
@@ -524,47 +340,8 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
     window.URL.revokeObjectURL(url)
   }
 
-  if (loading) {
-    return (
-      <EventLayout 
-        title="Loading Event..."
-        breadcrumbs={[
-          { label: 'Events', href: '/events' },
-          { label: 'Loading...' }
-        ]}
-      >
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <p className="ml-3 text-gray-600">Loading event...</p>
-          </div>
-        </div>
-      </EventLayout>
-    )
-  }
-
-  if (error || !event) {
-    return (
-      <EventLayout 
-        title="Event Not Found"
-        breadcrumbs={[
-          { label: 'Events', href: '/events' },
-          { label: 'Error' }
-        ]}
-      >
-        <div className="max-w-7xl mx-auto">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-8 text-center">
-            <p className="text-red-700">{error || 'Event not found'}</p>
-            <Link
-              href="/events"
-              className="mt-4 inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors"
-            >
-              ← Back to Events
-            </Link>
-          </div>
-        </div>
-      </EventLayout>
-    )
+  if (loading || error || !event) {
+    return null
   }
 
   return (
@@ -574,43 +351,20 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
       positionTemplates={event.departmentTemplate?.positionTemplates as PositionTemplate[] | null}
       departmentTemplateName={event.departmentTemplate?.name}
     >
-      <EventLayout 
-        title={event.name}
-        hideTitle={true}
-        breadcrumbs={[
-          { label: 'Events', href: '/events' },
-          { label: event.name }
-        ]}
-        selectedEvent={{
+      <EventPageLayout
+        event={{
           id: event.id,
           name: event.name,
-          status: event.status.toLowerCase() as any
+          status: event.status,
+          eventType: event.eventType,
+          startDate: event.startDate
         }}
+        currentPage="overview"
+        canEdit={canEdit}
+        canDelete={canDelete}
+        canManagePermissions={canManagePermissions}
+        onStatusChange={handleStatusChange}
       >
-        <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div>
-              <div className="flex items-center flex-wrap gap-3">
-                <h1 className="text-2xl font-bold text-gray-900">{event.name}</h1>
-                <span className={`px-3 py-1 text-sm rounded-full ${getStatusBadge(event.status)}`}>
-                  {event.status}
-                </span>
-              </div>
-              <p className="mt-2 text-sm text-gray-600">
-                {getEventTypeLabel(event.eventType)} • <SafeDate dateString={event.startDate} format="full" />
-              </p>
-            </div>
-            <EventCommandCenter 
-              event={event} 
-              canEdit={canEdit}
-              onStatusChange={handleStatusChange}
-              onClone={handleCloneEvent}
-              onDelete={canDelete ? handleDeleteEvent : undefined}
-            />
-          </div>
-        </div>
 
         {/* Admin Notice: No Department Template Configured */}
         {!event.departmentTemplate && canEdit && (
@@ -975,8 +729,7 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
             </div>
           </div>
         </div>
-      </div>
-    </EventLayout>
+      </EventPageLayout>
     </TemplateProvider>
   )
 }
@@ -1133,7 +886,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     const sessionBreakdown = countSessions.map(session => ({
       id: session.id,
       sessionName: session.sessionName,
-      countTime: session.countTime.toISOString(),
+      countTime: session.countTime?.toISOString() || new Date().toISOString(),
       totalCount: session.position_counts.reduce((sum, count) => sum + (count.attendeeCount || 0), 0),
       positionsReported: session.position_counts.length,
       status: session.status
@@ -1187,17 +940,20 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     }
 
     // Check event-specific permissions
-    const { canManageEvent, canDeleteEvent, canManageAttendants } = await import('../../../src/lib/eventAccess')
+    const { canManageEvent, canDeleteEvent, canManageAttendants, canManagePermissions } = await import('../../../src/lib/eventAccess')
     const userId = session.user?.id || ''
     
-    // MANAGER or OWNER can edit event settings
+    // ADMIN or COORDINATOR can edit event settings
     const canEdit = await canManageEvent(userId, id as string)
     
-    // Only OWNER can delete event
+    // Only ADMIN can delete event
     const canDelete = await canDeleteEvent(userId, id as string)
     
-    // OWNER, MANAGER, or OVERSEER (no scope) can create positions/attendants/count sessions
+    // ADMIN or COORDINATOR can create positions/attendants/count sessions
     const canManageContent = await canManageAttendants(userId, id as string)
+    
+    // Only ADMIN can manage permissions
+    const canManagePerms = await canManagePermissions(userId, id as string)
 
     return {
       props: {
@@ -1205,6 +961,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         canEdit,
         canDelete,
         canManageContent,
+        canManagePermissions: canManagePerms,
       },
     }
   } catch (error) {

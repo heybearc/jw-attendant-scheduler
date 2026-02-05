@@ -400,6 +400,12 @@ This document tracks significant technical decisions made during development.
 **Decision:** Systematically updated all 8 event pages to use EventPageWrapper with moduleConfig and permission props. Removed redundant breadcrumbs and duplicate event name display.
 **Consequences:** All event pages now show consistent tabs based on template moduleConfig (countTimes, lanyards) and user permissions (canManagePermissions). Cleaner UI with less redundancy. Pages affected: Oversight (added API permissions), Count Times (fixed props), Lanyards (added moduleConfig), Documents (added permissions), Announcements (added moduleConfig).
 
+### D-TS-015: NEXTAUTH_URL Industry-Standard Configuration
+**Date:** 2026-02-05  
+**Context:** Volunteer login was redirecting to node-specific URLs (blue.theoshift.com, green.theoshift.com) instead of public domain. Users should never see internal node URLs.  
+**Decision:** Implement NextAuth.js dual-URL pattern: NEXTAUTH_URL=https://theoshift.com for public redirects, NEXTAUTH_URL_INTERNAL=http://localhost:3001 for internal API calls.  
+**Consequences:** Public users always see theoshift.com domain. Direct node testing (blue/green.theoshift.com) still works. Matches industry standard for containerized/proxied environments. Applied to both BLUE and GREEN nodes.
+
 ---
 
 ## Shared Decisions

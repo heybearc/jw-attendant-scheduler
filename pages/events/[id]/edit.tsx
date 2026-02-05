@@ -86,7 +86,9 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-
+  const [submitting, setSubmitting] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showCloneConfirm, setShowCloneConfirm] = useState(false)
 
   const [formData, setFormData] = useState<EventFormData>({
     name: event.name || '',
@@ -312,6 +314,54 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
       console.error('Error:', error)
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  const handleCloneEvent = async () => {
+    if (!showCloneConfirm) {
+      setShowCloneConfirm(true)
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/events/${eventId}/clone`, {
+        method: 'POST'
+      })
+      const data = await response.json()
+
+      if (data.success) {
+        router.push(`/events/${data.data.id}`)
+      } else {
+        setError(data.error || 'Failed to clone event')
+        setShowCloneConfirm(false)
+      }
+    } catch (err) {
+      setError('An error occurred while cloning the event')
+      setShowCloneConfirm(false)
+    }
+  }
+
+  const handleDeleteEvent = async () => {
+    if (!showDeleteConfirm) {
+      setShowDeleteConfirm(true)
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/events/${eventId}`, {
+        method: 'DELETE'
+      })
+      const data = await response.json()
+
+      if (data.success) {
+        router.push('/events')
+      } else {
+        setError(data.error || 'Failed to delete event')
+        setShowDeleteConfirm(false)
+      }
+    } catch (err) {
+      setError('An error occurred while deleting the event')
+      setShowDeleteConfirm(false)
     }
   }
 
@@ -920,6 +970,76 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
             </button>
           </div>
         </form>
+
+        {/* Danger Zone */}
+        <div className="bg-white shadow rounded-lg p-6 border-2 border-red-200 mt-8">
+          <h3 className="text-lg font-medium text-red-900 mb-4">Danger Zone</h3>
+          <div className="space-y-4">
+            {/* Clone Event */}
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div>
+                <h4 className="text-sm font-medium text-gray-900">Clone This Event</h4>
+                <p className="text-sm text-gray-600 mt-1">
+                  Create a duplicate of this event with all settings and positions
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleCloneEvent}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    showCloneConfirm
+                      ? 'bg-blue-600 text-white hover:bg-blue-700'
+                      : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  {showCloneConfirm ? 'Confirm Clone' : '📋 Clone Event'}
+                </button>
+                {showCloneConfirm && (
+                  <button
+                    type="button"
+                    onClick={() => setShowCloneConfirm(false)}
+                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-300 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Delete Event */}
+            <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg">
+              <div>
+                <h4 className="text-sm font-medium text-red-900">Delete This Event</h4>
+                <p className="text-sm text-red-700 mt-1">
+                  Permanently delete this event and all associated data. This action cannot be undone.
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleDeleteEvent}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    showDeleteConfirm
+                      ? 'bg-red-700 text-white hover:bg-red-800'
+                      : 'bg-white border border-red-300 text-red-700 hover:bg-red-50'
+                  }`}
+                >
+                  {showDeleteConfirm ? 'Confirm Delete' : '🗑️ Delete Event'}
+                </button>
+                {showDeleteConfirm && (
+                  <button
+                    type="button"
+                    onClick={() => setShowDeleteConfirm(false)}
+                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-300 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </EventLayout>
   )

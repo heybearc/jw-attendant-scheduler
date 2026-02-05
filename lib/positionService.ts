@@ -290,11 +290,18 @@ export class PositionService {
       let shiftEnd = data.shiftEnd
       
       if (data.shiftId && (!shiftStart || !shiftEnd)) {
-        const position = await this.getPosition(data.positionId)
-        const shift = position?.shifts?.find((s: any) => s.id === data.shiftId)
-        if (shift) {
-          shiftStart = new Date(shift.startTime)
-          shiftEnd = new Date(shift.endTime)
+        try {
+          const posResponse = await fetch(`/api/events/${this.eventId}/positions/${data.positionId}`)
+          if (posResponse.ok) {
+            const position = await posResponse.json()
+            const shift = position.shifts?.find((s: any) => s.id === data.shiftId)
+            if (shift) {
+              shiftStart = new Date(shift.startTime)
+              shiftEnd = new Date(shift.endTime)
+            }
+          }
+        } catch (err) {
+          console.warn('Failed to fetch shift times:', err)
         }
       }
       

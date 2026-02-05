@@ -2290,8 +2290,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
           </div>
         )}
       </div>
-      </EventPageLayout>
-    </TemplateProvider>
+    </EventLayout>
   )
 }
 

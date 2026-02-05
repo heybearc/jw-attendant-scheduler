@@ -40,6 +40,13 @@ interface OversightData {
     status: string
     eventType: string
     startDate: string
+    departmentTemplate?: {
+      id: string
+      name: string
+      moduleConfig?: any
+      terminology?: any
+      positionTemplates?: any
+    } | null
   }
   statistics: {
     totalPositions: number
@@ -119,6 +126,10 @@ export default function EventOversightDashboard() {
       canEdit={false}
       canDelete={false}
       canManagePermissions={false}
+      moduleConfig={event.departmentTemplate?.moduleConfig || null}
+      terminology={event.departmentTemplate?.terminology || null}
+      positionTemplates={event.departmentTemplate?.positionTemplates || null}
+      departmentTemplateName={event.departmentTemplate?.name}
     >
         {/* Header */}
         <div className="mb-8 flex justify-between items-start">

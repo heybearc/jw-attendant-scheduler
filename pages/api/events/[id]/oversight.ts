@@ -38,7 +38,22 @@ export default async function handler(
       // Verify event exists
       const event = await prisma.events.findUnique({
         where: { id: eventId },
-        select: { id: true, name: true }
+        select: {
+          id: true,
+          name: true,
+          status: true,
+          eventType: true,
+          startDate: true,
+          departmentTemplate: {
+            select: {
+              id: true,
+              name: true,
+              moduleConfig: true,
+              terminology: true,
+              positionTemplates: true
+            }
+          }
+        }
       })
 
       if (!event) {

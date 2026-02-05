@@ -170,6 +170,8 @@ interface EventPositionsProps {
 
 export default function EventPositionsPage({ eventId, event, positions: initialPositions, attendants, stats, canManageContent, canEdit, canDelete, canManagePermissions }: EventPositionsProps) {
   const router = useRouter()
+  const { data: session } = useSession()
+  const isAdmin = session?.user?.role === 'ADMIN'
   
   // Initialize services
   const positionService = React.useMemo(() => createPositionService(eventId), [eventId])
@@ -789,10 +791,6 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
       !leadershipAttendantIds.has(att.id)
     )
   }
-
-  // Get session data
-  const { data: session } = useSession()
-  const isAdmin = session?.user?.role === 'ADMIN'
 
   // Helper function to reload page while preserving showInactive state
   const reloadWithState = () => {

@@ -1,18 +1,29 @@
 # TheoShift Task State
 
-**Last updated:** 2026-02-05 (5:08 PM)  
+**Last updated:** 2026-02-05 (5:36 PM)  
 **Current branch:** main  
-**Working on:** v3.11.0 UI Modernization - RELEASED TO PRODUCTION
+**Working on:** Drag-and-drop assignment bug investigation
 
 ---
 
 ## Current Task
-**v3.11.0 UI Modernization** - COMPLETE AND LIVE
+**Drag-and-Drop Assignment Creation Bug** - PARTIALLY FIXED
 
 ### What I'm doing right now
-Successfully released v3.11.0 UI modernization to production. Both Volunteers and Positions pages modernized with professional, industry-standard interface. All tests passing, traffic switched to BLUE, STANDBY synced.
+Investigating and fixing drag-and-drop assignment creation bug. Fixed multiple issues (attendantId→userId mapping, attendant→volunteer relations, shift time fetching) but GREEN (STANDBY) has persistent caching issues preventing full verification. BLUE (LIVE) has all fixes deployed.
 
 ### Recent completions
+
+**Today (2026-02-05 - Late Afternoon):**
+- ✅ Fixed drag-and-drop assignment creation bug (multiple fixes)
+  - ✅ Map attendantId to userId for API compatibility
+  - ✅ Fetch shift times from position data when shiftId provided
+  - ✅ Update Prisma relations from attendant to volunteer
+  - ✅ Add position existence validation
+- ✅ Validated FB-023 template enforcement (already implemented)
+- ✅ Deployed fixes to BLUE (LIVE)
+- ✅ Promoted NEXTAUTH dual-URL pattern to control plane (D-023)
+- ✅ Synced governance updates
 
 **Today (2026-02-05 - Afternoon):**
 - ✅ UI Modernization (Volunteers & Positions pages)
@@ -332,30 +343,25 @@ Successfully released v3.11.0 UI modernization to production. Both Volunteers an
 - Repository significantly cleaner and organized
 
 ### Next steps
-1. **Test Permissions Refactor on STANDBY**
-   - Visit http://blue.theoshift.com/events/[event-id]/permissions
-   - Verify role dropdown shows only 3 options (ADMIN, COORDINATOR, VIEWER)
-   - Test granting/editing/removing permissions
-   - Verify permission checks work correctly
+1. **Verify drag-and-drop fix on LIVE (BLUE)**
+   - Test drag-and-drop assignment creation on theoshift.com
+   - Confirm all fixes are working in production
+   
+2. **Investigate GREEN caching issue (optional)**
+   - GREEN has persistent build cache preventing fixes from taking effect
+   - May need to clear node_modules and rebuild from scratch
+   - Or just accept BLUE as primary and sync GREEN when needed
 
-2. **Release v3.9.0 (Permissions Refactor)**
-   - Run `/bump` to create v3.9.0 release notes
-   - Run `/test-release` to verify STANDBY
-   - Run `/release` to switch traffic
-   - Run database migration on LIVE (GREEN)
-   - Run `/sync` to update STANDBY
-
-3. **Execute Short-Term Priorities**
-   - See PRIORITIES.md for detailed task list
-   - Focus on help documentation audit (Medium priority)
-   - Email content refinement (Medium priority)
-   - Mobile navigation expansion (Medium priority)
+3. **Continue with medium priority feedback items**
+   - FB-025: Location library with Google Maps
+   - FB-026: Feedback notifications banner
+   - FB-027: Event selection page organization
 
 ---
 
 ## Known Issues
 **Current:**
-- ⚠️ Permissions refactor code complete but not yet deployed (uncommitted changes in working directory)
+- ⚠️ **GREEN (STANDBY) build cache issue** - Drag-and-drop fixes not taking effect on GREEN despite multiple rebuilds. BLUE (LIVE) has all fixes and should work correctly. May need deeper investigation or fresh deployment to GREEN.
 
 **Resolved:**
 - ✅ All test failures fixed (was 14 failing, now 0 failing)
@@ -382,6 +388,6 @@ Successfully released v3.11.0 UI modernization to production. Both Volunteers an
 ---
 
 ## Exact Next Command
-**Test permissions refactor on STANDBY:** Visit http://blue.theoshift.com in browser, log in as admin, navigate to an event's permissions page, and verify the 3-role system works correctly. Then run `/bump` to create v3.9.0 release.
+**Verify drag-and-drop fix:** Test drag-and-drop assignment creation on theoshift.com (BLUE/LIVE) to confirm all fixes are working. If working, update IMPLEMENTATION-PLAN.md to mark bug as fully resolved. Then pick next priority item from IMPLEMENTATION-PLAN.md (FB-025, FB-026, or FB-027).
 
 **For work items and priorities:** See IMPLEMENTATION-PLAN.md for complete backlog, roadmap, bugs, and feature requests (D-022).

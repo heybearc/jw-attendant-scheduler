@@ -7,8 +7,12 @@
 
 ## 🎯 Recent Completions (Feb 5, 2026)
 
-### ✅ UI Modernization - Professional Industry-Standard Design
-**Completed:** Volunteers and Positions pages modernized with clean, professional interfaces
+### ✅ v3.11.0 Released - UI Modernization + Bug Fixes
+**Completed:** Volunteers and Positions pages modernized with clean, professional interfaces. Drag-and-drop assignment bug fixed (deployed to LIVE).
+
+**Version:** v3.11.0  
+**Released:** 2026-02-05  
+**Status:** Live on theoshift.com (BLUE)
 
 **Volunteers Page:**
 - Replaced large header with compact design and inline stats pills (All/Active/Inactive)
@@ -66,10 +70,11 @@
 - None currently
 
 ### Recently Fixed
-- [x] **Drag-and-drop assignment creation failing with 500 error** (CRITICAL, FIXED 2026-02-05) - positionService.createAssignment was sending `attendantId` but API expects `userId`. Fixed by mapping attendantId to userId and ensuring shiftStart/shiftEnd are ISO strings. Deployed to STANDBY.
+- [x] **Drag-and-drop assignment creation failing with 500 error** (CRITICAL, FIXED 2026-02-05) - Multiple fixes applied: (1) Map attendantId to userId for API compatibility, (2) Fetch shift times from position data when shiftId provided, (3) Update Prisma relations from attendant to volunteer, (4) Add position existence validation. **Deployed to BLUE (LIVE).** GREEN (STANDBY) has persistent build cache issue preventing verification.
 - [x] **Event creation failing with 500 error** (CRITICAL, FIXED 2026-02-04) - Event creation API was using deprecated OWNER role instead of ADMIN after v3.9.0 permissions refactor. Fixed and deployed to LIVE immediately.
 
 ### Non-Critical (Backlog)
+- [ ] **GREEN (STANDBY) build cache issue** (effort: M, NEW 2026-02-05) - GREEN server has persistent build cache preventing code changes from taking effect despite multiple rebuilds and .next folder deletion. BLUE (LIVE) works correctly. **Impact:** Cannot fully verify fixes on STANDBY. **Workaround:** Deploy to BLUE first, sync GREEN when needed. **Status:** Needs investigation or fresh deployment.
 - [ ] **React error loop in production** (effort: L) - Recurring minified React errors #425 and #418 causing infinite error boundary loops. Caught by APEX GUARDIAN error boundary. Errors occur in production build, need to reproduce in dev mode with non-minified React to identify root cause. **Impact:** Console spam, potential performance degradation. **Frequency:** Intermittent but recurring across releases. **Status:** Monitoring, non-blocking.
 - [ ] Position management test expects event selection (effort: S) - Pre-existing test failure, non-blocking
 - [ ] Refactoring validation test expects event selection (effort: S) - Pre-existing test failure, non-blocking

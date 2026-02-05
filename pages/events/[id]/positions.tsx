@@ -832,66 +832,64 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
         canDelete={canDelete}
         canManagePermissions={canManagePermissions}
       >
-        <div className="space-y-6">
-          {/* Action Toolbar */}
-          <div className="flex flex-wrap items-center gap-2">
+        {/* Action Toolbar */}
+        <div className="flex flex-wrap items-center gap-2">
+          {canManageContent && (
+            <button
+              onClick={handleAutoAssignOversightAware}
+              disabled={isSubmitting || getUnassignedCount() === 0}
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all ${
+                isSubmitting 
+                  ? 'bg-blue-500 cursor-not-allowed' 
+                  : getUnassignedCount() === 0
+                    ? 'bg-green-500 hover:bg-green-600'
+                    : 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600'
+              }`}
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                  <span>Assigning...</span>
+                </>
+              ) : getUnassignedCount() === 0 ? (
+                <span>🎉 All Assigned</span>
+              ) : (
+                <span>🚨 Auto-Assign ({getUnassignedCount()})</span>
+              )}
+            </button>
+          )}
 
-                {canManageContent && (
-                  <button
-                    onClick={handleAutoAssignOversightAware}
-                    disabled={isSubmitting || getUnassignedCount() === 0}
-                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all ${
-                      isSubmitting 
-                        ? 'bg-blue-500 cursor-not-allowed' 
-                        : getUnassignedCount() === 0
-                          ? 'bg-green-500 hover:bg-green-600'
-                          : 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600'
-                    }`}
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
-                        <span>Assigning...</span>
-                      </>
-                    ) : getUnassignedCount() === 0 ? (
-                      <span>🎉 All Assigned</span>
-                    ) : (
-                      <span>🚨 Auto-Assign ({getUnassignedCount()})</span>
-                    )}
-                  </button>
-                )}
+          <button
+            onClick={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
+            className="inline-flex items-center px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            {viewMode === 'list' ? '📊 Grid' : '📋 List'}
+          </button>
 
-                <button
-                  onClick={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
-                  className="inline-flex items-center px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  {viewMode === 'list' ? '📊 Grid' : '📋 List'}
-                </button>
+          <button
+            onClick={() => {
+              const newState = !showInactive
+              setShowInactive(newState)
+              localStorage.setItem(`showInactive-event-${eventId}`, newState.toString())
+              const url = new URL(window.location.href)
+              if (newState) {
+                url.searchParams.set('showInactive', 'true')
+              } else {
+                url.searchParams.delete('showInactive')
+              }
+              window.history.replaceState({}, '', url.toString())
+            }}
+            className={`inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+              showInactive 
+                ? 'bg-purple-600 text-white hover:bg-purple-700' 
+                : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            👁️ {showInactive ? 'Hide' : 'Show'} Inactive
+          </button>
 
-                <button
-                  onClick={() => {
-                    const newState = !showInactive
-                    setShowInactive(newState)
-                    localStorage.setItem(`showInactive-event-${eventId}`, newState.toString())
-                    const url = new URL(window.location.href)
-                    if (newState) {
-                      url.searchParams.set('showInactive', 'true')
-                    } else {
-                      url.searchParams.delete('showInactive')
-                    }
-                    window.history.replaceState({}, '', url.toString())
-                  }}
-                  className={`inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    showInactive 
-                      ? 'bg-purple-600 text-white hover:bg-purple-700' 
-                      : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  👁️ {showInactive ? 'Hide' : 'Show'} Inactive
-                </button>
-
-                {/* Filters Dropdown */}
-                <div className="relative inline-block">
+          {/* Filters Dropdown */}
+          <div className="relative inline-block">
                   <button
                     onClick={() => setShowFiltersMenu(!showFiltersMenu)}
                     className="inline-flex items-center gap-1 px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"

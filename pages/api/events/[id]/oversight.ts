@@ -154,7 +154,11 @@ export default async function handler(
       const response = {
         event: {
           id: event.id,
-          name: event.name
+          name: event.name,
+          status: event.status,
+          eventType: event.eventType,
+          startDate: event.startDate?.toISOString() || '',
+          departmentTemplate: event.departmentTemplate
         },
         statistics: {
           totalPositions,

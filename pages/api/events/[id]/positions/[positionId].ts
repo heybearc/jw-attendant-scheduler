@@ -47,7 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
         assignments: {
           include: {
-            attendant: {
+            volunteer: {
               select: {
                 id: true,
                 firstName: true,
@@ -166,7 +166,7 @@ async function handleUpdatePosition(req: NextApiRequest, res: NextApiResponse, p
         },
         assignments: {
           include: {
-            attendant: {
+            volunteer: {
               select: {
                 id: true,
                 firstName: true,
@@ -249,7 +249,7 @@ async function handleDeletePosition(req: NextApiRequest, res: NextApiResponse, p
       const activeAssignmentCount = await prisma.position_assignments.count({
         where: { 
           positionId: position.id,
-          attendant: {
+          volunteer: {
             isActive: true
           }
         }

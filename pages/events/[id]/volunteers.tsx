@@ -1,7 +1,7 @@
 import { GetServerSideProps } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../api/auth/[...nextauth]'
-import EventLayout from '../../../components/EventLayout'
+import EventPageWrapper from '../../../components/EventPageWrapper'
 import FilterPresets from '../../../components/FilterPresets'
 import { VolunteerBadges } from '../../../components/VolunteerBadges'
 import React, { useState, useEffect } from 'react'
@@ -61,10 +61,13 @@ interface EventVolunteersPageProps {
   event: Event
   attendants: Attendant[]
   canManageContent: boolean
+  canEdit: boolean
+  canDelete: boolean
+  canManagePermissions: boolean
   stats: VolunteerStats
 }
 
-export default function EventAttendantsPage({ eventId, event, attendants, canManageContent, stats }: EventVolunteersPageProps) {
+export default function EventAttendantsPage({ eventId, event, attendants, canManageContent, canEdit, canDelete, canManagePermissions, stats }: EventVolunteersPageProps) {
   const router = useRouter()
   const [showAddModal, setShowAddModal] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
@@ -899,18 +902,18 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
   }
 
   return (
-    <EventLayout 
-      title={`${event.name} - Volunteers | Theocratic Shift Scheduler`}
-      breadcrumbs={[
-        { label: 'Events', href: '/events' },
-        { label: event.name, href: `/events/${eventId}` },
-        { label: 'Attendants' }
-      ]}
-      selectedEvent={{
+    <EventPageWrapper
+      event={{
         id: eventId,
         name: event.name,
-        status: event.status
+        status: event.status,
+        eventType: event.eventType,
+        startDate: event.startDate
       }}
+      currentPage="volunteers"
+      canEdit={canEdit}
+      canDelete={canDelete}
+      canManagePermissions={canManagePermissions}
     >
       <div className="max-w-7xl mx-auto">
         {/* Header */}
@@ -919,13 +922,6 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-4">Event Volunteers</h2>
               <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-3">
-                <button 
-                  onClick={() => router.push(`/events/${eventId}`)}
-                  disabled={loading}
-                  className="bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white font-bold py-3 px-4 rounded transition-colors min-h-[44px] touch-manipulation"
-                >
-                  ← Back to Event
-                </button>
                 {canManageContent && (
                   <div className="flex space-x-3">
                     <button 
@@ -2289,7 +2285,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
           </div>
         )}
       </div>
-    </EventLayout>
+    </EventPageWrapper>
   )
 }
 
@@ -2555,9 +2551,12 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     const attendants = Array.from(attendantMap.values())
 
     // Check event-specific permissions
-    const { canManageAttendants } = await import('../../../src/lib/eventAccess')
+    const { canManageAttendants, canManageEvent, canDeleteEvent, canManagePermissions } = await import('../../../src/lib/eventAccess')
     const userId = session.user?.id || ''
     const canManageContent = await canManageAttendants(userId, id as string)
+    const canEdit = await canManageEvent(userId, id as string)
+    const canDelete = await canDeleteEvent(userId, id as string)
+    const canManagePerms = await canManagePermissions(userId, id as string)
 
     return {
       props: {
@@ -2565,6 +2564,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         event,
         attendants,
         canManageContent,
+        canEdit,
+        canDelete,
+        canManagePermissions: canManagePerms,
         stats: {
           total: allAttendants.length,
           active: allAttendants.filter(a => a.isActive).length,

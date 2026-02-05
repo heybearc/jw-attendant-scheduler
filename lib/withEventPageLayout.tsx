@@ -34,11 +34,7 @@ export function withEventPagePermissions<P extends { [key: string]: any }>(
 ) {
   return async (
     context: GetServerSidePropsContext
-  ): Promise<GetServerSidePropsResult<P & {
-    canEdit: boolean
-    canDelete: boolean
-    canManagePermissions: boolean
-  }>> => {
+  ): Promise<GetServerSidePropsResult<any>> => {
     const session = await getServerSession(context.req, context.res, authOptions)
     
     if (!session) {

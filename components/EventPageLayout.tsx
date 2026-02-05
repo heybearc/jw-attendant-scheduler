@@ -20,9 +20,9 @@ interface EventPageLayoutProps {
   currentPage: 'overview' | 'positions' | 'volunteers' | 'oversight' | 'count-times' | 'lanyards' | 'documents' | 'announcements' | 'permissions' | 'edit'
   canEdit?: boolean
   canDelete?: boolean
+  canManagePermissions?: boolean
   onStatusChange?: (status: string) => void
-  onClone?: () => void
-  onDelete?: () => void
+  onExport?: () => void
 }
 
 export default function EventPageLayout({
@@ -31,9 +31,9 @@ export default function EventPageLayout({
   currentPage,
   canEdit = false,
   canDelete = false,
+  canManagePermissions = false,
   onStatusChange,
-  onClone,
-  onDelete
+  onExport
 }: EventPageLayoutProps) {
   const moduleConfig = useModuleConfig()
   const router = useRouter()
@@ -121,25 +121,15 @@ export default function EventPageLayout({
             </button>
             {showMoreMenu && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
-                {onClone && (
+                {onExport && (
                   <button
-                    onClick={() => { onClone(); setShowMoreMenu(false); }}
+                    onClick={() => { onExport(); setShowMoreMenu(false); }}
                     className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
                   >
-                    <span>📋</span>
-                    <span>Clone Event</span>
+                    <span>📥</span>
+                    <span>Export Data</span>
                   </button>
                 )}
-                <button
-                  onClick={() => {
-                    router.push(`/events/${event.id}/permissions`);
-                    setShowMoreMenu(false);
-                  }}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-                >
-                  <span>🔐</span>
-                  <span>Permissions</span>
-                </button>
                 {event.status === 'COMPLETED' && onStatusChange && (
                   <button
                     onClick={() => { onStatusChange('ARCHIVED'); setShowMoreMenu(false); }}
@@ -149,21 +139,12 @@ export default function EventPageLayout({
                     <span>Archive Event</span>
                   </button>
                 )}
-                {onDelete && (
-                  <button
-                    onClick={() => { onDelete(); setShowMoreMenu(false); }}
-                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 border-t border-gray-200"
-                  >
-                    <span>🗑️</span>
-                    <span>Delete Event</span>
-                  </button>
-                )}
               </div>
             )}
           </div>
         </div>
 
-        {/* Tab Navigation */}
+        {/* Tab Navigation - Workflow Order */}
         <div className="border-b border-gray-200 overflow-x-auto">
           <nav className="flex gap-1 min-w-max">
             <Link
@@ -250,16 +231,18 @@ export default function EventPageLayout({
             >
               📢 Announcements
             </Link>
-            <Link
-              href={`/events/${event.id}/permissions`}
-              className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${
-                currentPage === 'permissions'
-                  ? 'text-blue-600 border-b-2 border-blue-600'
-                  : 'text-gray-600 hover:text-gray-900 hover:border-gray-300 border-b-2 border-transparent'
-              }`}
-            >
-              🔐 Permissions
-            </Link>
+            {canManagePermissions && (
+              <Link
+                href={`/events/${event.id}/permissions`}
+                className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${
+                  currentPage === 'permissions'
+                    ? 'text-blue-600 border-b-2 border-blue-600'
+                    : 'text-gray-600 hover:text-gray-900 hover:border-gray-300 border-b-2 border-transparent'
+                }`}
+              >
+                🔐 Permissions
+              </Link>
+            )}
           </nav>
         </div>
 

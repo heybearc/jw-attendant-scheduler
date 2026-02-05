@@ -55,6 +55,13 @@ interface Event {
   status: string
   eventType: string
   startDate: string
+  departmentTemplate?: {
+    id: string
+    name: string
+    moduleConfig?: any
+    terminology?: any
+    positionTemplates?: any
+  } | null
 }
 
 interface CountStats {
@@ -72,9 +79,13 @@ interface EventCountTimesPageProps {
   canDelete: boolean
   canManagePermissions: boolean
   stats: CountStats
+  moduleConfig?: any
+  terminology?: any
+  positionTemplates?: any
+  departmentTemplateName?: string
 }
 
-export default function EventCountTimesPage({ eventId, event, countSessions, canManageContent, canEdit, canDelete, canManagePermissions, stats }: EventCountTimesPageProps) {
+export default function EventCountTimesPage({ eventId, event, countSessions, canManageContent, canEdit, canDelete, canManagePermissions, stats, moduleConfig, terminology, positionTemplates, departmentTemplateName }: EventCountTimesPageProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -154,6 +165,10 @@ export default function EventCountTimesPage({ eventId, event, countSessions, can
       canEdit={canEdit}
       canDelete={canDelete}
       canManagePermissions={canManagePermissions}
+      moduleConfig={moduleConfig}
+      terminology={terminology}
+      positionTemplates={positionTemplates}
+      departmentTemplateName={departmentTemplateName}
     >
         <div className="max-w-7xl mx-auto">
           {/* Header */}
@@ -351,19 +366,29 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     const { prisma } = await import('../../../src/lib/prisma')
     
     // Phase 3B: Check if Count Times module is enabled for this event
-    const eventTemplate = await prisma.events.findUnique({
+    const event = await prisma.events.findUnique({
       where: { id: id as string },
       select: {
+        id: true,
+        name: true,
+        status: true,
+        eventType: true,
+        startDate: true,
         departmentTemplate: {
           select: {
-            moduleConfig: true
+            id: true,
+            name: true,
+            moduleConfig: true,
+            terminology: true,
+            positionTemplates: true
           }
         }
       }
     })
     
     // If event has a department template with moduleConfig, check if countTimes is disabled
-    if (eventTemplate?.departmentTemplate?.moduleConfig) {
+    if (event?.departmentTemplate?.moduleConfig) {
+      const moduleConfig = event.departmentTemplate.moduleConfig as any
       const moduleConfig = eventTemplate.departmentTemplate.moduleConfig as any
       if (moduleConfig.countTimes === false) {
         // Count Times module is disabled for this event

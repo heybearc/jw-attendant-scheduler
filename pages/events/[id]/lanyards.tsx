@@ -964,8 +964,15 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     }
   }
 
-  // APEX GUARDIAN: Full SSR data fetching for lanyards tab
+  // Check event-specific permissions
   const { id } = context.params!
+  const { canManageEvent, canDeleteEvent, canManagePermissions } = await import('../../../src/lib/eventAccess')
+  const userId = session.user?.id || ''
+  const canEdit = await canManageEvent(userId, id as string)
+  const canDelete = await canDeleteEvent(userId, id as string)
+  const canManagePerms = await canManagePermissions(userId, id as string)
+
+  // APEX GUARDIAN: Full SSR data fetching for lanyards tab
   
   try {
     const { prisma } = await import('../../../src/lib/prisma')

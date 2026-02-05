@@ -197,6 +197,9 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
   const [selectedOverseer, setSelectedOverseer] = useState<string>('all')
   const [roleFilter, setRoleFilter] = useState<'all' | 'overseers' | 'assistants' | 'keymen'>('all')
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
+  const [showFiltersMenu, setShowFiltersMenu] = useState(false)
+  const [showExportMenu, setShowExportMenu] = useState(false)
+  const [showActionsMenu, setShowActionsMenu] = useState(false)
   
   // Define getFilteredPositionsWithOverseer before using it in exportHook
   const getFilteredPositionsWithOverseer = () => {
@@ -839,214 +842,249 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                   Manage positions and roles for {event?.name}
                 </p>
               </div>
-              {/* Mobile-Responsive Button Layout */}
-              <div className="space-y-3">
-                {/* Row 1: Navigation & Primary Actions */}
-                <div className="flex flex-wrap gap-2">
-                  <Link
-                    href={`/events/${eventId}`}
-                    className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-                  >
-                    ← Back
-                  </Link>
+              {/* Professional Action Toolbar */}
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Primary Actions */}
+                <Link
+                  href={`/events/${eventId}`}
+                  className="inline-flex items-center px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  ← Back
+                </Link>
 
-                  {canManageContent && (
-                    <button
-                      onClick={handleAutoAssignOversightAware}
-                      disabled={isSubmitting || getUnassignedCount() === 0}
-                      className={`px-4 py-2 rounded-lg text-sm font-bold text-white transition-all ${
-                        isSubmitting 
-                          ? 'bg-blue-500 cursor-not-allowed' 
-                          : getUnassignedCount() === 0
-                            ? 'bg-green-500 hover:bg-green-600'
-                            : 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600'
-                      }`}
-                      title={`Auto-assign ${getUnassignedCount()} available volunteers`}
-                    >
-                      {isSubmitting ? (
-                        <span className="flex items-center gap-2">
-                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
-                          Assigning...
-                        </span>
-                      ) : getUnassignedCount() === 0 ? (
-                        <span>🎉 All Assigned</span>
-                      ) : (
-                        <span>🚨 Auto-Assign ({getUnassignedCount()})</span>
-                      )}
-                    </button>
-                  )}
-
+                {canManageContent && (
                   <button
-                    onClick={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-                    title={viewMode === 'list' ? 'Switch to Grid View' : 'Switch to List View'}
-                  >
-                    {viewMode === 'list' ? '📊 Grid' : '📋 List'}
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      const newState = !showInactive
-                      setShowInactive(newState)
-                      localStorage.setItem(`showInactive-event-${eventId}`, newState.toString())
-                      const url = new URL(window.location.href)
-                      if (newState) {
-                        url.searchParams.set('showInactive', 'true')
-                      } else {
-                        url.searchParams.delete('showInactive')
-                      }
-                      window.history.replaceState({}, '', url.toString())
-                    }}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      showInactive 
-                        ? 'bg-purple-600 hover:bg-purple-700 text-white' 
-                        : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                    onClick={handleAutoAssignOversightAware}
+                    disabled={isSubmitting || getUnassignedCount() === 0}
+                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all ${
+                      isSubmitting 
+                        ? 'bg-blue-500 cursor-not-allowed' 
+                        : getUnassignedCount() === 0
+                          ? 'bg-green-500 hover:bg-green-600'
+                          : 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600'
                     }`}
-                    title={showInactive ? 'Hide inactive' : 'Show inactive'}
                   >
-                    👁️ {showInactive ? 'Hide' : 'Show'} Inactive
+                    {isSubmitting ? (
+                      <>
+                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                        <span>Assigning...</span>
+                      </>
+                    ) : getUnassignedCount() === 0 ? (
+                      <span>🎉 All Assigned</span>
+                    ) : (
+                      <span>🚨 Auto-Assign ({getUnassignedCount()})</span>
+                    )}
                   </button>
+                )}
+
+                <button
+                  onClick={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
+                  className="inline-flex items-center px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  {viewMode === 'list' ? '📊 Grid' : '📋 List'}
+                </button>
+
+                <button
+                  onClick={() => {
+                    const newState = !showInactive
+                    setShowInactive(newState)
+                    localStorage.setItem(`showInactive-event-${eventId}`, newState.toString())
+                    const url = new URL(window.location.href)
+                    if (newState) {
+                      url.searchParams.set('showInactive', 'true')
+                    } else {
+                      url.searchParams.delete('showInactive')
+                    }
+                    window.history.replaceState({}, '', url.toString())
+                  }}
+                  className={`inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    showInactive 
+                      ? 'bg-purple-600 text-white hover:bg-purple-700' 
+                      : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  👁️ {showInactive ? 'Hide' : 'Show'} Inactive
+                </button>
+
+                {/* Filters Dropdown */}
+                <div className="relative inline-block">
+                  <button
+                    onClick={() => setShowFiltersMenu(!showFiltersMenu)}
+                    className="inline-flex items-center gap-1 px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    🔍 Filters
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {showFiltersMenu && (
+                    <div className="absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                      <div className="p-3 space-y-2">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">Overseer</label>
+                          <select
+                            value={selectedOverseer}
+                            onChange={(e) => setSelectedOverseer(e.target.value)}
+                            className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            <option value="all">All Overseers</option>
+                            {Array.from(new Set(
+                              positions
+                                .map(p => p.oversight?.[0]?.overseer)
+                                .filter(Boolean)
+                                .map(o => JSON.stringify({ id: o!.id, name: `${o!.firstName} ${o!.lastName}` }))
+                            )).map(overseerStr => {
+                              const overseer = JSON.parse(overseerStr)
+                              return (
+                                <option key={overseer.id} value={overseer.id}>
+                                  {overseer.name}
+                                </option>
+                              )
+                            })}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">Role</label>
+                          <select
+                            value={roleFilter}
+                            onChange={(e) => setRoleFilter(e.target.value as 'all' | 'overseers' | 'assistants' | 'keymen')}
+                            className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            <option value="all">All Roles</option>
+                            <option value="overseers">🔵 Overseers</option>
+                            <option value="assistants">🟢 Assistants</option>
+                            <option value="keymen">🟡 Keymen</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                {/* Row 2: Filters */}
-                <div className="flex flex-wrap gap-2">
-                  <select
-                    value={selectedOverseer}
-                    onChange={(e) => setSelectedOverseer(e.target.value)}
-                    className="bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
+                {/* Export Dropdown */}
+                <div className="relative inline-block">
+                  <button
+                    onClick={() => setShowExportMenu(!showExportMenu)}
+                    className="inline-flex items-center gap-1 px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                   >
-                    <option value="all">All Overseers</option>
-                    {Array.from(new Set(
-                      positions
-                        .map(p => p.oversight?.[0]?.overseer)
-                        .filter(Boolean)
-                        .map(o => JSON.stringify({ id: o!.id, name: `${o!.firstName} ${o!.lastName}` }))
-                    )).map(overseerStr => {
-                      const overseer = JSON.parse(overseerStr)
-                      return (
-                        <option key={overseer.id} value={overseer.id}>
-                          {overseer.name}
-                        </option>
-                      )
-                    })}
-                  </select>
-
-                  <select
-                    value={roleFilter}
-                    onChange={(e) => setRoleFilter(e.target.value as 'all' | 'overseers' | 'assistants' | 'keymen')}
-                    className="bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    title="Filter by oversight role"
-                  >
-                    <option value="all">All Roles</option>
-                    <option value="overseers">🔵 Overseers</option>
-                    <option value="assistants">🟢 Assistants</option>
-                    <option value="keymen">🟡 Keymen</option>
-                  </select>
+                    📥 Export
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {showExportMenu && (
+                    <div className="absolute left-0 mt-2 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                      <button
+                        onClick={() => { handleExportPDF(); setShowExportMenu(false); }}
+                        disabled={isExporting}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50 flex items-center gap-2"
+                      >
+                        <span>📄</span>
+                        <span>{isExporting ? 'Exporting...' : 'Export PDF'}</span>
+                      </button>
+                      <button
+                        onClick={() => { handleExportExcel(); setShowExportMenu(false); }}
+                        disabled={isExporting}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50 flex items-center gap-2"
+                      >
+                        <span>📊</span>
+                        <span>{isExporting ? 'Exporting...' : 'Export Excel'}</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
 
-                {/* Row 3: Export & Management Actions */}
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    onClick={handleExportPDF}
-                    disabled={isExporting}
-                    className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 flex items-center gap-1"
-                  >
-                    <span>📄</span>
-                    <span>{isExporting ? 'Exporting...' : 'PDF'}</span>
-                  </button>
-                  <button
-                    onClick={handleExportExcel}
-                    disabled={isExporting}
-                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 flex items-center gap-1"
-                  >
-                    <span>📊</span>
-                    <span>{isExporting ? 'Exporting...' : 'Excel'}</span>
-                  </button>
-                  
-                  {canManageContent && (
+                {/* Actions Dropdown (Admin only) */}
+                {canManageContent && (
+                  <div className="relative inline-block">
                     <button
-                      onClick={async () => {
-                        if (!confirm('📧 Send assignment notifications to all volunteers?\n\nThis will send an email to each volunteer with their current assignments.\n\nContinue?')) {
-                          return
-                        }
-                        try {
-                          const response = await fetch(`/api/events/${eventId}/assignments/send-notifications`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' }
-                          })
-                          const data = await response.json()
-                          if (response.ok && data.success) {
-                            if (data.failed > 0) {
-                              alert(`⚠️ ${data.message}\n\nErrors:\n${data.errors?.join('\n') || 'Unknown errors'}`)
-                            } else {
-                              alert(`✅ ${data.message}`)
+                      onClick={() => setShowActionsMenu(!showActionsMenu)}
+                      className="inline-flex items-center gap-1 px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      ⚙️ Actions
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    {showActionsMenu && (
+                      <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                        <button
+                          onClick={async () => {
+                            setShowActionsMenu(false)
+                            if (!confirm('📧 Send assignment notifications to all volunteers?\n\nThis will send an email to each volunteer with their current assignments.\n\nContinue?')) return
+                            try {
+                              const response = await fetch(`/api/events/${eventId}/assignments/send-notifications`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' }
+                              })
+                              const data = await response.json()
+                              if (response.ok && data.success) {
+                                alert(data.failed > 0 ? `⚠️ ${data.message}\n\nErrors:\n${data.errors?.join('\n') || 'Unknown errors'}` : `✅ ${data.message}`)
+                              } else {
+                                alert(`❌ ${data.error || data.message || 'Failed to send notifications'}`)
+                              }
+                            } catch (error) {
+                              alert(`❌ Failed to send notifications: ${error.message}`)
                             }
-                          } else {
-                            alert(`❌ ${data.error || data.message || 'Failed to send notifications'}`)
-                          }
-                        } catch (error) {
-                          alert(`❌ Failed to send notifications: ${error.message}`)
-                        }
-                      }}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-                      title="Send email notifications"
-                    >
-                      📧 Notify
-                    </button>
-                  )}
-                  
-                  {canManageContent && (
-                    <button
-                      onClick={async () => {
-                        if (!confirm('⚠️ Clear ALL assignments?\n\nThis cannot be undone.')) return
-                        try {
-                          const success = await positionService.clearAllAssignments()
-                          if (success) {
-                            alert('✅ Cleared all assignments')
-                            router.reload()
-                          } else {
-                            alert('Failed to clear assignments')
-                          }
-                        } catch (error) {
-                          alert('Failed to clear assignments')
-                        }
-                      }}
-                      className="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-                      title="Clear all assignments"
-                    >
-                      🧹 Clear
-                    </button>
-                  )}
-                </div>
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                        >
+                          <span>📧</span>
+                          <span>Send Notifications</span>
+                        </button>
+                        <button
+                          onClick={async () => {
+                            setShowActionsMenu(false)
+                            if (!confirm('⚠️ Clear ALL assignments?\n\nThis cannot be undone.')) return
+                            try {
+                              const success = await positionService.clearAllAssignments()
+                              if (success) {
+                                alert('✅ Cleared all assignments')
+                                router.reload()
+                              } else {
+                                alert('Failed to clear assignments')
+                              }
+                            } catch (error) {
+                              alert('Failed to clear assignments')
+                            }
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                        >
+                          <span>🧹</span>
+                          <span>Clear All Assignments</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
 
-                {/* Row 4: Bulk Operations (when items selected) */}
+                {/* Bulk Operations Bar (contextual) */}
                 {canManageContent && selectedPositions.size > 0 && (
-                  <div className="flex flex-wrap items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+                  <div className="flex items-center gap-2 ml-auto bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
                     <span className="text-sm text-blue-700 font-medium">
                       {selectedPositions.size} selected
                     </span>
                     <button
                       onClick={() => setShowTemplateModal(true)}
-                      className="text-xs bg-green-100 hover:bg-green-200 text-green-700 px-2 py-1 rounded"
-                      title="Apply shift template"
+                      className="text-xs bg-green-100 hover:bg-green-200 text-green-700 px-2 py-1 rounded font-medium"
                     >
                       📅 Template
                     </button>
                     <button
                       onClick={handleBulkDelete}
-                      className="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-2 py-1 rounded"
+                      className="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-2 py-1 rounded font-medium"
                     >
                       Delete
                     </button>
                     <button
                       onClick={() => setShowBulkEditModal(true)}
-                      className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded"
+                      className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded font-medium"
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => setSelectedPositions(new Set())}
-                      className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded"
+                      className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded font-medium"
                     >
                       Clear
                     </button>

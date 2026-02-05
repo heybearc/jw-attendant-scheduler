@@ -55,6 +55,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const validatedData = assignmentSchema.parse(req.body)
         console.log('Validated assignment data:', validatedData)
         
+        // Verify position exists before creating assignment
+        const positionExists = await prisma.positions.findUnique({
+          where: { id: validatedData.positionId }
+        })
+        console.log('Position exists check:', { positionId: validatedData.positionId, exists: !!positionExists })
+        
+        if (!positionExists) {
+          return res.status(400).json({ 
+            error: `Position ${validatedData.positionId} not found` 
+          })
+        }
+        
         const newAssignment = await prisma.assignments.create({
           data: {
             id: crypto.randomUUID(),

@@ -465,7 +465,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           name: event.name,
           status: event.status,
           eventType: event.eventType,
-          startDate: event.startDate?.toISOString() || new Date().toISOString()
+          startDate: event.startDate?.toISOString() || new Date().toISOString(),
+          departmentTemplate: event.departmentTemplate
         },
         announcements: announcements.map(a => ({
           id: a.id,
@@ -484,7 +485,11 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         canManage,
         canEdit,
         canDelete,
-        canManagePermissions: canManagePerms
+        canManagePermissions: canManagePerms,
+        moduleConfig: event.departmentTemplate?.moduleConfig || null,
+        terminology: event.departmentTemplate?.terminology || null,
+        positionTemplates: event.departmentTemplate?.positionTemplates || null,
+        departmentTemplateName: event.departmentTemplate?.name || undefined
       }
     }
   } catch (error) {

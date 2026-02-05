@@ -1,7 +1,7 @@
 import { GetServerSideProps } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../api/auth/[...nextauth]'
-import EventLayout from '../../../components/EventLayout'
+import EventPageWrapper from '../../../components/EventPageWrapper'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
@@ -59,18 +59,21 @@ interface EventLanyardsPageProps {
   eventId: string
   event: Event
   lanyards: Lanyard[]
-  attendants: Attendant[]
+  attendants: Volunteer[]
   lanyardSettings: LanyardSettings | null
   stats: LanyardStats
+  canEdit: boolean
+  canDelete: boolean
+  canManagePermissions: boolean
 }
 
-export default function EventLanyardsPage({ eventId, event, lanyards, attendants, lanyardSettings, stats }: EventLanyardsPageProps) {
+export default function EventLanyardsPage({ eventId, event, lanyards, attendants, lanyardSettings, stats, canEdit, canDelete, canManagePermissions }: EventLanyardsPageProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showCheckOutModal, setShowCheckOutModal] = useState(false)
   const [selectedLanyardId, setSelectedLanyardId] = useState<string>('')
-  const [selectedAttendant, setSelectedAttendant] = useState<Attendant | null>(null)
+  const [selectedAttendant, setSelectedAttendant] = useState<Volunteer | null>(null)
   const [attendantSearch, setAttendantSearch] = useState('')
   const [showAttendantDropdown, setShowAttendantDropdown] = useState(false)
   const [showCreateForm, setShowCreateForm] = useState(false)
@@ -332,12 +335,12 @@ export default function EventLanyardsPage({ eventId, event, lanyards, attendants
 
   if (loading) {
     return (
-      <EventLayout 
-        title="Loading Lanyards..."
-        breadcrumbs={[
-          { label: 'Events', href: '/events' },
-          { label: 'Loading...' }
-        ]}
+      <EventPageWrapper
+        event={event}
+        currentPage="lanyards"
+        canEdit={canEdit}
+        canDelete={canDelete}
+        canManagePermissions={canManagePermissions}
       >
         <div className="max-w-7xl mx-auto">
           <div className="animate-pulse">
@@ -345,18 +348,18 @@ export default function EventLanyardsPage({ eventId, event, lanyards, attendants
             <div className="h-64 bg-gray-200 rounded"></div>
           </div>
         </div>
-      </EventLayout>
+      </EventPageWrapper>
     )
   }
 
   if (error) {
     return (
-      <EventLayout 
-        title="Lanyards - Error"
-        breadcrumbs={[
-          { label: 'Events', href: '/events' },
-          { label: 'Lanyards' }
-        ]}
+      <EventPageWrapper
+        event={event}
+        currentPage="lanyards"
+        canEdit={canEdit}
+        canDelete={canDelete}
+        canManagePermissions={canManagePermissions}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="bg-red-50 border-l-4 border-red-400 p-6 rounded-lg shadow-sm">
@@ -397,7 +400,7 @@ export default function EventLanyardsPage({ eventId, event, lanyards, attendants
             </div>
           </div>
         </div>
-      </EventLayout>
+      </EventPageWrapper>
     )
   }
 
@@ -416,13 +419,12 @@ export default function EventLanyardsPage({ eventId, event, lanyards, attendants
           }
         `}</style>
       </Head>
-      <EventLayout 
-        title={`Lanyards - ${event?.name || 'Event'}`}
-        breadcrumbs={[
-          { label: 'Events', href: '/events' },
-          { label: event?.name || 'Event', href: `/events/${eventId}` },
-          { label: 'Lanyards' }
-        ]}
+      <EventPageWrapper
+        event={event}
+        currentPage="lanyards"
+        canEdit={canEdit}
+        canDelete={canDelete}
+        canManagePermissions={canManagePermissions}
       >
         {/* Export Information Form - Visible on screen and in print */}
       <div className="max-w-7xl mx-auto mb-6">
@@ -925,7 +927,7 @@ export default function EventLanyardsPage({ eventId, event, lanyards, attendants
           )}
         </div>
       </div>
-    </EventLayout>
+    </EventPageWrapper>
     </>
   )
 }
@@ -1116,7 +1118,10 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           total: lanyards.length,
           available: lanyards.filter(l => !l.isCheckedOut).length,
           checkedOut: lanyards.filter(l => l.isCheckedOut).length
-        }
+        },
+        canEdit,
+        canDelete,
+        canManagePermissions: canManagePerms
       }
     }
   } catch (error) {

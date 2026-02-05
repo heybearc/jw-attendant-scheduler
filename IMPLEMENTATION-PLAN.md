@@ -63,9 +63,10 @@
 ## 🐛 Known Bugs
 
 ### Critical (Fix Immediately)
-- [ ] **Drag-and-drop assignment creation failing with 500 error** (CRITICAL, NEW 2026-02-05) - When dragging a volunteer to a position to create an assignment, the API call to `/api/event-assignments/[id]` returns 500 Internal Server Error. Error occurs in `createAssignment` function. **Impact:** Cannot create assignments via drag-and-drop, must use alternative methods. **Location:** Positions page drag-and-drop functionality. **Error:** `POST /api/event-assignments/[eventId] 500 (Internal Server Error)`. **Status:** Needs investigation of API endpoint and database query.
+- None currently
 
 ### Recently Fixed
+- [x] **Drag-and-drop assignment creation failing with 500 error** (CRITICAL, FIXED 2026-02-05) - positionService.createAssignment was sending `attendantId` but API expects `userId`. Fixed by mapping attendantId to userId and ensuring shiftStart/shiftEnd are ISO strings. Deployed to STANDBY.
 - [x] **Event creation failing with 500 error** (CRITICAL, FIXED 2026-02-04) - Event creation API was using deprecated OWNER role instead of ADMIN after v3.9.0 permissions refactor. Fixed and deployed to LIVE immediately.
 
 ### Non-Critical (Backlog)
@@ -83,8 +84,8 @@
 
 **Total: 27 items from production feedback system**
 
-### 🔴 Open - High/Urgent Priority (1 item)
-- [ ] **FB-023:** Template enforcement update (ENHANCEMENT, HIGH) - Hide buttons/menu items for modules that are turned off in department templates. Ensure template settings properly control UI visibility. *Submitted: 2026-02-04*
+### 🔴 Open - High/Urgent Priority (0 items)
+- None currently
 
 ### 🟡 Open - Medium Priority (7 items)
 - [ ] **FB-025:** Location library (ENHANCEMENT, MEDIUM) - Track previously used locations with addresses, Google Maps integration, search/autocomplete when creating events to avoid retyping same information. *Submitted: 2026-02-04*
@@ -95,7 +96,8 @@
 - [ ] **FB-012:** Positions Page - Bulk Edit Enhancement (ENHANCEMENT, MEDIUM) - Bulk edit to assign shifts AND oversight mappings in same motion, preserve selection until window closes. *Submitted: 2025-10-24*
 - [ ] **FB-017:** Positions Page - Conflict Management (ENHANCEMENT, MEDIUM) - Highlight conflicts when scheduling manually, dynamic suggestion card to help placement without conflicts. *Submitted: 2025-10-24*
 
-### ✅ Resolved/Closed (19 items)
+### ✅ Resolved/Closed (20 items)
+- [x] **FB-023:** Template enforcement update (ENHANCEMENT, HIGH, RESOLVED 2026-02-05) - Already implemented. EventPageLayout component conditionally renders Count Times and Lanyards tabs based on moduleConfig settings. Template enforcement working correctly across all event pages. *Submitted: 2026-02-04*
 - [x] **FB-024:** Positions page layout update (BUG, MEDIUM, RESOLVED 2026-02-05) - Completely modernized both Positions and Volunteers pages with professional, industry-standard UI design. Reduced button clutter, added clean icons, grouped secondary actions, improved mobile responsiveness. *Submitted: 2026-02-04*
 - [x] **FB-001:** Attendant Overseer Assistants labels (BUG, HIGH, RESOLVED 2026-02-04) - Replaced raw JSON textarea with professional UI featuring individual fields for name, phone, email with add/remove buttons. *Submitted: 2025-12-22*
 - [x] **FB-007:** Attendant view without edit screen (BUG, MEDIUM, RESOLVED 2026-02-04) - Added "View Details" button to actions dropdown with read-only modal showing all volunteer information. *Submitted: 2025-10-28*

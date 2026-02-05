@@ -1,7 +1,8 @@
 import { GetServerSideProps } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../api/auth/[...nextauth]'
-import EventLayout from '../../../components/EventLayout'
+import EventPageLayout from '../../../components/EventPageLayout'
+import { TemplateProvider } from '../../../contexts/TemplateContext'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
@@ -28,6 +29,12 @@ interface Event {
   startDate: string
   endDate: string
   status: string
+  departmentTemplate?: {
+    moduleConfig?: any
+    terminology?: any
+    positionTemplates?: any
+    name?: string
+  }
 }
 
 interface Volunteer {
@@ -227,24 +234,22 @@ export default function EventDocumentsPage({ eventId, event, documents, attendan
         <title>Documents - {event?.name} | Theocratic Shift Scheduler</title>
       </Head>
 
-      <EventLayout 
-        title={`Documents - ${event?.name}`}
-        breadcrumbs={[
-          { label: 'Events', href: '/events' },
-          { label: event?.name || 'Event', href: `/events/${eventId}` },
-          { label: 'Documents' }
-        ]}
-        selectedEvent={{
-          id: eventId,
-          name: event?.name || 'Unknown Event',
-          status: event?.status
-        }}
+      <TemplateProvider
+        moduleConfig={event.departmentTemplate?.moduleConfig || null}
+        terminology={event.departmentTemplate?.terminology || null}
+        positionTemplates={event.departmentTemplate?.positionTemplates || null}
+        departmentTemplateName={event.departmentTemplate?.name}
       >
-        <div className="max-w-7xl mx-auto">
-          <div className="mb-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Event Documents</h1>
+        <EventPageLayout
+          event={event}
+          currentPage="documents"
+          canEdit={true}
+          canDelete={false}
+          canManagePermissions={false}
+        >
+          <div className="max-w-7xl mx-auto">
+            <div className="mb-6">
+              <div className="flex items-center justify-between">
                 <p className="mt-1 text-sm text-gray-600">
                   Upload and publish documents to volunteers for {event?.name}
                 </p>
@@ -447,7 +452,6 @@ export default function EventDocumentsPage({ eventId, event, documents, attendan
               </div>
             )}
           </div>
-        </div>
 
         {/* Publish Modal */}
         {showPublishModal && selectedDocument && (
@@ -556,7 +560,8 @@ export default function EventDocumentsPage({ eventId, event, documents, attendan
             </div>
           </div>
         )}
-      </EventLayout>
+        </EventPageLayout>
+      </TemplateProvider>
     </>
   )
 }

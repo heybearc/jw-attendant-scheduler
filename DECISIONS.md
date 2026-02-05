@@ -390,6 +390,18 @@
 
 ---
 
+## Technical Decisions Log
+
+This document tracks significant technical decisions made during development.
+
+### D-APP-016: Unified Event Page Tab Navigation
+**Date:** 2026-02-05
+**Context:** Event pages (Oversight, Count Times, Lanyards, Documents, Announcements) showed inconsistent tabs - some missing Count Times, Lanyards, or Permissions tabs based on template config and user permissions.
+**Decision:** Systematically updated all 8 event pages to use EventPageWrapper with moduleConfig and permission props. Removed redundant breadcrumbs and duplicate event name display.
+**Consequences:** All event pages now show consistent tabs based on template moduleConfig (countTimes, lanyards) and user permissions (canManagePermissions). Cleaner UI with less redundancy. Pages affected: Oversight (added API permissions), Count Times (fixed props), Lanyards (added moduleConfig), Documents (added permissions), Announcements (added moduleConfig).
+
+---
+
 ## Shared Decisions
 
 For architectural decisions that apply across all apps, see:

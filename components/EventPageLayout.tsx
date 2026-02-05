@@ -111,37 +111,39 @@ export default function EventPageLayout({
             </Link>
           )}
 
-          {/* More Actions Dropdown */}
-          <div className="relative inline-block ml-auto">
-            <button
-              onClick={() => setShowMoreMenu(!showMoreMenu)}
-              className="inline-flex items-center gap-1 px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              ⋯ More
-            </button>
-            {showMoreMenu && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
-                {onExport && (
-                  <button
-                    onClick={() => { onExport(); setShowMoreMenu(false); }}
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-                  >
-                    <span>📥</span>
-                    <span>Export Data</span>
-                  </button>
-                )}
-                {event.status === 'COMPLETED' && onStatusChange && (
-                  <button
-                    onClick={() => { onStatusChange('ARCHIVED'); setShowMoreMenu(false); }}
-                    className="w-full text-left px-4 py-2 text-sm text-yellow-700 hover:bg-yellow-50 flex items-center gap-2"
-                  >
-                    <span>📦</span>
-                    <span>Archive Event</span>
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
+          {/* More Actions Dropdown - Only show if there are actions available */}
+          {(onExport || (event.status === 'COMPLETED' && onStatusChange)) && (
+            <div className="relative inline-block ml-auto">
+              <button
+                onClick={() => setShowMoreMenu(!showMoreMenu)}
+                className="inline-flex items-center gap-1 px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                ⋯ More
+              </button>
+              {showMoreMenu && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                  {onExport && (
+                    <button
+                      onClick={() => { onExport(); setShowMoreMenu(false); }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                    >
+                      <span>📥</span>
+                      <span>Export Data</span>
+                    </button>
+                  )}
+                  {event.status === 'COMPLETED' && onStatusChange && (
+                    <button
+                      onClick={() => { onStatusChange('ARCHIVED'); setShowMoreMenu(false); }}
+                      className="w-full text-left px-4 py-2 text-sm text-yellow-700 hover:bg-yellow-50 flex items-center gap-2"
+                    >
+                      <span>📦</span>
+                      <span>Archive Event</span>
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Tab Navigation - Workflow Order */}

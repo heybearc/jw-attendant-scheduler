@@ -434,12 +434,13 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     }
 
     // Transform event data
-    const event = {
+    const eventProps = {
       id: eventData.id,
       name: eventData.name,
       status: eventData.status,
       eventType: eventData.eventType,
-      startDate: eventData.startDate?.toISOString() || new Date().toISOString()
+      startDate: eventData.startDate?.toISOString() || '',
+      departmentTemplate: event.departmentTemplate
     }
 
     // Transform count sessions data
@@ -478,21 +479,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     return {
       props: {
         eventId: id as string,
-        event,
+        event: eventProps,
         countSessions,
         canManageContent,
         canEdit,
-        canDelete,
-        canManagePermissions: canManagePerms,
-        stats: {
-          total: countSessions.length,
-          active: countSessions.filter(s => s.isActive).length,
-          completed: countSessions.filter(s => s.status === 'COMPLETED').length
-        }
-      }
-    }
-  } catch (error) {
-    console.error('Error fetching count-times data:', error)
-    return { notFound: true }
-  }
 }

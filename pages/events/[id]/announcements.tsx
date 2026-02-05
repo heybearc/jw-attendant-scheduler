@@ -1,7 +1,8 @@
 import { GetServerSideProps } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../api/auth/[...nextauth]'
-import EventLayout from '../../../components/EventLayout'
+import EventPageLayout from '../../../components/EventPageLayout'
+import { TemplateProvider } from '../../../contexts/TemplateContext'
 import { useState } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
@@ -25,6 +26,9 @@ interface Announcement {
 interface Event {
   id: string
   name: string
+  status: string
+  eventType: string
+  startDate: string
 }
 
 interface EventAnnouncementsPageProps {
@@ -32,9 +36,12 @@ interface EventAnnouncementsPageProps {
   event: Event
   announcements: Announcement[]
   canManage: boolean
+  canEdit: boolean
+  canDelete: boolean
+  canManagePermissions: boolean
 }
 
-export default function EventAnnouncementsPage({ eventId, event, announcements, canManage }: EventAnnouncementsPageProps) {
+export default function EventAnnouncementsPage({ eventId, event, announcements, canManage, canEdit, canDelete, canManagePermissions }: EventAnnouncementsPageProps) {
   const router = useRouter()
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -137,34 +144,41 @@ export default function EventAnnouncementsPage({ eventId, event, announcements, 
   }
 
   return (
-    <EventLayout
-      title="Announcements"
-      breadcrumbs={[
-        { label: 'Events', href: '/events' },
-        { label: event.name, href: `/events/${eventId}` },
-        { label: 'Announcements' }
-      ]}
-      selectedEvent={{
-        id: event.id,
-        name: event.name
-      }}
+    <TemplateProvider
+      moduleConfig={null}
+      terminology={null}
+      positionTemplates={null}
+      departmentTemplateName={undefined}
     >
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Announcements</h1>
-              <p className="text-gray-600">Manage banner announcements for volunteers</p>
-            </div>
-            <div className="flex space-x-3">
-              <Link
-                href={`/events/${eventId}`}
-                className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded transition-colors"
-              >
-                ← Back to Event
-              </Link>
-              {canManage && (
+      <EventPageLayout
+        event={{
+          id: event.id,
+          name: event.name,
+          status: event.status,
+          eventType: event.eventType,
+          startDate: event.startDate
+        }}
+        currentPage="announcements"
+        canEdit={canEdit}
+        canDelete={canDelete}
+        canManagePermissions={canManagePermissions}
+      >
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Announcements</h1>
+                <p className="text-gray-600">Manage banner announcements for volunteers</p>
+              </div>
+              <div className="flex space-x-3">
+                <Link
+                  href={`/events/${eventId}`}
+                  className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded transition-colors"
+                >
+                  ← Back to Event
+                </Link>
+                {canManage && (
                 <button
                   onClick={() => {
                     setEditingId(null)
@@ -373,7 +387,8 @@ export default function EventAnnouncementsPage({ eventId, event, announcements, 
           </div>
         )}
       </div>
-    </EventLayout>
+      </EventPageLayout>
+    </TemplateProvider>
   )
 }
 
@@ -395,7 +410,13 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
     const event = await prisma.events.findUnique({
       where: { id: id as string },
-      select: { id: true, name: true }
+      select: { 
+        id: true, 
+        name: true,
+        status: true,
+        eventType: true,
+        startDate: true
+      }
     })
 
     if (!event) {
@@ -421,17 +442,27 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
     const user = await prisma.users.findUnique({
       where: { email: session.user.email! },
-      select: { role: true }
+      select: { role: true, id: true }
     })
 
     const canManage = user && ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN'].includes(user.role)
+
+    // Check event-specific permissions
+    const { canManageEvent, canDeleteEvent, canManagePermissions } = await import('../../../src/lib/eventAccess')
+    const userId = user?.id || ''
+    const canEdit = await canManageEvent(userId, id as string)
+    const canDelete = await canDeleteEvent(userId, id as string)
+    const canManagePerms = await canManagePermissions(userId, id as string)
 
     return {
       props: {
         eventId: id as string,
         event: {
           id: event.id,
-          name: event.name
+          name: event.name,
+          status: event.status,
+          eventType: event.eventType,
+          startDate: event.startDate?.toISOString() || new Date().toISOString()
         },
         announcements: announcements.map(a => ({
           id: a.id,
@@ -441,13 +472,16 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           isActive: a.isActive,
           startDate: a.startDate?.toISOString() || null,
           endDate: a.endDate?.toISOString() || null,
-          createdAt: a.createdAt.toISOString(),
+          createdAt: a.createdAt?.toISOString() || new Date().toISOString(),
           users: {
             firstName: a.users.firstName,
             lastName: a.users.lastName
           }
         })),
-        canManage
+        canManage,
+        canEdit,
+        canDelete,
+        canManagePermissions: canManagePerms
       }
     }
   } catch (error) {

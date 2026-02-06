@@ -32,7 +32,7 @@ test.describe('Phase 7 Mobile Optimization Validation', () => {
       await page.waitForLoadState('networkidle')
       
       // Go to volunteers page
-      await page.click('a:has-text("Volunteer")')
+      await page.click('a:has-text("Volunteers"), a[href*="/volunteers"]')
       await page.waitForLoadState('networkidle')
       
       // Verify page loads without errors

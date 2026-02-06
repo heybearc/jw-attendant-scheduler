@@ -3,8 +3,8 @@ import { test, expect } from '@playwright/test';
 test.describe('Template Module Enforcement', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto(process.env.BASE_URL || 'http://localhost:3001');
-    await page.fill('input[name="email"]', process.env.TEST_USER_EMAIL || 'admin@theoshift.local');
-    await page.fill('input[name="password"]', process.env.TEST_USER_PASSWORD || 'password');
+    await page.fill('input[type="email"]', process.env.TEST_USER_EMAIL || 'admin@theoshift.local');
+    await page.fill('input[type="password"]', process.env.TEST_USER_PASSWORD || 'password');
     await page.click('button[type="submit"]');
     await page.waitForURL('**/events/select');
   });

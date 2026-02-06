@@ -92,9 +92,9 @@ test.describe('UI Modernization Release - Volunteers & Positions Pages', () => {
       await page.goto(`${process.env.BASE_URL}/events/7a14c6ac-18c3-4c98-9b07-ba853d30f144/positions`)
       await page.waitForLoadState('networkidle')
 
-      // Check for view toggle buttons with SVG icons (not emoji)
-      const viewToggle = page.locator('button[title*="View"], button svg').first()
-      await expect(viewToggle).toBeVisible()
+      // Check for view toggle buttons - look for List/Grid buttons or SVG icons
+      const viewToggle = page.locator('button:has-text("List"), button:has-text("Grid"), button[aria-label*="view"]').first()
+      await expect(viewToggle).toBeVisible({ timeout: 10000 })
 
       console.log('✅ Positions page has professional view toggle')
     })

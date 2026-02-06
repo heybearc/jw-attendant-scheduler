@@ -11,7 +11,7 @@ test.describe('Event Creation', () => {
 
   test('can create new event without errors', async ({ page }) => {
     // Click create event button
-    await page.click('text=Create Event')
+    await page.click('a[href*="/events/create"], button:has-text("Create Event")')
     await page.waitForURL('**/events/create')
     
     // Fill in required fields
@@ -40,7 +40,7 @@ test.describe('Event Creation', () => {
 
   test('creator gets ADMIN role on new event', async ({ page }) => {
     // Create event
-    await page.click('text=Create Event')
+    await page.click('a[href*="/events/create"], button:has-text("Create Event")')
     await page.waitForURL('**/events/create')
     
     const timestamp = Date.now()
@@ -59,7 +59,7 @@ test.describe('Event Creation', () => {
     await page.waitForURL('**/events/**')
     
     // Navigate to permissions page
-    await page.click('text=Manage Permissions')
+    await page.click('a[href*="/permissions"], button:has-text("Permissions")')
     await page.waitForURL('**/permissions')
     
     // Verify creator has ADMIN role

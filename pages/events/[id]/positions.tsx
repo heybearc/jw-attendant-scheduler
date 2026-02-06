@@ -207,10 +207,49 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
   const [showAvailableAttendants, setShowAvailableAttendants] = useState(false)
   const [selectedOverseer, setSelectedOverseer] = useState<string>('all')
   const [roleFilter, setRoleFilter] = useState<'all' | 'overseers' | 'assistants' | 'keymen'>('all')
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
+  // Initialize viewMode from localStorage if available
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('positions-view-mode')
+      return (saved === 'list' || saved === 'grid') ? saved : 'list'
+    }
+    return 'list'
+  })
   const [showFiltersMenu, setShowFiltersMenu] = useState(false)
   const [showExportMenu, setShowExportMenu] = useState(false)
   const [showActionsMenu, setShowActionsMenu] = useState(false)
+
+  // Persist viewMode to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('positions-view-mode', viewMode)
+    }
+  }, [viewMode])
+
+  // Restore scroll position on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedScrollPos = sessionStorage.getItem('positions-scroll-pos')
+      if (savedScrollPos) {
+        setTimeout(() => {
+          window.scrollTo(0, parseInt(savedScrollPos, 10))
+          sessionStorage.removeItem('positions-scroll-pos')
+        }, 100)
+      }
+    }
+  }, [])
+
+  // Save scroll position before page unload
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('positions-scroll-pos', window.scrollY.toString())
+      }
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [])
   
   // Define getFilteredPositionsWithOverseer before using it in exportHook
   const getFilteredPositionsWithOverseer = () => {

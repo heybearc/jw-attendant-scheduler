@@ -19,19 +19,6 @@ test.describe('Test Other Event Pages', () => {
     await page.waitForURL(/\/events|\/admin/, { timeout: 10000 })
   })
 
-  test('check if /events/select works', async ({ page }) => {
-    await page.goto(`${BASE_URL}/events/select`)
-    const title = await page.title()
-    console.log('Events select page title:', title)
-    
-    const bodyText = await page.textContent('body')
-    if (bodyText?.includes('404')) {
-      console.log('❌ /events/select returns 404')
-    } else {
-      console.log('✅ /events/select works')
-    }
-  })
-
   test('check if /events/[id]/positions works', async ({ page }) => {
     const eventId = '7a14c6ac-18c3-4c98-9b07-ba853d30f144'
     const response = await page.goto(`${BASE_URL}/events/${eventId}/positions`)

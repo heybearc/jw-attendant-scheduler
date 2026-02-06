@@ -612,8 +612,8 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
       for (const positionId of selectedPositions) {
         const success = await positionService.createShift(positionId, {
           name: shiftName,
-          startTime: isAllDay ? null : shiftStart,
-          endTime: isAllDay ? null : shiftEnd,
+          startTime: isAllDay ? null : (shiftStart || ''),
+          endTime: isAllDay ? null : (shiftEnd || ''),
           isAllDay: isAllDay
         })
         

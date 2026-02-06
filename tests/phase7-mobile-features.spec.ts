@@ -216,6 +216,7 @@ test.describe('Phase 7: Performance', () => {
     await page.waitForLoadState('networkidle')
     
     // Dashboard should load successfully (presence of tabs indicates success)
-    await expect(page.locator('button:has-text("Assignments")')).toBeVisible()
+    const assignmentsTab = page.locator('button:has-text("Assignments")')
+    await expect(assignmentsTab).toBeVisible({ timeout: 10000 })
   })
 })

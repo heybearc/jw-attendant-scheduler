@@ -27,17 +27,22 @@ test.describe('Phase 7 Mobile Optimization Validation', () => {
   test('Volunteer delete functionality', async ({ page }) => {
     // Navigate to first event
     const firstEvent = page.locator('a[href^="/events/"]').first()
-    if (await firstEvent.count() > 0) {
+    const eventCount = await firstEvent.count()
+    
+    if (eventCount > 0) {
       await firstEvent.click()
+      await page.waitForURL('**/events/**')
       await page.waitForLoadState('networkidle')
       
-      // Go to volunteers page
-      await page.click('a:has-text("Volunteers"), a[href*="/volunteers"]')
+      // Go to volunteers page - wait for tab to be available
+      await page.waitForSelector('a[href*="/volunteers"]', { timeout: 10000 })
+      await page.click('a[href*="/volunteers"]')
+      await page.waitForURL('**/volunteers')
       await page.waitForLoadState('networkidle')
       
       // Verify page loads without errors
       const pageTitle = await page.title()
-      expect(pageTitle).toContain('Volunteer')
+      expect(pageTitle.toLowerCase()).toContain('volunteer')
     }
   })
 

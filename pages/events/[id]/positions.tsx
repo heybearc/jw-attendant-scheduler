@@ -226,18 +226,25 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
     }
   }, [viewMode])
 
-  // Restore scroll position on mount
+  // Restore scroll position after content loads
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedScrollPos = sessionStorage.getItem('positions-scroll-pos')
       if (savedScrollPos) {
-        setTimeout(() => {
-          window.scrollTo(0, parseInt(savedScrollPos, 10))
+        // Wait for content to render, then restore scroll position
+        const restoreScroll = () => {
+          const scrollPos = parseInt(savedScrollPos, 10)
+          window.scrollTo(0, scrollPos)
           sessionStorage.removeItem('positions-scroll-pos')
-        }, 100)
+        }
+        
+        // Use requestAnimationFrame to ensure DOM is ready
+        requestAnimationFrame(() => {
+          setTimeout(restoreScroll, 300)
+        })
       }
     }
-  }, [])
+  }, [positionsHook.positions])
 
   // Save scroll position before page unload
   useEffect(() => {

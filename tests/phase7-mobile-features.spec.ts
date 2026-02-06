@@ -17,17 +17,17 @@ test.describe('Phase 7: Mobile Volunteer Features', () => {
     await page.setViewportSize({ width: 375, height: 667 }) // iPhone SE
   })
 
-  test.skip('Volunteer login redirects correctly', async ({ page }) => {
+  test('Volunteer login redirects correctly', async ({ page }) => {
     await page.goto(`${process.env.BASE_URL}/volunteer/login`)
     
     // Verify login page loads
     await expect(page.locator('h2:has-text("Volunteer Access")')).toBeVisible()
     
-    // Fill in login form
-    await page.fill('input[name="firstName"]', 'Test')
-    await page.fill('input[name="lastName"]', 'Volunteer')
-    await page.fill('input[name="congregation"]', 'Test Congregation')
-    await page.fill('input[name="pin"]', '1234')
+    // Fill in login form with valid test credentials
+    await page.fill('input[name="firstName"]', 'Cory')
+    await page.fill('input[name="lastName"]', 'Allen')
+    await page.fill('input[name="congregation"]', 'Twinsburg')
+    await page.fill('input[name="pin"]', '0879')
     
     // Submit form
     await page.click('button[type="submit"]')
@@ -40,13 +40,13 @@ test.describe('Phase 7: Mobile Volunteer Features', () => {
     expect(currentUrl).not.toContain('/volunteer/login')
   })
 
-  test.skip('Mobile volunteer dashboard has 4 tabs', async ({ page }) => {
+  test('Mobile volunteer dashboard has 4 tabs', async ({ page }) => {
     // Login first
     await page.goto(`${process.env.BASE_URL}/volunteer/login`)
-    await page.fill('input[name="firstName"]', 'Test')
-    await page.fill('input[name="lastName"]', 'Volunteer')
-    await page.fill('input[name="congregation"]', 'Test Congregation')
-    await page.fill('input[name="pin"]', '1234')
+    await page.fill('input[name="firstName"]', 'Cory')
+    await page.fill('input[name="lastName"]', 'Allen')
+    await page.fill('input[name="congregation"]', 'Twinsburg')
+    await page.fill('input[name="pin"]', '0879')
     await page.click('button[type="submit"]')
     
     // Wait for dashboard
@@ -59,13 +59,13 @@ test.describe('Phase 7: Mobile Volunteer Features', () => {
     await expect(page.locator('button:has-text("Documents")')).toBeVisible()
   })
 
-  test.skip('Documents tab is visible and functional', async ({ page }) => {
+  test('Documents tab is visible and functional', async ({ page }) => {
     // Login and navigate to dashboard
     await page.goto(`${process.env.BASE_URL}/volunteer/login`)
-    await page.fill('input[name="firstName"]', 'Test')
-    await page.fill('input[name="lastName"]', 'Volunteer')
-    await page.fill('input[name="congregation"]', 'Test Congregation')
-    await page.fill('input[name="pin"]', '1234')
+    await page.fill('input[name="firstName"]', 'Cory')
+    await page.fill('input[name="lastName"]', 'Allen')
+    await page.fill('input[name="congregation"]', 'Twinsburg')
+    await page.fill('input[name="pin"]', '0879')
     await page.click('button[type="submit"]')
     
     await page.waitForURL(/\/volunteer\/dashboard/, { timeout: 10000 })
@@ -80,13 +80,13 @@ test.describe('Phase 7: Mobile Volunteer Features', () => {
     expect(hasDocuments || hasEmptyState).toBeTruthy()
   })
 
-  test.skip('Sign out button is visible and works', async ({ page }) => {
+  test('Sign out button is visible and works', async ({ page }) => {
     // Login
     await page.goto(`${process.env.BASE_URL}/volunteer/login`)
-    await page.fill('input[name="firstName"]', 'Test')
-    await page.fill('input[name="lastName"]', 'Volunteer')
-    await page.fill('input[name="congregation"]', 'Test Congregation')
-    await page.fill('input[name="pin"]', '1234')
+    await page.fill('input[name="firstName"]', 'Cory')
+    await page.fill('input[name="lastName"]', 'Allen')
+    await page.fill('input[name="congregation"]', 'Twinsburg')
+    await page.fill('input[name="pin"]', '0879')
     await page.click('button[type="submit"]')
     
     await page.waitForURL(/\/volunteer\/dashboard/, { timeout: 10000 })
@@ -103,13 +103,13 @@ test.describe('Phase 7: Mobile Volunteer Features', () => {
     await expect(page.locator('h2:has-text("Volunteer Access")')).toBeVisible()
   })
 
-  test.skip('Touch targets are at least 44px', async ({ page }) => {
+  test('Touch targets are at least 44px', async ({ page }) => {
     // Login
     await page.goto(`${process.env.BASE_URL}/volunteer/login`)
-    await page.fill('input[name="firstName"]', 'Test')
-    await page.fill('input[name="lastName"]', 'Volunteer')
-    await page.fill('input[name="congregation"]', 'Test Congregation')
-    await page.fill('input[name="pin"]', '1234')
+    await page.fill('input[name="firstName"]', 'Cory')
+    await page.fill('input[name="lastName"]', 'Allen')
+    await page.fill('input[name="congregation"]', 'Twinsburg')
+    await page.fill('input[name="pin"]', '0879')
     await page.click('button[type="submit"]')
     
     await page.waitForURL(/\/volunteer\/dashboard/, { timeout: 10000 })
@@ -125,15 +125,15 @@ test.describe('Phase 7: Mobile Volunteer Features', () => {
     }
   })
 
-  test.skip('Mobile dashboard loads within 3 seconds', async ({ page }) => {
+  test('Mobile dashboard loads within 3 seconds', async ({ page }) => {
     const startTime = Date.now()
     
     // Login
     await page.goto(`${process.env.BASE_URL}/volunteer/login`)
-    await page.fill('input[name="firstName"]', 'Test')
-    await page.fill('input[name="lastName"]', 'Volunteer')
-    await page.fill('input[name="congregation"]', 'Test Congregation')
-    await page.fill('input[name="pin"]', '1234')
+    await page.fill('input[name="firstName"]', 'Cory')
+    await page.fill('input[name="lastName"]', 'Allen')
+    await page.fill('input[name="congregation"]', 'Twinsburg')
+    await page.fill('input[name="pin"]', '0879')
     await page.click('button[type="submit"]')
     
     // Wait for dashboard to fully load
@@ -146,13 +146,13 @@ test.describe('Phase 7: Mobile Volunteer Features', () => {
     expect(loadTime).toBeLessThan(3000)
   })
 
-  test.skip('Refresh button works on mobile dashboard', async ({ page }) => {
+  test('Refresh button works on mobile dashboard', async ({ page }) => {
     // Login
     await page.goto(`${process.env.BASE_URL}/volunteer/login`)
-    await page.fill('input[name="firstName"]', 'Test')
-    await page.fill('input[name="lastName"]', 'Volunteer')
-    await page.fill('input[name="congregation"]', 'Test Congregation')
-    await page.fill('input[name="pin"]', '1234')
+    await page.fill('input[name="firstName"]', 'Cory')
+    await page.fill('input[name="lastName"]', 'Allen')
+    await page.fill('input[name="congregation"]', 'Twinsburg')
+    await page.fill('input[name="pin"]', '0879')
     await page.click('button[type="submit"]')
     
     await page.waitForURL(/\/volunteer\/dashboard/, { timeout: 10000 })
@@ -242,7 +242,7 @@ test.describe('Phase 7: Performance', () => {
     await page.waitForLoadState('networkidle')
   })
 
-  test.skip('No console errors on mobile dashboard', async ({ page }) => {
+  test('No console errors on mobile dashboard', async ({ page }) => {
     const consoleErrors: string[] = []
     
     page.on('console', msg => {

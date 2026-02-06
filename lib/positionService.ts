@@ -317,7 +317,7 @@ export class PositionService {
         volunteerId: data.attendantId,
         positionId: data.positionId,
         shiftId: data.shiftId,
-        role: 'VOLUNTEER'
+        role: 'ATTENDANT'
       }
       
       const response = await fetch(`/api/events/${this.eventId}/assignments`, {

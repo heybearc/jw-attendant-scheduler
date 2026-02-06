@@ -172,6 +172,7 @@ interface EventPositionsProps {
   departmentTemplateName?: string
 }
 export default function EventPositionsPage({ eventId, event, positions: initialPositions, attendants, stats, canManageContent, canEdit, canDelete, canManagePermissions, moduleConfig, terminology, positionTemplates, departmentTemplateName }: EventPositionsProps) {
+  const router = useRouter()
   
   // Initialize services
   const positionService = React.useMemo(() => createPositionService(eventId), [eventId])
@@ -1264,7 +1265,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                     positionId,
                     attendantId,
                     shiftId,
-                    role: 'VOLUNTEER'
+                    role: 'ATTENDANT'
                   })
                   if (success) {
                     router.reload()

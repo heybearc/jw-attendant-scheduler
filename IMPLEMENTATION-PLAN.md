@@ -53,6 +53,28 @@
 ## 📋 Backlog (Prioritized)
 
 ### High Priority
+- [ ] **IVS Volunteer Approval & Early Check-In Module** (effort: XL, NEW 2026-02-06) - Configurable volunteer module extensions for IVS department approval workflow and early check-in management. Event-specific (approvals per event/year). **Prerequisites:** Define department spreadsheet import/export format before implementation.
+  - **Phase 1: Database Schema** (effort: M)
+    - Extend `event_volunteers` table with optional approval workflow fields (approvalStatus, submittedByDepartment, approvalRequestedAt, approvalNotes, approvedAt, approvedBy, deniedReason, importBatchId)
+    - Add early check-in fields (earlyCheckinEligible, checkedInAt, checkedInBy, checkinNotes)
+    - Extend `moduleConfig` in department_templates/events to enable/disable volunteer extensions
+  - **Phase 2: Volunteers Page Extensions** (effort: L)
+    - Conditional column display based on moduleConfig (approval status, department, check-in fields)
+    - Conditional filters (approval status, department filter, check-in eligible)
+    - Conditional bulk actions (Request Approval, Mark Approved/Denied, Export to Department Format)
+    - Import department spreadsheets with batch tracking
+    - Export back to department format with approval results
+  - **Phase 3: Early Check-In Tab** (effort: M)
+    - New event tab (conditionally shown when earlyCheckin module enabled)
+    - Check-in interface for volunteers with earlyCheckinEligible flag
+    - Real-time check-in status tracking
+    - Export to Excel/PDF
+    - Email check-in reports
+  - **Phase 4: Admin Configuration** (effort: S)
+    - Department template configuration UI for enabling/disabling modules
+    - Custom status list configuration
+    - Department list management for filtering
+  - **Use Case:** IVS department manages volunteer approval workflow across multiple departments (import spreadsheets, track approval status, coordinate with service committees, export results). Separate from IVS department's own 20-volunteer scheduling needs (uses standard event workflow).
 - [ ] **Admin portal redesign with tabs layout** (effort: XL, NEW 2026-02-06) - Redesign admin portal to use tab-based navigation like event pages instead of sidebar menu. Current sidebar makes mobile experience unusable. Should follow EventPageWrapper pattern with horizontal tabs for better mobile UX.
 - [ ] Email content refinement for assignment notifications (effort: M) - Improve clarity, tone, and user experience of notification emails
 

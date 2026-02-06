@@ -1190,7 +1190,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
               const totalShifts = positions.filter(p => p.isActive).reduce((sum, pos) => sum + (pos.shifts?.length || 0), 0)
               const assignedShifts = positions.filter(p => p.isActive).reduce((sum, pos) => {
                 return sum + (pos.shifts?.filter(shift => {
-                  const shiftAssignments = pos.assignments?.filter(a => a.shift?.id === shift.id && a.role === 'VOLUNTEER').length || 0
+                  const shiftAssignments = pos.assignments?.filter(a => a.shift?.id === shift.id && a.role === 'ATTENDANT').length || 0
                   return shiftAssignments > 0
                 }).length || 0)
               }, 0)
@@ -1243,7 +1243,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                 <div>
                   <p className="text-sm font-medium text-gray-500">Total Assignments</p>
                   <p className="text-3xl font-bold text-gray-900">
-                    {positions.filter(p => p.isActive).reduce((sum, p) => sum + (p.assignments?.filter(a => a.role === 'VOLUNTEER').length || 0), 0)}
+                    {positions.filter(p => p.isActive).reduce((sum, p) => sum + (p.assignments?.filter(a => a.role === 'ATTENDANT').length || 0), 0)}
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
@@ -1320,7 +1320,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                 // Calculate completion percentage for this position
                 const totalShifts = position.shifts?.length || 0
                 const assignedShifts = position.shifts?.filter(shift => {
-                  const shiftAssignments = position.assignments?.filter(a => a.shift?.id === shift.id && a.role === 'VOLUNTEER').length || 0
+                  const shiftAssignments = position.assignments?.filter(a => a.shift?.id === shift.id && a.role === 'ATTENDANT').length || 0
                   return shiftAssignments > 0
                 }).length || 0
                 const completionPercentage = totalShifts > 0 ? Math.round((assignedShifts / totalShifts) * 100) : 0
@@ -1421,7 +1421,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
 
                     <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
                       <span>Position #{position.positionNumber}</span>
-                      <span>{position.shifts?.length || 0} shifts • {position.assignments?.filter(a => a.role === 'VOLUNTEER').length || 0} attendants</span>
+                      <span>{position.shifts?.length || 0} shifts • {position.assignments?.filter(a => a.role === 'ATTENDANT').length || 0} attendants</span>
                     </div>
 
 
@@ -1443,7 +1443,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                             
                             // Separate regular attendants from leadership for this shift
                             const attendantAssignments = shiftSpecificAssignments.filter(assignment => 
-                              assignment.role === 'VOLUNTEER'
+                              assignment.role === 'ATTENDANT'
                             )
                             const shiftLeadershipAssignments = shiftSpecificAssignments.filter(assignment => 
                               assignment.role === 'OVERSEER' || assignment.role === 'KEYMAN'

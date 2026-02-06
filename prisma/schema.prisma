@@ -814,8 +814,7 @@ enum OversightLevel {
 enum PositionRole {
   OVERSEER
   KEYMAN
-  VOLUNTEER
-  ATTENDANT  // Legacy value - kept for backward compatibility
+  ATTENDANT  // Standard volunteer assignment role
 }
 
 enum UserRole {

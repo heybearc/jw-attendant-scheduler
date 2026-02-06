@@ -17,7 +17,7 @@ interface Shift {
 interface Assignment {
   id: string
   role: string
-  attendant: {
+  volunteer: {
     id: string
     firstName: string
     lastName: string
@@ -90,7 +90,7 @@ export default function PositionGridView({
     return positions.flatMap(p => 
       (p.assignments || []).map(a => ({
         id: a.id,
-        attendantId: a.attendant.id,
+        attendantId: a.volunteer.id,
         positionId: p.id,
         eventId: eventId,
         shift: a.shift ? {
@@ -98,7 +98,7 @@ export default function PositionGridView({
           endTime: a.shift.endTime || '',
           isAllDay: a.shift.isAllDay
         } : undefined,
-        attendant: a.attendant
+        attendant: a.volunteer
       }))
     )
   }, [positions, eventId])
@@ -162,7 +162,7 @@ export default function PositionGridView({
     if (assignment) {
       return {
         status: 'assigned',
-        attendant: assignment.attendant,
+        attendant: assignment.volunteer,
         assignmentId: assignment.id
       }
     }

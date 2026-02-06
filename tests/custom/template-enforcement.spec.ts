@@ -54,8 +54,8 @@ test.describe('Template Module Enforcement', () => {
     await page.click('text=Regional Convention 2026');
     await page.waitForURL('**/events/**');
     
-    // Click Edit Event
-    await page.click('text=Edit Event');
+    // Click Settings button (Edit Event)
+    await page.click('a[href$="/edit"]');
     await page.waitForURL('**/edit');
     
     // Department Template dropdown should exist
@@ -72,8 +72,8 @@ test.describe('Template Module Enforcement', () => {
     await page.click('text=Regional Convention 2026');
     await page.waitForURL('**/events/**');
     
-    // Click Edit Event
-    await page.click('text=Edit Event');
+    // Click Settings button (Edit Event)
+    await page.click('a[href$="/edit"]');
     await page.waitForURL('**/edit');
     
     // Select a template

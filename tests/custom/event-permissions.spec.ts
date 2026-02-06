@@ -14,8 +14,8 @@ test.describe('Event Permissions UX', () => {
   })
 
   test('permissions page shows Add User button', async ({ page }) => {
-    // Navigate to permissions page
-    await page.click('a[href*="/permissions"], button:has-text("Permissions")')
+    // Navigate to permissions page - it's a tab in EventPageLayout
+    await page.click('a[href$="/permissions"]')
     await page.waitForURL('**/permissions')
     
     // Verify "Add User" button exists (not "Invite User")
@@ -28,7 +28,7 @@ test.describe('Event Permissions UX', () => {
   })
 
   test('Add User form shows dropdown instead of email input', async ({ page }) => {
-    await page.click('a[href*="/permissions"], button:has-text("Permissions")')
+    await page.click('a[href$="/permissions"]')
     await page.waitForURL('**/permissions')
     
     // Click Add User button
@@ -48,7 +48,7 @@ test.describe('Event Permissions UX', () => {
   })
 
   test('Add User form has role selection', async ({ page }) => {
-    await page.click('a[href*="/permissions"], button:has-text("Permissions")')
+    await page.click('a[href$="/permissions"]')
     await page.waitForURL('**/permissions')
     
     await page.click('button:has-text("+ Add User")')

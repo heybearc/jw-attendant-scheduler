@@ -187,8 +187,8 @@ test.describe('Phase 7: Document Management', () => {
     await page.click('a[href*="/events/"]')
     await page.waitForURL(/\/events\/[^/]+$/, { timeout: 5000 })
     
-    // Navigate to documents
-    await page.click('a[href*="/documents"]')
+    // Navigate to documents - it's a tab in EventPageLayout
+    await page.click('a[href$="/documents"]')
     await page.waitForURL(/\/documents/, { timeout: 5000 })
     
     // Check for publish buttons (if documents exist)
@@ -208,7 +208,7 @@ test.describe('Phase 7: Document Management', () => {
     await page.waitForURL(/\/events/, { timeout: 10000 })
     await page.click('a[href*="/events/"]')
     await page.waitForURL(/\/events\/[^/]+$/, { timeout: 5000 })
-    await page.click('a[href*="/documents"]')
+    await page.click('a[href$="/documents"]')
     await page.waitForURL(/\/documents/, { timeout: 5000 })
     
     // Check if any documents are published

@@ -30,8 +30,8 @@ test.describe('Permissions Refactor - 3 Role System', () => {
     const firstEvent = page.locator('a[href*="/events/"]').first();
     await firstEvent.click();
     
-    // Navigate to permissions
-    await page.click('text=Permissions');
+    // Navigate to permissions - it's a tab in EventPageLayout
+    await page.click('a[href$="/permissions"]');
     await page.waitForURL('**/permissions');
     
     // Verify page loaded
@@ -76,7 +76,7 @@ test.describe('Permissions Refactor - 3 Role System', () => {
     const firstEvent = page.locator('a[href*="/events/"]').first();
     await firstEvent.click();
     
-    await page.click('text=Permissions');
+    await page.click('a[href$="/permissions"]');
     await page.waitForURL('**/permissions');
     
     // Check for permission entries

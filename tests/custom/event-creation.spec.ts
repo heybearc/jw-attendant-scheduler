@@ -11,7 +11,7 @@ test.describe('Event Creation', () => {
 
   test('can create new event without errors', async ({ page }) => {
     // Click create event button
-    await page.click('a[href*="/events/create"], button:has-text("Create Event")')
+    await page.click('a[href="/events/create"]')
     await page.waitForURL('**/events/create')
     
     // Fill in required fields
@@ -35,12 +35,12 @@ test.describe('Event Creation', () => {
     await page.waitForURL('**/events/**', { timeout: 10000 })
     
     // Verify we're on event details page (not error page)
-    await expect(page.locator('text=Event Command Center')).toBeVisible({ timeout: 5000 })
+    await expect(page.locator('h3:has-text("Event Command Center")')).toBeVisible({ timeout: 5000 })
   })
 
   test('creator gets ADMIN role on new event', async ({ page }) => {
     // Create event
-    await page.click('a[href*="/events/create"], button:has-text("Create Event")')
+    await page.click('a[href="/events/create"]')
     await page.waitForURL('**/events/create')
     
     const timestamp = Date.now()
@@ -58,8 +58,8 @@ test.describe('Event Creation', () => {
     await page.click('button[type="submit"]')
     await page.waitForURL('**/events/**')
     
-    // Navigate to permissions page
-    await page.click('a[href*="/permissions"], button:has-text("Permissions")')
+    // Navigate to permissions page - it's a tab in EventPageLayout
+    await page.click('a[href$="/permissions"]')
     await page.waitForURL('**/permissions')
     
     // Verify creator has ADMIN role

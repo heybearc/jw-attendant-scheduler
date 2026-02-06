@@ -180,11 +180,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
         
         // For regular attendants, limit to 1 per shift
-        if (validatedData.role === 'VOLUNTEER') {
+        if (validatedData.role === 'ATTENDANT') {
           const existingAttendants = await prisma.position_assignments.count({
             where: { 
               shiftId: validatedData.shiftId,
-              role: 'VOLUNTEER'
+              role: 'ATTENDANT'
             }
           })
           

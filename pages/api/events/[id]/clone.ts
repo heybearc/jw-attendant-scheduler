@@ -233,7 +233,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             positionId: newPositionId,
             attendantId: assignment.attendantId,
             shiftId: newShiftId,
-            role: assignment.role || 'VOLUNTEER',
+            role: assignment.role || 'ATTENDANT',
             assignedBy: user.id,
             notes: assignment.notes
           }

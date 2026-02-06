@@ -9,7 +9,7 @@ import crypto from 'crypto'
 const assignmentSchema = z.object({
   volunteerId: z.string().min(1, 'Volunteer ID is required'),
   positionId: z.string().min(1, 'Position ID is required'),
-  role: z.enum(['VOLUNTEER', 'OVERSEER', 'KEYMAN']).optional().default('VOLUNTEER'),
+  role: z.enum(['ATTENDANT', 'OVERSEER', 'KEYMAN']).optional().default('ATTENDANT'),
   shiftId: z.string().min(1, 'Shift ID is required for all assignments'),
   notes: z.string().optional()
 })

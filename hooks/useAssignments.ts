@@ -31,7 +31,7 @@ export function useAssignments({ eventId }: UseAssignmentsProps): UseAssignments
         positionId,
         attendantId,
         shiftId,
-        role: 'ATTENDANT'
+        role: 'VOLUNTEER'
       })
       
       if (success) {

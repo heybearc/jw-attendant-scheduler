@@ -144,7 +144,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         
         p.shifts.forEach((shift: any, shiftIndex: number) => {
           const assignments = p.assignments?.filter((a: any) => 
-            a.shift?.id === shift.id && a.role === 'ATTENDANT'
+            a.shift?.id === shift.id && a.role === 'VOLUNTEER'
           ) || []
           
           const boxHeight = assignments.length > 0 ? 55 : 45

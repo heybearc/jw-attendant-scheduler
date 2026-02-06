@@ -97,7 +97,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (p.shifts && p.shifts.length > 0) {
         p.shifts.forEach((shift: any, shiftIndex: number) => {
           const assignments = p.assignments?.filter((a: any) => 
-            a.shift?.id === shift.id && a.role === 'ATTENDANT'
+            a.shift?.id === shift.id && a.role === 'VOLUNTEER'
           ) || []
           
           const attendantNames = assignments.length > 0

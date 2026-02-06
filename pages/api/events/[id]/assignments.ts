@@ -9,7 +9,7 @@ import crypto from 'crypto'
 const assignmentSchema = z.object({
   volunteerId: z.string().min(1, 'Volunteer ID is required'),
   positionId: z.string().min(1, 'Position ID is required'),
-  role: z.enum(['ATTENDANT', 'OVERSEER', 'KEYMAN']).optional().default('ATTENDANT'),
+  role: z.enum(['VOLUNTEER', 'ATTENDANT', 'OVERSEER', 'KEYMAN']).optional().default('VOLUNTEER'),
   shiftId: z.string().min(1, 'Shift ID is required for all assignments'),
   notes: z.string().optional()
 })
@@ -179,20 +179,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           })
         }
         
-        // For regular attendants, limit to 1 per shift
-        if (validatedData.role === 'ATTENDANT') {
-          const existingAttendants = await prisma.position_assignments.count({
+        // For regular volunteers, limit to 1 per shift
+        if (validatedData.role === 'VOLUNTEER') {
+          const existingVolunteers = await prisma.position_assignments.count({
             where: { 
               shiftId: validatedData.shiftId,
-              role: 'ATTENDANT'
+              role: 'VOLUNTEER'
             }
           })
           
-          if (existingAttendants >= 1) {
+          if (existingVolunteers >= 1) {
             return res.status(409).json({
-              error: 'Shift already has maximum attendants assigned',
+              error: 'Shift already has maximum volunteers assigned',
               conflictType: 'SHIFT_FULL',
-              message: 'Each shift can only have one attendant assigned'
+              message: 'Each shift can only have one volunteer assigned'
             })
           }
         }

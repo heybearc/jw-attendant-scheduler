@@ -47,7 +47,7 @@ interface Volunteer {
 
 interface PositionGridViewProps {
   positions: Position[]
-  attendants: Attendant[]
+  attendants: Volunteer[]
   eventId: string
   onAssign: (positionId: string, shiftId: string, attendantId: string) => Promise<void>
   onUnassign: (assignmentId: string) => Promise<void>

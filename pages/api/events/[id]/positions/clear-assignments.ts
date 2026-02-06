@@ -14,13 +14,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method === 'POST') {
     try {
-      // Delete all attendant assignments for this event
+      // Delete all volunteer assignments for this event
       const result = await prisma.position_assignments.deleteMany({
         where: {
           positions: {
             eventId: eventId as string
           },
-          role: 'ATTENDANT'
+          role: 'VOLUNTEER'
         }
       })
 

@@ -145,8 +145,6 @@ model volunteers {
   position_oversight_keyman                                                             position_oversight_assignments[] @relation("position_oversight_assignments_keyman_idTovolunteers")
   position_oversight_overseer                                                           position_oversight_assignments[] @relation("position_oversight_assignments_overseer_idTovolunteers")
   volunteer_availability                                                                volunteer_availability[]
-
-  @@map("attendants")
 }
 
 // NEW: Department system models (backward compatible - coexists with volunteers)
@@ -216,7 +214,7 @@ model count_sessions {
 model document_publications {
   id              String          @id
   documentId      String
-  volunteerId     String          @map("attendantId")
+  volunteerId     String
   publishedAt     DateTime        @default(now())
   viewedAt        DateTime?
   downloadedAt    DateTime?
@@ -255,7 +253,7 @@ model event_volunteers {
   assignedStationRanges                               Json?
   createdAt                                           DateTime           @default(now())
   updatedAt                                           DateTime
-  volunteerId                                         String?            @map("attendantId")
+  volunteerId                                         String?
   keymanId                                            String?
   overseerId                                          String?
   volunteer                                           volunteers?        @relation("event_volunteers_volunteerIdTovolunteers", fields: [volunteerId], references: [id], onDelete: Cascade)
@@ -351,15 +349,15 @@ model events {
   startTime                      String?
   endTime                        String?
   eventType                      EventType                        @default(CIRCUIT_ASSEMBLY)
-  volunteersNeeded               Int?                             @map("attendantsNeeded")
+  volunteersNeeded               Int?
   capacity                       Int?
   assemblyoverseeremail          String?
   assemblyoverseername           String?
   assemblyoverseerphone          String?
-  volunteerOverseerAssistants    Json?                            @default("[]") @map("attendantoverseerassistants")
-  volunteerOverseerEmail         String?                          @map("attendantoverseeremail")
-  volunteerOverseerName          String?                          @map("attendantoverseername")
-  volunteerOverseerPhone         String?                          @map("attendantoverseerphone")
+  volunteerOverseerAssistants    Json?                            @default("[]")
+  volunteerOverseerEmail         String?
+  volunteerOverseerName          String?
+  volunteerOverseerPhone         String?
   circuitoverseeremail           String?
   circuitoverseername            String?
   circuitoverseerphone           String?
@@ -471,7 +469,7 @@ model position_assignments {
   id                                                      String           @id
   positionId                                              String
   shiftId                                                 String?
-  volunteerId                                             String           @map("attendantId")
+  volunteerId                                             String
   role                                                    PositionRole
   overseerId                                              String?
   keymanId                                                String?
@@ -688,7 +686,7 @@ model assignment_templates {
 model volunteer_availability {
   id             String     @id @default(uuid())
   eventId        String     @map("event_id")
-  volunteerId    String     @map("attendant_id")
+  volunteerId    String     @map("volunteer_id")
   status         String
   notes          String?
   availableDates Json?      @map("available_dates")

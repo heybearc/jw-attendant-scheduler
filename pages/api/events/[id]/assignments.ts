@@ -45,7 +45,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             } 
           },
           include: {
-            attendant: {
+            volunteer: {
               select: {
                 id: true,
                 firstName: true,
@@ -107,7 +107,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const existingAssignments = await (prisma as any).position_assignments.findMany({
           where: {
             volunteerId: validatedData.volunteerId,
-            NOT: { shiftId: validatedData.shiftId }
+            NOT: { shiftId: validatedData.shiftId },
+            positions: {
+              eventId: eventId
+            }
           },
           include: {
             shift: true

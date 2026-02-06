@@ -34,8 +34,8 @@ test.describe('Event Creation', () => {
     // Verify no 500 error
     await page.waitForURL('**/events/**', { timeout: 10000 })
     
-    // Verify we're on event details page (not error page)
-    await expect(page.locator('h3:has-text("Event Command Center")')).toBeVisible({ timeout: 5000 })
+    // Verify we're on event details page (not error page) - check for event name heading
+    await expect(page.locator('h1, h2').filter({ hasText: `Test Event ${timestamp}` })).toBeVisible({ timeout: 5000 })
   })
 
   test('creator gets ADMIN role on new event', async ({ page }) => {

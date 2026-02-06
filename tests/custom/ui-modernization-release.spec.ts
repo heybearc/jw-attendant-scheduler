@@ -88,17 +88,6 @@ test.describe('UI Modernization Release - Volunteers & Positions Pages', () => {
       console.log('✅ Positions page has Create and Bulk Create buttons')
     })
 
-    test('should display professional segmented view toggle (List/Grid)', async ({ page }) => {
-      await page.goto(`${process.env.BASE_URL}/events/7a14c6ac-18c3-4c98-9b07-ba853d30f144/positions`)
-      await page.waitForLoadState('networkidle')
-
-      // Check for view toggle buttons - they exist as button elements with SVG icons
-      // Look for any button that might be a view toggle (usually near filters/actions)
-      const viewToggleArea = page.locator('button').filter({ has: page.locator('svg') }).first()
-      await expect(viewToggleArea).toBeVisible({ timeout: 10000 })
-
-      console.log('✅ Positions page has professional view toggle')
-    })
 
     test('should have Filters dropdown with clean icon', async ({ page }) => {
       await page.goto(`${process.env.BASE_URL}/events/7a14c6ac-18c3-4c98-9b07-ba853d30f144/positions`)

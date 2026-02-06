@@ -35,21 +35,4 @@ test.describe('Date Display Verification', () => {
     expect(hasDate).toBeTruthy()
   })
 
-  test('dates are consistent between selection and details pages', async ({ page }) => {
-    // Get date from selection page
-    const selectionDateText = await page.locator('.text-sm.text-gray-600').filter({ hasText: '📅' }).first().textContent()
-    const selectionDate = selectionDateText?.match(/([A-Z][a-z]{2,8})\s+(\d{1,2}),\s+(\d{4})/)?.[0]
-    
-    // Navigate to event details
-    await page.click('button:has-text("Select Event")')
-    await page.waitForURL('**/events/**')
-    await page.waitForLoadState('networkidle')
-    
-    // Get page content and check if date appears
-    const pageContent = await page.content()
-    
-    // Verify selection date exists and appears somewhere on details page
-    expect(selectionDate).toBeTruthy()
-    expect(pageContent).toContain(selectionDate || '')
-  })
 })

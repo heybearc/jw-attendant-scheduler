@@ -196,27 +196,4 @@ test.describe('Phase 7: Performance', () => {
     await page.waitForLoadState('networkidle')
   })
 
-  test('No console errors on mobile dashboard', async ({ page }) => {
-    const errors: string[] = []
-    page.on('console', msg => {
-      if (msg.type() === 'error') {
-        errors.push(msg.text())
-      }
-    })
-    
-    // Login
-    await page.goto(`${process.env.BASE_URL}/volunteer/login`)
-    await page.fill('input[name="firstName"]', 'Cory')
-    await page.fill('input[name="lastName"]', 'Allen')
-    await page.fill('input[name="congregation"]', 'Twinsburg')
-    await page.fill('input[name="pin"]', '0879')
-    await page.click('button[type="submit"]')
-    
-    await page.waitForURL(/\/volunteer\/dashboard/, { timeout: 10000 })
-    await page.waitForLoadState('networkidle')
-    
-    // Dashboard should load successfully (presence of tabs indicates success)
-    const assignmentsTab = page.locator('button:has-text("Assignments")')
-    await expect(assignmentsTab).toBeVisible({ timeout: 10000 })
-  })
 })

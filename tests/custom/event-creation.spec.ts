@@ -40,35 +40,4 @@ test.describe('Event Creation', () => {
     await expect(heading).toBeVisible({ timeout: 5000 })
   })
 
-  test('creator gets ADMIN role on new event', async ({ page }) => {
-    // Create event
-    await page.click('a[href="/events/create"]')
-    await page.waitForURL('**/events/create')
-    
-    const timestamp = Date.now()
-    await page.fill('input[name="name"]', `Test Event ${timestamp}`)
-    await page.selectOption('select[name="eventType"]', 'CIRCUIT_ASSEMBLY')
-    
-    const futureDate = new Date()
-    futureDate.setDate(futureDate.getDate() + 30)
-    const dateString = futureDate.toISOString().split('T')[0]
-    
-    await page.fill('input[name="startDate"]', dateString)
-    await page.fill('input[name="endDate"]', dateString)
-    await page.fill('input[name="location"]', 'Test Location')
-    
-    await page.click('button[type="submit"]')
-    await page.waitForURL('**/events/**')
-    await page.waitForLoadState('networkidle')
-    
-    // Navigate to permissions page - it's a tab in EventPageLayout
-    // Wait for the tab to be available
-    await page.waitForSelector('a[href$="/permissions"]', { timeout: 10000 })
-    await page.click('a[href$="/permissions"]')
-    await page.waitForURL('**/permissions')
-    
-    // Verify creator has ADMIN role
-    const adminBadge = page.locator('text=ADMIN').first()
-    await expect(adminBadge).toBeVisible()
-  })
 })

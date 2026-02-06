@@ -3,7 +3,6 @@ import type { AppProps } from 'next/app'
 import Head from 'next/head'
 import { useEffect } from 'react'
 import ErrorBoundary from '../components/ErrorBoundary'
-import RebrandingBanner from '../components/RebrandingBanner'
 import { useActivityTracking } from '../src/hooks/useActivityTracking'
 import '../styles/globals.css'
 
@@ -50,7 +49,6 @@ function AppContent({ Component, pageProps }: { Component: any; pageProps: any }
         {/* Manifest */}
         <link rel="manifest" href="/manifest.json" />
       </Head>
-      <RebrandingBanner />
       <Component {...pageProps} />
     </>
   )

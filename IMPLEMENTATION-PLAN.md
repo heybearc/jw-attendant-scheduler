@@ -5,7 +5,10 @@
 
 ---
 
-## 🎯 Recent Completions (Feb 5, 2026)
+## 🎯 Recent Completions (Feb 6, 2026)
+
+### ✅ Rebranding Banner Removed
+**Completed:** Removed rebranding announcement banner and `/announcement/rebranding` page. Migration to theoshift.com domain is complete and deadline has passed (Feb 1, 2026). Cleaned up RebrandingBanner and MigrationBanner components.
 
 ### ✅ v3.11.0 Released - UI Modernization + Bug Fixes
 **Completed:** Volunteers and Positions pages modernized with clean, professional interfaces. Drag-and-drop assignment bug fixed (deployed to LIVE).
@@ -50,9 +53,11 @@
 ## 📋 Backlog (Prioritized)
 
 ### High Priority
+- [ ] **Admin portal redesign with tabs layout** (effort: XL, NEW 2026-02-06) - Redesign admin portal to use tab-based navigation like event pages instead of sidebar menu. Current sidebar makes mobile experience unusable. Should follow EventPageWrapper pattern with horizontal tabs for better mobile UX.
 - [ ] Email content refinement for assignment notifications (effort: M) - Improve clarity, tone, and user experience of notification emails
 
 ### Medium Priority
+- [ ] **Global announcements admin page** (effort: L, NEW 2026-02-06) - Create admin portal page to manage system-wide announcements that appear on all pages (like rebranding banner). Should support: title, message, type (INFO/WARNING/URGENT), start/end dates, active/inactive toggle, dismissal settings. Currently only have event-specific announcements and code-based static banners.
 - [ ] Mobile bottom navigation expansion (effort: M) - Ensure bottom nav appears consistently on all authenticated pages
 - [ ] Admin pages mobile optimization (effort: L) - Make admin tables, forms, and UI touch-friendly for mobile
 

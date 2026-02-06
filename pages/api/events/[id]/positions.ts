@@ -28,7 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         shifts: true,
         assignments: {
           include: {
-            attendant: {
+            volunteer: {
               select: {
                 id: true,
                 firstName: true,

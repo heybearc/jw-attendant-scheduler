@@ -312,13 +312,12 @@ export class PositionService {
         shiftEnd = shiftEnd || new Date(now.getTime() + 3600000) // +1 hour
       }
       
-      // API expects userId, not attendantId
+      // API expects volunteerId, not attendantId
       const apiData = {
-        userId: data.attendantId,
+        volunteerId: data.attendantId,
         positionId: data.positionId,
-        shiftStart: shiftStart.toISOString(),
-        shiftEnd: shiftEnd.toISOString(),
-        notes: data.notes
+        shiftId: data.shiftId,
+        role: 'VOLUNTEER'
       }
       
       const response = await fetch(`/api/events/${this.eventId}/assignments`, {

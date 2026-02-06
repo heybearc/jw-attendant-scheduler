@@ -321,7 +321,7 @@ export class PositionService {
         notes: data.notes
       }
       
-      const response = await fetch(`/api/event-assignments/${this.eventId}`, {
+      const response = await fetch(`/api/events/${this.eventId}/assignments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(apiData)

@@ -56,7 +56,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         console.log('Validated assignment data:', validatedData)
         
         // Verify position exists before creating assignment
-        const positionExists = await prisma.event_positions.findUnique({
+        const positionExists = await prisma.positions.findUnique({
           where: { id: validatedData.positionId }
         })
         console.log('Position exists check:', { positionId: validatedData.positionId, exists: !!positionExists })

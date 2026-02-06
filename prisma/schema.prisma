@@ -354,10 +354,10 @@ model events {
   assemblyoverseeremail          String?
   assemblyoverseername           String?
   assemblyoverseerphone          String?
-  volunteerOverseerAssistants    Json?                            @default("[]")
-  volunteerOverseerEmail         String?
-  volunteerOverseerName          String?
-  volunteerOverseerPhone         String?
+  volunteeroverseerassistants    Json?                            @default("[]")
+  volunteeroverseeremail         String?
+  volunteeroverseername          String?
+  volunteeroverseerphone         String?
   circuitoverseeremail           String?
   circuitoverseername            String?
   circuitoverseerphone           String?

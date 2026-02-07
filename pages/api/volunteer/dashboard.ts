@@ -110,11 +110,54 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     })
 
-    // Format assignments for frontend
+    // Get complete schedule for each position (FB-003: Complete schedule visibility)
+    const positionIds = positionAssignments.map(a => a.positions.id)
+    const allPositionAssignments = await prisma.position_assignments.findMany({
+      where: {
+        positionId: {
+          in: positionIds
+        }
+      },
+      include: {
+        volunteer: {
+          select: {
+            firstName: true,
+            lastName: true
+          }
+        },
+        shift: {
+          select: {
+            name: true,
+            startTime: true,
+            endTime: true,
+            isAllDay: true
+          }
+        }
+      },
+      orderBy: {
+        shift: {
+          startTime: 'asc'
+        }
+      }
+    })
+
+    // Format assignments for frontend with complete schedule
     const assignments = positionAssignments.map(assignment => {
       // Handle all-day shifts
       const isAllDay = assignment.shift?.isAllDay || false
       const shiftName = assignment.shift?.name || ''
+      
+      // Get complete schedule for this position
+      const positionSchedule = allPositionAssignments
+        .filter(a => a.positionId === assignment.positions.id)
+        .map(a => ({
+          volunteerName: `${a.volunteer.firstName} ${a.volunteer.lastName}`,
+          isCurrentUser: a.volunteerId === volunteerId,
+          shiftName: a.shift?.name || '',
+          startTime: a.shift?.isAllDay ? 'All Day' : (a.shift?.startTime || ''),
+          endTime: a.shift?.isAllDay ? '' : (a.shift?.endTime || ''),
+          isAllDay: a.shift?.isAllDay || false
+        }))
       
       return {
         id: assignment.id,
@@ -125,7 +168,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         endTime: isAllDay ? '' : (assignment.shift?.endTime || ''),
         instructions: undefined,
         overseer: assignment.overseer ? `${assignment.overseer.firstName} ${assignment.overseer.lastName}` : undefined,
-        keyman: assignment.keyman ? `${assignment.keyman.firstName} ${assignment.keyman.lastName}` : undefined
+        keyman: assignment.keyman ? `${assignment.keyman.firstName} ${assignment.keyman.lastName}` : undefined,
+        completeSchedule: positionSchedule
       }
     })
     

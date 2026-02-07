@@ -49,6 +49,14 @@ interface Assignment {
   instructions?: string
   overseer?: string
   keyman?: string
+  completeSchedule?: Array<{
+    volunteerName: string
+    isCurrentUser: boolean
+    shiftName: string
+    startTime: string
+    endTime: string
+    isAllDay: boolean
+  }>
 }
 
 interface Document {
@@ -670,7 +678,7 @@ export default function VolunteerDashboard() {
                       {dashboardData.assignments?.map((assignment) => (
                         <div key={assignment.id} className="border border-gray-200 rounded-lg p-4">
                           <div className="flex items-start justify-between">
-                            <div>
+                            <div className="w-full">
                               <h3 className="font-medium text-gray-900">{assignment.positionName}</h3>
                               {assignment.location && (
                                 <p className="text-sm text-gray-600 mt-1">📍 {assignment.location}</p>
@@ -683,6 +691,33 @@ export default function VolunteerDashboard() {
                                   {assignment.instructions}
                                 </p>
                               )}
+                              
+                              {/* Complete Schedule (FB-003) */}
+                              {assignment.completeSchedule && assignment.completeSchedule.length > 1 && (
+                                <div className="mt-4 pt-4 border-t border-gray-100">
+                                  <p className="text-xs font-medium text-gray-700 mb-2">📅 Complete Position Schedule:</p>
+                                  <div className="space-y-1">
+                                    {assignment.completeSchedule.map((schedule, idx) => (
+                                      <div 
+                                        key={idx} 
+                                        className={`text-xs p-2 rounded ${
+                                          schedule.isCurrentUser 
+                                            ? 'bg-blue-50 border border-blue-200 font-medium text-blue-900' 
+                                            : 'bg-gray-50 text-gray-700'
+                                        }`}
+                                      >
+                                        <span className="font-medium">{schedule.volunteerName}</span>
+                                        {schedule.isCurrentUser && <span className="ml-1 text-blue-600">(You)</span>}
+                                        <span className="mx-2">•</span>
+                                        <span>
+                                          {schedule.isAllDay ? 'All Day' : `${formatTime(schedule.startTime)}${schedule.endTime ? ` - ${formatTime(schedule.endTime)}` : ''}`}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              
                               {(assignment.overseer || assignment.keyman) && (
                                 <div className="mt-3 pt-3 border-t border-gray-100">
                                   <p className="text-xs text-gray-500 mb-1">Position Oversight:</p>

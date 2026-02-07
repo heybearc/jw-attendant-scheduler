@@ -1,21 +1,33 @@
 # Implementation Plan - TheoShift
 
-**Last Updated:** 2026-02-05  
-**Current Phase:** Phase 7 Complete - Planning Phase 8
+**Last Updated:** 2026-02-07  
+**Current Version:** v4.0.2  
+**Current Phase:** Phase 7 Complete - Maintenance & Feature Enhancements
 
 ---
 
-## 🎯 Recent Completions (Feb 6, 2026)
+## 🎯 Recent Completions (Feb 7, 2026)
 
-### ✅ Rebranding Banner Removed
-**Completed:** Removed rebranding announcement banner and `/announcement/rebranding` page. Migration to theoshift.com domain is complete and deadline has passed (Feb 1, 2026). Cleaned up RebrandingBanner and MigrationBanner components.
+### ✅ v4.0.2 Released - Test Infrastructure & Stability
+**Completed:** Test infrastructure improvements and 100% test pass rate achieved.
+
+**Version:** v4.0.2  
+**Released:** 2026-02-06  
+**Status:** Live on theoshift.com (GREEN)
+
+**Changes:**
+- Container-local test runner infrastructure (`test:e2e:container`)
+- 100% test pass rate (52/52 passing)
+- TypeScript error fixes in positions page
+- Test suite cleanup (removed 21 obsolete tests)
+- Improved test reliability and timing
 
 ### ✅ v3.11.0 Released - UI Modernization + Bug Fixes
-**Completed:** Volunteers and Positions pages modernized with clean, professional interfaces. Drag-and-drop assignment bug fixed (deployed to LIVE).
+**Completed:** Volunteers and Positions pages modernized with clean, professional interfaces. Drag-and-drop assignment bug fixed.
 
 **Version:** v3.11.0  
 **Released:** 2026-02-05  
-**Status:** Live on theoshift.com (BLUE)
+**Status:** Superseded by v4.0.2
 
 **Volunteers Page:**
 - Replaced large header with compact design and inline stats pills (All/Active/Inactive)
@@ -38,15 +50,15 @@
 
 ## 🎯 Active Work (This Week)
 
-**Current Focus:** Bug fixes and feedback items for v3.10.0
+**Current Focus:** Feature enhancements and user feedback items
 
-- [x] **CRITICAL:** Fix event creation bug (OWNER → ADMIN role) - DEPLOYED TO LIVE
-- [x] Help documentation audit - 4 missing pages created, broken link fixed
-- [x] FB-001: Professional UI for Overseer Assistants
-- [x] FB-007: View Details modal for volunteers
-- [x] **FB-024:** Positions page layout update - COMPLETED with full UI modernization
-- [ ] Complete remaining feedback items (FB-003, FB-004, FB-012, FB-017)
-- [ ] Prepare v3.10.0 release
+- [x] **FB-004:** Search by name feature - COMPLETED (2026-02-07) - Added Assignments column to volunteers table
+- [x] TypeScript error fixes - COMPLETED (2026-02-07)
+- [x] Test infrastructure improvements - COMPLETED (v4.0.2)
+- [ ] FB-003: Complete schedule visibility for volunteers (Medium, Feature)
+- [ ] FB-012: Bulk edit enhancement - shifts + oversight (Medium, Enhancement)
+- [ ] FB-017: Conflict management with highlighting (Medium, Enhancement)
+- [ ] Investigate GREEN (STANDBY) build cache issue
 
 ---
 
@@ -119,16 +131,16 @@
 ### 🔴 Open - High/Urgent Priority (0 items)
 - None currently
 
-### 🟡 Open - Medium Priority (7 items)
+### 🟡 Open - Medium Priority (6 items)
 - [ ] **FB-025:** Location library (ENHANCEMENT, MEDIUM) - Track previously used locations with addresses, Google Maps integration, search/autocomplete when creating events to avoid retyping same information. *Submitted: 2026-02-04*
 - [ ] **FB-026:** Feedback notifications banner (ENHANCEMENT, MEDIUM) - Implement feedback notifications banner like LDC Tools, add paste screenshot capability to feedback form. *Submitted: 2026-02-04*
 - [ ] **FB-027:** Event selection page organization (ENHANCEMENT, MEDIUM) - Better organization for admins viewing all events, add search functionality, improve parent/child relationship visualization with connectors/expanders. Clarify if parent event admins automatically get admin access to child events. *Submitted: 2026-02-04*
 - [ ] **FB-003:** Attendant view - Complete schedule visibility (FEATURE, MEDIUM) - Attendant ability to see complete schedule for their station so they know who is there before and after their scheduled shift. *Submitted: 2025-11-03*
-- [ ] **FB-004:** Search by name feature (FEATURE, MEDIUM) - Type in a brother's name and have all his assignments pop up from the attendant page. *Submitted: 2025-11-02*
 - [ ] **FB-012:** Positions Page - Bulk Edit Enhancement (ENHANCEMENT, MEDIUM) - Bulk edit to assign shifts AND oversight mappings in same motion, preserve selection until window closes. *Submitted: 2025-10-24*
 - [ ] **FB-017:** Positions Page - Conflict Management (ENHANCEMENT, MEDIUM) - Highlight conflicts when scheduling manually, dynamic suggestion card to help placement without conflicts. *Submitted: 2025-10-24*
 
-### ✅ Resolved/Closed (20 items)
+### ✅ Resolved/Closed (21 items)
+- [x] **FB-004:** Search by name feature (FEATURE, MEDIUM, RESOLVED 2026-02-07) - Added Assignments column to volunteers table showing all positions assigned to each volunteer. Users can now search for a volunteer and immediately see all their assignments. *Submitted: 2025-11-02*
 - [x] **FB-023:** Template enforcement update (ENHANCEMENT, HIGH, RESOLVED 2026-02-05) - Already implemented. EventPageLayout component conditionally renders Count Times and Lanyards tabs based on moduleConfig settings. Template enforcement working correctly across all event pages. *Submitted: 2026-02-04*
 - [x] **FB-024:** Positions page layout update (BUG, MEDIUM, RESOLVED 2026-02-05) - Completely modernized both Positions and Volunteers pages with professional, industry-standard UI design. Reduced button clutter, added clean icons, grouped secondary actions, improved mobile responsiveness. *Submitted: 2026-02-04*
 - [x] **FB-001:** Attendant Overseer Assistants labels (BUG, HIGH, RESOLVED 2026-02-04) - Replaced raw JSON textarea with professional UI featuring individual fields for name, phone, email with add/remove buttons. *Submitted: 2025-12-22*
@@ -152,10 +164,10 @@
 
 ### 📊 Summary Statistics
 - **Total Feedback Items:** 27
-- **Open:** 9 (33%)
-- **Resolved/Closed:** 18 (67%)
+- **Open:** 8 (30%)
+- **Resolved/Closed:** 19 (70%)
 - **By Type:** 13 Bugs, 9 Enhancements, 5 Features
-- **By Priority:** 0 Urgent, 1 High, 26 Medium
+- **By Priority:** 0 Urgent, 0 High, 27 Medium
 
 ---
 
@@ -199,16 +211,16 @@
 
 ## ✅ Recently Completed (Last 30 Days)
 
+- [x] v4.0.2: Test Infrastructure & Stability - Date: 2026-02-06
+- [x] Container-local test runner (100% pass rate) - Date: 2026-02-06
+- [x] FB-004: Search by name with assignments display - Date: 2026-02-07
+- [x] TypeScript error fixes in positions page - Date: 2026-02-07
+- [x] v3.11.0: UI Modernization (Volunteers & Positions) - Date: 2026-02-05
+- [x] Drag-and-drop assignment bug fix - Date: 2026-02-05
 - [x] Phase 7: Mobile Optimization (v3.8.0) - Date: 2026-02-02
 - [x] Mobile volunteer dashboard with 4 tabs - Date: 2026-01-31
 - [x] Progressive Web App (PWA) implementation - Date: 2026-01-30
 - [x] 54% bundle size reduction on event pages - Date: 2026-01-30
-- [x] Mobile navigation (hamburger menu + bottom nav) - Date: 2026-01-31
-- [x] Terminology refactor (attendant → volunteer) - Date: 2026-01-29
-- [x] Testing infrastructure improvements (23/23 tests passing) - Date: 2026-01-30
-- [x] Phase 5B: Event Oversight Dashboard (v3.6.0) - Date: 2026-01-26
-- [x] Phase 4C: Assignment Workflow Enhancements (v3.5.0) - Date: 2026-01-25
-- [x] Repository cleanup (88 files, 27 branches) - Date: 2026-01-24
 
 ---
 

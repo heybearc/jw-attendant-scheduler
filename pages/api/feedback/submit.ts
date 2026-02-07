@@ -66,9 +66,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         })
       }
 
+      // Generate next feedback number (FB-XXX format)
+      const lastFeedback = await prisma.feedback.findFirst({
+        where: {
+          feedbackNumber: {
+            not: null
+          }
+        },
+        orderBy: {
+          feedbackNumber: 'desc'
+        },
+        select: {
+          feedbackNumber: true
+        }
+      })
+      
+      let nextNumber = 1
+      if (lastFeedback?.feedbackNumber) {
+        const match = lastFeedback.feedbackNumber.match(/FB-(\d+)/)
+        if (match) {
+          nextNumber = parseInt(match[1]) + 1
+        }
+      }
+      
+      const feedbackNumber = `FB-${String(nextNumber).padStart(3, '0')}`
+
       // Create feedback record
       const feedback = await prisma.feedback.create({
         data: {
+          feedbackNumber,
           type: type.toUpperCase(),
           title: title.trim(),
           description: description.trim(),
@@ -149,7 +175,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         success: true,
         data: {
           id: feedback.id,
-          message: 'Feedback submitted successfully'
+          feedbackNumber: feedback.feedbackNumber,
+          message: `Feedback submitted successfully! Your feedback ID is ${feedback.feedbackNumber}`
         }
       })
     } catch (error) {

@@ -387,11 +387,13 @@ model events {
 
 model feedback {
   id                   String                 @id
+  feedbackNumber       String?                @unique
   type                 FeedbackType
   title                String
   description          String
   priority             FeedbackPriority       @default(MEDIUM)
   status               FeedbackStatus         @default(NEW)
+  resolutionComment    String?
   submittedBy          String
   createdAt            DateTime               @default(now())
   updatedAt            DateTime

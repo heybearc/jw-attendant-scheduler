@@ -43,8 +43,8 @@ export interface UpdatePositionData {
 
 export interface CreateShiftData {
   name: string
-  startTime: string
-  endTime: string
+  startTime: string | null
+  endTime: string | null
   isAllDay: boolean
 }
 

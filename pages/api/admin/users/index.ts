@@ -167,7 +167,7 @@ async function handleCreateUser(req: NextApiRequest, res: NextApiResponse) {
     if (sendInvitation && generatedPassword) {
       try {
         const { sendInvitationEmail } = require('../../../../src/lib/email')
-        const loginUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3001'}/auth/signin`
+        const loginUrl = `${process.env.NEXTAUTH_URL || `${req.headers['x-forwarded-proto'] || 'https'}://${req.headers.host}`}/auth/signin`
         
         await sendInvitationEmail({
           firstName: user.name?.split(' ')[0] || user.name || 'User',

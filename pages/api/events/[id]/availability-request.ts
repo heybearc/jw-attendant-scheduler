@@ -110,7 +110,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       day: 'numeric'
     }) : null
 
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3001'
+    const baseUrl = process.env.NEXTAUTH_URL || `${req.headers['x-forwarded-proto'] || 'https'}://${req.headers.host}`
 
     // Create availability records and send emails
     const results = {

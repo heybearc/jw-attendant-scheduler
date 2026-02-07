@@ -117,7 +117,7 @@ async function handleUpdateUser(req: NextApiRequest, res: NextApiResponse, id: s
     if (newPassword && sendResetEmail) {
       try {
         const { sendPasswordResetEmail } = require('../../../../src/lib/email')
-        const loginUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3001'}/auth/signin`
+        const loginUrl = `${process.env.NEXTAUTH_URL || `${req.headers['x-forwarded-proto'] || 'https'}://${req.headers.host}`}/auth/signin`
         
         await sendPasswordResetEmail({
           firstName: user.name?.split(' ')[0] || 'User',

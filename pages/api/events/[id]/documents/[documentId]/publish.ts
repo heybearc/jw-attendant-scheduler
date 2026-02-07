@@ -139,7 +139,7 @@ async function handlePublishDocument(req: NextApiRequest, res: NextApiResponse, 
             select: { id: true, firstName: true, email: true }
           })
           
-          const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3001'
+          const baseUrl = process.env.NEXTAUTH_URL || `${req.headers['x-forwarded-proto'] || 'https'}://${req.headers.host}`
           const documentUrl = `${baseUrl}/events/${eventId}/documents`
           
           // Send emails

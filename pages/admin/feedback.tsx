@@ -611,34 +611,6 @@ export default function FeedbackManagementPage() {
                   </p>
                   <p className="text-sm text-gray-500">
                     Current status: <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(selectedFeedback.status)}`}>
-                      {selectedFeedback.status.replace('_', ' ').toUpperCase()}
-                    </span>
-                  </p>
-                </div>
-
-                <div className="mb-6">
-                  <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
-                    New Status
-                  </label>
-                  <select
-                    id="status"
-                    value={newStatus}
-                    onChange={(e) => setNewStatus(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="new">New</option>
-                    <option value="in_progress">In Progress</option>
-                    <option value="resolved">Resolved</option>
-                    <option value="closed">Closed</option>
-                  </select>
-                </div>
-
-                <div className="flex justify-end space-x-3">
-                  <button
-                    onClick={() => setShowStatusModal(false)}
-                    className="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg"
-                  >
-                    Cancel
                   </button>
                   <button
                     onClick={handleChangeStatus}

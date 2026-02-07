@@ -378,6 +378,11 @@ export default function FeedbackManagementPage() {
                 <div className="flex justify-between items-start mb-6">
                   <div>
                     <div className="flex items-center space-x-3 mb-2">
+                      {selectedFeedback.feedbackNumber && (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-gray-800 text-white">
+                          {selectedFeedback.feedbackNumber}
+                        </span>
+                      )}
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTypeColor(selectedFeedback.type)}`}>
                         {getTypeIcon(selectedFeedback.type)} {selectedFeedback.type.charAt(0).toUpperCase() + selectedFeedback.type.slice(1)}
                       </span>
@@ -389,6 +394,12 @@ export default function FeedbackManagementPage() {
                       </span>
                     </div>
                     <h2 className="text-2xl font-bold text-gray-900">{selectedFeedback.title}</h2>
+                    {selectedFeedback.resolutionComment && (
+                      <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <p className="text-xs font-medium text-green-800 mb-1">✅ Resolution:</p>
+                        <p className="text-sm text-green-900">{selectedFeedback.resolutionComment}</p>
+                      </div>
+                    )}
                   </div>
                   <button
                     onClick={() => setShowDetailsModal(false)}

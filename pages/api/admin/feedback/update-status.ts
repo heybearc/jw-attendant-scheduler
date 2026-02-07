@@ -40,6 +40,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         })
       }
 
+      // Get admin user ID for comment authorship
+      const adminUser = await prisma.users.findUnique({
+        where: { email: session.user.email },
+        select: { id: true }
+      })
+
+      if (!adminUser) {
+        return res.status(500).json({ 
+          success: false, 
+          error: 'Admin user not found' 
+        })
+      }
+
       // Update feedback status and resolution comment
       const updatedFeedback = await prisma.feedback.update({
         where: { id: feedbackId },
@@ -58,6 +71,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }
         }
       })
+
+      // If marking as RESOLVED and resolution comment provided, also add as a regular comment
+      // This ensures email notifications will include the resolution details
+      if (status.toUpperCase() === 'RESOLVED' && resolutionComment?.trim()) {
+        await prisma.feedback_comments.create({
+          data: {
+            id: `comment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            feedbackId: feedbackId,
+            authorId: adminUser.id,
+            content: `Resolution: ${resolutionComment.trim()}`,
+            createdAt: new Date()
+          }
+        })
+      }
 
       return res.json({
         success: true,

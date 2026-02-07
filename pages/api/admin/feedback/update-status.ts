@@ -40,6 +40,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         })
       }
 
+      // Require resolution comment when marking as RESOLVED (D-024 compliance)
+      if (status.toUpperCase() === 'RESOLVED' && !resolutionComment?.trim()) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Resolution comment is required when marking feedback as RESOLVED' 
+        })
+      }
+
       // Get admin user ID for comment authorship
       const adminUser = await prisma.users.findUnique({
         where: { email: session.user.email },

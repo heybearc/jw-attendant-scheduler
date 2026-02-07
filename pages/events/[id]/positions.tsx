@@ -632,6 +632,85 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
     }
   }
 
+  // Handle combined shift creation + oversight assignment (FB-012)
+  const handleCombinedShiftAndOversight = async () => {
+    try {
+      const shiftName = (document.getElementById('combined-shift-name') as HTMLInputElement)?.value
+      const shiftStart = (document.getElementById('combined-shift-start') as HTMLInputElement)?.value
+      const shiftEnd = (document.getElementById('combined-shift-end') as HTMLInputElement)?.value
+      const isAllDay = (document.getElementById('combined-shift-allday') as HTMLInputElement)?.checked
+      const overseerId = (document.getElementById('combined-overseer') as HTMLSelectElement)?.value
+      const keymanId = (document.getElementById('combined-keyman') as HTMLSelectElement)?.value
+      
+      if (!shiftName) {
+        alert('Please specify a shift name')
+        return
+      }
+      
+      if (!isAllDay && (!shiftStart || !shiftEnd)) {
+        alert('Please specify start and end times, or check "All Day"')
+        return
+      }
+      
+      setIsSubmitting(true)
+      
+      // Step 1: Create shifts for all selected positions
+      let shiftSuccessCount = 0
+      for (const positionId of selectedPositions) {
+        const success = await positionService.createShift(positionId, {
+          name: shiftName,
+          startTime: isAllDay ? null : (shiftStart || ''),
+          endTime: isAllDay ? null : (shiftEnd || ''),
+          isAllDay: isAllDay
+        })
+        
+        if (success) {
+          shiftSuccessCount++
+        }
+      }
+      
+      // Step 2: Assign oversight if specified
+      let oversightSuccessCount = 0
+      if (overseerId || keymanId) {
+        const response = await fetch(`/api/events/${eventId}/positions/bulk-oversight`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            positionIds: Array.from(selectedPositions),
+            overseerId: overseerId || null,
+            keymanId: keymanId || null
+          })
+        })
+        
+        if (response.ok) {
+          oversightSuccessCount = selectedPositions.size
+        }
+      }
+      
+      // Report results
+      const messages = []
+      if (shiftSuccessCount > 0) {
+        messages.push(`✅ Created "${shiftName}" shift for ${shiftSuccessCount} positions`)
+      }
+      if (oversightSuccessCount > 0) {
+        messages.push(`✅ Assigned oversight to ${oversightSuccessCount} positions`)
+      }
+      
+      if (messages.length > 0) {
+        alert(messages.join('\n'))
+        // Keep modal open and selection preserved (FB-012 requirement)
+        router.reload()
+      } else {
+        alert('No changes were made')
+      }
+    } catch (error) {
+      console.error('Combined operation error:', error)
+      alert('Failed to complete combined operation')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   // Handle bulk oversight assignment using new API
   const handleBulkOversightAssignment = async () => {
     try {
@@ -2207,11 +2286,113 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                     </div>
                   </div>
 
-                  {/* 3. BULK OVERSIGHT ASSIGNMENT */}
+                  {/* 3. COMBINED SHIFT + OVERSIGHT (FB-012) */}
+                  <div className="border border-purple-200 rounded-lg p-6 bg-purple-50">
+                    <h4 className="text-lg font-medium text-purple-900 mb-4 flex items-center">
+                      <span className="bg-purple-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm mr-3">3</span>
+                      Combined: Create Shift + Assign Oversight
+                    </h4>
+                    <p className="text-sm text-purple-700 mb-4">Create a shift AND assign oversight in one operation (FB-012)</p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Shift Details */}
+                      <div className="space-y-3">
+                        <h5 className="font-medium text-gray-900">Shift Details</h5>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Shift Name</label>
+                          <input
+                            id="combined-shift-name"
+                            type="text"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            placeholder="e.g., Morning"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Start</label>
+                            <input
+                              id="combined-shift-start"
+                              type="time"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">End</label>
+                            <input
+                              id="combined-shift-end"
+                              type="time"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex items-center">
+                          <input
+                            id="combined-shift-allday"
+                            type="checkbox"
+                            className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+                          />
+                          <label htmlFor="combined-shift-allday" className="ml-2 text-sm text-gray-900">All Day</label>
+                        </div>
+                      </div>
+                      
+                      {/* Oversight Assignment */}
+                      <div className="space-y-3">
+                        <h5 className="font-medium text-gray-900">Oversight Assignment</h5>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Overseer</label>
+                          <select
+                            id="combined-overseer"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          >
+                            <option value="">No Overseer</option>
+                            {attendants.filter(att => 
+                              att.isActive && 
+                              Array.isArray(att.formsOfService) && 
+                              att.formsOfService.some(form => form.toLowerCase().includes('overseer'))
+                            ).map(overseer => (
+                              <option key={overseer.id} value={overseer.id}>
+                                {overseer.firstName} {overseer.lastName}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Keyman</label>
+                          <select
+                            id="combined-keyman"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          >
+                            <option value="">No Keyman</option>
+                            {attendants.filter(att => 
+                              att.isActive && 
+                              Array.isArray(att.formsOfService) && 
+                              att.formsOfService.some(form => form.toLowerCase().includes('keyman'))
+                            ).map(keyman => (
+                              <option key={keyman.id} value={keyman.id}>
+                                {keyman.firstName} {keyman.lastName}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-4 flex justify-end">
+                      <button
+                        onClick={handleCombinedShiftAndOversight}
+                        disabled={isSubmitting}
+                        className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white rounded-md font-medium"
+                      >
+                        {isSubmitting ? 'Processing...' : `Apply to ${selectedPositions.size} Positions`}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 4. BULK OVERSIGHT ASSIGNMENT */}
                   <div className="border border-green-200 rounded-lg p-6 bg-green-50">
                     <h4 className="text-lg font-medium text-green-900 mb-4 flex items-center">
-                      <span className="bg-green-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm mr-3">3</span>
-                      Bulk Oversight Assignment
+                      <span className="bg-green-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm mr-3">4</span>
+                      Bulk Oversight Assignment (Separate)
                     </h4>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

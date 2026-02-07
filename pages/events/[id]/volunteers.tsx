@@ -53,6 +53,10 @@ interface Volunteer {
     notes: string | null
     respondedAt: string | null
   } | null
+  assignments?: Array<{
+    positionName: string
+    role: string
+  }>
 }
 
 interface VolunteerStats {

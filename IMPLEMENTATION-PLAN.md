@@ -53,10 +53,11 @@
 **Current Focus:** Feature enhancements and user feedback items
 
 - [x] **FB-004:** Search by name feature - COMPLETED (2026-02-07) - Added Assignments column to volunteers table
+- [x] **FB-003:** Complete schedule visibility - COMPLETED (2026-02-07) - Volunteers can see full position schedule
+- [x] **FB-012:** Bulk edit enhancement - COMPLETED (2026-02-07) - Combined shift + oversight operation
+- [x] Email content refinement - COMPLETED (2026-02-07) - Improved clarity, tone, and UX
 - [x] TypeScript error fixes - COMPLETED (2026-02-07)
 - [x] Test infrastructure improvements - COMPLETED (v4.0.2)
-- [ ] FB-003: Complete schedule visibility for volunteers (Medium, Feature)
-- [ ] FB-012: Bulk edit enhancement - shifts + oversight (Medium, Enhancement)
 - [ ] FB-017: Conflict management with highlighting (Medium, Enhancement)
 - [ ] Investigate GREEN (STANDBY) build cache issue
 
@@ -131,15 +132,16 @@
 ### 🔴 Open - High/Urgent Priority (0 items)
 - None currently
 
-### 🟡 Open - Medium Priority (6 items)
+### 🟡 Open - Medium Priority (3 items)
 - [ ] **FB-025:** Location library (ENHANCEMENT, MEDIUM) - Track previously used locations with addresses, Google Maps integration, search/autocomplete when creating events to avoid retyping same information. *Submitted: 2026-02-04*
 - [ ] **FB-026:** Feedback notifications banner (ENHANCEMENT, MEDIUM) - Implement feedback notifications banner like LDC Tools, add paste screenshot capability to feedback form. *Submitted: 2026-02-04*
 - [ ] **FB-027:** Event selection page organization (ENHANCEMENT, MEDIUM) - Better organization for admins viewing all events, add search functionality, improve parent/child relationship visualization with connectors/expanders. Clarify if parent event admins automatically get admin access to child events. *Submitted: 2026-02-04*
-- [ ] **FB-003:** Attendant view - Complete schedule visibility (FEATURE, MEDIUM) - Attendant ability to see complete schedule for their station so they know who is there before and after their scheduled shift. *Submitted: 2025-11-03*
-- [ ] **FB-012:** Positions Page - Bulk Edit Enhancement (ENHANCEMENT, MEDIUM) - Bulk edit to assign shifts AND oversight mappings in same motion, preserve selection until window closes. *Submitted: 2025-10-24*
 - [ ] **FB-017:** Positions Page - Conflict Management (ENHANCEMENT, MEDIUM) - Highlight conflicts when scheduling manually, dynamic suggestion card to help placement without conflicts. *Submitted: 2025-10-24*
 
-### ✅ Resolved/Closed (21 items)
+### ✅ Resolved/Closed (24 items)
+- [x] **FB-003:** Complete schedule visibility (FEATURE, MEDIUM, RESOLVED 2026-02-07) - Volunteers can now see the complete schedule for their assigned positions, showing who is assigned before and after their shift. Helps with coordination and handoffs. *Submitted: 2025-11-03*
+- [x] **FB-012:** Bulk edit enhancement (ENHANCEMENT, MEDIUM, RESOLVED 2026-02-07) - Added combined shift creation + oversight assignment operation in bulk edit modal. Users can now create shifts AND assign oversight in one action with selection preserved. *Submitted: 2025-10-24*
+- [x] **Email Content Refinement** (ENHANCEMENT, MEDIUM, RESOLVED 2026-02-07) - Improved assignment notification emails with better subject lines, clearer content, actionable guidance, and enhanced UX. More conversational tone and better mobile readability.
 - [x] **FB-004:** Search by name feature (FEATURE, MEDIUM, RESOLVED 2026-02-07) - Added Assignments column to volunteers table showing all positions assigned to each volunteer. Users can now search for a volunteer and immediately see all their assignments. *Submitted: 2025-11-02*
 - [x] **FB-023:** Template enforcement update (ENHANCEMENT, HIGH, RESOLVED 2026-02-05) - Already implemented. EventPageLayout component conditionally renders Count Times and Lanyards tabs based on moduleConfig settings. Template enforcement working correctly across all event pages. *Submitted: 2026-02-04*
 - [x] **FB-024:** Positions page layout update (BUG, MEDIUM, RESOLVED 2026-02-05) - Completely modernized both Positions and Volunteers pages with professional, industry-standard UI design. Reduced button clutter, added clean icons, grouped secondary actions, improved mobile responsiveness. *Submitted: 2026-02-04*
@@ -164,9 +166,9 @@
 
 ### 📊 Summary Statistics
 - **Total Feedback Items:** 27
-- **Open:** 8 (30%)
-- **Resolved/Closed:** 19 (70%)
-- **By Type:** 13 Bugs, 9 Enhancements, 5 Features
+- **Open:** 5 (19%)
+- **Resolved/Closed:** 22 (81%)
+- **By Type:** 13 Bugs, 10 Enhancements, 5 Features
 - **By Priority:** 0 Urgent, 0 High, 27 Medium
 
 ---
@@ -211,6 +213,9 @@
 
 ## ✅ Recently Completed (Last 30 Days)
 
+- [x] FB-003: Complete schedule visibility for volunteers - Date: 2026-02-07
+- [x] FB-012: Combined shift + oversight bulk operation - Date: 2026-02-07
+- [x] Email content refinement (assignment notifications) - Date: 2026-02-07
 - [x] v4.0.2: Test Infrastructure & Stability - Date: 2026-02-06
 - [x] Container-local test runner (100% pass rate) - Date: 2026-02-06
 - [x] FB-004: Search by name with assignments display - Date: 2026-02-07
@@ -218,9 +223,6 @@
 - [x] v3.11.0: UI Modernization (Volunteers & Positions) - Date: 2026-02-05
 - [x] Drag-and-drop assignment bug fix - Date: 2026-02-05
 - [x] Phase 7: Mobile Optimization (v3.8.0) - Date: 2026-02-02
-- [x] Mobile volunteer dashboard with 4 tabs - Date: 2026-01-31
-- [x] Progressive Web App (PWA) implementation - Date: 2026-01-30
-- [x] 54% bundle size reduction on event pages - Date: 2026-01-30
 
 ---
 

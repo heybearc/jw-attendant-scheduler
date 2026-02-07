@@ -1416,6 +1416,9 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                           )}
                         </button>
                       </th>
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden xl:table-cell">
+                        Assignments
+                      </th>
                       <th className="w-24 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Actions
                       </th>
@@ -1512,7 +1515,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                           >
                             <option value="">No Keyman</option>
                             {attendants.filter(att => 
-                              att.isActive && 
+              att.isActive && 
                               Array.isArray(att.formsOfService) && 
                               att.formsOfService.some(form => form.toLowerCase().includes('keyman'))
                             ).map(keyman => (
@@ -1521,6 +1524,22 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                               </option>
                             ))}
                           </select>
+                        </td>
+                        <td className="px-3 py-3 hidden xl:table-cell">
+                          {attendant.assignments && attendant.assignments.length > 0 ? (
+                            <div className="text-xs space-y-1">
+                              {attendant.assignments.map((assignment: any, idx: number) => (
+                                <div key={idx} className="text-gray-700">
+                                  <span className="font-medium">{assignment.positionName}</span>
+                                  {assignment.role !== 'VOLUNTEER' && (
+                                    <span className="ml-1 text-gray-500">({assignment.role})</span>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-gray-400">No assignments</span>
+                          )}
                         </td>
                         <td className="px-3 py-3 whitespace-nowrap text-sm font-medium">
                           {canManageContent && (

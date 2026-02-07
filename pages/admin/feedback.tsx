@@ -322,6 +322,11 @@ export default function FeedbackManagementPage() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-2">
+                        {item.feedbackNumber && (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-800 text-white">
+                            {item.feedbackNumber}
+                          </span>
+                        )}
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTypeColor(item.type)}`}>
                           {getTypeIcon(item.type)} {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
                         </span>
@@ -611,6 +616,53 @@ export default function FeedbackManagementPage() {
                   </p>
                   <p className="text-sm text-gray-500">
                     Current status: <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(selectedFeedback.status)}`}>
+                      {selectedFeedback.status.replace('_', ' ').toUpperCase()}
+                    </span>
+                  </p>
+                </div>
+
+                <div className="mb-6">
+                  <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
+                    New Status
+                  </label>
+                  <select
+                    id="status"
+                    value={newStatus}
+                    onChange={(e) => setNewStatus(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="new">New</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="resolved">Resolved</option>
+                    <option value="closed">Closed</option>
+                  </select>
+                </div>
+
+                {/* Resolution Comment - Required for RESOLVED status */}
+                {newStatus === 'resolved' && (
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Resolution Comment <span className="text-red-500">*</span>
+                    </label>
+                    <p className="text-xs text-gray-500 mb-2">
+                      Explain how this was resolved for end users. This will be visible to the person who submitted the feedback.
+                    </p>
+                    <textarea
+                      value={resolutionComment}
+                      onChange={(e) => setResolutionComment(e.target.value)}
+                      placeholder="e.g., Fixed in v4.0.3 - Added validation to prevent this error"
+                      rows={4}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                )}
+
+                <div className="flex justify-end space-x-3">
+                  <button
+                    onClick={() => setShowStatusModal(false)}
+                    className="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg"
+                  >
+                    Cancel
                   </button>
                   <button
                     onClick={handleChangeStatus}

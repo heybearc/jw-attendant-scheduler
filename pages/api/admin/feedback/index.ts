@@ -48,11 +48,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Transform data for frontend
       const transformedFeedback = feedback.map(item => ({
         id: item.id,
+        feedbackNumber: item.feedbackNumber,
         type: item.type.toLowerCase(),
         title: item.title,
         description: item.description,
         priority: item.priority.toLowerCase(),
         status: item.status.toLowerCase().replace('_', '_'),
+        resolutionComment: item.resolutionComment,
         submittedBy: {
           name: `${item.users.firstName} ${item.users.lastName}`,
           email: item.users.email,

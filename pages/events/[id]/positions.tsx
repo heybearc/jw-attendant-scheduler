@@ -1310,8 +1310,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                   const success = await positionService.createAssignment({
                     positionId,
                     attendantId,
-                    shiftId,
-                    role: 'VOLUNTEER'
+                    shiftId
                   })
                   if (success) {
                     router.reload()
@@ -2414,7 +2413,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                       {assignmentProgress.assignments.slice(-5).map((assignment, index) => (
                         <div key={index} className="text-sm text-gray-700 mb-1 flex items-center">
                           <span className="text-green-500 mr-2">✓</span>
-                          {assignment}
+                          <span>{String(assignment)}</span>
                         </div>
                       ))}
                     </div>

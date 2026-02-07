@@ -7,11 +7,13 @@ import Link from 'next/link'
 
 interface FeedbackItem {
   id: string
+  feedbackNumber?: string
   type: 'bug' | 'enhancement' | 'feature'
   title: string
   description: string
   priority: 'low' | 'medium' | 'high' | 'urgent'
   status: 'new' | 'in_progress' | 'resolved' | 'closed'
+  resolutionComment?: string
   submittedBy: {
     name: string
     email: string
@@ -51,6 +53,7 @@ export default function FeedbackManagementPage() {
   const [showStatusModal, setShowStatusModal] = useState(false)
   const [newComment, setNewComment] = useState('')
   const [newStatus, setNewStatus] = useState('')
+  const [resolutionComment, setResolutionComment] = useState('')
   const [submittingComment, setSubmittingComment] = useState(false)
   const [updatingStatus, setUpdatingStatus] = useState(false)
 
@@ -156,20 +159,25 @@ export default function FeedbackManagementPage() {
   const handleChangeStatus = async () => {
     if (!selectedFeedback || !newStatus) return
     
+    // Require resolution comment when marking as RESOLVED
+    if (newStatus === 'resolved' && !resolutionComment.trim()) {
+      alert('Please provide a resolution comment explaining how this was resolved for end users.')
+      return
+    }
+    
     setUpdatingStatus(true)
     try {
-      const response = await fetch(`/api/admin/feedback/${selectedFeedback.id}/status`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await fetch('/api/admin/feedback/update-status', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          status: newStatus
+          feedbackId: selectedFeedback.id,
+          status: newStatus,
+          resolutionComment: newStatus === 'resolved' ? resolutionComment.trim() : null
         })
       })
-
+      
       if (response.ok) {
-        // Refresh feedback data
         await fetchFeedback()
         // Update selected feedback with new status
         const updatedFeedback = feedback.find(f => f.id === selectedFeedback.id)

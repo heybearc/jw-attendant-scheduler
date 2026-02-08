@@ -127,15 +127,25 @@ export const authOptions: NextAuthOptions = {
       }
       return session
     },
-    async redirect({ url, baseUrl }) {
-      // After login, redirect to event selection page
-      if (url === baseUrl || url === `${baseUrl}/`) {
-        return `${baseUrl}/events/select`
-      }
-      // Allow callback URLs on the same origin
+    async redirect({ url, baseUrl, token }) {
+      // If callback URL is provided and valid, use it
       if (url.startsWith(baseUrl)) {
         return url
       }
+      
+      // Default redirects based on role
+      if (url === baseUrl || url === `${baseUrl}/`) {
+        // Check user role from token
+        const role = token?.role as string
+        
+        if (role === 'VOLUNTEER') {
+          return `${baseUrl}/volunteer/select-event`
+        }
+        
+        // Default to admin event selection for ADMIN, OVERSEER, etc.
+        return `${baseUrl}/events/select`
+      }
+      
       return baseUrl
     },
   },

@@ -2,7 +2,7 @@ import { GetServerSideProps } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../api/auth/[...nextauth]'
 import HelpLayout from '../../components/HelpLayout'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 interface FeedbackPageProps {
   userRole: string
@@ -18,6 +18,45 @@ export default function FeedbackPage({ userRole, userName, userEmail }: Feedback
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [attachments, setAttachments] = useState<File[]>([])
+
+  // Handle paste events for screenshots
+  useEffect(() => {
+    const handlePaste = async (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items
+      if (!items) return
+
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i]
+        
+        // Check if the item is an image
+        if (item.type.startsWith('image/')) {
+          e.preventDefault()
+          
+          const file = item.getAsFile()
+          if (file) {
+            // Validate file size (10MB limit)
+            if (file.size > 10 * 1024 * 1024) {
+              alert('Pasted image is too large. Maximum size is 10MB.')
+              return
+            }
+            
+            // Create a new File with a descriptive name
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+            const renamedFile = new File(
+              [file], 
+              `pasted-screenshot-${timestamp}.png`, 
+              { type: file.type }
+            )
+            
+            setAttachments(prev => [...prev, renamedFile])
+          }
+        }
+      }
+    }
+
+    document.addEventListener('paste', handlePaste)
+    return () => document.removeEventListener('paste', handlePaste)
+  }, [])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
@@ -232,7 +271,7 @@ export default function FeedbackPage({ userRole, userName, userEmail }: Feedback
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                       </svg>
                       <p className="mb-2 text-sm text-gray-500">
-                        <span className="font-semibold">Click to upload</span> screenshots or documents
+                        <span className="font-semibold">Click to upload</span> or <span className="font-semibold">paste (Ctrl+V)</span> screenshots
                       </p>
                       <p className="text-xs text-gray-500">PNG, JPG, PDF, DOC (MAX. 10MB each)</p>
                     </div>
@@ -244,6 +283,13 @@ export default function FeedbackPage({ userRole, userName, userEmail }: Feedback
                       className="hidden"
                     />
                   </label>
+                </div>
+                
+                {/* Paste Hint */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-xs text-blue-700">
+                    <strong>💡 Tip:</strong> You can paste screenshots directly using <kbd className="px-2 py-1 bg-white border border-blue-300 rounded text-xs font-mono">Ctrl+V</kbd> (or <kbd className="px-2 py-1 bg-white border border-blue-300 rounded text-xs font-mono">⌘+V</kbd> on Mac)
+                  </p>
                 </div>
 
                 {/* Attached Files List */}

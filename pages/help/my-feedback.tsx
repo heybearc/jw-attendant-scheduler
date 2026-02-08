@@ -36,10 +36,73 @@ export default function MyFeedbackPage() {
   const [newComment, setNewComment] = useState('')
   const [submittingComment, setSubmittingComment] = useState(false)
   const [commentAttachments, setCommentAttachments] = useState<File[]>([])
+  const [pasteSuccess, setPasteSuccess] = useState(false)
 
   useEffect(() => {
     fetchMyFeedback()
   }, [])
+
+  // Handle paste events for screenshots in modal
+  useEffect(() => {
+    if (!showDetailsModal) return
+
+    const handlePaste = async (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items
+      if (!items) return
+
+      // Check if we have any images in the clipboard
+      let hasImage = false
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.startsWith('image/')) {
+          hasImage = true
+          break
+        }
+      }
+
+      if (!hasImage) return
+
+      // Check if user is focused on a text input/textarea
+      const target = e.target as HTMLElement
+      const isTextInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA'
+      
+      // If user is typing in a text field and there's text in clipboard, let them paste text
+      const hasText = Array.from(items).some(item => item.type.startsWith('text/'))
+      if (isTextInput && hasText) {
+        return
+      }
+
+      // Process image paste
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i]
+        
+        if (item.type.startsWith('image/')) {
+          e.preventDefault()
+          
+          const file = item.getAsFile()
+          if (file) {
+            if (file.size > 10 * 1024 * 1024) {
+              alert('Pasted image is too large. Maximum size is 10MB.')
+              return
+            }
+            
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+            const renamedFile = new File(
+              [file], 
+              `pasted-screenshot-${timestamp}.png`, 
+              { type: file.type }
+            )
+            
+            setCommentAttachments(prev => [...prev, renamedFile])
+            setPasteSuccess(true)
+            setTimeout(() => setPasteSuccess(false), 2000)
+          }
+        }
+      }
+    }
+
+    document.addEventListener('paste', handlePaste)
+    return () => document.removeEventListener('paste', handlePaste)
+  }, [showDetailsModal])
 
   const fetchMyFeedback = async () => {
     try {
@@ -330,7 +393,7 @@ export default function MyFeedbackPage() {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                                       </svg>
                                       <p className="text-xs text-gray-500">
-                                        <span className="font-semibold">Click to upload</span> additional files
+                                        <span className="font-semibold">Click to upload</span> or <span className="font-semibold">paste (Ctrl+V)</span>
                                       </p>
                                       <p className="text-xs text-gray-500">Screenshots, logs, documents (MAX. 10MB)</p>
                                     </div>
@@ -343,6 +406,21 @@ export default function MyFeedbackPage() {
                                     />
                                   </label>
                                 </div>
+
+                                {/* Paste Hint */}
+                                {pasteSuccess ? (
+                                  <div className="bg-green-50 border border-green-200 rounded-lg p-2 animate-pulse">
+                                    <p className="text-xs text-green-700">
+                                      <strong>✅ Screenshot pasted!</strong> Image added to attachments below.
+                                    </p>
+                                  </div>
+                                ) : (
+                                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-2">
+                                    <p className="text-xs text-blue-700">
+                                      <strong>💡 Tip:</strong> Paste screenshots with <kbd className="px-1 py-0.5 bg-white border border-blue-300 rounded text-xs font-mono">Ctrl+V</kbd> or <kbd className="px-1 py-0.5 bg-white border border-blue-300 rounded text-xs font-mono">⌘+V</kbd>
+                                    </p>
+                                  </div>
+                                )}
 
                                 {/* Comment Attached Files List */}
                                 {commentAttachments.length > 0 && (

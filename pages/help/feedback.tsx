@@ -18,6 +18,7 @@ export default function FeedbackPage({ userRole, userName, userEmail }: Feedback
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [attachments, setAttachments] = useState<File[]>([])
+  const [pasteSuccess, setPasteSuccess] = useState(false)
 
   // Handle paste events for screenshots
   useEffect(() => {
@@ -25,10 +26,33 @@ export default function FeedbackPage({ userRole, userName, userEmail }: Feedback
       const items = e.clipboardData?.items
       if (!items) return
 
+      // Check if we have any images in the clipboard
+      let hasImage = false
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.startsWith('image/')) {
+          hasImage = true
+          break
+        }
+      }
+
+      // If no image, let the default paste behavior happen (for text fields)
+      if (!hasImage) return
+
+      // Check if user is focused on a text input/textarea
+      const target = e.target as HTMLElement
+      const isTextInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA'
+      
+      // If user is typing in a text field and there's text in clipboard, let them paste text
+      // Only intercept if they're pasting ONLY an image (no text)
+      const hasText = Array.from(items).some(item => item.type.startsWith('text/'))
+      if (isTextInput && hasText) {
+        return // Let default text paste happen
+      }
+
+      // Process image paste
       for (let i = 0; i < items.length; i++) {
         const item = items[i]
         
-        // Check if the item is an image
         if (item.type.startsWith('image/')) {
           e.preventDefault()
           
@@ -49,6 +73,10 @@ export default function FeedbackPage({ userRole, userName, userEmail }: Feedback
             )
             
             setAttachments(prev => [...prev, renamedFile])
+            
+            // Show success feedback
+            setPasteSuccess(true)
+            setTimeout(() => setPasteSuccess(false), 2000)
           }
         }
       }
@@ -286,11 +314,19 @@ export default function FeedbackPage({ userRole, userName, userEmail }: Feedback
                 </div>
                 
                 {/* Paste Hint */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                  <p className="text-xs text-blue-700">
-                    <strong>💡 Tip:</strong> You can paste screenshots directly using <kbd className="px-2 py-1 bg-white border border-blue-300 rounded text-xs font-mono">Ctrl+V</kbd> (or <kbd className="px-2 py-1 bg-white border border-blue-300 rounded text-xs font-mono">⌘+V</kbd> on Mac)
-                  </p>
-                </div>
+                {pasteSuccess ? (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3 animate-pulse">
+                    <p className="text-xs text-green-700">
+                      <strong>✅ Screenshot pasted!</strong> Image added to attachments below.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <p className="text-xs text-blue-700">
+                      <strong>💡 Tip:</strong> You can paste screenshots directly using <kbd className="px-2 py-1 bg-white border border-blue-300 rounded text-xs font-mono">Ctrl+V</kbd> (or <kbd className="px-2 py-1 bg-white border border-blue-300 rounded text-xs font-mono">⌘+V</kbd> on Mac)
+                    </p>
+                  </div>
+                )}
 
                 {/* Attached Files List */}
                 {attachments.length > 0 && (

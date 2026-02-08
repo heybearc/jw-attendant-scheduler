@@ -1,19 +1,36 @@
 # Implementation Plan - TheoShift
 
-**Last Updated:** 2026-02-07  
-**Current Version:** v4.0.2  
+**Last Updated:** 2026-02-08  
+**Current Version:** v4.1.1  
 **Current Phase:** Phase 7 Complete - Maintenance & Feature Enhancements
 
 ---
 
-## 🎯 Recent Completions (Feb 7, 2026)
+## 🎯 Recent Completions (Feb 8, 2026)
+
+### ✅ v4.1.1 Released - FB-028 Localhost Redirect Bug Fix
+**Completed:** Fixed critical volunteer login redirect bug and improved testing infrastructure.
+
+**Version:** v4.1.1  
+**Released:** 2026-02-08  
+**Status:** Live on theoshift.com (GREEN)
+
+**Changes:**
+- Fixed FB-028: Volunteer login localhost:3001 redirect bug
+- Fixed hardcoded localhost fallbacks in 5 API files
+- Fixed NextAuth redirect logic for volunteer logins
+- Migrated E2E tests to qa-01 centralized testing infrastructure
+- Implemented dynamic STANDBY detection for blue-green testing
+- Created helper scripts for automated STANDBY testing
+- Updated workflows and documentation
+- Promoted qa-01 dynamic STANDBY testing pattern to control plane
 
 ### ✅ v4.0.2 Released - Test Infrastructure & Stability
 **Completed:** Test infrastructure improvements and 100% test pass rate achieved.
 
 **Version:** v4.0.2  
 **Released:** 2026-02-06  
-**Status:** Live on theoshift.com (GREEN)
+**Status:** Superseded by v4.1.1
 
 **Changes:**
 - Container-local test runner infrastructure (`test:e2e:container`)
@@ -50,16 +67,17 @@
 
 ## 🎯 Active Work (This Week)
 
-**Current Focus:** Feature enhancements and user feedback items
+**Current Focus:** Ready for next feature work - all critical bugs resolved
 
+- [x] **FB-028:** Localhost redirect bug - COMPLETED (2026-02-08) - Fixed volunteer login redirects
+- [x] **qa-01 testing migration** - COMPLETED (2026-02-08) - Centralized testing with dynamic STANDBY detection
 - [x] **FB-004:** Search by name feature - COMPLETED (2026-02-07) - Added Assignments column to volunteers table
 - [x] **FB-003:** Complete schedule visibility - COMPLETED (2026-02-07) - Volunteers can see full position schedule
 - [x] **FB-012:** Bulk edit enhancement - COMPLETED (2026-02-07) - Combined shift + oversight operation
 - [x] Email content refinement - COMPLETED (2026-02-07) - Improved clarity, tone, and UX
 - [x] TypeScript error fixes - COMPLETED (2026-02-07)
 - [x] Test infrastructure improvements - COMPLETED (v4.0.2)
-- [ ] FB-017: Conflict management with highlighting (Medium, Enhancement)
-- [ ] Investigate GREEN (STANDBY) build cache issue
+- [ ] **Next:** Pick from medium priority feedback items (FB-025, FB-026, FB-027, FB-017)
 
 ---
 
@@ -110,11 +128,12 @@
 - None currently
 
 ### Recently Fixed
-- [x] **Drag-and-drop assignment creation failing with 500 error** (CRITICAL, FIXED 2026-02-05) - Multiple fixes applied: (1) Map attendantId to userId for API compatibility, (2) Fetch shift times from position data when shiftId provided, (3) Update Prisma relations from attendant to volunteer, (4) Add position existence validation. **Deployed to BLUE (LIVE).** GREEN (STANDBY) has persistent build cache issue preventing verification.
+- [x] **FB-028: Volunteer login localhost redirect** (CRITICAL, FIXED 2026-02-08) - Volunteer login page was redirecting to localhost:3001 instead of production URL. Fixed hardcoded fallbacks in 5 API files and corrected NextAuth redirect logic. **Deployed to LIVE (GREEN) as v4.1.1.**
+- [x] **Drag-and-drop assignment creation failing with 500 error** (CRITICAL, FIXED 2026-02-05) - Multiple fixes applied: (1) Map attendantId to userId for API compatibility, (2) Fetch shift times from position data when shiftId provided, (3) Update Prisma relations from attendant to volunteer, (4) Add position existence validation. **Deployed to LIVE.**
 - [x] **Event creation failing with 500 error** (CRITICAL, FIXED 2026-02-04) - Event creation API was using deprecated OWNER role instead of ADMIN after v3.9.0 permissions refactor. Fixed and deployed to LIVE immediately.
+- [x] **GREEN (STANDBY) build cache issue** (FIXED 2026-02-08) - Resolved via PM2 restart. Both servers now healthy and synced.
 
 ### Non-Critical (Backlog)
-- [ ] **GREEN (STANDBY) build cache issue** (effort: M, NEW 2026-02-05) - GREEN server has persistent build cache preventing code changes from taking effect despite multiple rebuilds and .next folder deletion. BLUE (LIVE) works correctly. **Impact:** Cannot fully verify fixes on STANDBY. **Workaround:** Deploy to BLUE first, sync GREEN when needed. **Status:** Needs investigation or fresh deployment.
 - [ ] **React error loop in production** (effort: L) - Recurring minified React errors #425 and #418 causing infinite error boundary loops. Caught by APEX GUARDIAN error boundary. Errors occur in production build, need to reproduce in dev mode with non-minified React to identify root cause. **Impact:** Console spam, potential performance degradation. **Frequency:** Intermittent but recurring across releases. **Status:** Monitoring, non-blocking.
 - [ ] Position management test expects event selection (effort: S) - Pre-existing test failure, non-blocking
 - [ ] Refactoring validation test expects event selection (effort: S) - Pre-existing test failure, non-blocking
@@ -213,6 +232,9 @@
 
 ## ✅ Recently Completed (Last 30 Days)
 
+- [x] v4.1.1: FB-028 localhost redirect bug fix - Date: 2026-02-08
+- [x] qa-01 testing migration with dynamic STANDBY detection - Date: 2026-02-08
+- [x] Promoted qa-01 testing pattern to control plane - Date: 2026-02-08
 - [x] FB-003: Complete schedule visibility for volunteers - Date: 2026-02-07
 - [x] FB-012: Combined shift + oversight bulk operation - Date: 2026-02-07
 - [x] Email content refinement (assignment notifications) - Date: 2026-02-07

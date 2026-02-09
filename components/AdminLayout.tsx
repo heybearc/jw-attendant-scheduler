@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import { ReactNode, useState } from 'react'
 import packageJson from "../package.json"
 import { useRouter } from 'next/router'
 import { signOut, useSession } from 'next-auth/react'
@@ -15,39 +15,61 @@ interface AdminLayoutProps {
   releaseSummary?: string
 }
 
+type TopLevelSection = 'admin' | 'events' | 'help'
+
 export default function AdminLayout({ children, title, breadcrumbs = [], userLastSeenVersion, releaseSummary }: AdminLayoutProps) {
   const router = useRouter()
   const { data: session } = useSession()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const handleSignOut = async () => {
     await signOut({ redirect: true })
     window.location.href = '/auth/signin'
   }
 
-  const navigationItems = [
+  // Determine which top-level section we're in
+  const getCurrentSection = (): TopLevelSection => {
+    if (router.pathname.startsWith('/events')) return 'events'
+    if (router.pathname.startsWith('/help') || router.pathname === '/release-notes') return 'help'
+    return 'admin'
+  }
+
+  const currentSection = getCurrentSection()
+
+  const adminTabs = [
     { label: 'Dashboard', href: '/admin', icon: '🏠' },
-    { label: 'User Management', href: '/admin/users', icon: '👥' },
-    { label: 'Department Templates', href: '/admin/departments', icon: '🏢' },
-    { label: 'Assignment Templates', href: '/admin/assignment-templates', icon: '📋' },
-    { label: 'Location Library', href: '/admin/locations', icon: '📍' },
-    { label: 'Health Monitor', href: '/admin/health', icon: '💚' },
+    { label: 'Users', href: '/admin/users', icon: '👥' },
+    { label: 'Departments', href: '/admin/departments', icon: '🏢' },
+    { label: 'Templates', href: '/admin/assignment-templates', icon: '📋' },
+    { label: 'Locations', href: '/admin/locations', icon: '📍' },
+    { label: 'Feedback', href: '/admin/feedback', icon: '💬' },
+    { label: 'Health', href: '/admin/health', icon: '💚' },
     { label: 'API Status', href: '/admin/api-status', icon: '📊' },
     { label: 'Audit Logs', href: '/admin/audit-logs', icon: '📝' },
-    { label: 'System Operations', href: '/admin/system-ops', icon: '⚡' },
-    { label: 'Email Configuration', href: '/admin/email-config', icon: '📧' },
+    { label: 'System Ops', href: '/admin/system-ops', icon: '⚡' },
+    { label: 'Email Config', href: '/admin/email-config', icon: '📧' },
   ]
 
-  const eventNavigationItems = [
+  const eventTabs = [
     { label: 'Event Selection', href: '/events/select', icon: '🎯' },
     { label: 'Create Event', href: '/events/create', icon: '➕' },
   ]
 
-  const helpNavigationItems = [
+  const helpTabs = [
     { label: 'Help Center', href: '/help', icon: '❓' },
     { label: 'Release Notes', href: '/release-notes', icon: '📋' },
     { label: 'Send Feedback', href: '/help/feedback', icon: '💡' },
-    { label: 'Manage Feedback', href: '/admin/feedback', icon: '📝' },
   ]
+
+  const getSecondLevelTabs = () => {
+    switch (currentSection) {
+      case 'admin': return adminTabs
+      case 'events': return eventTabs
+      case 'help': return helpTabs
+    }
+  }
+
+  const secondLevelTabs = getSecondLevelTabs()
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -75,7 +97,7 @@ export default function AdminLayout({ children, title, breadcrumbs = [], userLas
             </div>
             
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-700">
+              <span className="text-sm text-gray-700 hidden sm:inline">
                 Welcome, {session?.user?.name}
               </span>
               <button
@@ -89,151 +111,126 @@ export default function AdminLayout({ children, title, breadcrumbs = [], userLas
         </div>
       </nav>
 
-      <div className="flex">
-        {/* Sidebar Navigation */}
-        <nav className="w-64 bg-white shadow-sm min-h-screen border-r border-gray-200">
-          <div className="p-4">
-            {/* Event Navigation Section */}
-            <div className="mb-6">
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                Event Management
-              </h3>
-              <ul className="space-y-1">
-                {eventNavigationItems.map((item) => {
-                  const isActive = router.pathname === item.href || 
-                    (item.href !== '/events/select' && router.pathname.startsWith(item.href))
-                  
-                  return (
-                    <li key={item.href}>
-                      <Link
-                        href={item.href}
-                        className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                          isActive
-                            ? 'bg-green-50 text-green-700 border-r-2 border-green-600'
-                            : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-                        }`}
-                      >
-                        <span className="mr-3">{item.icon}</span>
-                        {item.label}
-                      </Link>
-                    </li>
-                  )
-                })}
-              </ul>
-            </div>
-
-            {/* Admin Navigation Section */}
-            <div>
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                Admin Functions
-              </h3>
-              <ul className="space-y-1">
-                {navigationItems.map((item) => {
-                  const isActive = router.pathname === item.href || 
-                    (item.href !== '/admin' && router.pathname.startsWith(item.href))
-                  
-                  return (
-                    <li key={item.href}>
-                      <Link
-                        href={item.href}
-                        className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                          isActive
-                            ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600'
-                            : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-                        }`}
-                      >
-                        <span className="mr-3">{item.icon}</span>
-                        {item.label}
-                      </Link>
-                    </li>
-                  )
-                })}
-              </ul>
-            </div>
-
-            {/* Help & Support Section */}
-            <div>
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                Help & Support
-              </h3>
-              <ul className="space-y-1">
-                {helpNavigationItems.map((item) => {
-                  const isActive = router.pathname === item.href || 
-                    (item.href !== '/help' && router.pathname.startsWith(item.href))
-                  
-                  return (
-                    <li key={item.href}>
-                      <Link
-                        href={item.href}
-                        className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                          isActive
-                            ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600'
-                            : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-                        }`}
-                      >
-                        <span className="mr-3">{item.icon}</span>
-                        {item.label}
-                      </Link>
-                    </li>
-                  )
-                })}
-              </ul>
-            </div>
+      {/* Two-Level Tab Navigation */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Top Level Tabs */}
+          <div className="flex gap-8 border-b border-gray-200">
+            <Link
+              href="/admin"
+              className={`px-1 py-4 text-sm font-semibold border-b-2 transition-colors ${
+                currentSection === 'admin'
+                  ? 'text-blue-600 border-blue-600'
+                  : 'text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Admin
+            </Link>
+            <Link
+              href="/events/select"
+              className={`px-1 py-4 text-sm font-semibold border-b-2 transition-colors ${
+                currentSection === 'events'
+                  ? 'text-blue-600 border-blue-600'
+                  : 'text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Events
+            </Link>
+            <Link
+              href="/help"
+              className={`px-1 py-4 text-sm font-semibold border-b-2 transition-colors ${
+                currentSection === 'help'
+                  ? 'text-blue-600 border-blue-600'
+                  : 'text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Help
+            </Link>
           </div>
-        </nav>
 
-        {/* Main Content */}
-        <main className="flex-1">
-          {/* Breadcrumbs */}
-          {breadcrumbs.length > 0 && (
-            <div className="bg-white border-b border-gray-200 px-6 py-3">
-              <nav className="flex" aria-label="Breadcrumb">
-                <ol className="flex items-center space-x-2">
-                  <li>
-                    <Link href="/admin" className="text-gray-500 hover:text-gray-700">
-                      Dashboard
-                    </Link>
+          {/* Second Level Tabs - Scrollable on mobile */}
+          <div className="overflow-x-auto -mb-px">
+            <nav className="flex gap-1 min-w-max py-2">
+              {secondLevelTabs.map((tab) => {
+                const isActive = router.pathname === tab.href || 
+                  (tab.href !== '/admin' && tab.href !== '/help' && router.pathname.startsWith(tab.href))
+                
+                return (
+                  <Link
+                    key={tab.href}
+                    href={tab.href}
+                    className={`flex items-center gap-2 px-4 py-2 text-sm font-medium whitespace-nowrap rounded-t-lg transition-colors ${
+                      isActive
+                        ? 'bg-gray-50 text-blue-600 border-b-2 border-blue-600'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    <span>{tab.icon}</span>
+                    <span>{tab.label}</span>
+                  </Link>
+                )
+              })}
+            </nav>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumbs */}
+        {breadcrumbs.length > 0 && (
+          <div className="mb-6">
+            <nav className="flex" aria-label="Breadcrumb">
+              <ol className="flex items-center space-x-2 text-sm">
+                <li>
+                  <Link href="/admin" className="text-gray-500 hover:text-gray-700">
+                    Dashboard
+                  </Link>
+                </li>
+                {breadcrumbs.map((crumb, index) => (
+                  <li key={index} className="flex items-center">
+                    <svg className="flex-shrink-0 h-4 w-4 text-gray-400 mx-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                    </svg>
+                    {crumb.href ? (
+                      <Link href={crumb.href} className="text-gray-500 hover:text-gray-700">
+                        {crumb.label}
+                      </Link>
+                    ) : (
+                      <span className="text-gray-900 font-medium">{crumb.label}</span>
+                    )}
                   </li>
-                  {breadcrumbs.map((crumb, index) => (
-                    <li key={index} className="flex items-center">
-                      <svg className="flex-shrink-0 h-4 w-4 text-gray-400 mx-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                      </svg>
-                      {crumb.href ? (
-                        <Link href={crumb.href} className="text-gray-500 hover:text-gray-700">
-                          {crumb.label}
-                        </Link>
-                      ) : (
-                        <span className="text-gray-900 font-medium">{crumb.label}</span>
-                      )}
-                    </li>
-                  ))}
-                </ol>
-              </nav>
-            </div>
-          )}
+                ))}
+              </ol>
+            </nav>
+          </div>
+        )}
 
-          {/* Page Content */}
-          <div className="p-6">
-            {title && (
-              <div className="mb-6">
-                <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-              </div>
-            )}
-            {children}
-        
+        {/* Page Title */}
+        {title && (
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
+          </div>
+        )}
+
+        {/* Page Content */}
+        {children}
+
         {/* Footer with Version */}
-        <footer className="bg-white border-t border-gray-200 py-4 px-6 text-sm text-gray-500">
-          <div className="flex items-center justify-center space-x-3">
-            <div>TheoShift v{packageJson.version} | © 2025 | 
-              <Link href="/release-notes" className="text-blue-600 hover:text-blue-800 ml-1">Release Notes</Link>
-            </div>
+        <footer className="mt-12 pt-8 border-t border-gray-200 text-center text-sm text-gray-500">
+          <div className="flex items-center justify-center gap-3 flex-wrap">
+            <span>TheoShift v{packageJson.version}</span>
+            <span>•</span>
+            <span>© 2025</span>
+            <span>•</span>
+            <Link href="/release-notes" className="text-blue-600 hover:text-blue-800">
+              Release Notes
+            </Link>
+            <span>•</span>
             <ServerIndicator />
           </div>
         </footer>
-          </div>
-        </main>
-      </div>
+      </main>
       
       {/* Bottom Navigation (Mobile Only) */}
       <BottomNav />

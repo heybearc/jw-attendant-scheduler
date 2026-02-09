@@ -2,6 +2,7 @@ import { GetServerSideProps } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../api/auth/[...nextauth]'
 import EventLayout from '../../../components/EventLayout'
+import LocationSelector from '../../../components/LocationSelector'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
@@ -23,6 +24,7 @@ interface EventFormData {
   startTime: string
   endTime: string
   location: string
+  locationId: string
   capacity: string
   volunteersNeeded: string
   status: string
@@ -50,6 +52,7 @@ interface Event {
   startTime?: string
   endTime?: string
   location?: string
+  locationId?: string
   capacity?: number
   volunteersNeeded?: number
   status: string
@@ -99,6 +102,7 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
     startTime: event.startTime || '09:30',
     endTime: event.endTime || '16:00',
     location: event.location || '',
+    locationId: event.locationId || '',
     capacity: event.capacity ? event.capacity.toString() : '',
     volunteersNeeded: event.volunteersNeeded ? event.volunteersNeeded.toString() : '',
     status: event.status || 'UPCOMING',
@@ -147,6 +151,29 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
     setAssistants(assistants.map((assistant, i) => 
       i === index ? { ...assistant, [field]: value } : assistant
     ))
+  }
+
+  const handleLocationChange = (locationId: string | null, locationName: string) => {
+    setFormData(prev => ({
+      ...prev,
+      locationId: locationId || '',
+      location: locationName
+    }))
+    
+    if (errors.location) {
+      setErrors(prev => ({
+        ...prev,
+        location: ''
+      }))
+    }
+  }
+
+  const handleLocationCreate = async (newLocation: any) => {
+    setFormData(prev => ({
+      ...prev,
+      locationId: newLocation.id,
+      location: newLocation.name
+    }))
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -248,6 +275,7 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
         startTime: formData.startTime,
         endTime: formData.endTime || undefined,
         location: formData.location,
+        locationId: formData.locationId || undefined,
         capacity: formData.capacity ? parseInt(formData.capacity) : undefined,
         volunteersNeeded: formData.volunteersNeeded ? parseInt(formData.volunteersNeeded) : undefined,
         status: formData.status,
@@ -648,18 +676,16 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
                 <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
                   Location *
                 </label>
-                <input
-                  type="text"
-                  id="location"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.location ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  placeholder="Enter event location"
+                <LocationSelector
+                  value={formData.locationId || null}
+                  locationName={formData.location}
+                  onChange={handleLocationChange}
+                  onCreateNew={handleLocationCreate}
+                  error={errors.location}
                 />
-                {errors.location && <p className="mt-1 text-sm text-red-600">{errors.location}</p>}
+                <p className="mt-1 text-xs text-gray-500">
+                  Search saved locations or create a new one
+                </p>
               </div>
 
               <div>

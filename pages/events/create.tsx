@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../api/auth/[...nextauth]'
 import EventLayout from '../../components/EventLayout'
 import CustomFieldsRenderer from '../../components/CustomFieldsRenderer'
+import LocationSelector from '../../components/LocationSelector'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
@@ -17,6 +18,7 @@ interface EventFormData {
   startTime: string
   endTime: string
   location: string
+  locationId: string
   capacity: string
   attendantsNeeded: string
   status: string
@@ -59,6 +61,7 @@ export default function CreateEventPage() {
     startTime: '09:30',
     endTime: '16:00',
     location: '',
+    locationId: '',
     capacity: '',
     attendantsNeeded: '',
     status: 'UPCOMING',
@@ -119,6 +122,31 @@ export default function CreateEventPage() {
         [name]: ''
       }))
     }
+  }
+
+  const handleLocationChange = (locationId: string | null, locationName: string) => {
+    setFormData(prev => ({
+      ...prev,
+      locationId: locationId || '',
+      location: locationName
+    }))
+    
+    // Clear error when location is selected
+    if (errors.location) {
+      setErrors(prev => ({
+        ...prev,
+        location: ''
+      }))
+    }
+  }
+
+  const handleLocationCreate = async (newLocation: any) => {
+    // Location was created via API in the modal, just update form state
+    setFormData(prev => ({
+      ...prev,
+      locationId: newLocation.id,
+      location: newLocation.name
+    }))
   }
 
   const validateForm = (): boolean => {
@@ -217,6 +245,11 @@ export default function CreateEventPage() {
       const parentId = formData.parentEventId?.trim()
       if (parentId && parentId !== '') {
         submitData.parentEventId = parentId
+      }
+
+      const locId = formData.locationId?.trim()
+      if (locId && locId !== '') {
+        submitData.locationId = locId
       }
 
       // Add custom field values to settings
@@ -536,18 +569,16 @@ export default function CreateEventPage() {
                 <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
                   Location *
                 </label>
-                <input
-                  type="text"
-                  id="location"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.location ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                  placeholder="e.g., Kingdom Hall - Main Auditorium"
+                <LocationSelector
+                  value={formData.locationId || null}
+                  locationName={formData.location}
+                  onChange={handleLocationChange}
+                  onCreateNew={handleLocationCreate}
+                  error={errors.location}
                 />
-                {errors.location && <p className="mt-1 text-sm text-red-600">{errors.location}</p>}
+                <p className="mt-1 text-xs text-gray-500">
+                  Search saved locations or create a new one
+                </p>
               </div>
 
               <div>

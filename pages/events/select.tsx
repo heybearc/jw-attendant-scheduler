@@ -37,6 +37,7 @@ export default function EventSelectPage({ events, userLastSeenVersion, releaseSu
   const [error, setError] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [expandedEvents, setExpandedEvents] = useState<Set<string>>(new Set())
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set(['COMPLETED', 'ARCHIVED', 'CANCELLED']))
   const loading = false // No loading state needed with SSR
 
   const selectEvent = async (eventId: string) => {
@@ -106,6 +107,40 @@ export default function EventSelectPage({ events, userLastSeenVersion, releaseSu
     setExpandedEvents(newExpanded)
   }
 
+  const toggleSectionCollapse = (status: string) => {
+    const newCollapsed = new Set(collapsedSections)
+    if (newCollapsed.has(status)) {
+      newCollapsed.delete(status)
+    } else {
+      newCollapsed.add(status)
+    }
+    setCollapsedSections(newCollapsed)
+  }
+
+  // Status priority for sorting
+  const getStatusPriority = (status: string): number => {
+    switch (status.toUpperCase()) {
+      case 'CURRENT': return 1
+      case 'UPCOMING': return 2
+      case 'COMPLETED': return 3
+      case 'PAST': return 3
+      case 'ARCHIVED': return 4
+      case 'CANCELLED': return 5
+      default: return 6
+    }
+  }
+
+  // Sort events by status priority, then by start date descending
+  const sortEvents = (events: Event[]): Event[] => {
+    return [...events].sort((a, b) => {
+      const statusDiff = getStatusPriority(a.status) - getStatusPriority(b.status)
+      if (statusDiff !== 0) return statusDiff
+      
+      // Within same status, sort by start date descending (newest first)
+      return new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
+    })
+  }
+
   // Filter events based on search query
   const filteredEvents = events.filter(event => {
     if (!searchQuery) return true
@@ -118,16 +153,41 @@ export default function EventSelectPage({ events, userLastSeenVersion, releaseSu
     )
   })
 
-  // Organize events into parent/child hierarchy
-  const parentEvents = filteredEvents.filter(e => !e.parentEventId)
+  // Organize events into parent/child hierarchy with sorting
+  const sortedFilteredEvents = sortEvents(filteredEvents)
+  const parentEvents = sortedFilteredEvents.filter(e => !e.parentEventId)
   const childEventsMap = new Map<string, Event[]>()
-  filteredEvents.forEach(event => {
+  sortedFilteredEvents.forEach(event => {
     if (event.parentEventId) {
       const children = childEventsMap.get(event.parentEventId) || []
       children.push(event)
       childEventsMap.set(event.parentEventId, children)
     }
   })
+
+  // Sort child events within each parent
+  childEventsMap.forEach((children, parentId) => {
+    childEventsMap.set(parentId, sortEvents(children))
+  })
+
+  // Group parent events by status
+  const eventsByStatus = new Map<string, Event[]>()
+  parentEvents.forEach(event => {
+    const status = event.status.toUpperCase()
+    const normalizedStatus = status === 'PAST' ? 'COMPLETED' : status
+    const events = eventsByStatus.get(normalizedStatus) || []
+    events.push(event)
+    eventsByStatus.set(normalizedStatus, events)
+  })
+
+  // Define status groups in display order
+  const statusGroups = [
+    { key: 'CURRENT', label: 'Current Events', icon: '🟢' },
+    { key: 'UPCOMING', label: 'Upcoming Events', icon: '🔵' },
+    { key: 'COMPLETED', label: 'Completed Events', icon: '✅' },
+    { key: 'ARCHIVED', label: 'Archived Events', icon: '📦' },
+    { key: 'CANCELLED', label: 'Cancelled Events', icon: '❌' }
+  ]
 
   // No loading state needed with SSR - data is always available
   if (!events) {
@@ -285,14 +345,52 @@ export default function EventSelectPage({ events, userLastSeenVersion, releaseSu
               </div>
             </div>
           ) : (
-            <div className="space-y-6">
-              {parentEvents.map((event) => {
-                const children = childEventsMap.get(event.id) || []
-                const hasChildren = children.length > 0
-                const isExpanded = expandedEvents.has(event.id)
+            <div className="space-y-8">
+              {statusGroups.map(({ key, label, icon }) => {
+                const statusEvents = eventsByStatus.get(key) || []
+                if (statusEvents.length === 0) return null
+                
+                const isSectionCollapsed = collapsedSections.has(key)
                 
                 return (
-                  <div key={event.id}>
+                  <div key={key} className="space-y-4">
+                    {/* Status Section Header */}
+                    <button
+                      onClick={() => toggleSectionCollapse(key)}
+                      className="w-full flex items-center justify-between px-4 py-3 bg-white/20 backdrop-blur-sm rounded-lg hover:bg-white/30 transition-all group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <svg
+                          className={`w-5 h-5 text-white transition-transform ${isSectionCollapsed ? '' : 'rotate-90'}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                        <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                          <span>{icon}</span>
+                          <span>{label}</span>
+                        </h2>
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-white/30 text-white">
+                          {statusEvents.length}
+                        </span>
+                      </div>
+                      <span className="text-sm text-white/70 group-hover:text-white transition-colors">
+                        {isSectionCollapsed ? 'Click to expand' : 'Click to collapse'}
+                      </span>
+                    </button>
+
+                    {/* Status Section Events */}
+                    {!isSectionCollapsed && (
+                      <div className="space-y-4 pl-4">
+                        {statusEvents.map((event) => {
+                          const children = childEventsMap.get(event.id) || []
+                          const hasChildren = children.length > 0
+                          const isExpanded = expandedEvents.has(event.id)
+                          
+                          return (
+                            <div key={event.id}>
                     {/* Parent Event Card */}
                     <div className="relative">
                       {hasChildren && (
@@ -453,6 +551,11 @@ export default function EventSelectPage({ events, userLastSeenVersion, releaseSu
                             </div>
                           </div>
                         ))}
+                      </div>
+                    )}
+                  </div>
+                          )
+                        })}
                       </div>
                     )}
                   </div>

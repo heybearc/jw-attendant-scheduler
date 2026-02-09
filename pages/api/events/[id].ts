@@ -59,7 +59,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method === "PUT") {
       try {
         const { 
-          name, description, eventType, startDate, endDate, startTime, endTime, location, status, capacity, attendantsNeeded, volunteersNeeded,
+          name, description, eventType, startDate, endDate, startTime, endTime, location, locationId, status, capacity, attendantsNeeded, volunteersNeeded,
           departmentTemplateId,
           // APEX GUARDIAN: Oversight Management Fields
           circuitOverseerName, circuitOverseerPhone, circuitOverseerEmail,
@@ -78,6 +78,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           startTime,
           endTime,
           location,
+          locationId: locationId || null,
           status,
           capacity: capacity ? parseInt(capacity) : null,
           volunteersNeeded: (volunteersNeeded || attendantsNeeded) ? parseInt(volunteersNeeded || attendantsNeeded) : null,
@@ -85,6 +86,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         // Add department template if provided (can be null to clear)
+        // Note: departmentTemplateId is mapped in schema, so we can use it directly
         if (departmentTemplateId !== undefined) {
           updateData.departmentTemplateId = departmentTemplateId || null
         }

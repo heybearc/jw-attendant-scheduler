@@ -13,12 +13,22 @@ Theocratic Shift Scheduler is a comprehensive web application designed to manage
 - **Event Dashboard** - Centralized workspace for event management
 - **Event Status Tracking** - Upcoming, Current, Completed, Cancelled, Archived
 - **Event Templates** - Copy events with positions and settings
+- **Location Library** - Centralized location management with Google Maps integration
 
-### Attendant Management
-- **User Roles** - Admin, Overseer, Assistant Overseer, Keyman, Attendant
+### Location Library (NEW in v4.2.0)
+- **Saved Locations** - Create and reuse frequently used event locations
+- **Google Maps Integration** - Address autocomplete and geocoding
+- **Map Preview** - Interactive maps with markers and directions
+- **Admin Management** - Full CRUD interface at `/admin/locations`
+- **Usage Tracking** - Track popular locations and usage statistics
+- **Smart Selector** - Autocomplete dropdown with recent/popular locations
+
+### Volunteer Management
+- **User Roles** - Admin, Overseer, Assistant Overseer, Keyman, Volunteer
 - **Invitation System** - Secure token-based user invitations
-- **User-Attendant Linking** - Connect user accounts to attendant profiles
-- **Attendant Dashboard** - Assignment info, oversight contact, count times
+- **User-Volunteer Linking** - Connect user accounts to volunteer profiles
+- **Volunteer Dashboard** - Assignment info, oversight contact, count times
+- **Volunteer Portal** - Self-service login and assignment viewing
 
 ### Position & Assignment Management
 - **Unlimited Positions** - Create numbered positions per event
@@ -26,11 +36,12 @@ Theocratic Shift Scheduler is a comprehensive web application designed to manage
 - **Position Templates** - Reusable position configurations
 - **Bulk Operations** - Manage multiple positions efficiently
 - **Auto-Assignment Engine** - Priority-based assignment algorithm with conflict detection
+- **Drag-and-Drop** - Intuitive assignment creation
 
 ### Count Times System
 - **Count Sessions** - Track count times per event
 - **Position Counts** - Individual position count tracking
-- **Live Entry** - Real-time count entry via attendant dashboard
+- **Live Entry** - Real-time count entry via volunteer dashboard
 - **Count Analytics** - Reporting and analysis
 
 ### Oversight Management
@@ -45,8 +56,8 @@ Theocratic Shift Scheduler is a comprehensive web application designed to manage
 - **Admin Configuration** - Email settings management
 
 ### Import/Export
-- **CSV Import** - Bulk attendant data import
-- **Data Export** - Export attendants, events, assignments
+- **CSV Import** - Bulk volunteer data import
+- **Data Export** - Export volunteers, events, assignments
 - **Sample Templates** - CSV templates for data import
 
 ## 🛠️ Tech Stack
@@ -120,6 +131,9 @@ EMAIL_PORT="587"
 EMAIL_USER="your-email@gmail.com"
 EMAIL_PASSWORD="your-app-password"
 EMAIL_FROM="Theocratic Shift Scheduler <your-email@gmail.com>"
+
+# Google Maps (required for Location Library)
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY="your-google-maps-api-key"
 ```
 
 ## 📦 Available Scripts
@@ -141,20 +155,31 @@ theoshift/
 │   └── types/             # TypeScript type definitions
 ├── pages/                 # Next.js pages
 │   ├── api/              # API routes
+│   │   ├── events/       # Event API endpoints
+│   │   ├── locations/    # Location Library API endpoints
+│   │   └── volunteers/   # Volunteer API endpoints
 │   ├── admin/            # Admin pages
+│   │   └── locations.tsx # Location Library management
 │   ├── events/           # Event management pages
-│   └── attendants/       # Attendant management pages
+│   └── volunteer/        # Volunteer portal pages
 ├── components/            # React components
+│   ├── LocationSelector.tsx  # Location picker with autocomplete
+│   └── MapPreview.tsx        # Google Maps integration
 ├── features/              # Feature modules
 ├── prisma/               # Database schema and migrations
 │   ├── schema.prisma     # Prisma schema
 │   └── migrations/       # Database migrations
 ├── public/               # Static assets
 ├── scripts/              # Utility scripts
-├── mcp-blue-green/       # MCP deployment system
+├── tests/                # E2E tests (Playwright)
+├── release-notes/        # Version release notes
 ├── .windsurf/            # Windsurf IDE workflows
 │   └── workflows/        # Deployment workflows
-├── docs/                 # Documentation
+├── .cloudy-work/         # Control plane governance (submodule)
+├── _archive/             # Archived documentation
+├── DECISIONS.md          # Architectural decisions
+├── TASK-STATE.md         # Current task tracking
+├── TECH-DEBT.md          # Technical debt tracking
 ├── package.json
 ├── tsconfig.json
 ├── next.config.js
@@ -201,13 +226,13 @@ The deployment process follows three main workflows:
 
 ```bash
 # Check deployment status
-mcp3_get_deployment_status(app: "theoshift")
+mcp0_get_deployment_status(app: "theoshift")
 
 # Deploy to STANDBY
-mcp3_deploy_to_standby(app: "theoshift", pullGithub: true, runMigrations: false)
+mcp0_deploy_to_standby(app: "theoshift", pullGithub: true, runMigrations: false)
 
 # Switch traffic (after testing STANDBY)
-mcp3_switch_traffic(app: "theoshift", requireApproval: true)
+mcp0_switch_traffic(app: "theoshift", requireApproval: false)
 ```
 
 ### Manual Deployment (SSH)
@@ -216,9 +241,9 @@ If needed, you can deploy manually via SSH:
 
 ```bash
 # SSH to server
-ssh jwa  # Blue (10.92.3.24)
+ssh blue-theoshift  # Blue (10.92.3.24)
 # OR
-ssh jwg  # Green (10.92.3.22)
+ssh green-theoshift  # Green (10.92.3.22)
 
 # Navigate to project
 cd /opt/theoshift
@@ -243,7 +268,9 @@ pm2 restart theoshift-green
 - **Deployment Guide:** See `.windsurf/workflows/` for detailed deployment workflows
 - **API Documentation:** See `pages/api/` for API endpoint implementations
 - **Database Schema:** See `prisma/schema.prisma` for complete data model
-- **Infrastructure:** See `INFRASTRUCTURE_CONFIG.md` for server details
+- **Architectural Decisions:** See `DECISIONS.md` for key technical decisions
+- **Testing Policy:** See `TESTING-POLICY.md` for E2E testing requirements
+- **Release Notes:** See `release-notes/` for version history
 
 ## 🔐 Security
 
@@ -270,7 +297,24 @@ For issues or questions:
 
 ## 🔄 Version History
 
-- **v3.0.0** - Current version with MCP Blue-Green deployment
+- **v4.2.0** (2026-02-09) - Location Library
+  - Centralized location management with Google Maps integration
+  - LocationSelector component with autocomplete
+  - Admin locations page with CRUD operations
+  - Map preview and directions integration
+  - Usage tracking for popular locations
+
+- **v4.1.1** (2026-02-08) - Redirect Bug Fix
+  - Fixed localhost:3001 redirect issues in volunteer portal
+  - Corrected NextAuth redirect logic
+
+- **v3.11.0** (2026-02-05) - UI Modernization
+  - Modernized Volunteers and Positions pages
+  - Compact headers with inline stats
+  - Contextual bulk operations
+  - Mobile-responsive design improvements
+
+- **v3.0.0** - MCP Blue-Green Deployment
   - Event-centric architecture
   - Enhanced user management
   - Count times system

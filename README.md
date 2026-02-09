@@ -173,9 +173,7 @@ theoshift/
 ├── scripts/              # Utility scripts
 ├── tests/                # E2E tests (Playwright)
 ├── release-notes/        # Version release notes
-├── .windsurf/            # Windsurf IDE workflows
-│   └── workflows/        # Deployment workflows
-├── .cloudy-work/         # Control plane governance (submodule)
+├── .windsurf/            # IDE configuration and workflows
 ├── _archive/             # Archived documentation
 ├── DECISIONS.md          # Architectural decisions
 ├── TASK-STATE.md         # Current task tracking
@@ -189,83 +187,57 @@ theoshift/
 
 ## 🚢 Deployment
 
-This application uses the **MCP Blue-Green Deployment System** for zero-downtime deployments.
+This application uses a **Blue-Green Deployment System** for zero-downtime deployments.
 
 ### Deployment Architecture
 
-- **Blue Environment:** Container 134 (10.92.3.24) - https://blue.theoshift.com
-- **Green Environment:** Container 132 (10.92.3.22) - https://green.theoshift.com
-- **Database:** Container 131 (10.92.3.21) - Shared PostgreSQL
-- **Main URL:** https://theoshift.com (routes to LIVE server)
+- **Blue Environment** - Staging/Production environment
+- **Green Environment** - Staging/Production environment
+- **Database** - Shared PostgreSQL database
+- **Load Balancer** - Routes traffic to active environment
 
-Either Blue or Green can be LIVE or STANDBY. Status is dynamically determined by HAProxy routing.
+Either Blue or Green can be LIVE or STANDBY. The system uses automated health checks and traffic switching for safe deployments.
 
 ### Deployment Workflow
 
-The deployment process follows three main workflows:
+The deployment process follows these main steps:
 
-1. **`/bump`** - Version bump, release notes, deploy to STANDBY
-   - Increments version (patch/minor/major)
-   - Generates release notes
-   - Creates in-app announcements
-   - Updates help documentation
-   - Deploys to STANDBY server
+1. **Version Bump & Deploy to STANDBY**
+   - Increment version number (patch/minor/major)
+   - Generate release notes
+   - Deploy code to STANDBY environment
+   - Run automated tests
 
-2. **`/release`** - Switch traffic from STANDBY to LIVE
-   - Validates STANDBY environment
-   - Performs health checks
-   - Switches HAProxy routing
-   - STANDBY becomes new LIVE
+2. **Test STANDBY Environment**
+   - Run E2E test suite (Playwright)
+   - Verify all features work correctly
+   - Ensure 98%+ test pass rate
 
-3. **`/sync`** - Sync LIVE code to new STANDBY
-   - Deploys LIVE code to new STANDBY
-   - Ensures both environments are in sync
-   - Prepares for next deployment cycle
+3. **Switch Traffic to STANDBY**
+   - Validate STANDBY environment health
+   - Perform health checks
+   - Switch load balancer routing
+   - STANDBY becomes new LIVE (zero downtime)
 
-### MCP Commands
+4. **Sync New STANDBY**
+   - Deploy LIVE code to new STANDBY
+   - Ensure both environments match
+   - Prepare for next deployment cycle
 
-```bash
-# Check deployment status
-mcp0_get_deployment_status(app: "theoshift")
+### Deployment Requirements
 
-# Deploy to STANDBY
-mcp0_deploy_to_standby(app: "theoshift", pullGithub: true, runMigrations: false)
+- **Testing:** All deployments must pass E2E tests before going live
+- **Process Management:** PM2 for Node.js process management
+- **Database Migrations:** Prisma migrations applied before code deployment
+- **Environment Variables:** Properly configured on all environments
 
-# Switch traffic (after testing STANDBY)
-mcp0_switch_traffic(app: "theoshift", requireApproval: false)
-```
+### For Maintainers
 
-### Manual Deployment (SSH)
-
-If needed, you can deploy manually via SSH:
-
-```bash
-# SSH to server
-ssh blue-theoshift  # Blue (10.92.3.24)
-# OR
-ssh green-theoshift  # Green (10.92.3.22)
-
-# Navigate to project
-cd /opt/theoshift
-
-# Pull latest code
-git pull origin main
-
-# Install dependencies
-npm install
-
-# Build application
-npm run build
-
-# Restart PM2
-pm2 restart theoshift-blue
-# OR
-pm2 restart theoshift-green
-```
+Internal deployment documentation and infrastructure details are available in the private `.windsurf/workflows/` directory. Contact the project maintainer for access to deployment credentials and infrastructure.
 
 ## 📚 Documentation
 
-- **Deployment Guide:** See `.windsurf/workflows/` for detailed deployment workflows
+- **Contributing Guide:** See `CONTRIBUTING.md` for development setup and guidelines
 - **API Documentation:** See `pages/api/` for API endpoint implementations
 - **Database Schema:** See `prisma/schema.prisma` for complete data model
 - **Architectural Decisions:** See `DECISIONS.md` for key technical decisions
@@ -291,9 +263,10 @@ Private - All rights reserved
 ## 🆘 Support
 
 For issues or questions:
-1. Check the documentation in `.windsurf/workflows/`
-2. Review `INFRASTRUCTURE_CONFIG.md` for deployment details
-3. Contact the project maintainer
+1. Check `CONTRIBUTING.md` for development guidelines
+2. Review existing issues on GitHub
+3. Create a new issue with detailed information
+4. Contact the project maintainer for deployment access
 
 ## 🔄 Version History
 

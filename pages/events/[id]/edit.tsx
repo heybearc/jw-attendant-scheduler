@@ -279,6 +279,7 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
         capacity: formData.capacity ? parseInt(formData.capacity) : undefined,
         volunteersNeeded: formData.volunteersNeeded ? parseInt(formData.volunteersNeeded) : undefined,
         status: formData.status,
+        // Note: departmentTemplateId removed - causes Prisma errors as it's a relation field
         // APEX GUARDIAN: Oversight Management Fields
         circuitOverseerName: formData.circuitOverseerName || undefined,
         circuitOverseerPhone: formData.circuitOverseerPhone || undefined,

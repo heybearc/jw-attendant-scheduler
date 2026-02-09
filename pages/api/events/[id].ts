@@ -85,11 +85,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           updatedAt: new Date()
         }
 
-        // Add department template if provided (can be null to clear)
-        // Note: departmentTemplateId is mapped in schema, so we can use it directly
-        if (departmentTemplateId !== undefined) {
-          updateData.departmentTemplateId = departmentTemplateId || null
-        }
+        // Don't include departmentTemplateId in updateData - it causes Prisma errors
+        // The field exists in the database but Prisma treats it as a relation
 
         // Add oversight fields if provided (note: circuit/assembly use lowercase in schema)
         if (circuitOverseerName !== undefined) updateData.circuitoverseername = circuitOverseerName || null

@@ -1,4 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
+import { useLoadScript, Autocomplete } from '@react-google-maps/api'
+import MapPreview from './MapPreview'
+
+const libraries: ("places")[] = ["places"]
 
 interface Location {
   id: string
@@ -264,8 +268,35 @@ interface CreateLocationModalProps {
 function CreateLocationModal({ initialName, onClose, onSave }: CreateLocationModalProps) {
   const [name, setName] = useState(initialName)
   const [address, setAddress] = useState('')
+  const [latitude, setLatitude] = useState<number | null>(null)
+  const [longitude, setLongitude] = useState<number | null>(null)
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
+  const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null)
+
+  const { isLoaded } = useLoadScript({
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
+    libraries
+  })
+
+  const onLoad = (autocompleteInstance: google.maps.places.Autocomplete) => {
+    setAutocomplete(autocompleteInstance)
+  }
+
+  const onPlaceChanged = () => {
+    if (autocomplete) {
+      const place = autocomplete.getPlace()
+      
+      if (place.formatted_address) {
+        setAddress(place.formatted_address)
+      }
+      
+      if (place.geometry?.location) {
+        setLatitude(place.geometry.location.lat())
+        setLongitude(place.geometry.location.lng())
+      }
+    }
+  }
 
   const handleSave = async () => {
     if (!name.trim()) return
@@ -278,6 +309,8 @@ function CreateLocationModal({ initialName, onClose, onSave }: CreateLocationMod
         body: JSON.stringify({
           name: name.trim(),
           address: address.trim() || null,
+          latitude,
+          longitude,
           notes: notes.trim() || null
         })
       })
@@ -329,17 +362,51 @@ function CreateLocationModal({ initialName, onClose, onSave }: CreateLocationMod
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Address
             </label>
-            <input
-              type="text"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="123 Main St, City, State 12345"
-            />
+            {isLoaded ? (
+              <Autocomplete
+                onLoad={onLoad}
+                onPlaceChanged={onPlaceChanged}
+              >
+                <input
+                  type="text"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Start typing an address..."
+                />
+              </Autocomplete>
+            ) : (
+              <input
+                type="text"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="123 Main St, City, State 12345"
+              />
+            )}
             <p className="mt-1 text-xs text-gray-500">
-              We'll add Google Maps autocomplete in the next phase
+              {latitude && longitude ? (
+                <span className="text-green-600">
+                  ✓ Coordinates captured: {latitude.toFixed(6)}, {longitude.toFixed(6)}
+                </span>
+              ) : (
+                'Type to search for an address with Google Maps'
+              )}
             </p>
           </div>
+
+          {latitude && longitude && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Map Preview
+              </label>
+              <MapPreview
+                latitude={latitude}
+                longitude={longitude}
+                name={name}
+              />
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">

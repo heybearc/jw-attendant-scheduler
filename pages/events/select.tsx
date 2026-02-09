@@ -21,6 +21,8 @@ interface Event {
   status: string
   attendantsCount: number
   positionsCount: number
+  parentEventId?: string | null
+  childEvents?: Array<{ id: string; name: string }>
 }
 
 interface EventSelectPageProps {
@@ -33,6 +35,8 @@ export default function EventSelectPage({ events, userLastSeenVersion, releaseSu
   const { data: session } = useSession()
   const router = useRouter()
   const [error, setError] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [expandedEvents, setExpandedEvents] = useState<Set<string>>(new Set())
   const loading = false // No loading state needed with SSR
 
   const selectEvent = async (eventId: string) => {
@@ -91,6 +95,39 @@ export default function EventSelectPage({ events, userLastSeenVersion, releaseSu
         return '📅'
     }
   }
+
+  const toggleEventExpansion = (eventId: string) => {
+    const newExpanded = new Set(expandedEvents)
+    if (newExpanded.has(eventId)) {
+      newExpanded.delete(eventId)
+    } else {
+      newExpanded.add(eventId)
+    }
+    setExpandedEvents(newExpanded)
+  }
+
+  // Filter events based on search query
+  const filteredEvents = events.filter(event => {
+    if (!searchQuery) return true
+    const query = searchQuery.toLowerCase()
+    return (
+      event.name.toLowerCase().includes(query) ||
+      event.description?.toLowerCase().includes(query) ||
+      event.location?.toLowerCase().includes(query) ||
+      event.eventType.toLowerCase().includes(query)
+    )
+  })
+
+  // Organize events into parent/child hierarchy
+  const parentEvents = filteredEvents.filter(e => !e.parentEventId)
+  const childEventsMap = new Map<string, Event[]>()
+  filteredEvents.forEach(event => {
+    if (event.parentEventId) {
+      const children = childEventsMap.get(event.parentEventId) || []
+      children.push(event)
+      childEventsMap.set(event.parentEventId, children)
+    }
+  })
 
   // No loading state needed with SSR - data is always available
   if (!events) {
@@ -173,6 +210,44 @@ export default function EventSelectPage({ events, userLastSeenVersion, releaseSu
           </div>
         )}
 
+        {/* Search Bar */}
+        {events.length > 0 && (
+          <div className="max-w-6xl mx-auto mb-6">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search events by name, location, or type..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-4 py-3 pl-12 bg-white/90 backdrop-blur-sm text-gray-900 placeholder-gray-500 rounded-lg border-2 border-white/20 focus:border-white/40 focus:outline-none focus:ring-2 focus:ring-white/30 transition-all"
+              />
+              <svg
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+            {searchQuery && (
+              <p className="mt-2 text-sm text-blue-100">
+                Found {filteredEvents.length} event{filteredEvents.length !== 1 ? 's' : ''}
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Events Grid */}
         <div className="max-w-6xl mx-auto">
           {events.length === 0 ? (
@@ -193,77 +268,196 @@ export default function EventSelectPage({ events, userLastSeenVersion, releaseSu
                 )}
               </div>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {events.map((event) => (
-                <div
-                  key={event.id}
-                  className="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
-                  onClick={() => selectEvent(event.id)}
+          ) : filteredEvents.length === 0 ? (
+            <div className="text-center">
+              <div className="bg-white rounded-lg shadow-lg p-8 max-w-md mx-auto">
+                <div className="text-6xl mb-4">🔍</div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">No Events Found</h3>
+                <p className="text-gray-600 mb-6">
+                  No events match your search criteria. Try adjusting your search.
+                </p>
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
-                  <div className="p-6">
-                    {/* Event Status */}
-                    <div className="flex items-center justify-between mb-4">
-                      <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full border ${getStatusColor(event.status)}`}>
-                        {getStatusIcon(event.status)} {event.status.toUpperCase()}
-                      </span>
-                      <span className="text-sm text-gray-500">{event.eventType}</span>
+                  Clear Search
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {parentEvents.map((event) => {
+                const children = childEventsMap.get(event.id) || []
+                const hasChildren = children.length > 0
+                const isExpanded = expandedEvents.has(event.id)
+                
+                return (
+                  <div key={event.id}>
+                    {/* Parent Event Card */}
+                    <div className="relative">
+                      {hasChildren && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            toggleEventExpansion(event.id)
+                          }}
+                          className="absolute -left-8 top-6 z-10 w-6 h-6 bg-white rounded-full shadow-md flex items-center justify-center hover:bg-gray-50 transition-colors"
+                        >
+                          <svg
+                            className={`w-4 h-4 text-gray-600 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </button>
+                      )}
+                      <div
+                        className="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+                        onClick={() => selectEvent(event.id)}
+                      >
+                        <div className="p-6">
+                          <div className="flex items-center justify-between mb-4">
+                            <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full border ${getStatusColor(event.status)}`}>
+                              {getStatusIcon(event.status)} {event.status.toUpperCase()}
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-gray-500">{event.eventType}</span>
+                              {hasChildren && (
+                                <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 rounded-full">
+                                  {children.length} child event{children.length !== 1 ? 's' : ''}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <h3 className="text-xl font-bold text-gray-900 mb-2">
+                            {event.name}
+                          </h3>
+
+                          {event.description && (
+                            <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                              {event.description}
+                            </p>
+                          )}
+
+                          <div className="space-y-2 mb-4">
+                            <div className="flex items-center text-sm text-gray-600">
+                              <span className="mr-2">📅</span>
+                              {(() => {
+                                try {
+                                  const startPart = event.startDate.split('T')[0]
+                                  const endPart = event.endDate.split('T')[0]
+                                  const start = format(parseISO(startPart + 'T12:00:00'), 'MMM d, yyyy')
+                                  const end = format(parseISO(endPart + 'T12:00:00'), 'MMM d, yyyy')
+                                  return `${start} - ${end}`
+                                } catch {
+                                  return 'Invalid date range'
+                                }
+                              })()}
+                            </div>
+                            <div className="flex items-center text-sm text-gray-600">
+                              <span className="mr-2">📍</span>
+                              {event.location}
+                            </div>
+                          </div>
+
+                          <div className="flex justify-between text-sm text-gray-500 mb-4">
+                            <span>👥 {event.attendantsCount} volunteers</span>
+                            <span>📋 {event.positionsCount} positions</span>
+                          </div>
+
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              selectEvent(event.id)
+                            }}
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                          >
+                            Select Event
+                          </button>
+                        </div>
+                      </div>
                     </div>
 
-                    {/* Event Name */}
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">
-                      {event.name}
-                    </h3>
+                    {/* Child Events */}
+                    {hasChildren && isExpanded && (
+                      <div className="ml-8 mt-4 space-y-4 relative">
+                        {/* Vertical connector line */}
+                        <div className="absolute left-0 top-0 bottom-4 w-px bg-gray-300"></div>
+                        
+                        {children.map((childEvent) => (
+                          <div key={childEvent.id} className="relative pl-8">
+                            {/* Horizontal connector */}
+                            <div className="absolute left-0 top-6 w-8 h-px bg-gray-300"></div>
+                            
+                            <div
+                              className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer border-l-4 border-purple-400"
+                              onClick={() => selectEvent(childEvent.id)}
+                            >
+                              <div className="p-4">
+                                <div className="flex items-center justify-between mb-3">
+                                  <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full border ${getStatusColor(childEvent.status)}`}>
+                                    {getStatusIcon(childEvent.status)} {childEvent.status.toUpperCase()}
+                                  </span>
+                                  <span className="text-xs text-gray-500">{childEvent.eventType}</span>
+                                </div>
 
-                    {/* Event Description */}
-                    {event.description && (
-                      <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                        {event.description}
-                      </p>
+                                <h4 className="text-lg font-semibold text-gray-900 mb-2">
+                                  {childEvent.name}
+                                </h4>
+
+                                {childEvent.description && (
+                                  <p className="text-gray-600 text-sm mb-3 line-clamp-1">
+                                    {childEvent.description}
+                                  </p>
+                                )}
+
+                                <div className="space-y-1.5 mb-3">
+                                  <div className="flex items-center text-xs text-gray-600">
+                                    <span className="mr-2">📅</span>
+                                    {(() => {
+                                      try {
+                                        const startPart = childEvent.startDate.split('T')[0]
+                                        const endPart = childEvent.endDate.split('T')[0]
+                                        const start = format(parseISO(startPart + 'T12:00:00'), 'MMM d, yyyy')
+                                        const end = format(parseISO(endPart + 'T12:00:00'), 'MMM d, yyyy')
+                                        return `${start} - ${end}`
+                                      } catch {
+                                        return 'Invalid date range'
+                                      }
+                                    })()}
+                                  </div>
+                                  <div className="flex items-center text-xs text-gray-600">
+                                    <span className="mr-2">📍</span>
+                                    {childEvent.location}
+                                  </div>
+                                </div>
+
+                                <div className="flex justify-between text-xs text-gray-500 mb-3">
+                                  <span>👥 {childEvent.attendantsCount}</span>
+                                  <span>📋 {childEvent.positionsCount}</span>
+                                </div>
+
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    selectEvent(childEvent.id)
+                                  }}
+                                  className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm"
+                                >
+                                  Select Child Event
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     )}
-
-                    {/* Event Details */}
-                    <div className="space-y-2 mb-4">
-                      <div className="flex items-center text-sm text-gray-600">
-                        <span className="mr-2">📅</span>
-                        {(() => {
-                          // Parse date without timezone conversion
-                          try {
-                            const startPart = event.startDate.split('T')[0]
-                            const endPart = event.endDate.split('T')[0]
-                            const start = format(parseISO(startPart + 'T12:00:00'), 'MMM d, yyyy')
-                            const end = format(parseISO(endPart + 'T12:00:00'), 'MMM d, yyyy')
-                            return `${start} - ${end}`
-                          } catch {
-                            return 'Invalid date range'
-                          }
-                        })()}
-                      </div>
-                      <div className="flex items-center text-sm text-gray-600">
-                        <span className="mr-2">📍</span>
-                        {event.location}
-                      </div>
-                    </div>
-
-                    {/* Event Stats */}
-                    <div className="flex justify-between text-sm text-gray-500 mb-4">
-                      <span>👥 {event.attendantsCount} volunteers</span>
-                      <span>📋 {event.positionsCount} positions</span>
-                    </div>
-
-                    {/* Select Button */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        selectEvent(event.id)
-                      }}
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-                    >
-                      Select Event
-                    </button>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>
@@ -376,7 +570,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     location: event.location || '',
     status: event.status,
     attendantsCount: event.attendantsCount,
-    positionsCount: event.positionsCount
+    positionsCount: event.positionsCount,
+    parentEventId: event.parentEventId || null,
+    childEvents: event.childEvents || []
   }))
 
   // Get user's lastSeenReleaseVersion
@@ -390,7 +586,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
   return {
     props: {
-      events: eventsWithCounts,
+      events: events,
       userLastSeenVersion: currentUser?.lastSeenReleaseVersion || null,
       releaseSummary: latestRelease?.summary || null
     }

@@ -188,7 +188,14 @@ export async function getUserEvents(userId: string) {
           endDate: true,
           eventType: true,
           location: true,
-          venue: true
+          venue: true,
+          parentEventId: true,
+          childEvents: {
+            select: {
+              id: true,
+              name: true
+            }
+          }
         },
         orderBy: {
           startDate: 'desc'
@@ -216,7 +223,14 @@ export async function getUserEvents(userId: string) {
             endDate: true,
             eventType: true,
             location: true,
-            venue: true
+            venue: true,
+            parentEventId: true,
+            childEvents: {
+              select: {
+                id: true,
+                name: true
+              }
+            }
           }
         }
       },

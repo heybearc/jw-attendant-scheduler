@@ -84,13 +84,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           updatedAt: new Date()
         }
 
-        // Handle locationId separately using raw SQL since Prisma treats it as a relation
-        if (locationId !== undefined) {
-          updateData.locationId = locationId || null
-        }
-
-        // Don't include departmentTemplateId in updateData - it causes Prisma errors
-        // The field exists in the database but Prisma treats it as a relation
+        // Don't include departmentTemplateId or locationId in updateData - they cause Prisma errors
+        // These fields exist in the database but Prisma treats them as relation fields
 
         // Add oversight fields if provided (note: circuit/assembly use lowercase in schema)
         if (circuitOverseerName !== undefined) updateData.circuitoverseername = circuitOverseerName || null
@@ -104,10 +99,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (volunteerOverseerEmail !== undefined) updateData.volunteerOverseerEmail = volunteerOverseerEmail || null
         if (volunteerOverseerAssistants !== undefined) updateData.volunteerOverseerAssistants = volunteerOverseerAssistants || []
 
+        // Update the event
         const event = await prisma.events.update({
           where: { id },
           data: updateData
         })
+
+        // Update location_id separately using raw SQL since Prisma treats it as a relation field
+        if (locationId !== undefined) {
+          await prisma.$executeRawUnsafe(
+            `UPDATE events SET location_id = $1 WHERE id = $2`,
+            locationId || null,
+            id
+          )
+        }
 
         return res.status(200).json({ success: true, data: event })
 

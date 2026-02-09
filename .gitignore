@@ -80,3 +80,13 @@ tests/*.bak.*
 .windsurf/workflows/*.md
 .env.test
 tsconfig.tsbuildinfo
+
+# Infrastructure and deployment internals (sensitive information)
+docs/deployment/*INFRASTRUCTURE*.md
+docs/deployment/*INTERNAL*.md
+docs/deployment/THEOSHIFT_INFRASTRUCTURE_MIGRATION.md
+scripts/show-admin-creds.sh
+scripts/*-internal.sh
+scripts/post-deploy-health-check.sh
+mcp-blue-green/config.json
+mcp-blue-green/*-internal.*

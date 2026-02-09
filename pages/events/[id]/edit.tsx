@@ -303,10 +303,10 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
       // Note: departmentTemplateId removed - it causes Prisma errors as a relation field
       // The department template is already set on the event and doesn't need updating here
       
-      // Add locationId separately for the API to handle with raw SQL
+      // Send locationId separately so API can use it with Prisma relations (connect/disconnect)
       const requestBody = {
         ...submitData,
-        locationId: formData.locationId || undefined
+        locationId: formData.locationId || null  // Send as separate field for relation handling
       }
 
       const response = await fetch(`/api/events/${eventId}`, {

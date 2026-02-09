@@ -84,8 +84,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           updatedAt: new Date()
         }
 
-        // Don't include departmentTemplateId or locationId in updateData - they cause Prisma errors
-        // These fields exist in the database but Prisma treats them as relation fields
+        // Handle location relation properly using Prisma's connect/disconnect pattern
+        if (locationId !== undefined) {
+          if (locationId) {
+            // Connect to the location
+            updateData.locationRef = {
+              connect: { id: locationId }
+            }
+          } else {
+            // Disconnect from location (set to null)
+            updateData.locationRef = {
+              disconnect: true
+            }
+          }
+        }
 
         // Add oversight fields if provided (note: circuit/assembly use lowercase in schema)
         if (circuitOverseerName !== undefined) updateData.circuitoverseername = circuitOverseerName || null
@@ -99,20 +111,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (volunteerOverseerEmail !== undefined) updateData.volunteerOverseerEmail = volunteerOverseerEmail || null
         if (volunteerOverseerAssistants !== undefined) updateData.volunteerOverseerAssistants = volunteerOverseerAssistants || []
 
-        // Update the event
+        // Update the event using Prisma relations
         const event = await prisma.events.update({
           where: { id },
           data: updateData
         })
-
-        // Update location_id separately using raw SQL since Prisma treats it as a relation field
-        if (locationId !== undefined) {
-          await prisma.$executeRawUnsafe(
-            `UPDATE events SET location_id = $1 WHERE id = $2`,
-            locationId || null,
-            id
-          )
-        }
 
         return res.status(200).json({ success: true, data: event })
 

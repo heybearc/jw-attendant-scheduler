@@ -78,11 +78,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           startTime,
           endTime,
           location,
-          locationId: locationId || null,
           status,
           capacity: capacity ? parseInt(capacity) : null,
           volunteersNeeded: (volunteersNeeded || attendantsNeeded) ? parseInt(volunteersNeeded || attendantsNeeded) : null,
           updatedAt: new Date()
+        }
+
+        // Handle locationId separately using raw SQL since Prisma treats it as a relation
+        if (locationId !== undefined) {
+          updateData.locationId = locationId || null
         }
 
         // Don't include departmentTemplateId in updateData - it causes Prisma errors

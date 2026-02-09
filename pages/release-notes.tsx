@@ -322,14 +322,15 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       // Parse markdown content for metadata if no frontmatter
       let parsedData = data
       if (!data.version) {
-        // Extract from markdown heading (e.g., "# Release v2.4.1")
-        const versionMatch = content.match(/^#\s+Release\s+v?(\d+\.\d+\.\d+)/m)
-        const dateMatch = content.match(/\*\*Release Date:\*\*\s+(.+)/m)
+        // Extract from markdown heading (e.g., "# Release v2.4.1" or "# What's New in Version 2.4.1")
+        const versionMatch = content.match(/^#\s+(?:Release\s+v?|What's New in (?:TheoShift )?(?:Version )?v?)(\d+\.\d+\.\d+)/m)
+        // Try both "Released:" and "Release Date:" formats
+        const dateMatch = content.match(/\*\*(?:Released|Release Date):\*\*\s+(.+?)(?:\s{2,}|\n|$)/m)
         const summaryMatch = content.match(/##\s+Summary\s+([\s\S]+?)(?=\n##|\n###|$)/)
         
         parsedData = {
           version: versionMatch?.[1] || versionFromFilename,
-          date: dateMatch?.[1] || '',
+          date: dateMatch?.[1]?.trim() || '',
           type: versionFromFilename.split('.')[2] === '0' 
             ? (versionFromFilename.split('.')[1] === '0' ? 'major' : 'minor')
             : 'patch',

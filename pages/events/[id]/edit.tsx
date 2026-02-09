@@ -300,14 +300,8 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
         })()
       }
 
-      // Only add departmentTemplateId if it has a valid non-empty value
-      const deptId = formData.departmentTemplateId?.trim()
-      if (deptId && deptId !== '') {
-        submitData.departmentTemplateId = deptId
-      } else {
-        // Explicitly set to null to clear the template
-        submitData.departmentTemplateId = null
-      }
+      // Note: departmentTemplateId removed - it causes Prisma errors as a relation field
+      // The department template is already set on the event and doesn't need updating here
 
       const response = await fetch(`/api/events/${eventId}`, {
         method: 'PUT',

@@ -4,6 +4,7 @@ import { authOptions } from '../api/auth/[...nextauth]'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
+import AdminLayout from '../../components/AdminLayout'
 
 /**
  * Phase 4C Week 2: Assignment Templates Management
@@ -92,34 +93,20 @@ export default function AssignmentTemplatesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => router.back()}
-                className="text-gray-600 hover:text-gray-900"
-              >
-                ← Back
-              </button>
-              <h1 className="text-2xl font-bold text-gray-900">
-                📋 Assignment Templates
-              </h1>
-            </div>
-            <button
-              onClick={() => router.push('/admin/assignment-templates/create')}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-            >
-              + Create Template
-            </button>
-          </div>
-        </div>
+    <AdminLayout title="Assignment Templates">
+      {/* Action Bar */}
+      <div className="flex justify-end mb-6">
+        <button
+          onClick={() => router.push('/admin/assignment-templates/create')}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
+        >
+          <span>+</span>
+          <span>Create Template</span>
+        </button>
       </div>
 
       {/* Filters */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div>
         <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
@@ -349,8 +336,7 @@ export default function AssignmentTemplatesPage() {
           </div>
         </div>
       )}
-
-    </div>
+    </AdminLayout>
   )
 }
 

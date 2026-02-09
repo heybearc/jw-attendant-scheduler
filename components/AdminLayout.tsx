@@ -111,8 +111,8 @@ export default function AdminLayout({ children, title, breadcrumbs = [], userLas
         </div>
       </nav>
 
-      {/* Two-Level Tab Navigation */}
-      <div className="bg-white border-b border-gray-200">
+      {/* Desktop: Two-Level Tab Navigation */}
+      <div className="hidden md:block bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Top Level Tabs */}
           <div className="flex gap-8 border-b border-gray-200">
@@ -148,7 +148,7 @@ export default function AdminLayout({ children, title, breadcrumbs = [], userLas
             </Link>
           </div>
 
-          {/* Second Level Tabs - Scrollable on mobile */}
+          {/* Second Level Tabs */}
           <div className="overflow-x-auto -mb-px">
             <nav className="flex gap-1 min-w-max py-2">
               {secondLevelTabs.map((tab) => {
@@ -174,6 +174,147 @@ export default function AdminLayout({ children, title, breadcrumbs = [], userLas
           </div>
         </div>
       </div>
+
+      {/* Mobile: Hamburger Menu Button */}
+      <div className="md:hidden bg-white border-b border-gray-200">
+        <div className="px-4 py-3 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900">
+            {currentSection === 'admin' && 'Admin'}
+            {currentSection === 'events' && 'Events'}
+            {currentSection === 'help' && 'Help'}
+          </h2>
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors touch-manipulation"
+            aria-label="Toggle menu"
+          >
+            <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {mobileMenuOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              )}
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile: Slide-out Menu (PWA-friendly) */}
+      {mobileMenuOpen && (
+        <>
+          {/* Backdrop */}
+          <div 
+            className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          
+          {/* Menu Panel */}
+          <div className="md:hidden fixed inset-y-0 right-0 w-80 max-w-[85vw] bg-white shadow-xl z-50 overflow-y-auto">
+            <div className="p-4">
+              {/* Close Button */}
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-gray-900">Navigation</h3>
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors touch-manipulation"
+                  aria-label="Close menu"
+                >
+                  <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Admin Functions */}
+              <div className="mb-6">
+                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-3">
+                  Admin Functions
+                </h4>
+                <nav className="space-y-1">
+                  {adminTabs.map((tab) => {
+                    const isActive = router.pathname === tab.href || 
+                      (tab.href !== '/admin' && router.pathname.startsWith(tab.href))
+                    
+                    return (
+                      <Link
+                        key={tab.href}
+                        href={tab.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`flex items-center gap-3 px-3 py-3 rounded-lg text-base font-medium transition-colors touch-manipulation ${
+                          isActive
+                            ? 'bg-blue-50 text-blue-700'
+                            : 'text-gray-700 hover:bg-gray-50 active:bg-gray-100'
+                        }`}
+                      >
+                        <span className="text-xl">{tab.icon}</span>
+                        <span>{tab.label}</span>
+                      </Link>
+                    )
+                  })}
+                </nav>
+              </div>
+
+              {/* Event Management */}
+              <div className="mb-6">
+                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-3">
+                  Event Management
+                </h4>
+                <nav className="space-y-1">
+                  {eventTabs.map((tab) => {
+                    const isActive = router.pathname === tab.href || 
+                      (tab.href !== '/events/select' && router.pathname.startsWith(tab.href))
+                    
+                    return (
+                      <Link
+                        key={tab.href}
+                        href={tab.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`flex items-center gap-3 px-3 py-3 rounded-lg text-base font-medium transition-colors touch-manipulation ${
+                          isActive
+                            ? 'bg-green-50 text-green-700'
+                            : 'text-gray-700 hover:bg-gray-50 active:bg-gray-100'
+                        }`}
+                      >
+                        <span className="text-xl">{tab.icon}</span>
+                        <span>{tab.label}</span>
+                      </Link>
+                    )
+                  })}
+                </nav>
+              </div>
+
+              {/* Help & Support */}
+              <div className="mb-6">
+                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-3">
+                  Help & Support
+                </h4>
+                <nav className="space-y-1">
+                  {helpTabs.map((tab) => {
+                    const isActive = router.pathname === tab.href || 
+                      (tab.href !== '/help' && router.pathname.startsWith(tab.href))
+                    
+                    return (
+                      <Link
+                        key={tab.href}
+                        href={tab.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`flex items-center gap-3 px-3 py-3 rounded-lg text-base font-medium transition-colors touch-manipulation ${
+                          isActive
+                            ? 'bg-blue-50 text-blue-700'
+                            : 'text-gray-700 hover:bg-gray-50 active:bg-gray-100'
+                        }`}
+                      >
+                        <span className="text-xl">{tab.icon}</span>
+                        <span>{tab.label}</span>
+                      </Link>
+                    )
+                  })}
+                </nav>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

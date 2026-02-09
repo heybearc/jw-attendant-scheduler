@@ -275,11 +275,11 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
         startTime: formData.startTime,
         endTime: formData.endTime || undefined,
         location: formData.location,
-        locationId: formData.locationId || undefined,
         capacity: formData.capacity ? parseInt(formData.capacity) : undefined,
         volunteersNeeded: formData.volunteersNeeded ? parseInt(formData.volunteersNeeded) : undefined,
         status: formData.status,
-        // Note: departmentTemplateId removed - causes Prisma errors as it's a relation field
+        // Note: departmentTemplateId and locationId removed - they cause Prisma errors as relation fields
+        // locationId is sent separately for raw SQL update
         // APEX GUARDIAN: Oversight Management Fields
         circuitOverseerName: formData.circuitOverseerName || undefined,
         circuitOverseerPhone: formData.circuitOverseerPhone || undefined,
@@ -302,6 +302,12 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
 
       // Note: departmentTemplateId removed - it causes Prisma errors as a relation field
       // The department template is already set on the event and doesn't need updating here
+      
+      // Add locationId separately for the API to handle with raw SQL
+      const requestBody = {
+        ...submitData,
+        locationId: formData.locationId || undefined
+      }
 
       const response = await fetch(`/api/events/${eventId}`, {
         method: 'PUT',
@@ -309,7 +315,7 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify(submitData),
+        body: JSON.stringify(requestBody),
       })
 
       if (!response.ok) {

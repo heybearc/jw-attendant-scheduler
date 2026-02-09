@@ -4,6 +4,7 @@ import { authOptions } from '../../api/auth/[...nextauth]'
 import EventPageWrapper from '../../../components/EventPageWrapper'
 import FilterPresets from '../../../components/FilterPresets'
 import { VolunteerBadges } from '../../../components/VolunteerBadges'
+import VolunteerDetailsPopup from '../../../components/VolunteerDetailsPopup'
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 
@@ -1440,21 +1441,28 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                           />
                         </td>
                         <td className="px-3 py-3">
-                          <div className="text-sm font-medium text-gray-900">
-                            {attendant.firstName} {attendant.lastName}
-                          </div>
-                          <div className="text-xs text-gray-500 sm:hidden">
-                            {attendant.email}
-                          </div>
-                          <VolunteerBadges
-                            isActive={attendant.isActive}
-                            profileVerificationRequired={attendant.profileVerificationRequired}
-                            profileVerifiedAt={attendant.profileVerifiedAt}
-                            availabilityStatus={attendant.availability?.status as any}
-                            availabilityNotes={attendant.availability?.notes}
-                            formsOfService={attendant.formsOfService}
-                            onAvailabilityClick={() => handleAvailabilityClick(attendant.id)}
-                          />
+                          <VolunteerDetailsPopup
+                            volunteer={attendant}
+                            onEdit={() => handleEditAttendant(attendant)}
+                          >
+                            <div>
+                              <div className="text-sm font-medium text-gray-900 hover:text-blue-600 transition-colors">
+                                {attendant.firstName} {attendant.lastName}
+                              </div>
+                              <div className="text-xs text-gray-500 sm:hidden">
+                                {attendant.email}
+                              </div>
+                              <VolunteerBadges
+                                isActive={attendant.isActive}
+                                profileVerificationRequired={attendant.profileVerificationRequired}
+                                profileVerifiedAt={attendant.profileVerifiedAt}
+                                availabilityStatus={attendant.availability?.status as any}
+                                availabilityNotes={attendant.availability?.notes}
+                                formsOfService={attendant.formsOfService}
+                                onAvailabilityClick={() => handleAvailabilityClick(attendant.id)}
+                              />
+                            </div>
+                          </VolunteerDetailsPopup>
                         </td>
                         <td className="px-3 py-3 whitespace-nowrap hidden lg:table-cell">
                           <div className="text-sm text-gray-900 truncate">{attendant.email}</div>
@@ -2364,11 +2372,18 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                 </div>
 
                 {/* Forms of Service */}
-                {viewingAttendant.formsOfService && (
+                {viewingAttendant.formsOfService && Array.isArray(viewingAttendant.formsOfService) && viewingAttendant.formsOfService.length > 0 && (
                   <div className="bg-gray-50 rounded-lg p-4">
                     <h4 className="text-sm font-semibold text-gray-700 mb-3">Forms of Service</h4>
                     <div className="flex flex-wrap gap-2">
-                      <VolunteerBadges formsOfService={viewingAttendant.formsOfService} />
+                      {viewingAttendant.formsOfService.map((service: string, idx: number) => (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                        >
+                          {service}
+                        </span>
+                      ))}
                     </div>
                   </div>
                 )}

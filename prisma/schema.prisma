@@ -357,7 +357,7 @@ model events {
   endDate                        DateTime                         @db.Date
   location                       String?
   venue                          String?
-  locationId                     String?
+  locationId                     String?                          @map("location_id")
   isActive                       Boolean                          @default(true)
   settings                       Json?
   createdAt                      DateTime                         @default(now())

@@ -120,8 +120,7 @@ export default async function handler(
     const eventVolunteer = await prisma.event_volunteers.findFirst({
       where: {
         eventId: eventId as string,
-        volunteerId: volunteerId as string,
-        ivsImportBatchId: { not: null } as any // Ensure it's an IVS volunteer
+        volunteerId: volunteerId as string
       }
     })
 

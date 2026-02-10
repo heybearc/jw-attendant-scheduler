@@ -5,8 +5,8 @@ import { Page } from '@playwright/test';
  */
 
 export async function login(page: Page, email?: string, password?: string) {
-  const testEmail = email || process.env.TEST_USER_EMAIL ;
-  const testPassword = password || process.env.TEST_USER_PASSWORD ;
+  const testEmail = email || process.env.TEST_USER_EMAIL || 'admin@theoshift.local';
+  const testPassword = password || process.env.TEST_USER_PASSWORD || 'AdminPass123!';
   
   await page.goto('/auth/signin');
   await page.fill('#email', testEmail);
@@ -66,4 +66,14 @@ export async function selectEvent(page: Page, eventName?: string) {
     await eventCard.click();
     await page.waitForTimeout(1000);
   }
+}
+
+export async function navigateToEventById(page: Page, eventId: string) {
+  await page.goto(`/events/${eventId}`);
+  await waitForDataLoad(page);
+}
+
+export async function navigateToEventPage(page: Page, eventId: string, pagePath: string) {
+  await page.goto(`/events/${eventId}/${pagePath}`);
+  await waitForDataLoad(page);
 }

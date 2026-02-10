@@ -9,7 +9,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method !== 'PUT' && req.method !== 'PATCH') {
+  if (req.method !== 'PUT' && req.method !== 'PATCH' && req.method !== 'DELETE') {
     return res.status(405).json({ success: false, message: 'Method not allowed' })
   }
 
@@ -32,6 +32,29 @@ export default async function handler(
 
     if (!eventPermission) {
       return res.status(403).json({ success: false, message: 'Forbidden - Admin access required' })
+    }
+
+    // Handle DELETE request
+    if (req.method === 'DELETE') {
+      const eventVolunteer = await prisma.event_volunteers.findFirst({
+        where: {
+          eventId: eventId as string,
+          volunteerId: volunteerId as string
+        }
+      })
+
+      if (!eventVolunteer) {
+        return res.status(404).json({ success: false, message: 'IVS volunteer not found in event' })
+      }
+
+      await prisma.event_volunteers.delete({
+        where: { id: eventVolunteer.id }
+      })
+
+      return res.status(200).json({
+        success: true,
+        message: 'Volunteer deleted successfully'
+      })
     }
 
     const {

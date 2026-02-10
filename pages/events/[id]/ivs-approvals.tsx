@@ -290,6 +290,48 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
     }
   }
 
+  const handleDeleteVolunteer = async (volunteerId: string, name: string) => {
+    if (!confirm(`Delete ${name} from IVS Approvals? This cannot be undone.`)) return
+
+    try {
+      const response = await fetch(`/api/events/${eventId}/ivs/volunteers/${volunteerId}`, {
+        method: 'DELETE',
+      })
+
+      if (response.ok) {
+        alert('Volunteer deleted successfully')
+        fetchVolunteers()
+      } else {
+        alert('Failed to delete volunteer')
+      }
+    } catch (error) {
+      console.error('Error deleting volunteer:', error)
+      alert('Error deleting volunteer')
+    }
+  }
+
+  const handleClearAll = async () => {
+    if (!confirm(`Delete ALL ${volunteers.length} volunteers from IVS Approvals? This cannot be undone.`)) return
+    if (!confirm('Are you ABSOLUTELY sure? This will permanently delete all IVS volunteer records.')) return
+
+    try {
+      const response = await fetch(`/api/events/${eventId}/ivs/volunteers/clear-all`, {
+        method: 'DELETE',
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        alert(`Successfully deleted ${result.deleted} volunteer(s)`)
+        fetchVolunteers()
+      } else {
+        alert('Failed to clear volunteers')
+      }
+    } catch (error) {
+      console.error('Error clearing volunteers:', error)
+      alert('Error clearing volunteers')
+    }
+  }
+
   const filteredVolunteers = volunteers.filter(v => {
     if (filterDepartment && v.submittedBy !== filterDepartment) return false
     if (filterStatus && v.approvalStatus !== filterStatus) return false
@@ -321,7 +363,7 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
         <div className="p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">IVS Volunteer Approvals</h1>
-          <div className="flex gap-2 mb-4">
+          <div className="flex gap-2 mb-4 flex-wrap">
             <button
               onClick={() => setShowImportModal(true)}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
@@ -334,6 +376,20 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
             >
               Export List
             </button>
+            <button
+              onClick={() => router.push(`/events/${eventId}/ivs-checkin`)}
+              className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
+            >
+              📱 Mobile Check-In
+            </button>
+            {volunteers.length > 0 && (
+              <button
+                onClick={handleClearAll}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+              >
+                Clear All
+              </button>
+            )}
             
             {selectedVolunteers.length > 0 && (
               <div className="ml-auto flex gap-2 items-center">
@@ -490,7 +546,7 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
                       )}
                     </td>
                     <td className="px-4 py-3 text-sm">
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 flex-wrap">
                         <button
                           onClick={() => handleEdit(volunteer)}
                           className="px-3 py-1 bg-blue-600 text-white rounded-md text-xs hover:bg-blue-700"
@@ -521,6 +577,12 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
                             Check In
                           </button>
                         )}
+                        <button
+                          onClick={() => handleDeleteVolunteer(volunteer.id, `${volunteer.firstName} ${volunteer.lastName}`)}
+                          className="px-3 py-1 bg-gray-600 text-white rounded-md text-xs hover:bg-gray-700"
+                        >
+                          Delete
+                        </button>
                       </div>
                     </td>
                   </tr>

@@ -6,6 +6,7 @@ import { useRouter } from 'next/router'
 import EventPageLayout from '../../../components/EventPageLayout'
 import { TemplateProvider } from '../../../contexts/TemplateContext'
 import { PrismaClient } from '@prisma/client'
+import EditVolunteerModal from '../../../components/EditVolunteerModal'
 
 const prisma = new PrismaClient()
 
@@ -43,6 +44,8 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
   const [filterRound, setFilterRound] = useState('')
   const [departments, setDepartments] = useState<string[]>([])
   const [rounds, setRounds] = useState<number[]>([])
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingVolunteer, setEditingVolunteer] = useState<IVSVolunteer | null>(null)
 
   useEffect(() => {
     fetchVolunteers()
@@ -170,6 +173,37 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
     } catch (error) {
       console.error('Error checking in:', error)
       alert('Error checking in volunteer')
+    }
+  }
+
+  const handleEdit = (volunteer: IVSVolunteer) => {
+    setEditingVolunteer(volunteer)
+    setShowEditModal(true)
+  }
+
+  const handleQuickApprove = async (volunteerId: string, approve: boolean) => {
+    const reason = !approve ? prompt('Reason for denial:') : null
+    if (!approve && !reason) return
+
+    try {
+      const response = await fetch(`/api/events/${eventId}/ivs/volunteers/${volunteerId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ivsApprovalStatus: approve ? 'Approved' : 'Not Approved',
+          ...(reason && { ivsDeniedReason: reason })
+        }),
+      })
+
+      if (response.ok) {
+        alert(`Volunteer ${approve ? 'approved' : 'denied'} successfully!`)
+        fetchVolunteers()
+      } else {
+        alert('Failed to update approval status')
+      }
+    } catch (error) {
+      console.error('Error updating approval:', error)
+      alert('Error updating approval status')
     }
   }
 
@@ -329,14 +363,38 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
                       )}
                     </td>
                     <td className="px-4 py-3 text-sm">
-                      {volunteer.earlyCheckinEligible && !volunteer.checkedInAt && (
+                      <div className="flex gap-2">
                         <button
-                          onClick={() => handleCheckIn(volunteer.id)}
-                          className="px-3 py-1 bg-green-600 text-white rounded-md text-xs hover:bg-green-700"
+                          onClick={() => handleEdit(volunteer)}
+                          className="px-3 py-1 bg-blue-600 text-white rounded-md text-xs hover:bg-blue-700"
                         >
-                          Check In
+                          Edit
                         </button>
-                      )}
+                        {volunteer.approvalStatus === 'Pending' && (
+                          <>
+                            <button
+                              onClick={() => handleQuickApprove(volunteer.id, true)}
+                              className="px-3 py-1 bg-green-600 text-white rounded-md text-xs hover:bg-green-700"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              onClick={() => handleQuickApprove(volunteer.id, false)}
+                              className="px-3 py-1 bg-red-600 text-white rounded-md text-xs hover:bg-red-700"
+                            >
+                              Deny
+                            </button>
+                          </>
+                        )}
+                        {volunteer.earlyCheckinEligible && !volunteer.checkedInAt && (
+                          <button
+                            onClick={() => handleCheckIn(volunteer.id)}
+                            className="px-3 py-1 bg-purple-600 text-white rounded-md text-xs hover:bg-purple-700"
+                          >
+                            Check In
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -362,7 +420,39 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
             onExport={handleExport}
           />
         )}
-        </div>
+
+        {/* Edit Modal */}
+        {showEditModal && editingVolunteer && (
+          <EditVolunteerModal
+            volunteer={editingVolunteer}
+            onClose={() => {
+              setShowEditModal(false)
+              setEditingVolunteer(null)
+            }}
+            onSave={async (data) => {
+              try {
+                const response = await fetch(`/api/events/${eventId}/ivs/volunteers/${editingVolunteer.id}`, {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(data),
+                })
+
+                if (response.ok) {
+                  alert('Volunteer updated successfully!')
+                  setShowEditModal(false)
+                  setEditingVolunteer(null)
+                  fetchVolunteers()
+                } else {
+                  alert('Failed to update volunteer')
+                }
+              } catch (error) {
+                console.error('Error updating volunteer:', error)
+                alert('Error updating volunteer')
+              }
+            }}
+          />
+        )}
+      </div>
       </EventPageLayout>
     </TemplateProvider>
   )

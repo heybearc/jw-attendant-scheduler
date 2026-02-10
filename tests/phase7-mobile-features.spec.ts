@@ -24,10 +24,10 @@ test.describe('Phase 7: Mobile Volunteer Features', () => {
     await expect(page.locator('h2:has-text("Volunteer Access")')).toBeVisible()
     
     // Fill in login form with valid test credentials
-    await page.fill('input[name="firstName"]', 'Cory')
-    await page.fill('input[name="lastName"]', 'Allen')
-    await page.fill('input[name="congregation"]', 'Twinsburg')
-    await page.fill('input[name="pin"]', '0879')
+    await page.fill('input[name="firstName"]', process.env.VOLUNTEER_FIRST_NAME || 'Cory')
+    await page.fill('input[name="lastName"]', process.env.VOLUNTEER_LAST_NAME || 'Allen')
+    await page.fill('input[name="congregation"]', process.env.VOLUNTEER_CONGREGATION || 'Twinsburg')
+    await page.fill('input[name="pin"]', process.env.VOLUNTEER_PIN || '0879')
     
     // Submit form
     await page.click('button[type="submit"]')
@@ -43,10 +43,10 @@ test.describe('Phase 7: Mobile Volunteer Features', () => {
   test('Mobile volunteer dashboard has 4 tabs', async ({ page }) => {
     // Login first
     await page.goto(`${process.env.BASE_URL}/volunteer/login`)
-    await page.fill('input[name="firstName"]', 'Cory')
-    await page.fill('input[name="lastName"]', 'Allen')
-    await page.fill('input[name="congregation"]', 'Twinsburg')
-    await page.fill('input[name="pin"]', '0879')
+    await page.fill('input[name="firstName"]', process.env.VOLUNTEER_FIRST_NAME || 'Cory')
+    await page.fill('input[name="lastName"]', process.env.VOLUNTEER_LAST_NAME || 'Allen')
+    await page.fill('input[name="congregation"]', process.env.VOLUNTEER_CONGREGATION || 'Twinsburg')
+    await page.fill('input[name="pin"]', process.env.VOLUNTEER_PIN || '0879')
     await page.click('button[type="submit"]')
     
     // Wait for dashboard
@@ -62,10 +62,10 @@ test.describe('Phase 7: Mobile Volunteer Features', () => {
   test('Documents tab is visible and functional', async ({ page }) => {
     // Login and navigate to dashboard
     await page.goto(`${process.env.BASE_URL}/volunteer/login`)
-    await page.fill('input[name="firstName"]', 'Cory')
-    await page.fill('input[name="lastName"]', 'Allen')
-    await page.fill('input[name="congregation"]', 'Twinsburg')
-    await page.fill('input[name="pin"]', '0879')
+    await page.fill('input[name="firstName"]', process.env.VOLUNTEER_FIRST_NAME || 'Cory')
+    await page.fill('input[name="lastName"]', process.env.VOLUNTEER_LAST_NAME || 'Allen')
+    await page.fill('input[name="congregation"]', process.env.VOLUNTEER_CONGREGATION || 'Twinsburg')
+    await page.fill('input[name="pin"]', process.env.VOLUNTEER_PIN || '0879')
     await page.click('button[type="submit"]')
     
     await page.waitForURL(/\/volunteer\/dashboard/, { timeout: 10000 })
@@ -84,10 +84,10 @@ test.describe('Phase 7: Mobile Volunteer Features', () => {
   test('Sign out button is visible and works', async ({ page }) => {
     // Login
     await page.goto(`${process.env.BASE_URL}/volunteer/login`)
-    await page.fill('input[name="firstName"]', 'Cory')
-    await page.fill('input[name="lastName"]', 'Allen')
-    await page.fill('input[name="congregation"]', 'Twinsburg')
-    await page.fill('input[name="pin"]', '0879')
+    await page.fill('input[name="firstName"]', process.env.VOLUNTEER_FIRST_NAME || 'Cory')
+    await page.fill('input[name="lastName"]', process.env.VOLUNTEER_LAST_NAME || 'Allen')
+    await page.fill('input[name="congregation"]', process.env.VOLUNTEER_CONGREGATION || 'Twinsburg')
+    await page.fill('input[name="pin"]', process.env.VOLUNTEER_PIN || '0879')
     await page.click('button[type="submit"]')
     
     await page.waitForURL(/\/volunteer\/dashboard/, { timeout: 10000 })
@@ -106,10 +106,10 @@ test.describe('Phase 7: Mobile Volunteer Features', () => {
   test('Touch targets are at least 44px', async ({ page }) => {
     // Login
     await page.goto(`${process.env.BASE_URL}/volunteer/login`)
-    await page.fill('input[name="firstName"]', 'Cory')
-    await page.fill('input[name="lastName"]', 'Allen')
-    await page.fill('input[name="congregation"]', 'Twinsburg')
-    await page.fill('input[name="pin"]', '0879')
+    await page.fill('input[name="firstName"]', process.env.VOLUNTEER_FIRST_NAME || 'Cory')
+    await page.fill('input[name="lastName"]', process.env.VOLUNTEER_LAST_NAME || 'Allen')
+    await page.fill('input[name="congregation"]', process.env.VOLUNTEER_CONGREGATION || 'Twinsburg')
+    await page.fill('input[name="pin"]', process.env.VOLUNTEER_PIN || '0879')
     await page.click('button[type="submit"]')
     
     await page.waitForURL(/\/volunteer\/dashboard/, { timeout: 10000 })
@@ -130,10 +130,10 @@ test.describe('Phase 7: Mobile Volunteer Features', () => {
     
     // Login
     await page.goto(`${process.env.BASE_URL}/volunteer/login`)
-    await page.fill('input[name="firstName"]', 'Cory')
-    await page.fill('input[name="lastName"]', 'Allen')
-    await page.fill('input[name="congregation"]', 'Twinsburg')
-    await page.fill('input[name="pin"]', '0879')
+    await page.fill('input[name="firstName"]', process.env.VOLUNTEER_FIRST_NAME || 'Cory')
+    await page.fill('input[name="lastName"]', process.env.VOLUNTEER_LAST_NAME || 'Allen')
+    await page.fill('input[name="congregation"]', process.env.VOLUNTEER_CONGREGATION || 'Twinsburg')
+    await page.fill('input[name="pin"]', process.env.VOLUNTEER_PIN || '0879')
     await page.click('button[type="submit"]')
     
     // Wait for dashboard to fully load
@@ -149,10 +149,10 @@ test.describe('Phase 7: Mobile Volunteer Features', () => {
   test('Refresh button works on mobile dashboard', async ({ page }) => {
     // Login
     await page.goto(`${process.env.BASE_URL}/volunteer/login`)
-    await page.fill('input[name="firstName"]', 'Cory')
-    await page.fill('input[name="lastName"]', 'Allen')
-    await page.fill('input[name="congregation"]', 'Twinsburg')
-    await page.fill('input[name="pin"]', '0879')
+    await page.fill('input[name="firstName"]', process.env.VOLUNTEER_FIRST_NAME || 'Cory')
+    await page.fill('input[name="lastName"]', process.env.VOLUNTEER_LAST_NAME || 'Allen')
+    await page.fill('input[name="congregation"]', process.env.VOLUNTEER_CONGREGATION || 'Twinsburg')
+    await page.fill('input[name="pin"]', process.env.VOLUNTEER_PIN || '0879')
     await page.click('button[type="submit"]')
     
     await page.waitForURL(/\/volunteer\/dashboard/, { timeout: 10000 })

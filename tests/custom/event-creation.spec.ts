@@ -26,7 +26,17 @@ test.describe('Event Creation', () => {
     
     await page.fill('input[name="startDate"]', dateString)
     await page.fill('input[name="endDate"]', dateString)
-    await page.fill('input[name="location"]', 'Test Location')
+    
+    // Handle LocationSelector - type in the search input and select first option or create new
+    const locationInput = page.locator('input[placeholder*="Search"], input[placeholder*="location"]').first()
+    await locationInput.fill('Test Location')
+    await page.waitForTimeout(500)
+    
+    // Try to select existing location or create new one
+    const locationOption = page.locator('li:has-text("Test Location"), button:has-text("Create")').first()
+    if (await locationOption.count() > 0) {
+      await locationOption.click()
+    }
     
     // Submit form
     await page.click('button[type="submit"]')

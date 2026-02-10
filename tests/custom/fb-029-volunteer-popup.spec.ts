@@ -23,8 +23,8 @@ test.describe('FB-029: Volunteer Details Popup', () => {
       await page.waitForURL('**/events/**', { timeout: 5000 })
     }
     
-    // Navigate to volunteers tab
-    const volunteersTab = page.locator('a[href*="/volunteers"], button:has-text("Volunteers")')
+    // Navigate to volunteers tab (use .first() to avoid strict mode violation)
+    const volunteersTab = page.locator('a[href*="/volunteers"]').first()
     if (await volunteersTab.count() > 0) {
       await volunteersTab.click()
       await page.waitForTimeout(1000)

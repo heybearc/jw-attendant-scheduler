@@ -196,8 +196,8 @@ test.describe('FB-023: Event Selection Page Enhancements', () => {
   })
 
   test('should display event status badges correctly', async ({ page }) => {
-    // Look for status badges
-    const statusBadges = page.locator('span:has-text("CURRENT"), span:has-text("UPCOMING"), span:has-text("COMPLETED")')
+    // Look for status badges with rounded-full class
+    const statusBadges = page.locator('span.rounded-full:has-text("CURRENT"), span.rounded-full:has-text("UPCOMING"), span.rounded-full:has-text("COMPLETED")')
     
     if (await statusBadges.count() > 0) {
       const firstBadge = statusBadges.first()
@@ -206,6 +206,7 @@ test.describe('FB-023: Event Selection Page Enhancements', () => {
       // Should have appropriate styling
       const classes = await firstBadge.getAttribute('class')
       expect(classes).toContain('rounded-full')
+      expect(classes).toContain('inline-flex')
     }
   })
 

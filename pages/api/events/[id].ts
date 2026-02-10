@@ -61,9 +61,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         // Extract locationId separately to handle as a relation
         const { locationId, ...bodyData } = req.body
         
-        console.log('=== EVENT UPDATE DEBUG ===')
-        console.log('Received body data:', JSON.stringify(bodyData, null, 2))
-        
         const { 
           name, description, eventType, startDate, endDate, startTime, endTime, location, status, capacity, attendantsNeeded, volunteersNeeded,
           departmentTemplateId,
@@ -73,12 +70,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           volunteerOverseerName, volunteerOverseerPhone, volunteerOverseerEmail,
           volunteerOverseerAssistants
         } = bodyData
-        
-        console.log('Volunteer Overseer Fields:')
-        console.log('  Name:', volunteerOverseerName)
-        console.log('  Phone:', volunteerOverseerPhone)
-        console.log('  Email:', volunteerOverseerEmail)
-        console.log('  Assistants:', volunteerOverseerAssistants)
 
         // APEX GUARDIAN: Build update data dynamically to avoid Prisma type issues
         const updateData: any = {
@@ -123,15 +114,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (volunteerOverseerEmail !== undefined) updateData.volunteeroverseeremail = volunteerOverseerEmail || null
         if (volunteerOverseerAssistants !== undefined) updateData.volunteeroverseerassistants = volunteerOverseerAssistants || []
 
-        console.log('Update data being sent to Prisma:', JSON.stringify(updateData, null, 2))
-
         // Update the event using Prisma relations
         const event = await prisma.events.update({
           where: { id },
           data: updateData
         })
-        
-        console.log('Event updated successfully. Returned event:', JSON.stringify(event, null, 2))
 
         return res.status(200).json({ success: true, data: event })
 

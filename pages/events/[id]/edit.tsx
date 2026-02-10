@@ -1151,7 +1151,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       capacity: event.capacity,
       volunteersNeeded: event.volunteersNeeded,
       status: event.status,
-      // APEX GUARDIAN: Oversight Management Fields (using database field names)
+      // APEX GUARDIAN: Oversight Management Fields (using database field names - all lowercase)
       departmentTemplateId: event.departmentTemplateId || '',
       circuitOverseerName: eventWithOversight.circuitoverseername,
       circuitOverseerPhone: eventWithOversight.circuitoverseerphone,
@@ -1159,10 +1159,10 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       assemblyOverseerName: eventWithOversight.assemblyoverseername,
       assemblyOverseerPhone: eventWithOversight.assemblyoverseerphone,
       assemblyOverseerEmail: eventWithOversight.assemblyoverseeremail,
-      volunteerOverseerName: eventWithOversight.volunteerOverseerName,
-      volunteerOverseerPhone: eventWithOversight.volunteerOverseerPhone,
-      volunteerOverseerEmail: eventWithOversight.volunteerOverseerEmail,
-      volunteerOverseerAssistants: eventWithOversight.volunteerOverseerAssistants,
+      volunteerOverseerName: eventWithOversight.volunteeroverseername,
+      volunteerOverseerPhone: eventWithOversight.volunteeroverseerphone,
+      volunteerOverseerEmail: eventWithOversight.volunteeroverseeremail,
+      volunteerOverseerAssistants: eventWithOversight.volunteeroverseerassistants,
       createdAt: event.createdAt?.toISOString() || null,
       updatedAt: event.updatedAt?.toISOString() || null
     }

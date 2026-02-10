@@ -179,8 +179,8 @@ test.describe('Phase 7: Performance', () => {
   test('Event page loads with lazy-loaded components', async ({ page }) => {
     // Login as admin
     await page.goto(`${process.env.BASE_URL}/auth/signin`)
-    await page.fill('#email', process.env.TEST_USER_EMAIL!)
-    await page.fill('#password', process.env.TEST_USER_PASSWORD!)
+    await page.type('#email', process.env.TEST_USER_EMAIL!)
+    await page.type('#password', process.env.TEST_USER_PASSWORD!)
     await page.click('button[type="submit"]')
     
     await page.waitForURL(/\/events/, { timeout: 10000 })

@@ -5,8 +5,8 @@ test.describe('Phase 7 Mobile Optimization Validation', () => {
     await page.goto(process.env.BASE_URL || 'http://localhost:3001')
     
     // Login
-    await page.fill('#email', process.env.TEST_USER_EMAIL || '')
-    await page.fill('#password', process.env.TEST_USER_PASSWORD || '')
+    await page.type('#email', process.env.TEST_USER_EMAIL || '')
+    await page.type('#password', process.env.TEST_USER_PASSWORD || '')
     await page.click('button[type="submit"]')
     await page.waitForURL('**/events/select')
   })

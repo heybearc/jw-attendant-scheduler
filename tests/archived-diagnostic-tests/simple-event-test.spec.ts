@@ -7,8 +7,8 @@ const credentials = getTestCredentials()
 test('simple event page test', async ({ page }) => {
   // Login
   await page.goto(`${BASE_URL}/auth/signin`)
-  await page.fill('#email', 'admin@theoshift.local')
-  await page.fill('#password', 'AdminPass123!')
+  await page.type('#email', 'admin@theoshift.local')
+  await page.type('#password', 'AdminPass123!')
   await page.click('button[type="submit"]')
   await page.waitForURL(/\/events/, { timeout: 10000 })
   

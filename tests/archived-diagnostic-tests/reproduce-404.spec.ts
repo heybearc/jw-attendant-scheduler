@@ -34,8 +34,8 @@ test.describe('Reproduce 404 Error', () => {
     
     console.log('Step 2: Filling in credentials...')
     // Find the email input - it uses id="email"
-    await page.fill('#email', 'admin@theoshift.local')
-    await page.fill('#password', 'AdminPass123!')
+    await page.type('#email', 'admin@theoshift.local')
+    await page.type('#password', 'AdminPass123!')
     
     console.log('Step 3: Submitting login...')
     await page.click('button[type="submit"]')
@@ -87,8 +87,8 @@ test.describe('Reproduce 404 Error', () => {
     
     // Login
     await page.goto(`${BASE_URL}/auth/signin`)
-    await page.fill('#email', 'admin@theoshift.local')
-    await page.fill('#password', 'AdminPass123!')
+    await page.type('#email', 'admin@theoshift.local')
+    await page.type('#password', 'AdminPass123!')
     await page.click('button[type="submit"]')
     await page.waitForURL(/\/events|\/admin/, { timeout: 10000 })
     

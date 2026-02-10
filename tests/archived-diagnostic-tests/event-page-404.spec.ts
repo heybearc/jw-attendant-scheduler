@@ -13,8 +13,8 @@ test.describe('Event Detail Page Access', () => {
   test.beforeEach(async ({ page }) => {
     // Login first
     await page.goto(`${BASE_URL}/auth/signin`)
-    await page.fill('#email', credentials.email)
-    await page.fill('#password', credentials.password)
+    await page.type('#email', credentials.email)
+    await page.type('#password', credentials.password)
     await page.click('button[type="submit"]')
     
     // Wait for redirect after login

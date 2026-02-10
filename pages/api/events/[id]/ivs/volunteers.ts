@@ -60,6 +60,10 @@ export default async function handler(
       approvedAt: ev.ivsApprovedAt ? formatDate(ev.ivsApprovedAt) : undefined,
       approvedBy: ev.ivsApprovedBy || undefined,
       notes: ev.ivsApprovalNotes || undefined,
+      earlyCheckinEligible: ev.earlyCheckinEligible || false,
+      checkedInAt: ev.checkedInAt ? formatDate(ev.checkedInAt) : undefined,
+      checkedInBy: ev.checkedInBy || undefined,
+      checkinNotes: ev.checkinNotes || undefined,
     }))
 
     return res.status(200).json({ success: true, volunteers })

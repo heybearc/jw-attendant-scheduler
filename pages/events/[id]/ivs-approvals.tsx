@@ -20,6 +20,10 @@ interface IVSVolunteer {
   approvedAt?: string
   approvedBy?: string
   notes?: string
+  earlyCheckinEligible?: boolean
+  checkedInAt?: string
+  checkedInBy?: string
+  checkinNotes?: string
 }
 
 interface IVSApprovalsPageProps {
@@ -120,6 +124,47 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
     } catch (error) {
       console.error('Export error:', error)
       alert('Export failed. Please try again.')
+    }
+  }
+
+  const handleToggleEarlyEntry = async (volunteerId: string, currentValue: boolean) => {
+    try {
+      const response = await fetch(`/api/events/${eventId}/ivs/volunteers/${volunteerId}/early-entry`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ earlyCheckinEligible: !currentValue }),
+      })
+
+      if (response.ok) {
+        fetchVolunteers()
+      } else {
+        alert('Failed to update early entry flag')
+      }
+    } catch (error) {
+      console.error('Error updating early entry:', error)
+      alert('Error updating early entry flag')
+    }
+  }
+
+  const handleCheckIn = async (volunteerId: string) => {
+    const notes = prompt('Check-in notes (optional):')
+    
+    try {
+      const response = await fetch(`/api/events/${eventId}/ivs/volunteers/${volunteerId}/check-in`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes: notes || undefined }),
+      })
+
+      if (response.ok) {
+        alert('Volunteer checked in successfully!')
+        fetchVolunteers()
+      } else {
+        alert('Failed to check in volunteer')
+      }
+    } catch (error) {
+      console.error('Error checking in:', error)
+      alert('Error checking in volunteer')
     }
   }
 
@@ -237,8 +282,9 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Department</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Round</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Approved Date</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Notes</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Early Entry</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Check-In</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -253,8 +299,40 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
                         {volunteer.approvalStatus}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm">{volunteer.approvedAt || '-'}</td>
-                    <td className="px-4 py-3 text-sm text-gray-500">{volunteer.notes || '-'}</td>
+                    <td className="px-4 py-3 text-sm">
+                      <button
+                        onClick={() => handleToggleEarlyEntry(volunteer.id, volunteer.earlyCheckinEligible || false)}
+                        className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                          volunteer.earlyCheckinEligible
+                            ? 'bg-purple-100 text-purple-800 hover:bg-purple-200'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                      >
+                        {volunteer.earlyCheckinEligible ? '✓ Early Entry' : 'Set Early Entry'}
+                      </button>
+                    </td>
+                    <td className="px-4 py-3 text-sm">
+                      {volunteer.checkedInAt ? (
+                        <div className="text-xs">
+                          <div className="text-green-600 font-medium">✓ Checked In</div>
+                          <div className="text-gray-500">{volunteer.checkedInAt}</div>
+                        </div>
+                      ) : volunteer.earlyCheckinEligible ? (
+                        <span className="text-gray-400">Not checked in</span>
+                      ) : (
+                        <span className="text-gray-300">-</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-sm">
+                      {volunteer.earlyCheckinEligible && !volunteer.checkedInAt && (
+                        <button
+                          onClick={() => handleCheckIn(volunteer.id)}
+                          className="px-3 py-1 bg-green-600 text-white rounded-md text-xs hover:bg-green-700"
+                        >
+                          Check In
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

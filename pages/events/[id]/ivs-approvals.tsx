@@ -176,6 +176,32 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
     }
   }
 
+  const handleClearCheckIn = async (volunteerId: string) => {
+    if (!confirm('Clear check-in status for this volunteer?')) return
+
+    try {
+      const response = await fetch(`/api/events/${eventId}/ivs/volunteers/${volunteerId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          checkedInAt: null,
+          checkedInBy: null,
+          checkinNotes: null
+        }),
+      })
+
+      if (response.ok) {
+        alert('Check-in cleared successfully!')
+        fetchVolunteers()
+      } else {
+        alert('Failed to clear check-in')
+      }
+    } catch (error) {
+      console.error('Error clearing check-in:', error)
+      alert('Error clearing check-in')
+    }
+  }
+
   const handleEdit = (volunteer: IVSVolunteer) => {
     setEditingVolunteer(volunteer)
     setShowEditModal(true)
@@ -355,6 +381,12 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
                         <div className="text-xs">
                           <div className="text-green-600 font-medium">✓ Checked In</div>
                           <div className="text-gray-500">{volunteer.checkedInAt}</div>
+                          <button
+                            onClick={() => handleClearCheckIn(volunteer.id)}
+                            className="mt-1 text-xs text-red-600 hover:text-red-800 underline"
+                          >
+                            Clear Check-In
+                          </button>
                         </div>
                       ) : volunteer.earlyCheckinEligible ? (
                         <span className="text-gray-400">Not checked in</span>

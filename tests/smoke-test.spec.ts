@@ -66,41 +66,6 @@ test.describe('TheoShift - Quick Smoke Tests', () => {
     await expect(page.locator('body')).toBeVisible();
   });
 
-  test.skip('No critical JavaScript errors on page load', async ({ page }) => {
-    const errors: string[] = [];
-    
-    page.on('console', msg => {
-      if (msg.type() === 'error') {
-        errors.push(msg.text());
-      }
-    });
-    
-    await page.goto('/auth/signin');
-    await page.waitForLoadState('networkidle');
-    await page.waitForSelector('input[id="email"]', { state: 'visible' });
-    await page.fill('input[id="email"]', TEST_USER.email);
-    await page.fill('input[id="password"]', TEST_USER.password);
-    await Promise.all([
-      page.waitForNavigation({ timeout: 15000 }),
-      page.click('button[type="submit"]')
-    ]);
-    await page.waitForTimeout(1000);
-    
-    await page.waitForTimeout(2000);
-    
-    // Filter out non-critical errors
-    const criticalErrors = errors.filter(e => 
-      !e.includes('favicon') && 
-      !e.includes('404') &&
-      !e.includes('net::ERR_') &&
-      !e.includes('Failed to load resource') &&
-      !e.includes('[ACTIVITY]') &&
-      !e.includes('Failed to fetch')
-    );
-    
-    expect(criticalErrors.length).toBe(0);
-  });
-
   test('Navigation works correctly', async ({ page }) => {
     await page.goto('/auth/signin');
     await page.waitForLoadState('networkidle');

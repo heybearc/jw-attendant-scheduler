@@ -50,7 +50,7 @@ export default async function handler(
     })
 
     const volunteers = eventVolunteers.map(ev => ({
-      id: ev.id,
+      id: ev.volunteerId, // Use volunteerId so edit API can find the record
       firstName: ev.volunteer?.firstName || '',
       lastName: ev.volunteer?.lastName || '',
       congregation: ev.volunteer?.congregation || '',

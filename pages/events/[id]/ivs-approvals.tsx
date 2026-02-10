@@ -7,6 +7,7 @@ import EventPageLayout from '../../../components/EventPageLayout'
 import { TemplateProvider } from '../../../contexts/TemplateContext'
 import { PrismaClient } from '@prisma/client'
 import EditVolunteerModal from '../../../components/EditVolunteerModal'
+import BulkActionModal from '../../../components/BulkActionModal'
 
 const prisma = new PrismaClient()
 
@@ -236,6 +237,59 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
     }
   }
 
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedVolunteers(filteredVolunteers.map(v => v.id))
+    } else {
+      setSelectedVolunteers([])
+    }
+  }
+
+  const handleSelectVolunteer = (volunteerId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedVolunteers([...selectedVolunteers, volunteerId])
+    } else {
+      setSelectedVolunteers(selectedVolunteers.filter(id => id !== volunteerId))
+    }
+  }
+
+  const handleBulkAction = (action: string) => {
+    if (selectedVolunteers.length === 0) {
+      alert('Please select volunteers first')
+      return
+    }
+    setBulkAction(action)
+    setShowBulkModal(true)
+  }
+
+  const handleBulkConfirm = async (data: any) => {
+    try {
+      const response = await fetch(`/api/events/${eventId}/ivs/volunteers/bulk`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          volunteerIds: selectedVolunteers,
+          ...data
+        }),
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        alert(`Successfully updated ${result.updated} volunteer(s)`)
+        setShowBulkModal(false)
+        setBulkAction('')
+        setSelectedVolunteers([])
+        fetchVolunteers()
+      } else {
+        const error = await response.json()
+        alert(`Failed to update volunteers: ${error.message}`)
+      }
+    } catch (error) {
+      console.error('Error with bulk action:', error)
+      alert('Error performing bulk action')
+    }
+  }
+
   const filteredVolunteers = volunteers.filter(v => {
     if (filterDepartment && v.submittedBy !== filterDepartment) return false
     if (filterStatus && v.approvalStatus !== filterStatus) return false
@@ -267,7 +321,7 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
         <div className="p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">IVS Volunteer Approvals</h1>
-          <div className="flex gap-2">
+          <div className="flex gap-2 mb-4">
             <button
               onClick={() => setShowImportModal(true)}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
@@ -280,6 +334,28 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
             >
               Export List
             </button>
+            
+            {selectedVolunteers.length > 0 && (
+              <div className="ml-auto flex gap-2 items-center">
+                <span className="text-sm text-gray-600">{selectedVolunteers.length} selected</span>
+                <select
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      handleBulkAction(e.target.value)
+                      e.target.value = ''
+                    }
+                  }}
+                  className="px-3 py-2 border rounded-md bg-purple-600 text-white hover:bg-purple-700"
+                >
+                  <option value="">Bulk Actions</option>
+                  <option value="approve">Approve Selected</option>
+                  <option value="deny">Deny Selected</option>
+                  <option value="setEarlyEntry">Set Early Entry</option>
+                  <option value="changeRound">Change Round</option>
+                  <option value="changeDepartment">Change Department</option>
+                </select>
+              </div>
+            )}
           </div>
         </div>
 
@@ -345,6 +421,14 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
             <table className="min-w-full bg-white border">
               <thead className="bg-gray-50">
                 <tr>
+                  <th className="px-4 py-3 text-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedVolunteers.length === filteredVolunteers.length && filteredVolunteers.length > 0}
+                      onChange={(e) => handleSelectAll(e.target.checked)}
+                      className="w-4 h-4"
+                    />
+                  </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Congregation</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Department</th>
@@ -358,6 +442,14 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
               <tbody className="divide-y divide-gray-200">
                 {filteredVolunteers.map(volunteer => (
                   <tr key={volunteer.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 text-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedVolunteers.includes(volunteer.id)}
+                        onChange={(e) => handleSelectVolunteer(volunteer.id, e.target.checked)}
+                        className="w-4 h-4"
+                      />
+                    </td>
                     <td className="px-4 py-3 text-sm">{volunteer.firstName} {volunteer.lastName}</td>
                     <td className="px-4 py-3 text-sm">{volunteer.congregation}</td>
                     <td className="px-4 py-3 text-sm">{volunteer.submittedBy}</td>
@@ -485,6 +577,19 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
                 alert('Error updating volunteer')
               }
             }}
+          />
+        )}
+
+        {/* Bulk Action Modal */}
+        {showBulkModal && (
+          <BulkActionModal
+            action={bulkAction}
+            selectedCount={selectedVolunteers.length}
+            onClose={() => {
+              setShowBulkModal(false)
+              setBulkAction('')
+            }}
+            onConfirm={handleBulkConfirm}
           />
         )}
       </div>

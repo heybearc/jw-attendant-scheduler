@@ -171,7 +171,7 @@ export default async function handler(
             eventId: eventId as string,
             volunteerId: globalVolunteer.id,
             userId: null,
-            role: 'ATTENDANT' as any,
+            role: 'VOLUNTEER' as any,
             isActive: true,
             ivsApprovalStatus: approvalStatus,
             ivsSubmittedBy: departmentName,

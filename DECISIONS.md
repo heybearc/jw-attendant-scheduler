@@ -406,6 +406,18 @@ This document tracks significant technical decisions made during development.
 **Decision:** Implement NextAuth.js dual-URL pattern: NEXTAUTH_URL=https://theoshift.com for public redirects, NEXTAUTH_URL_INTERNAL=http://localhost:3001 for internal API calls.  
 **Consequences:** Public users always see theoshift.com domain. Direct node testing (blue/green.theoshift.com) still works. Matches industry standard for containerized/proxied environments. Applied to both BLUE and GREEN nodes.
 
+### D-TS-027: Test Creation Guidelines and Authentication Patterns
+**Date:** 2026-02-10  
+**Context:** Custom IVS tests were failing due to manual authentication implementation causing timeout issues. Need standardized test creation pattern to prevent future failures.  
+**Decision:** Created TEST_CREATION_GUIDELINES.md with reusable authentication helpers and established patterns. All new tests must use login() helper instead of manual auth, use navigateToEventPage() for navigation, and include module detection for optional features.  
+**Consequences:** Tests now skip gracefully when modules aren't enabled. No more authentication timeout issues. Clear template for future test creation. Test helpers updated with proper TypeScript types and default values.
+
+### D-TS-028: IVS Module Separate Management Architecture
+**Date:** 2026-02-10  
+**Context:** Need to manage International Volunteer Service volunteers separately from local volunteers to avoid confusion and maintain clear workflows.  
+**Decision:** IVS volunteers managed in separate module with own page, API endpoints, and database filters. They never appear on main Volunteers page. Module is optional and enabled per department template.  
+**Consequences:** Clear separation between IVS and local volunteers. Dedicated mobile check-in interface. Bulk operations for efficiency. Module toggle in department templates. Complete tracking of approval workflow from request to check-in.
+
 ---
 
 ## Shared Decisions

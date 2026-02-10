@@ -116,15 +116,17 @@ export default async function handler(
       updateData.ivsSubmittedBy = ivsSubmittedBy
     }
 
+    // Find the event_volunteers record by volunteerId (the volunteer's global ID)
     const eventVolunteer = await prisma.event_volunteers.findFirst({
       where: {
         eventId: eventId as string,
-        volunteerId: volunteerId as string
+        volunteerId: volunteerId as string,
+        ivsImportBatchId: { not: null } as any // Ensure it's an IVS volunteer
       }
     })
 
     if (!eventVolunteer) {
-      return res.status(404).json({ success: false, message: 'Volunteer not found in event' })
+      return res.status(404).json({ success: false, message: 'IVS volunteer not found in event' })
     }
 
     await prisma.event_volunteers.update({

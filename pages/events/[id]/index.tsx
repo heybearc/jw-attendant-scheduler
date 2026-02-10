@@ -350,6 +350,7 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
       terminology={event.departmentTemplate?.terminology as Terminology | null}
       positionTemplates={event.departmentTemplate?.positionTemplates as PositionTemplate[] | null}
       departmentTemplateName={event.departmentTemplate?.name}
+      eventModuleOverrides={event.settings?.moduleOverrides || null}
     >
       <EventPageLayout
         event={{

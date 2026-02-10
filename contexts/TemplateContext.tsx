@@ -16,6 +16,7 @@ interface TemplateProviderProps {
   terminology?: Terminology | null
   positionTemplates?: PositionTemplate[] | null
   departmentTemplateName?: string
+  eventModuleOverrides?: Record<string, boolean> | null
 }
 
 export function TemplateProvider({
@@ -23,12 +24,19 @@ export function TemplateProvider({
   moduleConfig = null,
   terminology = null,
   positionTemplates = null,
-  departmentTemplateName
+  departmentTemplateName,
+  eventModuleOverrides = null
 }: TemplateProviderProps) {
+  // Merge template config with event-specific overrides
+  const mergedModuleConfig = moduleConfig ? {
+    ...moduleConfig,
+    ...(eventModuleOverrides || {})
+  } : null
+
   return (
     <TemplateContext.Provider
       value={{
-        moduleConfig,
+        moduleConfig: mergedModuleConfig,
         terminology,
         positionTemplates,
         departmentTemplateName

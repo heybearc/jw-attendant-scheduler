@@ -71,6 +71,11 @@ export default function CreateEventPage() {
 
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, any>>({})
   const [customFieldErrors, setCustomFieldErrors] = useState<Record<string, string>>({})
+  const [moduleOverrides, setModuleOverrides] = useState<Record<string, boolean>>({
+    countTimes: true,
+    lanyards: true,
+    ivsApprovals: true
+  })
 
   // Fetch department templates and events
   useEffect(() => {
@@ -252,11 +257,10 @@ export default function CreateEventPage() {
         submitData.locationId = locId
       }
 
-      // Add custom field values to settings
-      if (Object.keys(customFieldValues).length > 0) {
-        submitData.settings = {
-          customFields: customFieldValues
-        }
+      // Add custom field values and module overrides to settings
+      submitData.settings = {
+        ...(Object.keys(customFieldValues).length > 0 && { customFields: customFieldValues }),
+        moduleOverrides: moduleOverrides
       }
 
       console.log('Submitting data:', JSON.stringify(submitData, null, 2))
@@ -408,6 +412,49 @@ export default function CreateEventPage() {
                 </p>
               </div>
             </div>
+
+            {/* Module Overrides - Show when template is selected */}
+            {formData.departmentTemplateId && (
+              <div className="mt-6 pt-6 border-t border-blue-200">
+                <h4 className="text-sm font-medium text-gray-900 mb-3">
+                  📋 Available Modules for This Event
+                </h4>
+                <p className="text-xs text-gray-600 mb-4">
+                  Customize which modules are enabled for this specific event. Unchecked modules won't appear in the event navigation.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <label className="flex items-center space-x-3 p-3 bg-white border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={moduleOverrides.countTimes}
+                      onChange={(e) => setModuleOverrides(prev => ({ ...prev, countTimes: e.target.checked }))}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <span className="text-sm text-gray-700">⏱️ Count Times</span>
+                  </label>
+
+                  <label className="flex items-center space-x-3 p-3 bg-white border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={moduleOverrides.lanyards}
+                      onChange={(e) => setModuleOverrides(prev => ({ ...prev, lanyards: e.target.checked }))}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <span className="text-sm text-gray-700">🎫 Lanyards</span>
+                  </label>
+
+                  <label className="flex items-center space-x-3 p-3 bg-white border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={moduleOverrides.ivsApprovals}
+                      onChange={(e) => setModuleOverrides(prev => ({ ...prev, ivsApprovals: e.target.checked }))}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <span className="text-sm text-gray-700">📋 IVS Approvals</span>
+                  </label>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Basic Information */}

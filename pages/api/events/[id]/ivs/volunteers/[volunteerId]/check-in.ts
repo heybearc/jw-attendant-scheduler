@@ -35,10 +35,20 @@ export default async function handler(
       return res.status(403).json({ success: false, message: 'Forbidden - Admin access required' })
     }
 
-    // Check if volunteer is early entry eligible
-    const volunteer = await prisma.event_volunteers.findUnique({
-      where: { id: volunteerId as string },
+    // Find volunteer by volunteerId (global volunteer ID)
+    const volunteer = await prisma.event_volunteers.findFirst({
+      where: { 
+        eventId: eventId as string,
+        volunteerId: volunteerId as string
+      },
     })
+
+    if (!volunteer) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Volunteer not found in event' 
+      })
+    }
 
     if (!volunteer?.earlyCheckinEligible) {
       return res.status(400).json({ 
@@ -56,7 +66,7 @@ export default async function handler(
 
     // Check in volunteer
     await prisma.event_volunteers.update({
-      where: { id: volunteerId as string },
+      where: { id: volunteer.id },
       data: {
         checkedInAt: new Date(),
         checkedInBy: `${session.user.name || session.user.email}`,

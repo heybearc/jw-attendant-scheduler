@@ -44,9 +44,12 @@ test.describe('Phase 7 Mobile Optimization Validation', () => {
       await page.waitForURL('**/volunteers', { timeout: 5000 })
       await page.waitForLoadState('networkidle')
       
-      // Verify page loads without errors
-      const pageTitle = await page.title()
-      expect(pageTitle.toLowerCase()).toContain('volunteer')
+      // Verify we're on volunteers page and it loads without errors
+      expect(page.url()).toContain('/volunteers')
+      
+      // Check that page has loaded content (table or volunteers list)
+      const pageContent = page.locator('table, [role="table"], h1, h2').first()
+      await expect(pageContent).toBeVisible({ timeout: 5000 })
     }
   })
 

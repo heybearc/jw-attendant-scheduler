@@ -244,26 +244,50 @@ model email_configurations {
 }
 
 model event_volunteers {
-  id                    String      @id
-  eventId               String
-  userId                String?
-  role                  UserRole    @default(VOLUNTEER)
-  isActive              Boolean     @default(true)
-  assignedDepartments   Json?
-  assignedStationRanges Json?
-  createdAt             DateTime    @default(now())
-  updatedAt             DateTime
-  volunteerId           String?
-  keymanId              String?
-  overseerId            String?
-  volunteer             volunteers? @relation("event_volunteers_volunteerIdTovolunteers", fields: [volunteerId], references: [id], onDelete: Cascade)
-  events                events      @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  keyman                volunteers? @relation("event_volunteers_keymanIdTovolunteers", fields: [keymanId], references: [id])
-  overseer              volunteers? @relation("event_volunteers_overseerIdTovolunteers", fields: [overseerId], references: [id])
-  users                 users?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                      String                 @id
+  eventId                 String
+  userId                  String?
+  role                    UserRole               @default(VOLUNTEER)
+  isActive                Boolean                @default(true)
+  assignedDepartments     Json?
+  assignedStationRanges   Json?
+  createdAt               DateTime               @default(now())
+  updatedAt               DateTime
+  volunteerId             String?
+  keymanId                String?
+  overseerId              String?
+  
+  // IVS Approval Workflow Fields (optional, null if not using IVS module)
+  ivsApprovalStatus       String?                @map("ivs_approval_status")
+  ivsSubmittedBy          String?                @map("ivs_submitted_by")
+  ivsRequestRound         Int?                   @map("ivs_request_round")
+  ivsApprovalRequestedAt  DateTime?              @map("ivs_approval_requested_at")
+  ivsApprovalNotes        String?                @map("ivs_approval_notes")
+  ivsApprovedAt           DateTime?              @map("ivs_approved_at")
+  ivsApprovedBy           String?                @map("ivs_approved_by")
+  ivsDeniedReason         String?                @map("ivs_denied_reason")
+  ivsImportBatchId        String?                @map("ivs_import_batch_id")
+  
+  // Early Check-In Fields (future phase)
+  earlyCheckinEligible    Boolean?               @default(false) @map("early_checkin_eligible")
+  checkedInAt             DateTime?              @map("checked_in_at")
+  checkedInBy             String?                @map("checked_in_by")
+  checkinNotes            String?                @map("checkin_notes")
+  
+  // Relations
+  volunteer               volunteers?            @relation("event_volunteers_volunteerIdTovolunteers", fields: [volunteerId], references: [id], onDelete: Cascade)
+  events                  events                 @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  keyman                  volunteers?            @relation("event_volunteers_keymanIdTovolunteers", fields: [keymanId], references: [id])
+  overseer                volunteers?            @relation("event_volunteers_overseerIdTovolunteers", fields: [overseerId], references: [id])
+  users                   users?                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  importBatch             ivs_import_batches?    @relation(fields: [ivsImportBatchId], references: [id], onDelete: SetNull)
 
   @@unique([eventId, volunteerId])
   @@unique([eventId, userId])
+  @@index([ivsApprovalStatus])
+  @@index([ivsRequestRound])
+  @@index([ivsImportBatchId])
+  @@index([earlyCheckinEligible])
   @@map("event_attendants")
 }
 
@@ -395,6 +419,7 @@ model events {
   positions                      positions[]
   event_departments              event_departments[]
   volunteer_availability         volunteer_availability[]
+  ivs_import_batches             ivs_import_batches[]
   parentEvent                    events?                          @relation("EventHierarchy", fields: [parentEventId], references: [id], onDelete: Cascade)
   childEvents                    events[]                         @relation("EventHierarchy")
   departmentTemplate             department_templates?            @relation(fields: [departmentTemplateId], references: [id], onDelete: SetNull)
@@ -657,6 +682,7 @@ model users {
   shift_templates                shift_templates[]
   assignment_templates           assignment_templates[]
   locations                      locations[]
+  ivs_import_batches             ivs_import_batches[]
 }
 
 // ============================================================================
@@ -813,6 +839,29 @@ enum FeedbackType {
   BUG
   ENHANCEMENT
   FEATURE
+}
+
+model ivs_import_batches {
+  id              String              @id @default(uuid())
+  eventId         String              @map("event_id")
+  requestRound    Int                 @map("request_round")
+  importedBy      String              @map("imported_by")
+  importedAt      DateTime            @default(now()) @map("imported_at")
+  fileName        String              @map("file_name")
+  departmentName  String?             @map("department_name")
+  volunteerCount  Int                 @default(0) @map("volunteer_count")
+  notes           String?
+  createdAt       DateTime            @default(now()) @map("created_at")
+  updatedAt       DateTime            @updatedAt @map("updated_at")
+  
+  // Relations
+  event           events              @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  importedByUser  users               @relation(fields: [importedBy], references: [id], onDelete: NoAction)
+  volunteers      event_volunteers[]
+  
+  @@index([eventId])
+  @@index([requestRound])
+  @@index([importedAt])
 }
 
 enum LanyardStatus {

@@ -247,7 +247,7 @@ model event_volunteers {
   id                      String                 @id
   eventId                 String
   userId                  String?
-  role                    UserRole               @default(VOLUNTEER)
+  role                    UserRole               @default(ATTENDANT)
   isActive                Boolean                @default(true)
   assignedDepartments     Json?
   assignedStationRanges   Json?

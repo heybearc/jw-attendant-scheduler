@@ -339,6 +339,27 @@ export default function CreateEventPage() {
           </div>
         </div>
 
+        {/* Help Banner */}
+        <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-start">
+            <span className="text-2xl mr-3">💡</span>
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-blue-900 mb-1">
+                Need help creating your event?
+              </h3>
+              <p className="text-sm text-blue-700 mb-2">
+                Learn how to set up your event, choose templates, and customize modules.
+              </p>
+              <Link
+                href="/help/creating-events"
+                className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
+              >
+                View Step-by-Step Guide →
+              </Link>
+            </div>
+          </div>
+        </div>
+
         {/* Messages */}
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">

@@ -23,9 +23,15 @@ export default function HelpPage({ userRole }: HelpPageProps) {
       roles: ['ADMIN']
     },
     {
+      id: 'creating-events',
+      title: '📅 Creating Your First Event',
+      description: 'Step-by-step guide for new event coordinators',
+      roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN']
+    },
+    {
       id: 'event-management',
-      title: '📅 Event Management',
-      description: 'Creating, editing, managing events, and exporting data',
+      title: '� Event Management',
+      description: 'Managing existing events, editing details, and exporting data',
       roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN']
     },
     {

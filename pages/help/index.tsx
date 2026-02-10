@@ -95,6 +95,12 @@ export default function HelpPage({ userRole }: HelpPageProps) {
       roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN', 'VOLUNTEER']
     },
     {
+      id: 'ivs-approvals',
+      title: '📋 IVS Volunteer Approvals',
+      description: 'Manage International Volunteer Service volunteers, approvals, and early check-in',
+      roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN']
+    },
+    {
       id: 'mobile-features',
       title: '📱 Mobile Features',
       description: 'Using TheoShift on mobile devices with touch gestures and optimized layouts',

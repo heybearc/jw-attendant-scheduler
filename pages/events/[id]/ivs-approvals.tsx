@@ -1,7 +1,13 @@
 import { useState, useEffect } from 'react'
+import { GetServerSideProps } from 'next'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '../../api/auth/[...nextauth]'
 import { useRouter } from 'next/router'
-import { useSession } from 'next-auth/react'
 import EventPageLayout from '../../../components/EventPageLayout'
+import { TemplateProvider } from '../../../contexts/TemplateContext'
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
 
 interface IVSVolunteer {
   id: string
@@ -16,10 +22,14 @@ interface IVSVolunteer {
   notes?: string
 }
 
-export default function IVSApprovalsPage() {
+interface IVSApprovalsPageProps {
+  event: any
+  canEdit: boolean
+}
+
+export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPageProps) {
   const router = useRouter()
-  const { id: eventId } = router.query
-  const { data: session } = useSession()
+  const eventId = event.id
   const [volunteers, setVolunteers] = useState<IVSVolunteer[]>([])
   const [loading, setLoading] = useState(true)
   const [showImportModal, setShowImportModal] = useState(false)
@@ -31,10 +41,8 @@ export default function IVSApprovalsPage() {
   const [rounds, setRounds] = useState<number[]>([])
 
   useEffect(() => {
-    if (eventId) {
-      fetchVolunteers()
-    }
-  }, [eventId])
+    fetchVolunteers()
+  }, [])
 
   const fetchVolunteers = async () => {
     try {
@@ -132,8 +140,18 @@ export default function IVSApprovalsPage() {
   }
 
   return (
-    <EventPageLayout>
-      <div className="p-6">
+    <TemplateProvider
+      moduleConfig={event.departmentTemplate?.moduleConfig || null}
+      terminology={event.departmentTemplate?.terminology || null}
+      positionTemplates={event.departmentTemplate?.positionTemplates || null}
+      departmentTemplateName={event.departmentTemplate?.name}
+    >
+      <EventPageLayout
+        event={event}
+        currentPage="overview"
+        canEdit={canEdit}
+      >
+        <div className="p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">IVS Volunteer Approvals</h1>
           <div className="flex gap-2">
@@ -261,9 +279,68 @@ export default function IVSApprovalsPage() {
             onExport={handleExport}
           />
         )}
-      </div>
-    </EventPageLayout>
+        </div>
+      </EventPageLayout>
+    </TemplateProvider>
   )
+}
+
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const session = await getServerSession(context.req, context.res, authOptions)
+  
+  if (!session?.user?.id) {
+    return {
+      redirect: {
+        destination: '/auth/signin',
+        permanent: false,
+      },
+    }
+  }
+
+  const { id } = context.params as { id: string }
+
+  try {
+    const event = await prisma.events.findUnique({
+      where: { id },
+      include: {
+        departmentTemplate: true,
+      },
+    })
+
+    if (!event) {
+      return { notFound: true }
+    }
+
+    const permission = await prisma.event_permissions.findFirst({
+      where: {
+        eventId: id,
+        userId: session.user.id,
+      },
+    })
+
+    if (!permission) {
+      return {
+        redirect: {
+          destination: '/events/select',
+          permanent: false,
+        },
+      }
+    }
+
+    const canEdit = permission.role === 'ADMIN' as any
+
+    return {
+      props: {
+        event: JSON.parse(JSON.stringify(event)),
+        canEdit,
+      },
+    }
+  } catch (error) {
+    console.error('Error fetching event:', error)
+    return { notFound: true }
+  } finally {
+    await prisma.$disconnect()
+  }
 }
 
 function ImportModal({ onClose, onImport }: { onClose: () => void; onImport: (file: File, round: number, dept?: string) => void }) {

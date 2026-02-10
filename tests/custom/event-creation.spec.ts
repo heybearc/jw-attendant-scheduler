@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 
 test.describe('Event Creation', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(process.env.BASE_URL || 'http://localhost:3001')
+    await page.goto(process.env.BASE_URL + '/auth/signin')
     await page.type('#email', process.env.TEST_USER_EMAIL || '')
     await page.type('#password', process.env.TEST_USER_PASSWORD || '')
     await page.click('button[type="submit"]')

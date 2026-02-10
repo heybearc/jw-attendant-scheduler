@@ -9,8 +9,8 @@ test.describe('FB-023: Event Selection Page Enhancements', () => {
   test.beforeEach(async ({ page }) => {
     // Login as admin
     await page.goto(process.env.BASE_URL + '/auth/signin')
-    await page.fill('input[name="email"]', process.env.TEST_USER_EMAIL!)
-    await page.fill('input[name="password"]', process.env.TEST_USER_PASSWORD!)
+    await page.type('#email', process.env.TEST_USER_EMAIL!)
+    await page.type('#password', process.env.TEST_USER_PASSWORD!)
     await page.click('button[type="submit"]')
     
     // Wait for redirect to event selection
@@ -19,12 +19,12 @@ test.describe('FB-023: Event Selection Page Enhancements', () => {
 
   test('should display search bar on event selection page', async ({ page }) => {
     // Verify search input exists
-    const searchInput = page.locator('input[placeholder*="Search events"]')
+    const searchInput = page.locator('input[placeholder*="Search events by name"]')
     await expect(searchInput).toBeVisible()
   })
 
   test('should filter events by search query', async ({ page }) => {
-    const searchInput = page.locator('input[placeholder*="Search events"]')
+    const searchInput = page.locator('input[placeholder*="Search events by name"]')
     
     // Type search query
     await searchInput.fill('Convention')
@@ -38,7 +38,7 @@ test.describe('FB-023: Event Selection Page Enhancements', () => {
   })
 
   test('should clear search with X button', async ({ page }) => {
-    const searchInput = page.locator('input[placeholder*="Search events"]')
+    const searchInput = page.locator('input[placeholder*="Search events by name"]')
     
     // Enter search
     await searchInput.fill('test')
@@ -149,7 +149,7 @@ test.describe('FB-023: Event Selection Page Enhancements', () => {
   })
 
   test('should maintain hierarchy during search', async ({ page }) => {
-    const searchInput = page.locator('input[placeholder*="Search events"]')
+    const searchInput = page.locator('input[placeholder*="Search events by name"]')
     
     // Search for something generic
     await searchInput.fill('event')
@@ -164,7 +164,7 @@ test.describe('FB-023: Event Selection Page Enhancements', () => {
   })
 
   test('should show "no results" state for non-matching search', async ({ page }) => {
-    const searchInput = page.locator('input[placeholder*="Search events"]')
+    const searchInput = page.locator('input[placeholder*="Search events by name"]')
     
     // Search for something that won't match
     await searchInput.fill('xyznonexistent12345')

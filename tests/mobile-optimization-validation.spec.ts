@@ -34,9 +34,10 @@ test.describe('Phase 7 Mobile Optimization Validation', () => {
       await page.waitForURL('**/events/**')
       await page.waitForLoadState('networkidle')
       
-      // Go to volunteers page - wait for tab to be available
-      await page.waitForSelector('a[href*="/volunteers"]', { timeout: 10000 })
-      await page.click('a[href*="/volunteers"]')
+      // Go to volunteers page - use .first() to handle multiple matching elements
+      const volunteersTab = page.locator('a[href*="/volunteers"]').first()
+      await volunteersTab.waitFor({ state: 'visible', timeout: 10000 })
+      await volunteersTab.click()
       await page.waitForURL('**/volunteers')
       await page.waitForLoadState('networkidle')
       

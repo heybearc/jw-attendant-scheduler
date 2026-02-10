@@ -32,8 +32,8 @@ test.describe('FB-029: Volunteer Details Popup', () => {
   })
 
   test('should display volunteer names as clickable elements', async ({ page }) => {
-    // Look for volunteer name cells in table
-    const volunteerNames = page.locator('td:has-text(/[A-Z][a-z]+ [A-Z][a-z]+/)')
+    // Look for volunteer name cells in table - use filter with regex
+    const volunteerNames = page.locator('td').filter({ hasText: /[A-Z][a-z]+ [A-Z][a-z]+/ })
     
     if (await volunteerNames.count() > 0) {
       const firstName = volunteerNames.first()

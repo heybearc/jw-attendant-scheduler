@@ -2582,9 +2582,11 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     }
 
     // Simplified: Get attendants for this event (including inactive)
+    // Exclude IVS approval volunteers - they only appear in IVS Approvals tab
     const eventAttendants = await prisma.event_volunteers.findMany({
       where: {
-        eventId: id as string
+        eventId: id as string,
+        ivsImportBatchId: null as any // Exclude IVS imports
       },
       select: {
         volunteerId: true

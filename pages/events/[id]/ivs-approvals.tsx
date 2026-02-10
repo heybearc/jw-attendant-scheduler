@@ -46,6 +46,9 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
   const [rounds, setRounds] = useState<number[]>([])
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingVolunteer, setEditingVolunteer] = useState<IVSVolunteer | null>(null)
+  const [selectedVolunteers, setSelectedVolunteers] = useState<string[]>([])
+  const [showBulkModal, setShowBulkModal] = useState(false)
+  const [bulkAction, setBulkAction] = useState('')
 
   useEffect(() => {
     fetchVolunteers()

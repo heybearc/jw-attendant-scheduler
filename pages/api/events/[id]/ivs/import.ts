@@ -165,13 +165,13 @@ export default async function handler(
         const approvedBy = isElder ? 'Auto-approved (Elder)' : undefined
 
         // Create event volunteer record with IVS fields
-        // Note: No role or userId - IVS volunteers don't have app permissions
         await prisma.event_volunteers.create({
           data: {
             id: uuidv4(),
             eventId: eventId as string,
             volunteerId: globalVolunteer.id,
             userId: null,
+            role: 'ATTENDANT' as any,
             isActive: true,
             ivsApprovalStatus: approvalStatus,
             ivsSubmittedBy: departmentName,

@@ -15,15 +15,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     select: { id: true, role: true }
   })
 
-  if (!user || user.role !== 'ADMIN') {
-    return res.status(403).json({ success: false, error: 'Admin access required' })
+  if (!user) {
+    return res.status(403).json({ success: false, error: 'User not found' })
   }
+
+  // GET: Allow ADMIN, OVERSEER, ASSISTANT_OVERSEER to read templates
+  // POST: Only ADMIN can create templates
+  const canRead = ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER'].includes(user.role)
+  const canWrite = user.role === 'ADMIN'
 
   try {
     switch (req.method) {
       case 'GET':
+        if (!canRead) {
+          return res.status(403).json({ success: false, error: 'Insufficient permissions' })
+        }
         return await handleGet(req, res)
       case 'POST':
+        if (!canWrite) {
+          return res.status(403).json({ success: false, error: 'Admin access required' })
+        }
         return await handlePost(req, res)
       default:
         res.setHeader('Allow', ['GET', 'POST'])

@@ -25,20 +25,23 @@ test.describe('Phase 7 Mobile Optimization Validation', () => {
   })
 
   test('Volunteer delete functionality', async ({ page }) => {
-    // Navigate to first event
-    const firstEvent = page.locator('a[href^="/events/"]').first()
-    const eventCount = await firstEvent.count()
+    // Navigate to first event card (not just any link)
+    const firstEventCard = page.locator('.bg-white.rounded-lg.shadow-lg').first()
+    const eventCount = await firstEventCard.count()
     
     if (eventCount > 0) {
-      await firstEvent.click()
-      await page.waitForURL('**/events/**')
+      await firstEventCard.click()
+      await page.waitForURL('**/events/**', { timeout: 10000 })
       await page.waitForLoadState('networkidle')
       
-      // Go to volunteers page - use .first() to handle multiple matching elements
+      // Wait a bit for tabs to render
+      await page.waitForTimeout(1000)
+      
+      // Go to volunteers page - look for the tab link
       const volunteersTab = page.locator('a[href*="/volunteers"]').first()
       await volunteersTab.waitFor({ state: 'visible', timeout: 10000 })
       await volunteersTab.click()
-      await page.waitForURL('**/volunteers')
+      await page.waitForURL('**/volunteers', { timeout: 5000 })
       await page.waitForLoadState('networkidle')
       
       // Verify page loads without errors

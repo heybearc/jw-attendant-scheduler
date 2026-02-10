@@ -127,7 +127,7 @@
     - Custom status list configuration
     - Department list management for filtering
   - **Use Case:** IVS department manages volunteer approval workflow across multiple departments (import spreadsheets, track approval status, coordinate with service committees, export results). Separate from IVS department's own 20-volunteer scheduling needs (uses standard event workflow).
-- [ ] **Admin portal redesign with tabs layout** (effort: XL, NEW 2026-02-06) - Redesign admin portal to use tab-based navigation like event pages instead of sidebar menu. Current sidebar makes mobile experience unusable. Should follow EventPageWrapper pattern with horizontal tabs for better mobile UX.
+- [x] **Admin portal redesign with tabs layout** (effort: XL, COMPLETED 2026-02-10) - Redesigned admin console with tab-based navigation instead of sidebar menu. Implemented mobile hamburger menu for PWA-friendly admin access. Improved organization of admin functions into logical groups (Event Management, Admin Functions, Help). **Deployed as v4.3.0.**
 - [ ] Email content refinement for assignment notifications (effort: M) - Improve clarity, tone, and user experience of notification emails
 
 ### Medium Priority
@@ -253,6 +253,10 @@
 
 ## ✅ Recently Completed (Last 30 Days)
 
+- [x] v4.3.0: Admin Console Redesign - Date: 2026-02-10
+- [x] Tab-based navigation replacing sidebar menu - Date: 2026-02-10
+- [x] Mobile hamburger menu for PWA-friendly admin access - Date: 2026-02-10
+- [x] 100% test pass rate (81/81 tests) - Date: 2026-02-10
 - [x] v4.1.1: FB-028 localhost redirect bug fix - Date: 2026-02-08
 - [x] qa-01 testing migration with dynamic STANDBY detection - Date: 2026-02-08
 - [x] Promoted qa-01 testing pattern to control plane - Date: 2026-02-08

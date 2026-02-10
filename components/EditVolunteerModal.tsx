@@ -31,6 +31,8 @@ export default function EditVolunteerModal({ volunteer, onClose, onSave }: EditV
   const [notes, setNotes] = useState(volunteer.notes || '')
   const [deniedReason, setDeniedReason] = useState('')
   const [earlyCheckin, setEarlyCheckin] = useState(volunteer.earlyCheckinEligible || false)
+  const [requestRound, setRequestRound] = useState(volunteer.requestRound)
+  const [department, setDepartment] = useState(volunteer.submittedBy)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -41,7 +43,9 @@ export default function EditVolunteerModal({ volunteer, onClose, onSave }: EditV
       ivsApprovalStatus: approvalStatus,
       ivsApprovalNotes: notes,
       ...(approvalStatus === 'Not Approved' && deniedReason && { ivsDeniedReason: deniedReason }),
-      earlyCheckinEligible: earlyCheckin
+      earlyCheckinEligible: earlyCheckin,
+      ivsRequestRound: requestRound,
+      ivsSubmittedBy: department
     })
   }
 
@@ -82,6 +86,30 @@ export default function EditVolunteerModal({ volunteer, onClose, onSave }: EditV
               className="w-full px-3 py-2 border rounded-md"
               required
             />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Department</label>
+              <input
+                type="text"
+                value={department}
+                onChange={(e) => setDepartment(e.target.value)}
+                className="w-full px-3 py-2 border rounded-md"
+                placeholder="e.g., Parking, Security"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Request Round</label>
+              <input
+                type="number"
+                min="1"
+                value={requestRound}
+                onChange={(e) => setRequestRound(parseInt(e.target.value))}
+                className="w-full px-3 py-2 border rounded-md"
+                required
+              />
+            </div>
           </div>
 
           <div className="mb-4">

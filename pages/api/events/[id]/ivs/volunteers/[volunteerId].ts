@@ -44,7 +44,9 @@ export default async function handler(
       earlyCheckinEligible,
       checkedInAt,
       checkedInBy,
-      checkinNotes
+      checkinNotes,
+      ivsRequestRound,
+      ivsSubmittedBy
     } = req.body
 
     // Update global volunteer record if name/congregation changed
@@ -104,6 +106,14 @@ export default async function handler(
 
     if (checkinNotes !== undefined) {
       updateData.checkinNotes = checkinNotes
+    }
+
+    if (ivsRequestRound !== undefined) {
+      updateData.ivsRequestRound = ivsRequestRound
+    }
+
+    if (ivsSubmittedBy !== undefined) {
+      updateData.ivsSubmittedBy = ivsSubmittedBy
     }
 
     const eventVolunteer = await prisma.event_volunteers.findFirst({

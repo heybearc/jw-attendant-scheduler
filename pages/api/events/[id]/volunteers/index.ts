@@ -52,10 +52,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 async function handleGetEventVolunteers(req: NextApiRequest, res: NextApiResponse, eventId: string, event: any) {
   try {
     // Get volunteers from event_volunteers table (mapped to event_attendants)
+    // Exclude IVS approval volunteers - they only appear in IVS Approvals tab
     const eventVolunteers = await prisma.event_volunteers.findMany({
       where: {
         eventId: eventId,
-        isActive: true
+        isActive: true,
+        ivsImportBatchId: null as any // Exclude IVS imports
       },
       include: {
         volunteer: {

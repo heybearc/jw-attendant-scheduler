@@ -32,18 +32,19 @@ interface Event {
   departmentTemplateId?: string | null
   settings?: {
     customFields?: Record<string, any>
+    moduleOverrides?: Record<string, boolean>
   } | null
-  // APEX GUARDIAN: Oversight Management Fields (database field names)
+  // APEX GUARDIAN: Oversight Management Fields (database field names - all lowercase)
   circuitoverseername?: string
   circuitoverseerphone?: string
   circuitoverseeremail?: string
   assemblyoverseername?: string
   assemblyoverseerphone?: string
   assemblyoverseeremail?: string
-  volunteerOverseerName?: string
-  volunteerOverseerPhone?: string
-  volunteerOverseerEmail?: string
-  volunteerOverseerAssistants?: any[]
+  volunteeroverseername?: string
+  volunteeroverseerphone?: string
+  volunteeroverseeremail?: string
+  volunteeroverseerassistants?: any[]
   childEvents?: Array<{
     id: string
     name: string
@@ -679,10 +680,10 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
                 <div className="bg-white bg-opacity-60 rounded-lg p-3">
                   <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">Volunteer Overseer</div>
                   <div className="text-sm font-semibold text-gray-900">
-                    {event.volunteerOverseerName || 'Not Assigned'}
+                    {event.volunteeroverseername || 'Not Assigned'}
                   </div>
-                  {event.volunteerOverseerPhone && (
-                    <div className="text-xs text-gray-600">📞 {event.volunteerOverseerPhone}</div>
+                  {event.volunteeroverseerphone && (
+                    <div className="text-xs text-gray-600">📞 {event.volunteeroverseerphone}</div>
                   )}
                 </div>
               </div>

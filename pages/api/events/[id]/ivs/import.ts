@@ -215,9 +215,26 @@ async function parseVolunteerFile(file: File): Promise<ImportedVolunteer[]> {
   const worksheet = workbook.Sheets[sheetName]
   const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as string[][]
 
+  if (data.length === 0) {
+    throw new Error('File is empty')
+  }
+
+  // Validate header row
+  const headerRow = data[0]
+  if (!headerRow || headerRow.length < 2) {
+    throw new Error('Invalid spreadsheet format. Expected columns: NAME, CONGREGATION')
+  }
+
+  const nameHeader = headerRow[0]?.toString().trim().toUpperCase()
+  const congregationHeader = headerRow[1]?.toString().trim().toUpperCase()
+
+  if (nameHeader !== 'NAME' || congregationHeader !== 'CONGREGATION') {
+    throw new Error(`Invalid spreadsheet format. Expected columns: NAME, CONGREGATION. Found: ${headerRow[0]}, ${headerRow[1]}`)
+  }
+
   const volunteers: ImportedVolunteer[] = []
 
-  // Skip header row
+  // Parse data rows (skip header)
   for (let i = 1; i < data.length; i++) {
     const row = data[i]
     if (!row || row.length < 2) continue

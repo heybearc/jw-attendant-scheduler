@@ -193,7 +193,7 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
     >
       <EventPageLayout
         event={event}
-        currentPage="overview"
+        currentPage="ivs-approvals"
         canEdit={canEdit}
       >
         <div className="p-6">

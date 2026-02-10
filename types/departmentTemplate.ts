@@ -21,6 +21,7 @@ export interface ModuleConfig {
   countTimes: boolean
   lanyards: boolean
   positions: boolean
+  ivsApprovals: boolean
   customFields: CustomField[]
 }
 
@@ -56,6 +57,7 @@ export const DEFAULT_ATTENDANTS_CONFIG: DepartmentTemplateConfig = {
     countTimes: true,
     lanyards: true,
     positions: true,
+    ivsApprovals: false,
     customFields: [
       {
         id: 'badge_number',
@@ -95,6 +97,7 @@ export const DEFAULT_BAPTISM_CONFIG: DepartmentTemplateConfig = {
     countTimes: false,
     lanyards: false,
     positions: true,
+    ivsApprovals: false,
     customFields: [
       {
         id: 'candidate_name',
@@ -138,6 +141,7 @@ export const DEFAULT_PARKING_CONFIG: DepartmentTemplateConfig = {
     countTimes: false,
     lanyards: false,
     positions: true,
+    ivsApprovals: false,
     customFields: [
       {
         id: 'lot_assignment',
@@ -168,4 +172,19 @@ export const DEFAULT_PARKING_CONFIG: DepartmentTemplateConfig = {
     { id: '3', name: 'Traffic Director', sortOrder: 3, capacity: 1 },
     { id: '4', name: 'Overflow Coordinator', sortOrder: 4, capacity: 1 }
   ]
+}
+
+export const DEFAULT_IVS_CONFIG: DepartmentTemplateConfig = {
+  moduleConfig: {
+    countTimes: false,
+    lanyards: false,
+    positions: false,
+    ivsApprovals: true,
+    customFields: []
+  },
+  terminology: {
+    volunteer: 'Volunteer',
+    department: 'Department'
+  },
+  positionTemplates: []
 }

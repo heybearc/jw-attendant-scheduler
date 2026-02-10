@@ -17,7 +17,7 @@ interface EventPageLayoutProps {
     eventType?: string
     startDate?: string
   }
-  currentPage: 'overview' | 'positions' | 'volunteers' | 'oversight' | 'count-times' | 'lanyards' | 'documents' | 'announcements' | 'permissions' | 'edit'
+  currentPage: 'overview' | 'positions' | 'volunteers' | 'oversight' | 'count-times' | 'lanyards' | 'ivs-approvals' | 'documents' | 'announcements' | 'permissions' | 'edit'
   canEdit?: boolean
   canDelete?: boolean
   canManagePermissions?: boolean
@@ -41,6 +41,7 @@ export default function EventPageLayout({
 
   const isCountTimesEnabled = moduleConfig?.countTimes === true
   const isLanyardsEnabled = moduleConfig?.lanyards === true
+  const isIVSEnabled = moduleConfig?.ivsApprovals === true
 
   const getStatusBadge = (status: string) => {
     const statusColors = {
@@ -198,6 +199,18 @@ export default function EventPageLayout({
                 }`}
               >
                 🏷️ Lanyards
+              </Link>
+            )}
+            {isIVSEnabled && (
+              <Link
+                href={`/events/${event.id}/ivs-approvals`}
+                className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${
+                  currentPage === 'ivs-approvals'
+                    ? 'text-blue-600 border-b-2 border-blue-600'
+                    : 'text-gray-600 hover:text-gray-900 hover:border-gray-300 border-b-2 border-transparent'
+                }`}
+              >
+                ✅ IVS Approvals
               </Link>
             )}
             <Link

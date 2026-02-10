@@ -117,12 +117,15 @@ export default async function handler(
     }
 
     // Find the event_volunteers record by volunteerId (the volunteer's global ID)
+    console.log('Searching for IVS volunteer:', { eventId, volunteerId })
     const eventVolunteer = await prisma.event_volunteers.findFirst({
       where: {
         eventId: eventId as string,
         volunteerId: volunteerId as string
       }
     })
+
+    console.log('Found event volunteer:', eventVolunteer ? 'YES' : 'NO', eventVolunteer?.id)
 
     if (!eventVolunteer) {
       return res.status(404).json({ success: false, message: 'IVS volunteer not found in event' })

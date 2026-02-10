@@ -50,6 +50,7 @@ export default function DepartmentTemplateModal({ isOpen, onClose, onSave, depar
     countTimes: false,
     lanyards: false,
     positions: true,
+    ivsApprovals: false,
     customFields: []
   })
 
@@ -98,6 +99,7 @@ export default function DepartmentTemplateModal({ isOpen, onClose, onSave, depar
       countTimes: false,
       lanyards: false,
       positions: true,
+      ivsApprovals: false,
       customFields: []
     })
     setTerminology({
@@ -505,6 +507,15 @@ function ModulesTab({ moduleConfig, setModuleConfig, loadPreset }: any) {
             enabled={true}
             onChange={() => {}}
             disabled={true}
+          />
+
+          <ModuleToggle
+            id="ivsApprovals"
+            label="IVS Approvals"
+            description="Track volunteer approval workflow with import/export and early check-in"
+            icon="✅"
+            enabled={moduleConfig.ivsApprovals}
+            onChange={(enabled) => setModuleConfig({ ...moduleConfig, ivsApprovals: enabled })}
           />
         </div>
       </div>

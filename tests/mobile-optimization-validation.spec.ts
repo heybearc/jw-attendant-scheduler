@@ -5,8 +5,8 @@ test.describe('Phase 7 Mobile Optimization Validation', () => {
     await page.goto(process.env.BASE_URL || 'http://localhost:3001')
     
     // Login
-    await page.fill('input[type="email"]', process.env.TEST_USER_EMAIL || '')
-    await page.fill('input[type="password"]', process.env.TEST_USER_PASSWORD || '')
+    await page.fill('#email', process.env.TEST_USER_EMAIL || '')
+    await page.fill('#password', process.env.TEST_USER_PASSWORD || '')
     await page.click('button[type="submit"]')
     await page.waitForURL('**/events/select')
   })
@@ -79,7 +79,7 @@ test.describe('Phase 7 Mobile Optimization Validation', () => {
     await page.goto(`${process.env.BASE_URL}/volunteer/login`)
     
     // Check for autocomplete attributes
-    const emailInput = page.locator('input[type="email"]').first()
+    const emailInput = page.locator('#email').first()
     if (await emailInput.count() > 0) {
       const autocomplete = await emailInput.getAttribute('autocomplete')
       expect(autocomplete).toBeTruthy()

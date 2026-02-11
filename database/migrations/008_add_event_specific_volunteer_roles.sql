@@ -22,7 +22,7 @@ SET
     is_overseer = COALESCE(v.is_overseer, false),
     is_elder = COALESCE(v.is_elder, false)
 FROM volunteers v
-WHERE ev.volunteer_id = v.id;
+WHERE ev."volunteerId" = v.id;
 
 -- Step 4: Add comment explaining the fields
 COMMENT ON COLUMN event_attendants.is_keyman IS 'Event-specific: Is this volunteer serving as a keyman for THIS event?';

@@ -247,6 +247,11 @@ model email_configurations {
 // The table was originally named 'event_attendants' but the model is 'event_volunteers'
 // We keep the @@map directive to maintain compatibility without requiring DBA access
 // See /docs/TABLE_RENAME_PLAN.md for details
+//
+// Event-Specific Roles (Option 1 Architecture):
+// isKeyman, isOverseer, isElder are event-specific flags
+// A volunteer can be a keyman in Event A but not in Event B
+// See /docs/VOLUNTEER_ROLES_ARCHITECTURE.md for details
 model event_volunteers {
   id                      String                 @id
   eventId                 String
@@ -260,6 +265,11 @@ model event_volunteers {
   volunteerId             String?
   keymanId                String?
   overseerId              String?
+  
+  // Event-specific role flags (Option 1 Architecture)
+  isKeyman                Boolean                @default(false) @map("is_keyman")
+  isOverseer              Boolean                @default(false) @map("is_overseer")
+  isElder                 Boolean                @default(false) @map("is_elder")
   
   // IVS Approval Workflow Fields (optional, null if not using IVS module)
   ivsApprovalStatus       String?                @map("ivs_approval_status")

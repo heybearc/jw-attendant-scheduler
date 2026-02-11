@@ -210,7 +210,7 @@ export async function getUserEvents(userId: string) {
       }))
     }
 
-    const permissions = await (prisma as any).event_permissions.findMany({
+    const permissions = await prisma.event_permissions.findMany({
       where: { userId },
       include: {
         events: {

@@ -77,7 +77,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         console.log('🔍 Checking for shift conflicts...')
         
         // Get the shift details for time conflict checking
-        const targetShift = await (prisma as any).position_shifts.findUnique({
+        const targetShift = await prisma.position_shifts.findUnique({
           where: { id: validatedData.shiftId },
           include: { positions: true }
         })
@@ -104,7 +104,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         // Check for all-day shift conflicts
         // If attendant has an all-day shift, they can't take any other shift
         // If assigning an all-day shift, attendant can't have any existing shifts
-        const existingAssignments = await (prisma as any).position_assignments.findMany({
+        const existingAssignments = await prisma.position_assignments.findMany({
           where: {
             volunteerId: validatedData.volunteerId,
             NOT: { shiftId: validatedData.shiftId },

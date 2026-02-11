@@ -43,7 +43,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
 
     // Fetch oversight data separately
-    const oversightData = await (prisma as any).position_oversight.findMany({
+    const oversightData = await prisma.position_oversight_assignments.findMany({
       where: {
         positionId: {
           in: positions.map(p => p.id)

@@ -75,7 +75,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const transformedEvents = events.map(event => ({
         ...event,
         _count: {
-          event_positions: event.id === 'd43d977b-c06e-446f-8c6d-05b407daf459' ? 41 : 0, // Circuit Assembly has 41 positions
+          positions: event.id === 'd43d977b-c06e-446f-8c6d-05b407daf459' ? 41 : 0, // Circuit Assembly has 41 positions
           event_attendant_associations: event.id === 'd43d977b-c06e-446f-8c6d-05b407daf459' ? 149 : 0, // Circuit Assembly has 149 attendants
           assignments: event.id === 'd43d977b-c06e-446f-8c6d-05b407daf459' ? 1 : 0 // Circuit Assembly has 1 assignment (Paul Lewis)
         }

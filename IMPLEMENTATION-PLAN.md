@@ -339,6 +339,7 @@
 - [x] **GREEN (STANDBY) build cache issue** (FIXED 2026-02-08) - Resolved via PM2 restart. Both servers now healthy and synced.
 
 ### Non-Critical (Backlog)
+- [ ] **TypeScript errors in test files** (effort: M, NEW 2026-02-11) - 174 TypeScript errors in test files and legacy components. Errors include: missing `@testing-library/react-hooks` imports, legacy "Attendant" type references in components, type mismatches in test files. **Impact:** Tests may not run correctly, but doesn't affect production runtime. **Files affected:** `__tests__/hooks/*.test.ts`, `components/FilterControls.tsx`, `components/OverseerModal.tsx`, `features/attendant-management/`. **Status:** Documented, needs cleanup pass.
 - [ ] **React error loop in production** (effort: L) - Recurring minified React errors #425 and #418 causing infinite error boundary loops. Caught by APEX GUARDIAN error boundary. Errors occur in production build, need to reproduce in dev mode with non-minified React to identify root cause. **Impact:** Console spam, potential performance degradation. **Frequency:** Intermittent but recurring across releases. **Status:** Monitoring, non-blocking.
 - [ ] Position management test expects event selection (effort: S) - Pre-existing test failure, non-blocking
 - [ ] Refactoring validation test expects event selection (effort: S) - Pre-existing test failure, non-blocking

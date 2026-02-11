@@ -102,7 +102,6 @@ model assignments {
   confirmationNotes  String?                    @map("confirmation_notes")
   declinedReason     String?                    @map("declined_reason")
   events             events                     @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  event_positions    event_positions            @relation(fields: [positionId], references: [id], onDelete: Cascade)
   users              users                      @relation(fields: [userId], references: [id], onDelete: Cascade)
   notifications      assignment_notifications[]
 
@@ -347,29 +346,6 @@ model event_permissions {
   @@index([userId])
 }
 
-model event_positions {
-  id                   String        @id
-  eventId              String
-  positionNumber       Int
-  positionName         String
-  description          String?
-  department           String?
-  isActive             Boolean       @default(true)
-  isAllDay             Boolean       @default(false)
-  isLeadershipPosition Boolean       @default(false)
-  requiresExperience   Boolean       @default(false)
-  maxVolunteers        Int           @default(1) @map("maxAttendants")
-  minVolunteers        Int           @default(1) @map("minAttendants")
-  tags                 Json?
-  instructions         String?
-  createdAt            DateTime      @default(now())
-  updatedAt            DateTime
-  assignments          assignments[]
-  events               events        @relation(fields: [eventId], references: [id], onDelete: Cascade)
-
-  @@unique([eventId, positionNumber])
-}
-
 model locations {
   id         String   @id @default(cuid())
   name       String
@@ -426,7 +402,6 @@ model events {
   event_volunteers               event_volunteers[]
   event_documents                event_documents[]
   event_permissions              event_permissions[]
-  event_positions                event_positions[]
   lanyard_settings               lanyard_settings?
   oversight_assignments          oversight_assignments[]
   position_oversight_assignments position_oversight_assignments[]

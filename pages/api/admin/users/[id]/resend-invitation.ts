@@ -60,7 +60,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     
     try {
       await sendInvitationEmail(user.email, user.firstName, invitationUrl)
-      console.log(`✅ Invitation resent to ${user.email}`)
     } catch (emailError) {
       console.error('Failed to send invitation email:', emailError)
       // Don't fail the request if email fails

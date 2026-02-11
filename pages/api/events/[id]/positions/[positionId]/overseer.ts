@@ -159,7 +159,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           })
         }
 
-        console.log('✅ Successfully created/updated position-level oversight assignment:', oversightAssignment.id)
 
         return res.status(201).json({
           success: true,

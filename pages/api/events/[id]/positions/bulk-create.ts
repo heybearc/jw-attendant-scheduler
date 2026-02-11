@@ -23,7 +23,6 @@ const bulkCreateSchema = z.object({
 })
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  console.log('🔍 BULK CREATE API CALLED')
   try {
     console.log('1. Checking session...')
     const session = await getServerSession(req, res, authOptions)
@@ -32,7 +31,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.log('❌ No session found')
       return res.status(401).json({ success: false, error: 'Unauthorized' })
     }
-    console.log('✅ Session valid')
 
     const { id: eventId } = req.query
     console.log('2. Event ID:', eventId)
@@ -51,7 +49,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.log('❌ Event not found')
       return res.status(404).json({ success: false, error: 'Event not found' })
     }
-    console.log('✅ Event found:', event.name)
 
     if (req.method === 'POST') {
       console.log('4. Calling handleBulkCreate...')
@@ -71,7 +68,6 @@ async function handleBulkCreate(req: NextApiRequest, res: NextApiResponse, event
   try {
     console.log('5. Parsing request body...')
     const validatedData = bulkCreateSchema.parse(req.body)
-    console.log('✅ Validated data:', validatedData)
     
     if (validatedData.endNumber < validatedData.startNumber) {
       return res.status(400).json({ 
@@ -141,7 +137,6 @@ async function handleBulkCreate(req: NextApiRequest, res: NextApiResponse, event
             updatedAt: new Date()
           }
         })
-        console.log(`   ✅ Position ${num} created`)
         
         // Create shifts for this position
         if (shiftsToCreate.length > 0) {
@@ -160,7 +155,6 @@ async function handleBulkCreate(req: NextApiRequest, res: NextApiResponse, event
               }
             })
           }
-          console.log(`   ✅ Shifts created for position ${num}`)
         }
         
         createdPositions.push(position)

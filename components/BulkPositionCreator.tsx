@@ -94,7 +94,6 @@ export default function BulkPositionCreator({ eventId, onClose, onSuccess }: Bul
                 errorCount++
               }
             } else {
-              console.log(`✅ Position already exists and active: ${positionName}`)
               updatedCount++
             }
           } else if (existingByNumber && !existingByNumber.isActive) {
@@ -174,7 +173,6 @@ export default function BulkPositionCreator({ eventId, onClose, onSuccess }: Bul
           failed: errorCount,
           message: `Processed ${totalProcessed} positions: ${parts.join(', ')}`
         }
-        console.log(`✅ Successfully processed ${totalProcessed} positions`)
         onSuccess(result)
       } else {
         alert('Failed to process positions')

@@ -82,7 +82,6 @@ async function handleGetVolunteer(req: NextApiRequest, res: NextApiResponse, eve
 
     // APEX GUARDIAN: Event Volunteers page is source of truth for all volunteers
     // All active volunteers are available for this event - no position assignment required
-    console.log(`✅ Fetching volunteer ${volunteerId} - Event Volunteers page is source of truth`)
 
     return res.status(200).json({
       success: true,
@@ -125,7 +124,6 @@ async function handleUpdateVolunteer(req: NextApiRequest, res: NextApiResponse, 
 
     // APEX GUARDIAN: Event Volunteers page is source of truth for all volunteers
     // No need to check for position assignments - all active volunteers are editable
-    console.log(`✅ Editing volunteer ${volunteerId} - Event Volunteers page is source of truth`)
 
     // Process forms of service
     let processedFormsOfService: string[] = []
@@ -188,10 +186,8 @@ async function handleUpdateVolunteer(req: NextApiRequest, res: NextApiResponse, 
         data: eventVolunteerUpdateData
       })
 
-      console.log(`✅ Updated event-specific roles for volunteer ${volunteerId}:`, { isOverseer, isKeyman })
     }
 
-    console.log(`✅ Successfully updated volunteer ${volunteerId}:`, {
       isActive: (updatedVolunteer as any).isActive,
       congregation: (updatedVolunteer as any).congregation
     })

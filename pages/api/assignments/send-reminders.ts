@@ -137,7 +137,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
               if (notificationResponse.ok) {
                 totalSent++
-                console.log(`✅ Reminder sent to volunteer ${volunteerId} for ${event.name}`)
               } else {
                 totalFailed++
                 const errorData = await notificationResponse.json()

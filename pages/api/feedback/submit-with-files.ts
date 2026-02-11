@@ -22,7 +22,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method === 'POST') {
     try {
-      console.log('🔍 FEEDBACK SUBMIT: Starting form parse')
       
       // Ensure upload directory exists FIRST
       const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'feedback')
@@ -43,7 +42,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       console.log('📝 Parsing form data...')
       const [fields, files] = await form.parse(req)
-      console.log('✅ Form parsed successfully:', { fields: Object.keys(fields), files: Object.keys(files) })
 
       // Extract form fields
       const type = Array.isArray(fields.type) ? fields.type[0] : fields.type

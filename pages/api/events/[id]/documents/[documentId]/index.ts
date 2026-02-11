@@ -29,7 +29,6 @@ async function handleDeleteDocument(req: NextApiRequest, res: NextApiResponse, e
   console.log('🔥 DELETE FUNCTION CALLED - eventId:', eventId, 'documentId:', documentId)
   try {
     // Fetch document from database to get file path
-    console.log('🔍 Looking up document in database...')
     const document = await prisma.event_documents.findUnique({
       where: { id: documentId }
     })
@@ -67,7 +66,6 @@ async function handleDeleteDocument(req: NextApiRequest, res: NextApiResponse, e
       where: { id: documentId }
     })
 
-    console.log(`✅ Successfully deleted document ${documentId} from event ${eventId}`)
 
     return res.status(200).json({
       success: true,

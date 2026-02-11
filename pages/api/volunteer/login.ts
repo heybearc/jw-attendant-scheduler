@@ -30,7 +30,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Search for volunteer by name and congregation
-    console.log('🔍 Searching for volunteer in database...')
     const volunteer = await prisma.volunteers.findFirst({
       where: {
         firstName: {
@@ -79,7 +78,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
     }
     
-    console.log('✅ Found volunteer:', volunteer.id)
     
     // Verify PIN using raw query (Prisma client doesn't include pinHash field due to server issue)
     const pinResult = await prisma.$queryRaw<Array<{ pinHash: string | null }>>`
@@ -105,7 +103,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
     }
     
-    console.log('✅ PIN verified')
 
     // Get active events for this volunteer
     const events = volunteer.event_volunteers_primary.map(ev => ({

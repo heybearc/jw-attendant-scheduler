@@ -146,7 +146,6 @@ export async function canManagePermissions(
     return false
   }
 
-  console.log('✅ canManagePermissions: User has role', permission.role)
   return permission.role === 'ADMIN'
 }
 

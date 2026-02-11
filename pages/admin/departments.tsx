@@ -103,7 +103,6 @@ export default function DepartmentTemplatesPage() {
     }
 
     setSuccess(editingDept ? 'Department updated successfully' : 'Department created successfully')
-    console.log('Fetching updated departments list...')
     await fetchDepartments()
     console.log('Departments refreshed')
   }

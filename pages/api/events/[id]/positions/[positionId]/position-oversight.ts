@@ -25,7 +25,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.log('❌ No session found')
       return res.status(401).json({ success: false, error: 'Unauthorized' })
     }
-    console.log('✅ Session valid for user:', session.user?.email)
 
     // Get user from database
     const user = await prisma.users.findUnique({
@@ -126,7 +125,6 @@ async function handleSetOversight(req: NextApiRequest, res: NextApiResponse, eve
   
   try {
     const validatedData = positionOversightSchema.parse(req.body)
-    console.log('✅ Validated data:', validatedData)
 
     // Verify overseer exists if provided
     if (validatedData.overseerId) {
@@ -181,7 +179,6 @@ async function handleSetOversight(req: NextApiRequest, res: NextApiResponse, eve
       })
     }
 
-    console.log('✅ Position oversight assigned successfully')
     return res.status(200).json({
       success: true,
       data: oversight,
@@ -231,7 +228,6 @@ async function handleDeleteOversight(req: NextApiRequest, res: NextApiResponse, 
       where: { id: existing.id }
     })
 
-    console.log('✅ Position oversight deleted successfully')
     return res.status(200).json({
       success: true,
       message: 'Position oversight removed successfully'

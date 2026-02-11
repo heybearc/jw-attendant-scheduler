@@ -26,7 +26,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.log('❌ No session found')
       return res.status(401).json({ success: false, error: 'Unauthorized' })
     }
-    console.log('✅ Session valid for user:', session.user?.email)
 
     // Check user permissions
     const user = await prisma.users.findUnique({
@@ -37,7 +36,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.log('❌ Insufficient permissions for user:', user?.role)
       return res.status(403).json({ success: false, error: 'Insufficient permissions' })
     }
-    console.log('✅ User permissions valid:', user.role)
     const userId = user.id
 
     console.log('2. Full req.query:', JSON.stringify(req.query))
@@ -82,7 +80,6 @@ async function handleBulkOversightAssignment(req: NextApiRequest, res: NextApiRe
   
   try {
     const validatedData = bulkOversightSchema.parse(req.body)
-    console.log('✅ Validated data:', validatedData)
 
     // Verify all positions exist and belong to the event
     console.log('4. Verifying positions exist...')
@@ -174,7 +171,6 @@ async function handleBulkOversightAssignment(req: NextApiRequest, res: NextApiRe
       return assignments
     })
 
-    console.log('✅ Bulk oversight assignment completed successfully')
     return res.status(200).json({
       success: true,
       data: {

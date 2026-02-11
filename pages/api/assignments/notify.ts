@@ -107,7 +107,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ error: 'Assignment not found' })
     }
 
-    console.log('✅ Assignment found:', assignmentId)
     console.log('Volunteer data:', assignment.volunteer ? 'Present' : 'Missing')
 
     const volunteerRecord = assignment.volunteer
@@ -131,7 +130,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       email: volunteerRecord.user?.email || volunteerRecord.email
     }
 
-    console.log('✅ Volunteer data prepared:', volunteer)
     
     const event = assignment.positions.events
     

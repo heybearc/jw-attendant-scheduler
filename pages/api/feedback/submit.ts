@@ -165,7 +165,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }
           }
           
-          console.log(`✅ Sent feedback notifications to ${admins.length} admins`)
         } catch (emailError) {
           console.error('Failed to send feedback notifications:', emailError)
         }

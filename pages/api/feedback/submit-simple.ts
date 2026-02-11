@@ -21,7 +21,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.log('Request body:', { type, title, description, priority })
 
       // Find user
-      console.log('🔍 Looking up user by email:', session.user.email)
       let user = await prisma.users.findUnique({
         where: { email: session.user.email }
       })
@@ -40,7 +39,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             updatedAt: new Date()
           }
         })
-        console.log('✅ User created:', user.id)
       }
 
       // Create feedback
@@ -54,7 +52,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           submittedBy: user.id
         }
       })
-      console.log('✅ Feedback created:', feedback.id)
 
       return res.json({
         success: true,

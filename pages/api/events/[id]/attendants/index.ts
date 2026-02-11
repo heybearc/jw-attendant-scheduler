@@ -163,7 +163,6 @@ async function handleCreateEventAttendant(req: NextApiRequest, res: NextApiRespo
       }
     })
 
-    console.log(`✅ Created attendant ${firstName} ${lastName} and assigned to event`)
 
     return res.status(201).json({
       success: true,
@@ -267,9 +266,7 @@ async function handleBulkImportEventAttendants(req: NextApiRequest, res: NextApi
                 updatedAt: new Date()
               }
             })
-            console.log(`✅ Updated attendant and assigned to event: ${attendantData.firstName} ${attendantData.lastName}`)
           } else {
-            console.log(`✅ Updated attendant (already assigned to event): ${attendantData.firstName} ${attendantData.lastName}`)
           }
 
           updated++
@@ -317,7 +314,6 @@ async function handleBulkImportEventAttendants(req: NextApiRequest, res: NextApi
           })
 
           created++
-          console.log(`✅ Created attendant and assigned to event: ${attendantData.firstName} ${attendantData.lastName}`)
         }
       } catch (error) {
         console.error(`Error processing attendant ${i + 1}:`, error)
@@ -331,7 +327,6 @@ async function handleBulkImportEventAttendants(req: NextApiRequest, res: NextApi
 
     console.log(`🎯 APEX GUARDIAN Import Complete: ${created} created, ${updated} updated, ${errors.length} errors`)
     console.log(`📊 IMPORT STATS: CSV had ${attendants.length} rows, processed ${created + updated} attendants, ${attendants.length - (created + updated)} skipped`)
-    console.log(`✅ All imported attendants are automatically assigned to the event and will appear in the attendants list`)
     
     if (errors.length > 0) {
       console.log(`❌ IMPORT ERRORS:`)

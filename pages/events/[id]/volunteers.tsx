@@ -812,7 +812,6 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                   throw new Error(`Basic update failed: ${err.error}`)
                 })
               }
-              console.log(`✅ Basic data updated for ${attendant.firstName} ${attendant.lastName}`)
               return response
             })
           )
@@ -848,7 +847,6 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                   console.error(`PIN update failed for ${attendant.firstName} ${attendant.lastName}:`, response.status)
                   throw new Error(`PIN update failed`)
                 }
-                console.log(`✅ PIN updated for ${attendant.firstName} ${attendant.lastName}: ${pin}`)
                 return response
               })
             )
@@ -879,7 +877,6 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                   throw new Error(`Oversight update failed: ${err.error}`)
                 })
               }
-              console.log(`✅ Oversight updated for ${attendant.firstName} ${attendant.lastName}`)
               return response
             })
           )
@@ -896,7 +893,6 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
         console.error('Some updates failed:', failed)
         alert(`Bulk edit completed with ${successful.length} successful and ${failed.length} failed updates. Check console for details.`)
       } else {
-        console.log(`✅ All ${successful.length} updates completed successfully`)
       }
       
       setShowBulkEditModal(false)

@@ -159,7 +159,6 @@ async function handlePublishDocument(req: NextApiRequest, res: NextApiResponse, 
             }
           }
           
-          console.log(`✅ Sent ${volunteers.length} document publish notifications`)
         } catch (emailError) {
           console.error('Failed to send document notifications:', emailError)
         }

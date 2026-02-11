@@ -16,7 +16,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.log('❌ No session found')
       return res.status(401).json({ success: false, error: 'Unauthorized' })
     }
-    console.log('✅ Session valid for user:', session.user.id)
 
     const { id: eventId, positionId, shiftId } = req.query
     console.log('2. Event ID:', eventId, 'Position ID:', positionId, 'Shift ID:', shiftId)
@@ -97,17 +96,14 @@ async function handleDeleteShift(req: NextApiRequest, res: NextApiResponse, even
         await tx.position_assignments.deleteMany({
           where: { shiftId: shiftId }
         })
-        console.log(`✅ Deleted ${assignments.length} assignments`)
       }
 
       // Then delete the shift itself
       await tx.position_shifts.delete({
         where: { id: shiftId }
       })
-      console.log('✅ Deleted shift')
     })
 
-    console.log('✅ Shift deleted successfully')
     return res.status(200).json({
       success: true,
       message: `Shift "${shiftName}" deleted successfully`,

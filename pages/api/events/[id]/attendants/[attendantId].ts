@@ -82,7 +82,6 @@ async function handleGetAttendant(req: NextApiRequest, res: NextApiResponse, eve
 
     // APEX GUARDIAN: Event Attendants page is source of truth for all attendants
     // All active attendants are available for this event - no position assignment required
-    console.log(`✅ Fetching attendant ${attendantId} - Event Attendants page is source of truth`)
 
     return res.status(200).json({
       success: true,
@@ -125,7 +124,6 @@ async function handleUpdateAttendant(req: NextApiRequest, res: NextApiResponse, 
 
     // APEX GUARDIAN: Event Attendants page is source of truth for all attendants
     // No need to check for position assignments - all active attendants are editable
-    console.log(`✅ Editing attendant ${attendantId} - Event Attendants page is source of truth`)
 
     // Process forms of service
     let processedFormsOfService: string[] = []
@@ -173,7 +171,6 @@ async function handleUpdateAttendant(req: NextApiRequest, res: NextApiResponse, 
       data: updateData
     })
 
-    console.log(`✅ Successfully updated attendant ${attendantId}:`, {
       isActive: (updatedAttendant as any).isActive,
       congregation: (updatedAttendant as any).congregation
     })

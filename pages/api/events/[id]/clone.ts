@@ -236,7 +236,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // and should start fresh for each event
 
     // Clone event permissions
-    console.log(`[CLONE] Fetching permissions for original event: ${id}`)
     const originalPermissions = await prisma.event_permissions.findMany({
       where: { eventId: id }
     })

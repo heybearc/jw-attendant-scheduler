@@ -1061,12 +1061,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     }) as any
     
     if (!eventData) {
-      console.log('🔍 LANYARDS: Event not found')
       return { notFound: true }
     }
 
-    console.log('🔍 LANYARDS: Event found, id:', eventData.id)
-    console.log('🔍 LANYARDS: Event data keys:', Object.keys(eventData))
 
     // Transform event data
     const event = {
@@ -1085,21 +1082,15 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       } : null
     }
     
-    console.log('🔍 LANYARDS: Event transformed successfully')
 
     // Transform lanyards data
-    console.log('🔍 LANYARDS DEBUG: lanyard_settings exists?', !!eventData.lanyard_settings)
-    console.log('🔍 LANYARDS DEBUG: lanyards array exists?', !!eventData.lanyard_settings?.lanyards)
-    console.log('🔍 LANYARDS DEBUG: lanyards array length:', eventData.lanyard_settings?.lanyards?.length)
     
     const lanyardsRaw = eventData.lanyard_settings?.lanyards
       ?.filter((lanyard, index) => {
         if (!lanyard) {
-          console.log(`🔍 LANYARDS DEBUG: Lanyard at index ${index} is null/undefined`)
           return false
         }
         if (!lanyard.id) {
-          console.log(`🔍 LANYARDS DEBUG: Lanyard at index ${index} has no id:`, lanyard)
           return false
         }
         return true

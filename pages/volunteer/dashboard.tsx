@@ -204,7 +204,6 @@ export default function VolunteerDashboard() {
         return
       }
       
-      console.log('Loading dashboard for volunteer:', session.user.id)
       
       // Get selected event from query param or localStorage fallback
       const eventId = router.query.eventId as string || localStorage.getItem('selectedEventId')
@@ -218,7 +217,6 @@ export default function VolunteerDashboard() {
       setSelectedEventId(eventId)
 
       // Fetch dashboard data
-      console.log('Fetching dashboard data...')
       const response = await fetch(`/api/volunteer/dashboard?volunteerId=${session.user.id}&eventId=${eventId}`)
       const result = await response.json()
       console.log('Dashboard API response:', result)
@@ -252,7 +250,6 @@ export default function VolunteerDashboard() {
       console.error('Dashboard loading error:', error)
       setError('An error occurred while loading your dashboard')
     } finally {
-      console.log('Dashboard loading complete, setting loading to false')
       setLoading(false)
     }
   }

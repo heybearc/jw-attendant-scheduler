@@ -32,8 +32,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       // APEX GUARDIAN: Event Volunteers page shows ALL volunteers
       // We need to create event-volunteer associations to store oversight assignments
-      console.log(`🔍 Updating oversight for volunteer: eventId=${eventId}, volunteerId=${volunteerId}`)
-      console.log(`🔍 Oversight data:`, validatedData)
 
       // Verify the volunteer exists and is active
       const volunteer = await prisma.volunteers.findFirst({
@@ -68,7 +66,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }
         })
         
-        console.log(`✅ Created new event-volunteer association: ${association.id}`)
       } else {
         // Update existing association
         association = await prisma.event_volunteers.update({
@@ -81,7 +78,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }
         })
         
-        console.log(`✅ Updated existing event-volunteer association: ${association.id}`)
       }
 
       // Fetch the updated association with related data

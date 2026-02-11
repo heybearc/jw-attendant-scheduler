@@ -166,7 +166,6 @@ async function handleCreateEventVolunteer(req: NextApiRequest, res: NextApiRespo
       }
     })
 
-    console.log(`✅ Created volunteer ${firstName} ${lastName} and assigned to event`)
 
     return res.status(201).json({
       success: true,
@@ -270,9 +269,7 @@ async function handleBulkImportEventVolunteers(req: NextApiRequest, res: NextApi
                 updatedAt: new Date()
               }
             })
-            console.log(`✅ Updated volunteer and assigned to event: ${volunteerData.firstName} ${volunteerData.lastName}`)
           } else {
-            console.log(`✅ Updated volunteer (already assigned to event): ${volunteerData.firstName} ${volunteerData.lastName}`)
           }
 
           updated++
@@ -320,7 +317,6 @@ async function handleBulkImportEventVolunteers(req: NextApiRequest, res: NextApi
           })
 
           created++
-          console.log(`✅ Created volunteer and assigned to event: ${volunteerData.firstName} ${volunteerData.lastName}`)
         }
       } catch (error: any) {
         console.error(`Error processing volunteer ${i + 1}:`, error)

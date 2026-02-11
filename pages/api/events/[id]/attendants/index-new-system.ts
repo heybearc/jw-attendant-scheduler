@@ -144,7 +144,6 @@ async function handleCreateEventAttendant(req: NextApiRequest, res: NextApiRespo
     })
 
     // NOTE: No position assignment created - attendant is available for assignment
-    console.log(`✅ Created attendant ${firstName} ${lastName} - available for position assignment`)
 
     return res.status(201).json({
       success: true,
@@ -228,7 +227,6 @@ async function handleBulkImportEventAttendants(req: NextApiRequest, res: NextApi
           })
 
           updated++
-          console.log(`✅ Updated attendant: ${attendantData.firstName} ${attendantData.lastName}`)
         } else {
           // Process forms of service
           let formsOfService = []
@@ -260,7 +258,6 @@ async function handleBulkImportEventAttendants(req: NextApiRequest, res: NextApi
           })
 
           created++
-          console.log(`✅ Created attendant: ${attendantData.firstName} ${attendantData.lastName}`)
         }
       } catch (error) {
         console.error(`Error processing attendant ${i + 1}:`, error)

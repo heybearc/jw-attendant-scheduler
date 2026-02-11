@@ -126,7 +126,6 @@ async function handleUpdateUser(req: NextApiRequest, res: NextApiResponse, id: s
           loginUrl: loginUrl
         })
         
-        console.log(`✅ Password reset email sent to ${user.email}`)
       } catch (emailError) {
         console.error('Failed to send password reset email:', emailError)
         // Don't fail the request if email fails

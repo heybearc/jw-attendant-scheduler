@@ -178,7 +178,6 @@ async function handleCreateUser(req: NextApiRequest, res: NextApiResponse) {
           loginUrl: loginUrl
         })
         
-        console.log(`✅ Invitation email sent to ${email}`)
       } catch (emailError) {
         console.error('Failed to send invitation email:', emailError)
         // Don't fail the request if email fails

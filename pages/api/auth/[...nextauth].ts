@@ -83,7 +83,6 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
-        console.log('✅ Volunteer found:', volunteer.id)
 
         // Verify PIN using raw query
         const pinResult = await prisma.$queryRaw<Array<{ pinHash: string | null }>>`

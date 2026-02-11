@@ -74,7 +74,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         console.log('Validated assignment data:', validatedData)
         
         // SHIFT-SPECIFIC CONFLICT DETECTION
-        console.log('🔍 Checking for shift conflicts...')
         
         // Get the shift details for time conflict checking
         const targetShift = await prisma.position_shifts.findUnique({
@@ -197,7 +196,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }
         }
         
-        console.log('✅ No conflicts detected, creating assignment...')
         
         const newAssignment = await prisma.position_assignments.create({
           data: {

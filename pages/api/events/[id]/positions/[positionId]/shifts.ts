@@ -145,7 +145,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           await prisma.position_assignments.deleteMany({
             where: { shiftId: shiftId }
           })
-          console.log(`✅ Removed ${assignments.length} assignments`)
         }
 
         // Delete the shift
@@ -153,7 +152,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           where: { id: shiftId }
         })
 
-        console.log(`✅ Successfully deleted shift ${shiftId}`)
 
         return res.status(200).json({
           success: true,

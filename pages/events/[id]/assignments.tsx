@@ -22,10 +22,10 @@ interface Assignment {
     lastName: string
     email: string
   }
-  event_positions: {
+  positions: {
     id: string
-    positionName: string
-    department: string
+    name: string
+    area: string
     positionNumber: number
   }
 }
@@ -398,10 +398,10 @@ export default function EventAssignments({ eventId, event, assignments, attendan
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">
-                            {assignment.event_positions.positionName}
+                            {assignment.positions.name}
                           </div>
                           <div className="text-sm text-gray-500">
-                            {assignment.event_positions.department} • #{assignment.event_positions.positionNumber}
+                            {assignment.positions.area} • #{assignment.positions.positionNumber}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -685,14 +685,14 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           lastName: assignment.users.lastName,
           email: assignment.users.email
         } : null,
-        event_positions: position ? {
+        positions: position ? {
           id: position.id,
-          positionName: position.name,
-          department: position.area || '',
+          name: position.name,
+          area: position.area || '',
           positionNumber: position.positionNumber
         } : null
       }
-    }).filter(assignment => assignment.users && assignment.event_positions)
+    }).filter(assignment => assignment.users && assignment.positions)
 
     // Transform attendants data from event_attendant_associations
     const attendants = eventData.event_volunteers

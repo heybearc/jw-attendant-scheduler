@@ -73,11 +73,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
         
         if (!position) {
-          // Also check event_positions table for debugging
-          const eventPosition = await prisma.event_positions.findUnique({
-            where: { id: positionId }
-          })
-          console.log('Event position lookup result:', eventPosition ? 'Found' : 'Not found')
           return res.status(404).json({ error: 'Position not found' })
         }
 

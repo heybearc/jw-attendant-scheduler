@@ -12,11 +12,11 @@ interface PositionCount {
   notes?: string
   countedBy?: string
   countedAt: string
-  event_positions: {
+  position: {
     id: string
     positionNumber: number
-    positionName: string
-    department: string
+    name: string
+    area: string
   }
 }
 
@@ -98,7 +98,7 @@ export default function CountSessionDetailPage() {
     const grouped: Record<string, PositionCount[]> = {}
     
     countSession.position_counts.forEach(pc => {
-      const dept = pc.event_positions.department || 'Unassigned'
+      const dept = pc.position.area || 'Unassigned'
       if (!grouped[dept]) grouped[dept] = []
       grouped[dept].push(pc)
     })
@@ -284,16 +284,16 @@ export default function CountSessionDetailPage() {
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {positions
-                        .sort((a, b) => a.event_positions.positionNumber - b.event_positions.positionNumber)
+                        .sort((a, b) => a.position.positionNumber - b.position.positionNumber)
                         .map((pc) => (
                           <tr key={pc.id} className={pc.attendeeCount === null ? 'bg-yellow-50' : ''}>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div>
                                 <div className="text-sm font-medium text-gray-900">
-                                  {pc.event_positions.positionName}
+                                  {pc.position.name}
                                 </div>
                                 <div className="text-sm text-gray-500">
-                                  Position #{pc.event_positions.positionNumber}
+                                  Position #{pc.position.positionNumber}
                                 </div>
                               </div>
                             </td>
@@ -361,11 +361,11 @@ export default function CountSessionDetailPage() {
     
     const headers = ['Position Number', 'Position Name', 'Department', 'Attendee Count', 'Notes', 'Counted At']
     const rows = countSession.position_counts
-      .sort((a, b) => a.event_positions.positionNumber - b.event_positions.positionNumber)
+      .sort((a, b) => a.position.positionNumber - b.position.positionNumber)
       .map(pc => [
-        pc.event_positions.positionNumber,
-        pc.event_positions.positionName,
-        pc.event_positions.department,
+        pc.position.positionNumber,
+        pc.position.name,
+        pc.position.area,
         pc.attendeeCount ?? 'Not counted',
         pc.notes || '',
         pc.attendeeCount !== null ? (() => {

@@ -7,9 +7,9 @@ interface Assignment {
   shiftStart: string
   shiftEnd: string
   status: string
-  event_positions: {
-    positionName: string
-    department: string
+  positions: {
+    name: string
+    area: string
     description?: string
   }
   position_shifts?: {
@@ -207,16 +207,16 @@ export default function GuestLookupPage() {
                           <div className="flex justify-between items-start">
                             <div>
                               <p className="font-medium text-gray-900">
-                                {assignment.event_positions.positionName}
+                                {assignment.positions.name}
                               </p>
-                              {assignment.event_positions.department && (
+                              {assignment.positions.area && (
                                 <p className="text-sm text-gray-600">
-                                  Department: {assignment.event_positions.department}
+                                  Department: {assignment.positions.area}
                                 </p>
                               )}
-                              {assignment.event_positions.description && (
+                              {assignment.positions.description && (
                                 <p className="text-sm text-gray-500">
-                                  {assignment.event_positions.description}
+                                  {assignment.positions.description}
                                 </p>
                               )}
                             </div>

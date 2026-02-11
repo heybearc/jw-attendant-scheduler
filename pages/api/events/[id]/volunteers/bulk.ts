@@ -87,11 +87,15 @@ async function handleBulkDelete(req: NextApiRequest, res: NextApiResponse, event
   }
 
   try {
-    // Check if any volunteers have assignments
-    const assignmentsCount = await prisma.assignments.count({
+    // Check if any volunteers have position assignments
+    const assignmentsCount = await prisma.position_assignments.count({
       where: {
-        eventId: eventId,
-        userId: { in: attendantIds }
+        positions: {
+          eventId: eventId
+        },
+        volunteer: {
+          userId: { in: attendantIds }
+        }
       }
     })
 

@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../src/lib/prisma'
 import { isEmailConfigured } from '../../../src/lib/email'
+import { handleApiError } from '../../src/lib/apiError'
 
 /**
  * Phase 4C Feature #1: Automated Assignment Reminders
@@ -143,11 +144,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             } catch (error: any) {
               totalFailed++
               errors.push(`Event ${event.name}, Volunteer ${volunteerId}: ${error.message}`)
-              console.error(`❌ Error sending reminder:`, error)
+              // Error logged by handleApiError
             }
           }
         } catch (error: any) {
-          console.error(`❌ Error processing event ${event.name}:`, error)
+          // Error logged by handleApiError
           errors.push(`Event ${event.name}: ${error.message}`)
         }
       }
@@ -163,7 +164,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
 
   } catch (error: any) {
-    console.error('Send reminders API error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({
       error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error'

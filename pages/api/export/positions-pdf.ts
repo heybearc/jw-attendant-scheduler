@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../auth/[...nextauth]'
 import PDFDocument from 'pdfkit'
+import { handleApiError } from '../../src/lib/apiError'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -216,7 +217,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Finalize PDF
     doc.end()
   } catch (error) {
-    console.error('PDF export error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({ error: 'Failed to export PDF' })
   }
 }

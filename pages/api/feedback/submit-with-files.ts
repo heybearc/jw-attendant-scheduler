@@ -5,6 +5,7 @@ import { prisma } from '../../../src/lib/prisma'
 import formidable from 'formidable'
 import fs from 'fs'
 import path from 'path'
+import { handleApiError } from '../../src/lib/apiError'
 
 // Disable default body parser for file uploads
 export const config = {
@@ -137,7 +138,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       })
     } catch (error) {
-      console.error('❌ Error submitting feedback with files:', error)
+      // Error logged by handleApiError
       console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
       return res.status(500).json({ 
         success: false, 

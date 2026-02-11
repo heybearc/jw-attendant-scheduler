@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../auth/[...nextauth]'
 import { prisma } from '../../../src/lib/prisma'
+import { handleApiError } from '../../src/lib/apiError'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const session = await getServerSession(req, res, authOptions)
@@ -59,7 +60,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         requests: formattedRequests
       })
     } catch (error) {
-      console.error('Error fetching availability requests:', error)
+      // Error logged by handleApiError
       return res.status(500).json({ success: false, error: 'Failed to fetch availability requests' })
     }
   }
@@ -102,7 +103,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         message: 'Availability response recorded'
       })
     } catch (error) {
-      console.error('Error updating availability:', error)
+      // Error logged by handleApiError
       return res.status(500).json({ success: false, error: 'Failed to update availability' })
     }
   }

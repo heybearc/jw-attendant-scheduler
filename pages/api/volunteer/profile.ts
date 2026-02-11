@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../src/lib/prisma'
 import bcrypt from 'bcryptjs'
+import { handleApiError } from '../../src/lib/apiError'
 
 // Format phone number to (XXX) XXX-XXXX
 function formatPhoneNumber(phone: string): string {
@@ -72,7 +73,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       formattedPhone: formattedPhone
     })
   } catch (error) {
-    console.error('Profile update error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({
       success: false,
       error: 'Failed to update profile'

@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../../auth/[...nextauth]'
 import { prisma } from '../../../../src/lib/prisma'
 import { z } from 'zod'
+import { handleApiError } from '../../../src/lib/apiError'
 
 // Validation schema for lanyard updates
 const lanyardUpdateSchema = z.object({
@@ -74,7 +75,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(405).json({ error: 'Method not allowed' })
     }
   } catch (error) {
-    console.error('Lanyard API error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({ error: 'Internal server error' })
   }
 }

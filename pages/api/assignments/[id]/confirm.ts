@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../../auth/[...nextauth]'
 import { prisma } from '../../../../src/lib/prisma'
 import { randomBytes } from 'crypto'
+import { handleApiError } from '../../../src/lib/apiError'
 
 /**
  * Phase 4C: Assignment Confirmation API
@@ -93,7 +94,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
 
   } catch (error: any) {
-    console.error('Assignment confirmation error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({
       error: 'Failed to confirm assignment',
       message: error.message

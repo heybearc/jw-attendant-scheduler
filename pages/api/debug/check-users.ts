@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../src/lib/prisma'
+import { handleApiError } from '../../src/lib/apiError'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'GET') {
@@ -43,7 +44,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       })
     } catch (error) {
-      console.error('Error fetching users:', error)
+      // Error logged by handleApiError
       return res.status(500).json({ 
         success: false, 
         error: 'Failed to fetch users',

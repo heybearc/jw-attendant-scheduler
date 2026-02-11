@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../src/lib/prisma'
+import { handleApiError } from '../src/lib/apiError'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -29,7 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       uptime: process.uptime(),
     })
   } catch (error) {
-    console.error('Health check failed:', error)
+    // Error logged by handleApiError
     return res.status(503).json({
       status: 'unhealthy',
       timestamp: new Date().toISOString(),

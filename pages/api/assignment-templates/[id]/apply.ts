@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../../auth/[...nextauth]'
 import { prisma } from '../../../../src/lib/prisma'
 import { randomUUID } from 'crypto'
+import { handleApiError } from '../../../src/lib/apiError'
 
 /**
  * Phase 4C Week 2: Apply Assignment Template to Event
@@ -169,7 +170,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
 
   } catch (error: any) {
-    console.error('Apply template error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({
       error: 'Failed to apply template',
       message: error.message

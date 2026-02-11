@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import fs from 'fs'
 import path from 'path'
+import { handleApiError } from '../../src/lib/apiError'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -50,7 +51,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const fileStream = fs.createReadStream(fullPath)
     fileStream.pipe(res)
   } catch (error) {
-    console.error('File serve error:', error)
+    // Error logged by handleApiError
     res.status(500).send('Internal server error')
   }
 }

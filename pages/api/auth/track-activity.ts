@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from './[...nextauth]'
 import { prisma } from '../../../src/lib/prisma'
 import { v4 as uuidv4 } from 'uuid'
+import { handleApiError } from '../../src/lib/apiError'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const session = await getServerSession(req, res, authOptions)
@@ -137,7 +138,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     return res.status(400).json({ error: 'Invalid action' })
   } catch (error) {
-    console.error('[ACTIVITY] Error tracking activity:', error)
+    // Error logged by handleApiError
     // Don't fail the request if activity tracking fails
     return res.status(200).json({ 
       success: false, 

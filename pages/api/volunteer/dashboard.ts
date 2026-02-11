@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../src/lib/prisma'
 import { format } from 'date-fns'
+import { handleApiError } from '../../src/lib/apiError'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -352,7 +353,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     })
   } catch (error) {
-    console.error('Dashboard API error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({ success: false, error: 'Internal server error' })
   }
 }

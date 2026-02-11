@@ -4,6 +4,7 @@ import { authOptions } from '../auth/[...nextauth]'
 import { prisma } from '../../../src/lib/prisma'
 import { canManageAttendants } from '../../../src/lib/eventAccess'
 import bcrypt from 'bcryptjs'
+import { handleApiError } from '../../src/lib/apiError'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -95,7 +96,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       pin: finalPin // Return PIN so admin can communicate it to volunteer
     })
   } catch (error) {
-    console.error('Set PIN error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({
       success: false,
       error: 'Failed to set PIN'

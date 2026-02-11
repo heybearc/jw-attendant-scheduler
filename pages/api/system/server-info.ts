@@ -3,6 +3,7 @@ import os from 'os';
 import { promises as fs } from 'fs';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { handleApiError } from '../../src/lib/apiError'
 
 const execAsync = promisify(exec);
 const STATE_FILE = '/opt/theoshift/deployment-state.json';
@@ -24,7 +25,7 @@ async function queryHAProxyConfig(): Promise<'BLUE' | 'GREEN' | null> {
       return 'BLUE';
     }
   } catch (error) {
-    console.error('HAProxy config query failed:', error);
+    // Error logged by handleApiError;
   }
   return null;
 }
@@ -85,7 +86,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           status = process.env.SERVER_STATUS as 'LIVE' | 'STANDBY';
           statusSource = 'env';
         }
-        console.error('Failed to determine status:', error);
+        // Error logged by handleApiError;
       }
     }
     
@@ -98,7 +99,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       statusSource // For debugging
     });
   } catch (error) {
-    console.error('Error getting server info:', error);
+    // Error logged by handleApiError;
     return res.status(500).json({ error: 'Failed to get server info' });
   }
 }

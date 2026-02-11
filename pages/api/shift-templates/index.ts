@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../auth/[...nextauth]'
+import { handleApiError } from '../../src/lib/apiError'
 
 // Predefined shift templates based on your requirements
 const SHIFT_TEMPLATES = {
@@ -52,7 +53,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(405).json({ error: 'Method not allowed' })
     }
   } catch (error) {
-    console.error('Shift templates API error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({ error: 'Internal server error' })
   }
 }

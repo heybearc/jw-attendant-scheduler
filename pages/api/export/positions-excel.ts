@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../auth/[...nextauth]'
 import ExcelJS from 'exceljs'
+import { handleApiError } from '../../src/lib/apiError'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -195,7 +196,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     
     res.status(200).send(buffer)
   } catch (error) {
-    console.error('Excel export error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({ error: 'Failed to export Excel' })
   }
 }

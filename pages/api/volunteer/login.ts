@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../src/lib/prisma'
 import bcrypt from 'bcryptjs'
+import { handleApiError } from '../../src/lib/apiError'
 
 interface VolunteerLoginRequest {
   firstName: string
@@ -144,7 +145,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
 
   } catch (error) {
-    console.error('❌ Volunteer login error:', error)
+    // Error logged by handleApiError
     console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace')
     return res.status(500).json({ 
       success: false, 

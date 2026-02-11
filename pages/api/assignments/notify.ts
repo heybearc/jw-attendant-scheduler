@@ -4,6 +4,7 @@ import { authOptions } from '../auth/[...nextauth]'
 import { prisma } from '../../../src/lib/prisma'
 import { sendAssignmentNotification, AssignmentEmailData, AssignmentUpdateData, AssignmentCancelledData, AssignmentReminderData } from '../../../src/lib/assignmentEmails'
 import { isEmailConfigured } from '../../../src/lib/email'
+import { handleApiError } from '../../src/lib/apiError'
 
 /**
  * Phase 4C: Assignment Notification API
@@ -269,7 +270,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
 
   } catch (error: any) {
-    console.error('Assignment notification error:', error)
+    // Error logged by handleApiError
     
     // Check if it's an email configuration error
     if (error.message?.includes('Email configuration')) {

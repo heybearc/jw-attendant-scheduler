@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../src/lib/prisma'
 import bcrypt from 'bcryptjs'
+import { handleApiError } from '../../src/lib/apiError'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -65,7 +66,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     })
   } catch (error) {
-    console.error('Accept invitation error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({ success: false, error: 'Failed to accept invitation' })
   }
 }

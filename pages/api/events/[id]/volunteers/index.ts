@@ -159,6 +159,8 @@ async function handleCreateEventVolunteer(req: NextApiRequest, res: NextApiRespo
         volunteerId: volunteer.id,
         role: 'VOLUNTEER',
         isActive: true,
+        isOverseer: req.body.isOverseer || false,
+        isKeyman: req.body.isKeyman || false,
         createdAt: new Date(),
         updatedAt: new Date()
       }

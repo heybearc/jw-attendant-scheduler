@@ -109,9 +109,9 @@ async function handleGetVolunteer(req: NextApiRequest, res: NextApiResponse, eve
 
 async function handleUpdateVolunteer(req: NextApiRequest, res: NextApiResponse, eventId: string, volunteerId: string) {
   try {
-    const { firstName, lastName, email, phone, congregation, notes, formsOfService, isActive, profileVerificationRequired } = req.body
+    const { firstName, lastName, email, phone, congregation, notes, formsOfService, isActive, profileVerificationRequired, isOverseer, isKeyman } = req.body
 
-    console.log(`🔧 API Update volunteer ${volunteerId}:`, { firstName, lastName, isActive, congregation, formsOfService, profileVerificationRequired })
+    console.log(`🔧 API Update volunteer ${volunteerId}:`, { firstName, lastName, isActive, congregation, formsOfService, profileVerificationRequired, isOverseer, isKeyman })
 
     // Check if volunteer exists
     const existingVolunteer = await prisma.volunteers.findUnique({
@@ -172,6 +172,24 @@ async function handleUpdateVolunteer(req: NextApiRequest, res: NextApiResponse, 
       where: { id: volunteerId },
       data: updateData
     })
+
+    // Update event-specific roles if provided
+    if (isOverseer !== undefined || isKeyman !== undefined) {
+      const eventVolunteerUpdateData: any = {}
+      if (isOverseer !== undefined) eventVolunteerUpdateData.isOverseer = isOverseer
+      if (isKeyman !== undefined) eventVolunteerUpdateData.isKeyman = isKeyman
+      eventVolunteerUpdateData.updatedAt = new Date()
+
+      await prisma.event_volunteers.updateMany({
+        where: {
+          eventId: eventId,
+          volunteerId: volunteerId
+        },
+        data: eventVolunteerUpdateData
+      })
+
+      console.log(`✅ Updated event-specific roles for volunteer ${volunteerId}:`, { isOverseer, isKeyman })
+    }
 
     console.log(`✅ Successfully updated volunteer ${volunteerId}:`, {
       isActive: (updatedVolunteer as any).isActive,

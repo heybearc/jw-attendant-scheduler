@@ -339,7 +339,9 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
     congregation: '',
     formsOfService: '',
     notes: '',
-    isActive: true
+    isActive: true,
+    isOverseer: false,
+    isKeyman: false
   })
 
   // Add Attendant Handler
@@ -350,7 +352,9 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
       email: '', 
       phone: '', 
       congregation: '', 
-      formsOfService: '', 
+      formsOfService: '',
+      isOverseer: false,
+      isKeyman: false, 
       notes: '',
       isActive: true
     })
@@ -370,7 +374,9 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
         ? attendant.formsOfService.join(', ') 
         : attendant.formsOfService || '',
       notes: '',
-      isActive: attendant.isActive
+      isActive: attendant.isActive,
+      isOverseer: (attendant as any).isOverseer || false,
+      isKeyman: (attendant as any).isKeyman || false
     })
     setEditingAttendant(attendant)
     setShowAddModal(true)
@@ -1798,7 +1804,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                         Forms of Service *
                       </label>
                       <div className="mt-2 space-y-2">
-                        {['Elder', 'Ministerial Servant', 'Exemplary', 'Regular Pioneer', 'Overseer', 'Keyman', 'Other Dept.'].map((service) => (
+                        {['Elder', 'Ministerial Servant', 'Exemplary', 'Regular Pioneer', 'Other Dept.'].map((service) => (
                           <label key={service} className="flex items-center">
                             <input
                               type="checkbox"
@@ -1824,9 +1830,40 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                         ))}
                       </div>
                       <p className="mt-1 text-xs text-gray-500">
-                        Select all applicable forms of service. Overseers manage Keymen and Volunteers. Keymen manage groups of Volunteers.
+                        Select all applicable forms of service (Elder, Ministerial Servant, etc.). These are global qualifications.
                       </p>
                     </div>
+                    
+                    {/* Event-Specific Roles Section */}
+                    <div className="border-t pt-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Event-Specific Roles for This Event
+                      </label>
+                      <div className="space-y-2">
+                        <label className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={formData.isOverseer}
+                            onChange={(e) => setFormData({ ...formData, isOverseer: e.target.checked })}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">Overseer</span>
+                        </label>
+                        <label className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={formData.isKeyman}
+                            onChange={(e) => setFormData({ ...formData, isKeyman: e.target.checked })}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">Keyman</span>
+                        </label>
+                      </div>
+                      <p className="mt-1 text-xs text-gray-500">
+                        These roles are specific to THIS event only. A volunteer can be an overseer in one event but not in another.
+                      </p>
+                    </div>
+                    
                     <div>
                       <label className="block text-sm font-medium text-gray-700">
                         Notes

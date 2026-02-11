@@ -1727,7 +1727,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
             <div className="relative top-10 mx-auto p-6 border max-w-2xl w-full mx-4 shadow-lg rounded-md bg-white">
               <div className="mt-3">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  {editingAttendant ? 'Edit Attendant' : 'Add New Attendant'}
+                  {editingAttendant ? 'Edit Volunteer' : 'Add New Volunteer'}
                 </h3>
                 <form onSubmit={handleSaveAttendant}>
                   <div className="space-y-4">
@@ -1824,7 +1824,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                         ))}
                       </div>
                       <p className="mt-1 text-xs text-gray-500">
-                        Select all applicable forms of service. Overseers manage Keymen and Attendants. Keymen manage groups of Attendants.
+                        Select all applicable forms of service. Overseers manage Keymen and Volunteers. Keymen manage groups of Volunteers.
                       </p>
                     </div>
                     <div>
@@ -1847,10 +1847,10 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                           onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                           className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                         />
-                        <span className="ml-2 text-sm font-medium text-gray-700">Active Attendant</span>
+                        <span className="ml-2 text-sm font-medium text-gray-700">Active Volunteer</span>
                       </label>
                       <p className="mt-1 text-xs text-gray-500">
-                        Inactive attendants will not be available for new assignments
+                        Inactive volunteers will not be available for new assignments
                       </p>
                     </div>
                   </div>
@@ -1868,7 +1868,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                       disabled={loading}
                       className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-md"
                     >
-                      {loading ? 'Saving...' : (editingAttendant ? 'Update' : 'Add')} Attendant
+                      {loading ? 'Saving...' : (editingAttendant ? 'Update' : 'Add')} Volunteer
                     </button>
                   </div>
                 </form>
@@ -1877,7 +1877,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
           </div>
         )}
 
-        {/* Import Attendants Modal */}
+        {/* Import Volunteers Modal */}
         {showImportModal && (
           <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
             <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
@@ -1886,7 +1886,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                 
                 <div className="mb-4">
                   <p className="text-sm text-gray-600 mb-2">
-                    Upload a CSV file with attendant information. 
+                    Upload a CSV file with volunteer information. 
                   </p>
                   <button
                     onClick={downloadTemplate}

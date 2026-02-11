@@ -165,16 +165,19 @@
    - **Remaining:** Third-party libraries may still have violations
    - **Effort:** Small (1-2 hours for remaining issues)
 
-8. **Commented-Out Code and Debug Logging** - NEEDS CLEANUP
+8. **Commented-Out Code and Debug Logging** - IN PROGRESS
    - **Issue:** 760+ console.log statements across 194 files
-   - **Status:** VALID - Significant debug logging throughout codebase
-   - **Effort:** Medium (4-6 hours)
+   - **Status:** IN PROGRESS (2026-02-11) - Logger utility created, ready for systematic cleanup
+   - **Infrastructure:** Created /src/lib/logger.ts with environment-aware logging
+   - **Effort:** Medium (4-6 hours) - Infrastructure complete, cleanup in progress
    - **Risk:** Low (cleanup only)
 
-9. **Inconsistent Error Handling** - NEEDS STANDARDIZATION
+9. **Inconsistent Error Handling** - IN PROGRESS
    - **Issue:** Mix of error handling patterns (detailed vs generic errors)
-   - **Status:** VALID - Inconsistent error responses across API endpoints
-   - **Effort:** Medium (4-6 hours)
+   - **Status:** IN PROGRESS (2026-02-11) - Error handling utility created, ready for API updates
+   - **Infrastructure:** Created /src/lib/apiError.ts with standardized error responses
+   - **Features:** Handles Zod validation, Prisma errors, consistent status codes
+   - **Effort:** Medium (4-6 hours) - Infrastructure complete, API updates in progress
    - **Risk:** Low (improvement only)
 
 **Total Estimated Effort:** 40-60 hours across all items

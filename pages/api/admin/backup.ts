@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../auth/[...nextauth]'
 import { exec } from 'child_process'
 import { promisify } from 'util'
+import { handleApiError } from '../../src/lib/apiError'
 
 const execAsync = promisify(exec)
 
@@ -35,7 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       backups: backupList
     })
   } catch (error) {
-    console.error('Backup error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({
       error: 'Backup failed',
       details: error instanceof Error ? error.message : 'Unknown error'

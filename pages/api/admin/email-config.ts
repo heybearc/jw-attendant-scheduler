@@ -4,6 +4,7 @@ import { authOptions } from '../auth/[...nextauth]'
 import { prisma } from '../../../src/lib/prisma'
 import nodemailer from 'nodemailer'
 import { randomUUID } from 'crypto'
+import { handleApiError } from '../../src/lib/apiError'
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   const session = await getServerSession(req, res, authOptions)
@@ -45,7 +46,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         })
       }
     } catch (error) {
-      console.error('Error fetching email config:', error)
+      // Error logged by handleApiError
       return res.status(500).json({ success: false, error: 'Failed to fetch configuration' })
     }
   }
@@ -88,7 +89,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
       return res.json({ success: true, message: 'Email configuration saved successfully' })
     } catch (error) {
-      console.error('Error saving email config:', error)
+      // Error logged by handleApiError
       return res.status(500).json({ success: false, error: 'Failed to save configuration' })
     }
   }

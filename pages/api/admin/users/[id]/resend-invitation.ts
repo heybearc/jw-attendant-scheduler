@@ -4,6 +4,7 @@ import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '../../../../../src/lib/prisma'
 import * as nodemailer from 'nodemailer'
 import crypto from 'crypto'
+import { handleApiError } from '../../../../src/lib/apiError'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -73,7 +74,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     })
   } catch (error) {
-    console.error('Resend invitation error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({ success: false, error: 'Failed to resend invitation' })
   }
 }

@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../auth/[...nextauth]'
 import { prisma } from '../../../src/lib/prisma'
+import { handleApiError } from '../../src/lib/apiError'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const session = await getServerSession(req, res, authOptions)
@@ -33,7 +34,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         `
         tableExists = (result as any)[0]?.exists || false
       } catch (error) {
-        console.error('[SESSIONS] Error checking table existence:', error)
+        // Error logged by handleApiError
       }
       
       if (!tableExists) {
@@ -145,7 +146,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         timestamp: new Date().toISOString()
       })
     } catch (error) {
-      console.error('Error fetching sessions:', error)
+      // Error logged by handleApiError
       return res.status(500).json({ error: 'Failed to fetch sessions' })
     }
   }

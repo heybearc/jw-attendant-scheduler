@@ -24,18 +24,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     // Fetch the original event with all related data
-    // Check both old (event_positions) and new (positions) systems
     const originalEvent = await prisma.events.findUnique({
       where: { id },
       include: {
         event_volunteers: {
           include: {
             volunteer: true
-          }
-        },
-        event_positions: {
-          include: {
-            assignments: true
           }
         },
         positions: {
@@ -133,58 +127,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
     }
 
-    // Determine which position system to use
-    const useOldSystem = originalEvent.event_positions.length > 0
-    const useNewSystem = originalEvent.positions.length > 0
-
-    // Clone positions - OLD SYSTEM (event_positions)
-    if (useOldSystem) {
-      for (const position of originalEvent.event_positions) {
-        const newPositionId = uuidv4()
-        
-        await prisma.event_positions.create({
-          data: {
-            id: newPositionId,
-            eventId: newEventId,
-            positionNumber: position.positionNumber,
-            positionName: position.positionName,
-            description: position.description,
-            department: position.department,
-            isActive: position.isActive,
-            isAllDay: position.isAllDay,
-            isLeadershipPosition: position.isLeadershipPosition,
-            requiresExperience: position.requiresExperience,
-            tags: position.tags ?? undefined,
-            instructions: position.instructions,
-            updatedAt: new Date()
-          }
-        })
-
-        // Clone assignments for this position (old system uses assignments table)
-        for (const assignment of position.assignments) {
-          await prisma.assignments.create({
-            data: {
-              id: uuidv4(),
-              eventId: newEventId,
-              userId: assignment.userId,
-              positionId: newPositionId,
-              shiftId: assignment.shiftId,
-              shiftStart: assignment.shiftStart,
-              shiftEnd: assignment.shiftEnd,
-              status: assignment.status,
-              notes: assignment.notes,
-              assignedBy: assignment.assignedBy,
-              assignedAt: new Date(),
-              updatedAt: new Date()
-            }
-          })
-        }
-      }
-    }
-
-    // Clone positions - NEW SYSTEM (positions with shifts)
+    // Clone positions
     const positionMapping = new Map<string, string>()
-    if (useNewSystem) {
+    if (originalEvent.positions.length > 0) {
       for (const position of originalEvent.positions) {
       const newPositionId = uuidv4()
       positionMapping.set(position.id, newPositionId)
@@ -306,7 +251,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           userId: permission.userId,
           role: permission.role,
           scopeType: permission.scopeType,
-          scopeIds: permission.scopeIds,
+          scopeIds: permission.scopeIds ?? undefined,
           createdAt: new Date(),
           updatedAt: new Date()
         }
@@ -314,8 +259,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
     console.log(`[CLONE] Successfully cloned ${originalPermissions.length} permissions to new event: ${newEventId}`)
 
-    const positionCount = useOldSystem ? originalEvent.event_positions.length : originalEvent.positions.length
-    const systemUsed = useOldSystem ? 'old' : 'new'
+    const positionCount = originalEvent.positions.length
     const lanyardCount = originalEvent.lanyard_settings?.lanyards.length || 0
     
     return res.status(200).json({ 
@@ -323,7 +267,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       data: { 
         id: newEventId,
         name: clonedEvent.name,
-        message: `Event cloned successfully with ${positionCount} positions (${systemUsed} system), ${originalEvent.event_volunteers.length} volunteers, ${lanyardCount} lanyards, and ${originalPermissions.length} permissions`
+        message: `Event cloned successfully with ${positionCount} positions, ${originalEvent.event_volunteers.length} volunteers, ${lanyardCount} lanyards, and ${originalPermissions.length} permissions`
       }
     })
 

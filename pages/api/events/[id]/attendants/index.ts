@@ -195,7 +195,6 @@ async function handleBulkImportEventAttendants(req: NextApiRequest, res: NextApi
       })
     }
 
-    console.log(`🔄 APEX GUARDIAN: Bulk importing ${attendants.length} attendants to NEW system`)
 
     let created = 0
     let updated = 0
@@ -325,13 +324,9 @@ async function handleBulkImportEventAttendants(req: NextApiRequest, res: NextApi
       }
     }
 
-    console.log(`🎯 APEX GUARDIAN Import Complete: ${created} created, ${updated} updated, ${errors.length} errors`)
-    console.log(`📊 IMPORT STATS: CSV had ${attendants.length} rows, processed ${created + updated} attendants, ${attendants.length - (created + updated)} skipped`)
     
     if (errors.length > 0) {
-      console.log(`❌ IMPORT ERRORS:`)
       errors.forEach(error => {
-        console.log(`   Row ${error.row}: ${error.email} - ${error.error}`)
       })
     }
 

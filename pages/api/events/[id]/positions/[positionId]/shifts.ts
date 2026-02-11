@@ -37,9 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     switch (req.method) {
       case 'POST':
-        console.log('Shift creation request body:', req.body)
         const validatedData = shiftSchema.parse(req.body)
-        console.log('Validated shift data:', validatedData)
         
         // Verify position exists
         const position = await prisma.positions.findUnique({
@@ -73,7 +71,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           })
         }
 
-        console.log(`Creating shift for position ${positionId}, existing shifts: ${existingShifts.length}`)
 
         // Use provided name, or generate default name
         const defaultName = validatedData.isAllDay ? 'All Day' : `Shift ${existingShifts.length + 1}`
@@ -89,7 +86,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           sequence: existingShifts.length + 1
         }
 
-        console.log('Creating shift with data:', shiftData)
         console.log('Data types:', {
           id: typeof shiftData.id,
           positionId: typeof shiftData.positionId,
@@ -104,7 +100,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           data: shiftData
         })
 
-        console.log('Successfully created shift:', newShift.id)
 
         return res.status(201).json({
           success: true,
@@ -137,7 +132,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           where: { shiftId: shiftId }
         })
 
-        console.log(`🗑️ Deleting shift ${shiftId} with ${assignments.length} assignments`)
 
         if (assignments.length > 0) {
           console.log(`📋 Removing ${assignments.length} attendant assignments from shift`)

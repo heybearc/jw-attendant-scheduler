@@ -87,7 +87,6 @@ export default function DepartmentTemplatesPage() {
     
     const method = editingDept ? 'PUT' : 'POST'
 
-    console.log('handleSave called with:', { url, method, data })
 
     const response = await fetch(url, {
       method,
@@ -96,7 +95,6 @@ export default function DepartmentTemplatesPage() {
     })
 
     const result = await response.json()
-    console.log('API response:', result)
 
     if (!result.success) {
       throw new Error(result.error || 'Failed to save department')

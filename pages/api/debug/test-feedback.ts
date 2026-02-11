@@ -22,7 +22,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           role: true
         }
       })
-      console.log('Users found:', users.length)
 
       return res.json({
         success: true,

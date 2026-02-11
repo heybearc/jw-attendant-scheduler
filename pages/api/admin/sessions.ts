@@ -92,7 +92,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           .map(s => s.id)
 
         if (orphanedSessionIds.length > 0) {
-          console.log(`[SESSIONS] Found ${orphanedSessionIds.length} orphaned sessions, marking as inactive`)
           await prisma.user_activity.updateMany({
             where: {
               id: { in: orphanedSessionIds }

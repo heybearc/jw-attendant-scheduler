@@ -33,7 +33,6 @@ export default function BulkPositionCreator({ eventId, onClose, onSuccess }: Bul
         return
       }
 
-      console.log(`🚀 Processing ${positionNames.length} positions for event ${eventId}`)
 
       // Smart position management: reuse existing, reactivate inactive, create new
       let successCount = 0
@@ -48,7 +47,6 @@ export default function BulkPositionCreator({ eventId, onClose, onSuccess }: Bul
         if (existingResponse.ok) {
           const existingData = await existingResponse.json()
           existingPositions = existingData.data?.positions || []
-          console.log(`📊 Found ${existingPositions.length} existing positions (active + inactive)`)
         }
       } catch (error) {
         console.warn('Could not fetch existing positions, proceeding with creation only')
@@ -78,7 +76,6 @@ export default function BulkPositionCreator({ eventId, onClose, onSuccess }: Bul
           if (existingByName) {
             // Position with same name exists - reactivate if inactive, update if needed
             if (!existingByName.isActive) {
-              console.log(`🔄 Reactivating existing position: ${positionName}`)
               const response = await fetch(`/api/events/${eventId}/positions/${existingByName.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -98,7 +95,6 @@ export default function BulkPositionCreator({ eventId, onClose, onSuccess }: Bul
             }
           } else if (existingByNumber && !existingByNumber.isActive) {
             // Desired number exists but inactive - reuse it
-            console.log(`♻️ Reusing inactive position number ${desiredNumber} for: ${positionName}`)
             const response = await fetch(`/api/events/${eventId}/positions/${existingByNumber.id}`, {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
@@ -115,7 +111,6 @@ export default function BulkPositionCreator({ eventId, onClose, onSuccess }: Bul
             }
           } else if (desiredNumber && !existingByNumber) {
             // Create new position with desired number
-            console.log(`🆕 Creating new position ${desiredNumber}: ${positionName}`)
             const response = await fetch(`/api/events/${eventId}/positions`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -136,7 +131,6 @@ export default function BulkPositionCreator({ eventId, onClose, onSuccess }: Bul
             // Fallback: create with next available number
             const maxNumber = existingPositions.reduce((max, pos) => Math.max(max, pos.positionNumber || 0), 0)
             const nextNumber = maxNumber + 1 + i
-            console.log(`📝 Creating position with next available number ${nextNumber}: ${positionName}`)
             const response = await fetch(`/api/events/${eventId}/positions`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },

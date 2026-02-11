@@ -13,13 +13,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   console.log('🟢 Volunteer login API called')
   
   if (req.method !== 'POST') {
-    console.log('❌ Wrong method:', req.method)
     return res.status(405).json({ success: false, error: 'Method not allowed' })
   }
 
   try {
     const { firstName, lastName, congregation, pin }: VolunteerLoginRequest = req.body
-    console.log('🟢 Login attempt:', { firstName, lastName, congregation, pin: '****' })
 
     if (!firstName || !lastName || !congregation || !pin) {
       console.log('❌ Missing fields')
@@ -71,7 +69,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
 
     if (!volunteer) {
-      console.log('❌ Volunteer not found in database')
       return res.status(404).json({ 
         success: false, 
         error: 'Invalid credentials. Please check your information.' 

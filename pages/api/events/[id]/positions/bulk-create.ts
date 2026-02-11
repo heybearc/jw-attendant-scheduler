@@ -24,16 +24,13 @@ const bulkCreateSchema = z.object({
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    console.log('1. Checking session...')
     const session = await getServerSession(req, res, authOptions)
     
     if (!session) {
-      console.log('❌ No session found')
       return res.status(401).json({ success: false, error: 'Unauthorized' })
     }
 
     const { id: eventId } = req.query
-    console.log('2. Event ID:', eventId)
 
     if (!eventId || typeof eventId !== 'string') {
       console.log('❌ Invalid event ID')
@@ -46,7 +43,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
 
     if (!event) {
-      console.log('❌ Event not found')
       return res.status(404).json({ success: false, error: 'Event not found' })
     }
 
@@ -119,13 +115,10 @@ async function handleBulkCreate(req: NextApiRequest, res: NextApiResponse, event
     }
 
     // Create positions in transaction
-    console.log('6. Starting transaction...')
     const result = await prisma.$transaction(async (tx) => {
       const createdPositions = []
-      console.log(`7. Creating ${validatedData.endNumber - validatedData.startNumber + 1} positions...`)
       
       for (let num = validatedData.startNumber; num <= validatedData.endNumber; num++) {
-        console.log(`   Creating position ${num}...`)
         const position = await tx.positions.create({
           data: {
             id: randomUUID(),
@@ -140,7 +133,6 @@ async function handleBulkCreate(req: NextApiRequest, res: NextApiResponse, event
         
         // Create shifts for this position
         if (shiftsToCreate.length > 0) {
-          console.log(`   Creating ${shiftsToCreate.length} shifts for position ${num}...`)
           for (let i = 0; i < shiftsToCreate.length; i++) {
             const shift = shiftsToCreate[i]
             await tx.position_shifts.create({

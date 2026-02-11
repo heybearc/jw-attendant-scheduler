@@ -110,7 +110,6 @@ async function handleUpdateAttendant(req: NextApiRequest, res: NextApiResponse, 
   try {
     const { firstName, lastName, email, phone, congregation, notes, formsOfService, isActive, profileVerificationRequired } = req.body
 
-    console.log(`🔧 API Update attendant ${attendantId}:`, { firstName, lastName, isActive, congregation, formsOfService, profileVerificationRequired })
 
     // Check if attendant exists
     const existingAttendant = await prisma.volunteers.findUnique({
@@ -152,18 +151,15 @@ async function handleUpdateAttendant(req: NextApiRequest, res: NextApiResponse, 
     // CRITICAL FIX: Handle isActive properly
     if (isActive !== undefined) {
       updateData.isActive = isActive
-      console.log(`🔧 Setting isActive to: ${isActive} (type: ${typeof isActive})`)
     }
     
     // Handle profile verification requirement
     if (profileVerificationRequired !== undefined) {
       updateData.profileVerificationRequired = profileVerificationRequired
-      console.log(`🔧 Setting profileVerificationRequired to: ${profileVerificationRequired}`)
     }
     
     updateData.updatedAt = new Date()
 
-    console.log(`📡 Updating attendant ${attendantId} with data:`, updateData)
 
     // Update attendant
     const updatedAttendant = await prisma.volunteers.update({

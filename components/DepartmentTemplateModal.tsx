@@ -161,7 +161,6 @@ export default function DepartmentTemplateModal({ isOpen, onClose, onSave, depar
         positionTemplates
       })
       
-      console.log('Save successful, resetting form and closing modal')
       resetForm()
       onClose()
     } catch (err: any) {

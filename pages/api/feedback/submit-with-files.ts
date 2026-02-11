@@ -25,10 +25,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       
       // Ensure upload directory exists FIRST
       const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'feedback')
-      console.log('📁 Upload directory:', uploadDir)
       
       if (!fs.existsSync(uploadDir)) {
-        console.log('📁 Creating upload directory...')
         fs.mkdirSync(uploadDir, { recursive: true })
       }
 

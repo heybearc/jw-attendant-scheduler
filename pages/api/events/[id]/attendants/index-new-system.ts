@@ -176,7 +176,6 @@ async function handleBulkImportEventAttendants(req: NextApiRequest, res: NextApi
       })
     }
 
-    console.log(`🔄 APEX GUARDIAN: Bulk importing ${attendants.length} attendants to NEW system`)
 
     let created = 0
     let updated = 0
@@ -269,8 +268,6 @@ async function handleBulkImportEventAttendants(req: NextApiRequest, res: NextApi
       }
     }
 
-    console.log(`🎯 APEX GUARDIAN Import Complete: ${created} created, ${updated} updated, ${errors.length} errors`)
-    console.log(`📝 NOTE: Attendants are available for position assignment but won't appear in displays until assigned`)
 
     return res.status(200).json({
       success: true,

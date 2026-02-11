@@ -130,10 +130,7 @@ async function handleCreateInvitation(req: NextApiRequest, res: NextApiResponse,
       })
 
     // Send invitation email
-    console.log('DEBUG: NEXTAUTH_URL =', process.env.NEXTAUTH_URL)
-    console.log('DEBUG: All env vars:', Object.keys(process.env).filter(k => k.includes('NEXT')))
     const invitationUrl = `${process.env.NEXTAUTH_URL || 'https://blue.theoshift.com'}/auth/accept-invitation?token=${invitationToken}`
-    console.log('DEBUG: Generated invitation URL:', invitationUrl)
     
     try {
       await sendInvitationEmail(email, firstName, invitationUrl, message)

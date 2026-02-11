@@ -87,7 +87,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       `
     })
 
-    console.log('Test email sent successfully:', info.messageId)
 
     return res.json({ 
       success: true, 

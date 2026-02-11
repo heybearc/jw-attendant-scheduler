@@ -15,7 +15,6 @@ export const config = {
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    console.log('Documents API called:', req.method)
     
     const session = await getServerSession(req, res, authOptions)
     
@@ -79,14 +78,11 @@ async function handleGetDocuments(req: NextApiRequest, res: NextApiResponse, eve
 }
 
 async function handleUploadDocument(req: NextApiRequest, res: NextApiResponse, eventId: string, uploadedBy: string) {
-  console.log('Upload document - Starting upload for event:', eventId, 'by:', uploadedBy)
   fs.appendFileSync('/tmp/upload-debug.log', `\n${new Date().toISOString()} - Upload starting for event: ${eventId}, by: ${uploadedBy}\n`)
   try {
     // Create uploads directory if it doesn't exist
     const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'documents')
-    console.log('Upload directory:', uploadsDir)
     if (!fs.existsSync(uploadsDir)) {
-      console.log('Creating uploads directory...')
       fs.mkdirSync(uploadsDir, { recursive: true })
     }
 
@@ -107,7 +103,6 @@ async function handleUploadDocument(req: NextApiRequest, res: NextApiResponse, e
 
     console.log('Calling form.parse...')
     const [fields, files] = await form.parse(req)
-    console.log('Form parsed successfully. Fields:', Object.keys(fields), 'Files:', Object.keys(files))
 
     const title = Array.isArray(fields.title) ? fields.title[0] : fields.title
     const description = Array.isArray(fields.description) ? fields.description[0] : fields.description

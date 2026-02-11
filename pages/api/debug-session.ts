@@ -5,11 +5,9 @@ import { authOptions } from "./auth/[...nextauth]"
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     console.log('=== DEBUG SESSION ===')
-    console.log('Headers:', JSON.stringify(req.headers, null, 2))
     
     const session = await getServerSession(req, res, authOptions)
     
-    console.log('Session result:', session)
     
     if (session) {
       return res.status(200).json({ 

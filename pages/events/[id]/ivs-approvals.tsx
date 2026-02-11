@@ -77,7 +77,6 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
   }
 
   const handleImport = async (file: File, requestRound: number, departmentName?: string) => {
-    console.log('[Frontend] Starting import...', { fileName: file.name, requestRound, departmentName })
     
     const formData = new FormData()
     formData.append('file', file)
@@ -87,15 +86,12 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
     }
 
     try {
-      console.log('[Frontend] Making API request to:', `/api/events/${eventId}/ivs/import`)
       const response = await fetch(`/api/events/${eventId}/ivs/import`, {
         method: 'POST',
         body: formData,
       })
 
-      console.log('[Frontend] Response status:', response.status)
       const result = await response.json()
-      console.log('[Frontend] Response data:', result)
       
       if (result.success) {
         alert(`Import successful!\nImported: ${result.imported}\nSkipped: ${result.skipped}`)

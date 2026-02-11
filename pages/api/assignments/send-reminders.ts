@@ -74,7 +74,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let totalFailed = 0
     const errors: string[] = []
 
-    console.log(`🔔 Checking for events needing reminders...`)
 
     // For each reminder window, find events that need reminders
     for (const reminder of reminders) {
@@ -97,7 +96,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       })
 
-      console.log(`📅 Found ${upcomingEvents.length} event(s) in ${reminder.label} window`)
 
       // For each event, find all assignments and send reminders
       for (const event of upcomingEvents) {
@@ -117,7 +115,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           // Get unique volunteers
           const volunteerIds = [...new Set(assignments.map(a => a.attendantId))]
           
-          console.log(`📧 Sending ${reminder.label} reminders to ${volunteerIds.length} volunteer(s) for ${event.name}`)
 
           // Send reminder to each volunteer
           for (const volunteerId of volunteerIds) {
@@ -156,7 +153,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
-    console.log(`📊 Reminder results: ${totalSent} sent, ${totalFailed} failed`)
 
     return res.status(200).json({
       success: true,

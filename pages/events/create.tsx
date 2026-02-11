@@ -263,7 +263,6 @@ export default function CreateEventPage() {
         moduleOverrides: moduleOverrides
       }
 
-      console.log('Submitting data:', JSON.stringify(submitData, null, 2))
 
       const response = await fetch('/api/events', {
         method: 'POST',

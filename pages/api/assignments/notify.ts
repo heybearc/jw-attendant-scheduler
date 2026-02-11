@@ -107,7 +107,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ error: 'Assignment not found' })
     }
 
-    console.log('Volunteer data:', assignment.volunteer ? 'Present' : 'Missing')
 
     const volunteerRecord = assignment.volunteer
     if (!volunteerRecord) {
@@ -260,7 +259,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await sendAssignmentNotification(type as any, notificationData)
 
     // Log the notification (optional - could add to database)
-    console.log(`Assignment notification sent: ${type} for assignment ${assignmentId}`)
 
     return res.status(200).json({
       success: true,

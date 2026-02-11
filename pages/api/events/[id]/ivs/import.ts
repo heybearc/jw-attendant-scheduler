@@ -79,7 +79,6 @@ export default async function handler(
     // Parse Excel/CSV file
     const volunteers = await parseVolunteerFile(file)
     console.log(`[IVS Import] Parsed ${volunteers.length} volunteers from file`)
-    console.log('[IVS Import] First volunteer:', volunteers[0])
 
     if (volunteers.length === 0) {
       return res.status(400).json({ success: false, message: 'No volunteers found in file' })
@@ -107,11 +106,9 @@ export default async function handler(
 
     for (const volunteer of volunteers) {
       try {
-        console.log(`[IVS Import] Processing volunteer: ${volunteer.name}`)
         
         // Parse name into first and last
         const { firstName, lastName } = parseName(volunteer.name)
-        console.log(`[IVS Import] Parsed name - First: ${firstName}, Last: ${lastName}`)
 
         // Check for duplicates in this event
         const existing = await prisma.event_volunteers.findFirst({
@@ -126,12 +123,10 @@ export default async function handler(
         })
 
         if (existing) {
-          console.log(`[IVS Import] Skipping duplicate: ${volunteer.name}`)
           skipped++
           continue
         }
         
-        console.log(`[IVS Import] Creating volunteer record for: ${volunteer.name}`)
 
         // Create global volunteer record if doesn't exist
         let globalVolunteer = await prisma.volunteers.findFirst({
@@ -185,14 +180,12 @@ export default async function handler(
         })
 
         imported++
-        console.log(`[IVS Import] Successfully imported: ${volunteer.name}`)
       } catch (error) {
         console.error(`[IVS Import] Error importing ${volunteer.name}:`, error)
         errors.push(`Error importing ${volunteer.name}: ${error.message}`)
       }
     }
     
-    console.log(`[IVS Import] Import complete - Imported: ${imported}, Skipped: ${skipped}, Errors: ${errors.length}`)
 
     // Update batch with final counts
     await prisma.ivs_import_batches.update({

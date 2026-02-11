@@ -152,7 +152,6 @@ async function handleUpdatePosition(req: NextApiRequest, res: NextApiResponse, p
       }
     }
 
-    console.log(`Updating position ${position.id} with data:`, validatedData)
 
     const updatedPosition = await prisma.positions.update({
       where: { id: position.id },

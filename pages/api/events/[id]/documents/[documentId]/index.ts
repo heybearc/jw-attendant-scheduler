@@ -5,7 +5,6 @@ import path from 'path'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    console.log('Document delete API called:', req.method)
     
     const { id: eventId, documentId } = req.query
 
@@ -26,13 +25,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 }
 
 async function handleDeleteDocument(req: NextApiRequest, res: NextApiResponse, eventId: string, documentId: string) {
-  console.log('🔥 DELETE FUNCTION CALLED - eventId:', eventId, 'documentId:', documentId)
   try {
     // Fetch document from database to get file path
     const document = await prisma.event_documents.findUnique({
       where: { id: documentId }
     })
-    console.log('📄 Document found:', document ? document.title : 'NOT FOUND')
 
     if (!document) {
       return res.status(404).json({ success: false, error: 'Document not found' })
@@ -48,7 +45,6 @@ async function handleDeleteDocument(req: NextApiRequest, res: NextApiResponse, e
       const filePath = path.join(process.cwd(), 'public', document.fileUrl)
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath)
-        console.log(`Deleted file: ${filePath}`)
       }
     } catch (fileError) {
       console.error('Error deleting file:', fileError)
@@ -61,7 +57,6 @@ async function handleDeleteDocument(req: NextApiRequest, res: NextApiResponse, e
     })
 
     // Delete document record from database
-    console.log('🗑️ Deleting document from database...')
     await prisma.event_documents.delete({
       where: { id: documentId }
     })

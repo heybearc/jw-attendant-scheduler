@@ -69,9 +69,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         })
 
       case 'POST':
-        console.log('Assignment creation request body:', req.body)
         const validatedData = assignmentSchema.parse(req.body)
-        console.log('Validated assignment data:', validatedData)
         
         // SHIFT-SPECIFIC CONFLICT DETECTION
         

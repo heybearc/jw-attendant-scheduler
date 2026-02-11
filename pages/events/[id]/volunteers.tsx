@@ -589,7 +589,6 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
 
     setLoading(true)
     try {
-      console.log(`🗑️ Removing attendant: ${attendant.firstName} ${attendant.lastName} (ID: ${attendant.id})`)
       
       const response = await fetch(`/api/events/${eventId}/volunteers/${attendant.id}`, {
         method: 'DELETE'
@@ -782,23 +781,18 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
         
         if (bulkEditData.isActive !== '') {
           updateData.isActive = bulkEditData.isActive === 'true'
-          console.log(`🔧 Bulk status update for ${attendant.firstName} ${attendant.lastName}: ${bulkEditData.isActive} → ${updateData.isActive}`)
         }
         if (bulkEditData.congregation !== '') {
           updateData.congregation = bulkEditData.congregation
-          console.log(`🔧 Bulk congregation update for ${attendant.firstName} ${attendant.lastName}: ${updateData.congregation}`)
         }
         if (bulkEditData.formsOfService !== '') {
           updateData.formsOfService = bulkEditData.formsOfService
-          console.log(`🔧 Bulk forms of service update for ${attendant.firstName} ${attendant.lastName}: ${updateData.formsOfService}`)
         }
         if (bulkEditData.profileVerificationRequired !== '') {
           updateData.profileVerificationRequired = bulkEditData.profileVerificationRequired === 'true'
-          console.log(`🔧 Bulk verification update for ${attendant.firstName} ${attendant.lastName}: ${updateData.profileVerificationRequired}`)
         }
 
         if (Object.keys(updateData).length > 0) {
-          console.log(`📡 Making bulk update API call for attendant ID: ${attendant.id}`)
           updates.push(
             fetch(`/api/events/${eventId}/volunteers/${attendant.id}`, {
               method: 'PUT',
@@ -819,7 +813,6 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
 
         // Handle bulk PIN operations
         if (bulkEditData.pinAction !== '') {
-          console.log(`🔑 Bulk PIN operation for ${attendant.firstName} ${attendant.lastName}: ${bulkEditData.pinAction}`)
           
           let pin = ''
           if (bulkEditData.pinAction === 'auto-generate' && attendant.phone) {
@@ -863,7 +856,6 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
         }
 
         if (Object.keys(oversightData).length > 0) {
-          console.log(`🔧 Bulk oversight update for attendant ${attendant.firstName} ${attendant.lastName}:`, oversightData)
           oversightUpdates.push(
             fetch(`/api/events/${eventId}/volunteers/${attendant.id}/oversight`, {
               method: 'PUT',

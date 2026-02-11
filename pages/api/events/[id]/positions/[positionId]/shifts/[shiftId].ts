@@ -9,16 +9,13 @@ import { prisma } from '../../../../../../../src/lib/prisma'
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   console.log('🎯 SHIFT MANAGEMENT API CALLED')
   try {
-    console.log('1. Checking session...')
     const session = await getServerSession(req, res, authOptions)
     
     if (!session?.user?.id) {
-      console.log('❌ No session found')
       return res.status(401).json({ success: false, error: 'Unauthorized' })
     }
 
     const { id: eventId, positionId, shiftId } = req.query
-    console.log('2. Event ID:', eventId, 'Position ID:', positionId, 'Shift ID:', shiftId)
 
     if (!eventId || typeof eventId !== 'string' || 
         !positionId || typeof positionId !== 'string' ||
@@ -34,7 +31,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
 
     if (!event) {
-      console.log('❌ Event not found')
       return res.status(404).json({ success: false, error: 'Event not found' })
     }
 
@@ -48,7 +44,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
 
     if (!position) {
-      console.log('❌ Position not found or does not belong to event')
       return res.status(404).json({ success: false, error: 'Position not found' })
     }
 
@@ -62,7 +57,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
 
     if (!shift) {
-      console.log('❌ Shift not found or does not belong to position')
       return res.status(404).json({ success: false, error: 'Shift not found' })
     }
 
@@ -79,7 +73,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 }
 
 async function handleDeleteShift(req: NextApiRequest, res: NextApiResponse, eventId: string, positionId: string, shiftId: string, shiftName: string) {
-  console.log('🗑️  Deleting shift...')
   
   try {
     // Check if shift has assignments
@@ -87,7 +80,6 @@ async function handleDeleteShift(req: NextApiRequest, res: NextApiResponse, even
       where: { shiftId: shiftId }
     })
 
-    console.log(`Found ${assignments.length} assignments for this shift`)
 
     // Delete in transaction to ensure consistency
     await prisma.$transaction(async (tx) => {

@@ -8,8 +8,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   
   try {
     const session = await getServerSession(req, res, authOptions)
-    console.log('Session:', session ? 'Found' : 'Not found')
-    console.log('User email:', session?.user?.email)
     
     if (!session || !session.user?.email) {
       console.log('❌ No session or email')
@@ -18,16 +16,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (req.method === 'POST') {
       const { type, title, description, priority } = req.body
-      console.log('Request body:', { type, title, description, priority })
 
       // Find user
       let user = await prisma.users.findUnique({
         where: { email: session.user.email }
       })
-      console.log('User found:', user ? `${user.firstName} ${user.lastName}` : 'Not found')
 
       if (!user) {
-        console.log('🚀 Creating new user...')
         user = await prisma.users.create({
           data: {
             id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -42,7 +37,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       // Create feedback
-      console.log('💾 Creating feedback record...')
       const feedback = await prisma.feedback.create({
         data: {
           type: type.toUpperCase(),

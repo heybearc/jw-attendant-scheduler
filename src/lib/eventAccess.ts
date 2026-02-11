@@ -142,7 +142,6 @@ export async function canManagePermissions(
 ): Promise<boolean> {
   const permission = await checkEventAccess(userId, eventId, 'ADMIN')
   if (!permission) {
-    console.log('❌ canManagePermissions: No permission found for user', userId, 'event', eventId)
     return false
   }
 

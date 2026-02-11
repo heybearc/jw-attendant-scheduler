@@ -9,7 +9,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const session = await getServerSession(req, res, authOptions)
     
     if (session) {
-      console.log('Session found:', session.user?.email)
       return res.status(200).json({ 
         success: true, 
         authenticated: true,
@@ -17,7 +16,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         message: 'Session working correctly'
       })
     } else {
-      console.log('No session found')
       return res.status(401).json({ 
         success: false, 
         authenticated: false,

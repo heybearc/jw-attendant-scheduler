@@ -328,12 +328,9 @@ async function handleBulkImportEventVolunteers(req: NextApiRequest, res: NextApi
       }
     }
 
-    console.log(`🎯 Import Complete: ${created} created, ${updated} updated, ${errors.length} errors`)
     
     if (errors.length > 0) {
-      console.log(`❌ IMPORT ERRORS:`)
       errors.forEach(error => {
-        console.log(`   Row ${error.row}: ${error.email} - ${error.error}`)
       })
     }
 

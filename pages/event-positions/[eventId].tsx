@@ -520,7 +520,6 @@ export default function EventPositionsPage() {
             onClose={() => setShowBulkModal(false)}
             onSubmit={(positions) => {
               // Handle bulk create
-              console.log('Bulk create positions:', positions)
               setShowBulkModal(false)
             }}
           />

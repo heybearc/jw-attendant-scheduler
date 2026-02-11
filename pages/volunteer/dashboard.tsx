@@ -219,7 +219,6 @@ export default function VolunteerDashboard() {
       // Fetch dashboard data
       const response = await fetch(`/api/volunteer/dashboard?volunteerId=${session.user.id}&eventId=${eventId}`)
       const result = await response.json()
-      console.log('Dashboard API response:', result)
 
       if (result.success) {
         console.log('Setting dashboard data...')

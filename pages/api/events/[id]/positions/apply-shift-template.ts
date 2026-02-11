@@ -52,7 +52,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     switch (req.method) {
       case 'POST':
-        console.log('Apply shift template request:', req.body)
         const validatedData = applyTemplateSchema.parse(req.body)
         
         // Get the shift template
@@ -81,7 +80,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         
         // Apply template to each position
         for (const position of positions) {
-          console.log(`Applying ${validatedData.templateType} template to position ${position.name}`)
           
           // Check if position already has shifts
           const existingShifts = await prisma.position_shifts.findMany({
@@ -149,7 +147,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           })
         }
         
-        console.log(`Successfully created ${totalShiftsCreated} shifts across ${positions.length} positions`)
         
         return res.status(201).json({
           success: true,

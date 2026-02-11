@@ -19,11 +19,9 @@ const bulkOversightSchema = z.object({
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   console.log('🎯 BULK POSITION OVERSIGHT API CALLED')
   try {
-    console.log('1. Checking session...')
     const session = await getServerSession(req, res, authOptions)
     
     if (!session) {
-      console.log('❌ No session found')
       return res.status(401).json({ success: false, error: 'Unauthorized' })
     }
 
@@ -33,16 +31,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
 
     if (!user || !['ADMIN', 'OVERSEER', 'admin', 'overseer'].includes(user.role)) {
-      console.log('❌ Insufficient permissions for user:', user?.role)
       return res.status(403).json({ success: false, error: 'Insufficient permissions' })
     }
     const userId = user.id
 
-    console.log('2. Full req.query:', JSON.stringify(req.query))
     const { id } = req.query
     const eventId = Array.isArray(id) ? id[0] : id
-    console.log('2. Event ID:', eventId, 'Type:', typeof eventId)
-    console.log('2. Raw id value:', id)
 
     if (!eventId || typeof eventId !== 'string') {
       console.log('❌ Invalid event ID')
@@ -56,7 +50,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
 
     if (!event) {
-      console.log('❌ Event not found')
       return res.status(404).json({ success: false, error: 'Event not found' })
     }
 

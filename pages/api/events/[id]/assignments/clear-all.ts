@@ -30,7 +30,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'Event ID is required' })
     }
 
-    console.log(`🧹 BULK CLEAR: Starting assignment cleanup for event ${eventId}`)
 
     // Get all assignments for this event through positions
     const assignments = await prisma.position_assignments.findMany({
@@ -41,7 +40,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     })
 
-    console.log(`🧹 Found ${assignments.length} assignments to delete`)
 
     // Delete all assignments for this event
     const deleteResult = await prisma.position_assignments.deleteMany({

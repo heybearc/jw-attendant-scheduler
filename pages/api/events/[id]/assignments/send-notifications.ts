@@ -242,7 +242,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
-    console.log(`📊 Notification results: ${sent} sent, ${failed} failed`)
 
     return res.status(200).json({
       success: true,

@@ -18,11 +18,9 @@ const positionOversightSchema = z.object({
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   console.log('🎯 POSITION OVERSIGHT API CALLED')
   try {
-    console.log('1. Checking session...')
     const session = await getServerSession(req, res, authOptions)
     
     if (!session) {
-      console.log('❌ No session found')
       return res.status(401).json({ success: false, error: 'Unauthorized' })
     }
 
@@ -32,12 +30,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
 
     if (!user) {
-      console.log('❌ User not found')
       return res.status(401).json({ success: false, error: 'User not found' })
     }
 
     const { id: eventId, positionId } = req.query
-    console.log('2. Event ID:', eventId, 'Position ID:', positionId)
 
     if (!eventId || typeof eventId !== 'string' || !positionId || typeof positionId !== 'string') {
       console.log('❌ Invalid parameters')
@@ -51,7 +47,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
 
     if (!event) {
-      console.log('❌ Event not found')
       return res.status(404).json({ success: false, error: 'Event not found' })
     }
 
@@ -65,7 +60,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
 
     if (!position) {
-      console.log('❌ Position not found or does not belong to event')
       return res.status(404).json({ success: false, error: 'Position not found' })
     }
 
@@ -207,7 +201,6 @@ async function handleSetOversight(req: NextApiRequest, res: NextApiResponse, eve
 }
 
 async function handleDeleteOversight(req: NextApiRequest, res: NextApiResponse, eventId: string, positionId: string) {
-  console.log('🗑️  Deleting position oversight...')
   
   try {
     const existing = await prisma.position_oversight_assignments.findFirst({

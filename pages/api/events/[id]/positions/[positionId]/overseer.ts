@@ -20,15 +20,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ error: 'Unauthorized' })
     }
 
-    console.log('Full req.query:', JSON.stringify(req.query))
     const { id, positionId: posId } = req.query
     const eventId = Array.isArray(id) ? id[0] : id
     const positionId = Array.isArray(posId) ? posId[0] : posId
 
-    console.log('Event ID:', eventId, 'Type:', typeof eventId)
-    console.log('Position ID:', positionId, 'Type:', typeof positionId)
-    console.log('Raw id value:', id)
-    console.log('Raw positionId value:', posId)
 
     if (!eventId || typeof eventId !== 'string' || !positionId || typeof positionId !== 'string') {
       return res.status(400).json({ error: 'Event ID and Position ID are required' })
@@ -44,32 +39,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Verify event exists
-    console.log('Verifying event exists for eventId:', eventId)
     const event = await prisma.events.findUnique({
       where: { id: eventId }
     })
-    console.log('Event lookup result:', event ? 'Found' : 'Not found')
     if (!event) {
       return res.status(404).json({ error: 'Event not found' })
     }
 
     switch (req.method) {
       case 'POST':
-        console.log('Overseer assignment request body:', req.body)
-        console.log('Position ID received:', positionId)
         const validatedData = overseerSchema.parse(req.body)
-        console.log('Validated overseer data:', validatedData)
         
         // Verify position exists in positions table
         const position = await prisma.positions.findUnique({
           where: { id: positionId }
         })
         
-        console.log('Position lookup result:', position ? 'Found' : 'Not found')
         if (position) {
-          console.log('Position eventId:', position.eventId)
-          console.log('API eventId:', eventId)
-          console.log('EventId match:', position.eventId === eventId)
         }
         
         if (!position) {
@@ -81,7 +67,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           where: { id: validatedData.overseerId }
         })
 
-        console.log('Overseer lookup result:', overseer ? 'Found' : 'Not found')
 
         if (!overseer) {
           return res.status(404).json({ error: 'Overseer not found' })
@@ -93,7 +78,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             where: { id: validatedData.keymanId }
           })
           
-          console.log('Keyman lookup result:', keyman ? 'Found' : 'Not found')
           
           if (!keyman) {
             return res.status(404).json({ error: 'Keyman not found' })
@@ -113,7 +97,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         let oversightAssignment
         if (existingOversight) {
           // Update existing oversight assignment
-          console.log('Updating existing oversight assignment:', existingOversight.id)
           oversightAssignment = await prisma.position_oversight_assignments.update({
             where: { id: existingOversight.id },
             data: {
@@ -136,7 +119,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           })
         } else {
           // Create new position-level oversight assignment
-          console.log('Creating new position-level oversight assignment')
           oversightAssignment = await prisma.position_oversight_assignments.create({
             data: {
               positionId: positionId,

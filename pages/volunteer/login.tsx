@@ -50,10 +50,8 @@ export default function VolunteerLogin() {
       })
 
       // If we get here, there was an error (redirect: true navigates away on success)
-      console.log('🔵 SignIn result:', result)
       
       if (result?.error) {
-        console.log('❌ Login failed:', result.error)
         setError('Invalid credentials. Please check your information.')
         setLoading(false)
       }

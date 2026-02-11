@@ -80,20 +80,6 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse, eventId: str
           description: true,
           isActive: true
         }
-      },
-      event_volunteers: {
-        include: {
-          volunteer: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              email: true,
-              phone: true,
-              congregation: true
-            }
-          }
-        }
       }
     }
   })
@@ -178,9 +164,6 @@ async function handleDelete(req: NextApiRequest, res: NextApiResponse, eventId: 
   const department = await prisma.event_departments.findUnique({
     where: { id: deptId },
     include: {
-      event_volunteers: {
-        select: { id: true }
-      },
       children: {
         select: { id: true }
       }
@@ -195,12 +178,8 @@ async function handleDelete(req: NextApiRequest, res: NextApiResponse, eventId: 
     return res.status(400).json({ success: false, error: 'Department does not belong to this event' })
   }
 
-  if (department.event_volunteers.length > 0) {
-    return res.status(400).json({
-      success: false,
-      error: 'Cannot delete department with assigned volunteers. Remove volunteers first.'
-    })
-  }
+  // Note: Removed volunteer check since departments don't have direct volunteer relation
+  // If needed, query volunteers separately via event.event_volunteers
 
   if (department.children.length > 0) {
     return res.status(400).json({

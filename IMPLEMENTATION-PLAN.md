@@ -138,11 +138,11 @@
 
 ### 🟡 Medium Priority Technical Debt (3 items)
 
-4. **Dual Position Systems (event_positions + positions)**
+4. ✅ **Dual Position Systems (event_positions + positions)** - COMPLETE
    - **Issue:** Two position systems coexist, code handles both everywhere
    - **Effort:** Large (10-15 hours)
    - **Risk:** High (requires careful migration)
-   - **Status:** Documented, deferred until high priority items complete
+   - **Status:** COMPLETE (2026-02-11) - event_positions table dropped, all code migrated to unified positions system, released as v4.6.0
 
 5. ✅ **Inconsistent Field Name Mapping** - MOSTLY COMPLETE
    - **Issue:** Mix of camelCase, snake_case, lowercase across models
@@ -159,9 +159,23 @@
 
 ### 🟢 Low Priority Technical Debt (3 items)
 
-7. **Console Violations (Non-Passive Event Listeners)**
-8. **Commented-Out Code and Debug Logging**
-9. **Inconsistent Error Handling**
+7. ✅ **Console Violations (Non-Passive Event Listeners)** - MOSTLY COMPLETE
+   - **Issue:** Browser console shows violations about non-passive event listeners
+   - **Status:** MOSTLY COMPLETE (2026-02-11) - Main app code uses { passive: true } for scroll listeners
+   - **Remaining:** Third-party libraries may still have violations
+   - **Effort:** Small (1-2 hours for remaining issues)
+
+8. **Commented-Out Code and Debug Logging** - NEEDS CLEANUP
+   - **Issue:** 760+ console.log statements across 194 files
+   - **Status:** VALID - Significant debug logging throughout codebase
+   - **Effort:** Medium (4-6 hours)
+   - **Risk:** Low (cleanup only)
+
+9. **Inconsistent Error Handling** - NEEDS STANDARDIZATION
+   - **Issue:** Mix of error handling patterns (detailed vs generic errors)
+   - **Status:** VALID - Inconsistent error responses across API endpoints
+   - **Effort:** Medium (4-6 hours)
+   - **Risk:** Low (improvement only)
 
 **Total Estimated Effort:** 40-60 hours across all items
 

@@ -28,9 +28,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const originalEvent = await prisma.events.findUnique({
       where: { id },
       include: {
-        event_attendants: {
+        event_volunteers: {
           include: {
-            attendant: true
+            volunteer: true
           }
         },
         event_positions: {
@@ -110,24 +110,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     })
 
-    // Clone event_attendants (volunteers)
-    const attendantMapping = new Map<string, string>()
-    for (const eventAttendant of originalEvent.event_attendants) {
-      const newAttendantId = uuidv4()
-      attendantMapping.set(eventAttendant.id, newAttendantId)
+    // Clone event_volunteers
+    const volunteerMapping = new Map<string, string>()
+    for (const eventVolunteer of originalEvent.event_volunteers) {
+      const newVolunteerId = uuidv4()
+      volunteerMapping.set(eventVolunteer.id, newVolunteerId)
       
-      await prisma.event_attendants.create({
+      await prisma.event_volunteers.create({
         data: {
-          id: newAttendantId,
+          id: newVolunteerId,
           eventId: newEventId,
-          userId: eventAttendant.userId,
-          attendantId: eventAttendant.attendantId,
-          role: eventAttendant.role,
-          isActive: eventAttendant.isActive,
-          assignedDepartments: eventAttendant.assignedDepartments,
-          assignedStationRanges: eventAttendant.assignedStationRanges,
-          keymanId: eventAttendant.keymanId,
-          overseerId: eventAttendant.overseerId,
+          userId: eventVolunteer.userId,
+          volunteerId: eventVolunteer.volunteerId,
+          role: eventVolunteer.role,
+          isActive: eventVolunteer.isActive,
+          assignedDepartments: eventVolunteer.assignedDepartments,
+          assignedStationRanges: eventVolunteer.assignedStationRanges,
+          keymanId: eventVolunteer.keymanId,
+          overseerId: eventVolunteer.overseerId,
           updatedAt: new Date()
         }
       })
@@ -323,7 +323,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       data: { 
         id: newEventId,
         name: clonedEvent.name,
-        message: `Event cloned successfully with ${positionCount} positions (${systemUsed} system), ${originalEvent.event_attendants.length} volunteers, ${lanyardCount} lanyards, and ${originalPermissions.length} permissions`
+        message: `Event cloned successfully with ${positionCount} positions (${systemUsed} system), ${originalEvent.event_volunteers.length} volunteers, ${lanyardCount} lanyards, and ${originalPermissions.length} permissions`
       }
     })
 

@@ -24,7 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         include: {
           event_volunteers: true,
           assignments: true,
-          event_positions: true,
+          positions: true,
           // Phase 3B: Include department template configuration
           departmentTemplate: {
             select: {
@@ -49,7 +49,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         _count: {
           event_volunteers: event.event_volunteers.length,
           assignments: event.assignments.length,
-          event_positions: event.event_positions.length
+          positions: event.positions.length
         }
       }
 

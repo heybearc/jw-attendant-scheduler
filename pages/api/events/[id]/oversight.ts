@@ -4,14 +4,13 @@ import { authOptions } from '../../auth/[...nextauth]'
 import { prisma } from '../../../../src/lib/prisma'
 
 /**
- * Phase 5B: Event Oversight Dashboard API
+ * Event Oversight Dashboard API
  * 
  * GET /api/events/[id]/oversight
- * Returns oversight assignments for a specific event
+ * Returns oversight assignments for a specific event using position_oversight_assignments
  * 
  * Response includes:
  * - List of overseers with their position assignments
- * - List of assistant overseers with their position assignments
  * - List of keymen with their position assignments
  * - Coverage statistics (% of positions with oversight)
  * - Coverage gaps (positions without oversight)
@@ -43,16 +42,7 @@ export default async function handler(
           name: true,
           status: true,
           eventType: true,
-          startDate: true,
-          departmentTemplate: {
-            select: {
-              id: true,
-              name: true,
-              moduleConfig: true,
-              terminology: true,
-              positionTemplates: true
-            }
-          }
+          startDate: true
         }
       })
 
@@ -60,18 +50,26 @@ export default async function handler(
         return res.status(404).json({ error: 'Event not found' })
       }
 
-      // Get all assignments for this event where user has oversight role
-      const oversightAssignments = await prisma.assignments.findMany({
+      // Get all position oversight assignments for this event
+      const oversightAssignments = await prisma.position_oversight_assignments.findMany({
         where: {
           eventId: eventId
         },
         include: {
-          users: {
+          overseer: {
             select: {
               id: true,
-              name: true,
-              email: true,
-              role: true
+              firstName: true,
+              lastName: true,
+              email: true
+            }
+          },
+          keyman: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true
             }
           },
           positions: {
@@ -85,64 +83,66 @@ export default async function handler(
         }
       })
 
-      // Filter for oversight roles only
-      const filteredOversightAssignments = oversightAssignments.filter(
-        a => a.users.role === 'OVERSEER' || 
-             a.users.role === 'ASSISTANT_OVERSEER' || 
-             a.users.role === 'KEYMAN'
-      )
-
       // Get total positions for coverage calculation
       const totalPositions = await prisma.positions.count({
         where: { eventId: eventId }
       })
 
-      // Get positions with at least one oversight assignment
-      const positionsWithOversight = await prisma.positions.findMany({
-        where: {
-          eventId: eventId,
-          assignments: {
-            some: {
-              volunteer: {
-                role: {
-                  in: ['OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN']
-                }
-              }
-            }
-          }
-        },
-        select: { id: true }
-      })
+      // Get positions with oversight
+      const positionsWithOversight = oversightAssignments.filter(
+        oa => oa.overseerId || oa.keymanId
+      )
 
       // Get positions without oversight (coverage gaps)
-      const positionsWithoutOversight = await prisma.positions.findMany({
-        where: {
-          eventId: eventId,
-          NOT: {
-            assignments: {
-              some: {
-                volunteer: {
-                  role: {
-                    in: ['OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN']
-                  }
-                }
-              }
-            }
-          }
-        },
+      const positionsWithOversightIds = new Set(
+        oversightAssignments.map(oa => oa.positionId)
+      )
+      
+      const allPositions = await prisma.positions.findMany({
+        where: { eventId: eventId },
         select: {
           id: true,
           name: true,
           positionNumber: true,
           area: true
-        },
-        orderBy: { positionNumber: 'asc' }
+        }
       })
 
-      // Group assignments by role
-      const overseers = filteredOversightAssignments.filter(a => a.users.role === 'OVERSEER')
-      const assistantOverseers = filteredOversightAssignments.filter(a => a.users.role === 'ASSISTANT_OVERSEER')
-      const keymen = filteredOversightAssignments.filter(a => a.users.role === 'KEYMAN')
+      const coverageGaps = allPositions.filter(
+        p => !positionsWithOversightIds.has(p.id)
+      )
+
+      // Group by overseer and keyman
+      const overseerMap = new Map<string, any[]>()
+      const keymanMap = new Map<string, any[]>()
+
+      oversightAssignments.forEach(oa => {
+        if (oa.overseer) {
+          const key = oa.overseer.id
+          if (!overseerMap.has(key)) {
+            overseerMap.set(key, [])
+          }
+          overseerMap.get(key)!.push({
+            positionId: oa.positions.id,
+            positionName: oa.positions.name,
+            positionNumber: oa.positions.positionNumber,
+            area: oa.positions.area
+          })
+        }
+
+        if (oa.keyman) {
+          const key = oa.keyman.id
+          if (!keymanMap.has(key)) {
+            keymanMap.set(key, [])
+          }
+          keymanMap.get(key)!.push({
+            positionId: oa.positions.id,
+            positionName: oa.positions.name,
+            positionNumber: oa.positions.positionNumber,
+            area: oa.positions.area
+          })
+        }
+      })
 
       // Calculate coverage statistics
       const coverageCount = positionsWithOversight.length
@@ -150,109 +150,66 @@ export default async function handler(
         ? Math.round((coverageCount / totalPositions) * 100) 
         : 0
 
-      // Check event-specific permissions
-      const { canManageEvent, canDeleteEvent, canManagePermissions } = await import('../../../../src/lib/eventAccess')
-      const userId = session.user?.id || ''
-      const canEdit = await canManageEvent(userId, eventId)
-      const canDelete = await canDeleteEvent(userId, eventId)
-      const canManagePerms = await canManagePermissions(userId, eventId)
+      // Build response
+      const overseers = Array.from(overseerMap.entries()).map(([id, positions]) => {
+        const overseer = oversightAssignments.find(oa => oa.overseer?.id === id)?.overseer
+        return {
+          user: {
+            id: overseer?.id,
+            name: `${overseer?.firstName} ${overseer?.lastName}`,
+            email: overseer?.email
+          },
+          positions: positions
+        }
+      })
 
-      // Format response
-      const response = {
-        event: {
-          id: event.id,
-          name: event.name,
-          status: event.status,
-          eventType: event.eventType,
-          startDate: event.startDate?.toISOString() || '',
-          departmentTemplate: event.departmentTemplate
-        },
-        permissions: {
-          canEdit,
-          canDelete,
-          canManagePermissions: canManagePerms
-        },
-        statistics: {
-          totalPositions,
-          positionsWithOversight: coverageCount,
-          positionsWithoutOversight: positionsWithoutOversight.length,
-          coveragePercentage,
-          overseerCount: overseers.length,
-          assistantOverseerCount: assistantOverseers.length,
-          keymanCount: keymen.length
-        },
-        overseers: overseers.map(assignment => ({
-          assignmentId: assignment.id,
+      const keymen = Array.from(keymanMap.entries()).map(([id, positions]) => {
+        const keyman = oversightAssignments.find(oa => oa.keyman?.id === id)?.keyman
+        return {
           user: {
-            id: assignment.users.id,
-            name: assignment.users.name,
-            email: assignment.users.email
+            id: keyman?.id,
+            name: `${keyman?.firstName} ${keyman?.lastName}`,
+            email: keyman?.email
           },
-          position: {
-            id: assignment.event_positions.id,
-            name: assignment.event_positions.positionName,
-            number: assignment.event_positions.positionNumber,
-            department: assignment.event_positions.department
-          },
-          shift: {
-            start: assignment.shiftStart,
-            end: assignment.shiftEnd
-          },
-          status: assignment.status,
-          notes: assignment.notes
-        })),
-        assistantOverseers: assistantOverseers.map(assignment => ({
-          assignmentId: assignment.id,
-          user: {
-            id: assignment.users.id,
-            name: assignment.users.name,
-            email: assignment.users.email
-          },
-          position: {
-            id: assignment.event_positions.id,
-            name: assignment.event_positions.positionName,
-            number: assignment.event_positions.positionNumber,
-            department: assignment.event_positions.department
-          },
-          shift: {
-            start: assignment.shiftStart,
-            end: assignment.shiftEnd
-          },
-          status: assignment.status,
-          notes: assignment.notes
-        })),
-        keymen: keymen.map(assignment => ({
-          assignmentId: assignment.id,
-          user: {
-            id: assignment.users.id,
-            name: assignment.users.name,
-            email: assignment.users.email
-          },
-          position: {
-            id: assignment.event_positions.id,
-            name: assignment.event_positions.positionName,
-            number: assignment.event_positions.positionNumber,
-            department: assignment.event_positions.department
-          },
-          shift: {
-            start: assignment.shiftStart,
-            end: assignment.shiftEnd
-          },
-          status: assignment.status,
-          notes: assignment.notes
-        })),
-        coverageGaps: positionsWithoutOversight.map(position => ({
-          id: position.id,
-          name: position.positionName,
-          number: position.positionNumber,
-          department: position.department
-        }))
-      }
+          positions: positions
+        }
+      })
 
-      return res.status(200).json(response)
+      return res.status(200).json({
+        success: true,
+        data: {
+          event: {
+            id: event.id,
+            name: event.name,
+            status: event.status,
+            eventType: event.eventType,
+            startDate: event.startDate
+          },
+          oversight: {
+            overseers: overseers,
+            assistantOverseers: [], // Not tracked in new system
+            keymen: keymen,
+            coverageGaps: coverageGaps.map(position => ({
+              id: position.id,
+              positionName: position.name,
+              positionNumber: position.positionNumber,
+              department: position.area
+            }))
+          },
+          statistics: {
+            totalPositions: totalPositions,
+            positionsWithOversight: coverageCount,
+            coveragePercentage: coveragePercentage,
+            overseerCount: overseers.length,
+            assistantOverseerCount: 0,
+            keymanCount: keymen.length
+          }
+        }
+      })
     } catch (error) {
-      console.error('Error fetching oversight data:', error)
+      console.error('Oversight API error:', error)
       return res.status(500).json({ 
+        success: false, 
         error: 'Failed to fetch oversight data',
         details: error instanceof Error ? error.message : 'Unknown error'
       })

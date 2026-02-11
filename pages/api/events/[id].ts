@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "../auth/[...nextauth]"
 import { prisma } from "../../../src/lib/prisma"
 import { canDeleteEvent } from "../../../src/lib/eventAccess"
+import { handleApiError, apiSuccess } from "../../../src/lib/apiError"
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const session = await getServerSession(req, res, authOptions)
@@ -172,7 +173,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     return res.status(405).json({ error: "Method not allowed" })
   } catch (error) {
-    console.error("Event API error:", error)
-    return res.status(500).json({ error: "Internal server error" })
+    handleApiError(res, error, "Event API error")
   }
 }

@@ -96,17 +96,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         departmentTemplateId: originalEvent.departmentTemplateId,
         updatedAt: new Date(),
         // Clone oversight details
-        circuitoverseername: originalEvent.circuitoverseername,
-        circuitoverseerphone: originalEvent.circuitoverseerphone,
-        circuitoverseeremail: originalEvent.circuitoverseeremail,
-        assemblyoverseername: originalEvent.assemblyoverseername,
-        assemblyoverseerphone: originalEvent.assemblyoverseerphone,
-        assemblyoverseeremail: originalEvent.assemblyoverseeremail,
-        volunteeroverseername: originalEvent.volunteeroverseername,
-        volunteeroverseerphone: originalEvent.volunteeroverseerphone,
-        volunteeroverseeremail: originalEvent.volunteeroverseeremail,
-        volunteeroverseerassistants: originalEvent.volunteeroverseerassistants,
-        settings: originalEvent.settings
+        circuitOverseerName: originalEvent.circuitOverseerName,
+        circuitOverseerPhone: originalEvent.circuitOverseerPhone,
+        circuitOverseerEmail: originalEvent.circuitOverseerEmail,
+        assemblyOverseerName: originalEvent.assemblyOverseerName,
+        assemblyOverseerPhone: originalEvent.assemblyOverseerPhone,
+        assemblyOverseerEmail: originalEvent.assemblyOverseerEmail,
+        volunteerOverseerName: originalEvent.volunteerOverseerName,
+        volunteerOverseerPhone: originalEvent.volunteerOverseerPhone,
+        volunteerOverseerEmail: originalEvent.volunteerOverseerEmail,
+        volunteerOverseerAssistants: originalEvent.volunteerOverseerAssistants ?? undefined,
+        settings: originalEvent.settings ?? undefined
       }
     })
 
@@ -124,8 +124,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           volunteerId: eventVolunteer.volunteerId,
           role: eventVolunteer.role,
           isActive: eventVolunteer.isActive,
-          assignedDepartments: eventVolunteer.assignedDepartments,
-          assignedStationRanges: eventVolunteer.assignedStationRanges,
+          assignedDepartments: eventVolunteer.assignedDepartments ?? undefined,
+          assignedStationRanges: eventVolunteer.assignedStationRanges ?? undefined,
           keymanId: eventVolunteer.keymanId,
           overseerId: eventVolunteer.overseerId,
           updatedAt: new Date()
@@ -154,9 +154,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             isAllDay: position.isAllDay,
             isLeadershipPosition: position.isLeadershipPosition,
             requiresExperience: position.requiresExperience,
-            maxAttendants: position.maxAttendants,
-            minAttendants: position.minAttendants,
-            tags: position.tags,
+            tags: position.tags ?? undefined,
             instructions: position.instructions,
             updatedAt: new Date()
           }

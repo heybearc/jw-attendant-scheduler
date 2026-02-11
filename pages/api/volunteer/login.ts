@@ -47,7 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       },
       include: {
-        event_volunteers: {
+        event_volunteers_primary: {
           include: {
             events: {
               select: {
@@ -108,7 +108,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.log('✅ PIN verified')
 
     // Get active events for this volunteer
-    const events = volunteer.event_volunteers.map(ev => ({
+    const events = volunteer.event_volunteers_primary.map(ev => ({
       id: ev.events.id,
       name: ev.events.name,
       eventType: ev.events.eventType,

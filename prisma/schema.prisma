@@ -392,16 +392,16 @@ model events {
   eventType                      EventType                        @default(CIRCUIT_ASSEMBLY)
   volunteersNeeded               Int?
   capacity                       Int?
-  assemblyoverseeremail          String?
-  assemblyoverseername           String?
-  assemblyoverseerphone          String?
-  volunteeroverseerassistants    Json?                            @default("[]")
-  volunteeroverseeremail         String?
-  volunteeroverseername          String?
-  volunteeroverseerphone         String?
-  circuitoverseeremail           String?
-  circuitoverseername            String?
-  circuitoverseerphone           String?
+  assemblyOverseerEmail          String?                          @map("assemblyoverseeremail")
+  assemblyOverseerName           String?                          @map("assemblyoverseername")
+  assemblyOverseerPhone          String?                          @map("assemblyoverseerphone")
+  volunteerOverseerAssistants    Json?                            @default("[]") @map("volunteeroverseerassistants")
+  volunteerOverseerEmail         String?                          @map("volunteeroverseeremail")
+  volunteerOverseerName          String?                          @map("volunteeroverseername")
+  volunteerOverseerPhone         String?                          @map("volunteeroverseerphone")
+  circuitOverseerEmail           String?                          @map("circuitoverseeremail")
+  circuitOverseerName            String?                          @map("circuitoverseername")
+  circuitOverseerPhone           String?                          @map("circuitoverseerphone")
   parentEventId                  String?                          @map("parenteventid")
   locationRef                    locations?                       @relation(fields: [locationId], references: [id], onDelete: SetNull)
   departmentTemplateId           String?                          @map("departmenttemplateid")

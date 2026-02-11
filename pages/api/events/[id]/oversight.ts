@@ -74,12 +74,12 @@ export default async function handler(
               role: true
             }
           },
-          event_positions: {
+          positions: {
             select: {
               id: true,
-              positionName: true,
+              name: true,
               positionNumber: true,
-              department: true
+              area: true
             }
           }
         }
@@ -93,17 +93,17 @@ export default async function handler(
       )
 
       // Get total positions for coverage calculation
-      const totalPositions = await prisma.event_positions.count({
+      const totalPositions = await prisma.positions.count({
         where: { eventId: eventId }
       })
 
       // Get positions with at least one oversight assignment
-      const positionsWithOversight = await prisma.event_positions.findMany({
+      const positionsWithOversight = await prisma.positions.findMany({
         where: {
           eventId: eventId,
           assignments: {
             some: {
-              users: {
+              volunteer: {
                 role: {
                   in: ['OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN']
                 }
@@ -115,13 +115,13 @@ export default async function handler(
       })
 
       // Get positions without oversight (coverage gaps)
-      const positionsWithoutOversight = await prisma.event_positions.findMany({
+      const positionsWithoutOversight = await prisma.positions.findMany({
         where: {
           eventId: eventId,
           NOT: {
             assignments: {
               some: {
-                users: {
+                volunteer: {
                   role: {
                     in: ['OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN']
                   }
@@ -132,9 +132,9 @@ export default async function handler(
         },
         select: {
           id: true,
-          positionName: true,
+          name: true,
           positionNumber: true,
-          department: true
+          area: true
         },
         orderBy: { positionNumber: 'asc' }
       })

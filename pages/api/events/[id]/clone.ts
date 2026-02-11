@@ -228,17 +228,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       for (const assignment of position.assignments) {
         const newShiftId = assignment.shiftId ? shiftMapping.get(assignment.shiftId) : null
         
-        await prisma.position_assignments.create({
-          data: {
-            id: uuidv4(),
-            positionId: newPositionId,
-            attendantId: assignment.attendantId,
-            shiftId: newShiftId,
-            role: assignment.role || 'VOLUNTEER',
-            assignedBy: user.id,
-            notes: assignment.notes
-          }
-        })
+        // Only clone if there's a volunteerId
+        if (assignment.volunteerId) {
+          await prisma.position_assignments.create({
+            data: {
+              id: uuidv4(),
+              positionId: newPositionId,
+              volunteerId: assignment.volunteerId,
+              shiftId: newShiftId || undefined,
+              role: assignment.role || 'VOLUNTEER',
+              assignedBy: user.id
+            }
+          })
+        }
       }
 
       // Clone oversight assignments for this position

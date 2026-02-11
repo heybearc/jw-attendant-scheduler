@@ -34,14 +34,23 @@ This document tracks technical debt accumulated from database migrations, refact
 - Various comments and variable names throughout codebase
 
 **Recommended Fix:**
-1. Update Prisma schema to remove `@@map("event_attendants")`
-2. Run database migration to rename table
-3. Search and replace remaining "attendant" references
-4. Update all TypeScript types to match current schema
-5. Regenerate Prisma client
+1. ~~Update Prisma schema to remove `@@map("event_attendants")`~~ **DEFERRED**
+2. ~~Run database migration to rename table~~ **DEFERRED - requires DBA access**
+3. Search and replace remaining "attendant" references (UI/comments only)
+4. ~~Update all TypeScript types to match current schema~~ **COMPLETE**
+5. ~~Regenerate Prisma client~~ **COMPLETE**
 
-**Effort:** Medium (2-3 hours)  
-**Risk:** Medium (requires database migration)
+**Effort:** Medium (2-3 hours) - requires DBA access  
+**Risk:** Medium (requires database migration with proper permissions)
+
+**Status Update (2026-02-11):**
+- Migration scripts created and ready (`/database/migrations/006_*.sql`)
+- Table is owned by `jw_scheduler` user, not `theoshift_user`
+- Application user lacks ALTER TABLE permissions
+- **Decision:** Keep `@@map` directive, document clearly
+- Added schema comment explaining the mapping
+- See `/docs/TABLE_RENAME_PLAN.md` for full details
+- **Priority downgraded to Medium** (was High)
 
 ---
 
@@ -77,31 +86,34 @@ This document tracks technical debt accumulated from database migrations, refact
 **Issue:** Code references fields that don't exist in current Prisma schema.
 
 **Evidence:**
-- `ivsImportBatchId` referenced but not in schema
-- `ivsApprovalStatus` referenced but not in schema  
-- `ivs_import_batches` table referenced but not in Prisma client
-- `departmentId` was being set to empty string (now fixed)
+- ~~`ivsImportBatchId` referenced but not in schema~~ **FIXED - field exists**
+- ~~`ivsApprovalStatus` referenced but not in schema~~ **FIXED - field exists**
+- ~~`ivs_import_batches` table referenced but not in Prisma client~~ **FIXED - table exists**
+- ~~`departmentId` was being set to empty string~~ **FIXED**
 
 **Impact:**
-- TypeScript errors throughout codebase
-- Runtime errors when fields are accessed
-- Developers using `(prisma as any)` to bypass type checking
-- Unclear which fields actually exist
+- ~~TypeScript errors throughout codebase~~ **RESOLVED**
+- ~~Runtime errors when fields are accessed~~ **RESOLVED**
+- ~~Developers using `(prisma as any)` to bypass type checking~~ **RESOLVED**
+- ~~Unclear which fields actually exist~~ **DOCUMENTED**
 
 **Files Affected:**
-- `/pages/api/events/[id]/ivs/import.ts`
-- `/pages/api/events/[id]/volunteers/index.ts`
-- Potentially other IVS-related files
+- ~~`/pages/api/events/[id]/ivs/import.ts`~~ **FIXED**
+- ~~`/pages/api/events/[id]/volunteers/index.ts`~~ **FIXED**
+- ~~Potentially other IVS-related files~~ **CHECKED**
 
-**Recommended Fix:**
-1. Audit Prisma schema against actual database
-2. Add missing fields or remove references
-3. Update TypeScript types
-4. Remove all `(prisma as any)` casts
-5. Regenerate Prisma client
+**Completed Fixes (2026-02-11):**
+1. ✅ Audited Prisma schema against actual database
+2. ✅ Fields were already in schema, just needed client regeneration
+3. ✅ Updated TypeScript types
+4. ✅ Fixed volunteer login relation name (`event_volunteers_primary`)
+5. ✅ Regenerated Prisma client
+6. ✅ Fixed Json type issues with `?? undefined`
+7. ✅ Removed invalid `event_volunteers` relation from department API
 
-**Effort:** Medium (3-4 hours)  
-**Risk:** Low (mostly cleanup)
+**Effort:** Medium (3-4 hours) **COMPLETE**  
+**Risk:** Low (mostly cleanup) **COMPLETE**  
+**Status:** ✅ **RESOLVED**
 
 ---
 

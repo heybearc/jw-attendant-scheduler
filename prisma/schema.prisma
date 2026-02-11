@@ -243,6 +243,10 @@ model email_configurations {
   updatedAt          DateTime
 }
 
+// NOTE: This model maps to the 'event_attendants' table in the database
+// The table was originally named 'event_attendants' but the model is 'event_volunteers'
+// We keep the @@map directive to maintain compatibility without requiring DBA access
+// See /docs/TABLE_RENAME_PLAN.md for details
 model event_volunteers {
   id                      String                 @id
   eventId                 String

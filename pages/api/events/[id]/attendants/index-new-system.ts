@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '../../../../../src/lib/prisma'
+import { handleApiError } from '../../../../src/lib/apiError'
 
 // APEX GUARDIAN - NEW SYSTEM IMPORT API
 // This API imports attendants but doesn't create position assignments
@@ -44,7 +45,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     return res.status(405).json({ success: false, error: 'Method not allowed' })
   } catch (error) {
-    console.error('Event attendants API error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({ success: false, error: 'Internal server error' })
   }
 }
@@ -98,7 +99,7 @@ async function handleGetEventAttendants(req: NextApiRequest, res: NextApiRespons
       }))
     })
   } catch (error) {
-    console.error('Get event attendants error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({ success: false, error: 'Failed to fetch volunteers' })
   }
 }
@@ -160,7 +161,7 @@ async function handleCreateEventAttendant(req: NextApiRequest, res: NextApiRespo
       }
     })
   } catch (error) {
-    console.error('Create event attendant error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({ success: false, error: 'Failed to create volunteer' })
   }
 }
@@ -259,7 +260,7 @@ async function handleBulkImportEventAttendants(req: NextApiRequest, res: NextApi
           created++
         }
       } catch (error) {
-        console.error(`Error processing attendant ${i + 1}:`, error)
+        // Error logged by handleApiError
         errors.push({
           row: i + 1,
           email: attendantData.email || 'Unknown',
@@ -279,7 +280,7 @@ async function handleBulkImportEventAttendants(req: NextApiRequest, res: NextApi
       }
     })
   } catch (error) {
-    console.error('Bulk import event attendants error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({ success: false, error: 'Failed to import volunteers' })
   }
 }

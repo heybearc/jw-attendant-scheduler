@@ -5,6 +5,7 @@ import { prisma } from '../../../../../src/lib/prisma'
 import nodemailer from 'nodemailer'
 import { generateAssignmentCreatedEmail } from '../../../../../src/lib/assignmentEmails'
 import fs from 'fs'
+import { handleApiError } from '../../../../src/lib/apiError'
 
 const logToFile = (message: string) => {
   try {
@@ -238,7 +239,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         failed++
         errors.push(`Volunteer ${volunteerId}: ${error.message}`)
         logToFile(`FAILED: ${error.message}`)
-        console.error(`❌ Error sending to volunteer ${volunteerId}:`, error)
+        // Error logged by handleApiError
       }
     }
 
@@ -252,7 +253,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
 
   } catch (error: any) {
-    console.error('Send notifications API error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({
       error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error'

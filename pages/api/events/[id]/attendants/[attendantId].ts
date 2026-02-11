@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '../../../../../src/lib/prisma'
 import { checkEventAccess, canManageAttendants } from '../../../../../src/lib/eventAccess'
+import { handleApiError } from '../../../../src/lib/apiError'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { id: eventId, attendantId } = req.query
@@ -65,7 +66,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(405).json({ error: 'Method not allowed' })
     }
   } catch (error) {
-    console.error('Attendant API error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({ error: 'Internal server error' })
   }
 }
@@ -101,7 +102,7 @@ async function handleGetAttendant(req: NextApiRequest, res: NextApiResponse, eve
       }
     })
   } catch (error) {
-    console.error('Get attendant error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({ error: 'Failed to fetch attendant' })
   }
 }
@@ -189,7 +190,7 @@ async function handleUpdateAttendant(req: NextApiRequest, res: NextApiResponse, 
       }
     })
   } catch (error) {
-    console.error('Update attendant error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({ error: 'Failed to update attendant' })
   }
 }
@@ -231,7 +232,7 @@ async function handleDeleteAttendant(req: NextApiRequest, res: NextApiResponse, 
       message: 'Attendant removed from event'
     })
   } catch (error) {
-    console.error('Delete attendant error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({ error: 'Failed to delete attendant' })
   }
 }

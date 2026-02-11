@@ -5,6 +5,7 @@ import { prisma } from '../../../src/lib/prisma'
 import { getUserEvents } from '../../../src/lib/eventAccess'
 import { z } from 'zod'
 import crypto from 'crypto'
+import { handleApiError } from '../../../src/lib/apiError'
 
 // Validation schema for event creation/update
 const eventSchema = z.object({
@@ -59,7 +60,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(405).json({ error: 'Method not allowed' })
     }
   } catch (error) {
-    console.error('Events API error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({ error: 'Internal server error' })
   }
 }

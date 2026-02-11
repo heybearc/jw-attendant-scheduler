@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "../../auth/[...nextauth]"
 import { prisma } from "../../../../src/lib/prisma"
 import { v4 as uuidv4 } from 'uuid'
+import { handleApiError } from '../../../src/lib/apiError'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -269,7 +270,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
 
   } catch (error) {
-    console.error("Event clone error:", error)
+    // Error logged by handleApiError
     return res.status(500).json({ 
       error: "Failed to clone event",
       details: error instanceof Error ? error.message : "Unknown error"

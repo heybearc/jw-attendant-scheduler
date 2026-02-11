@@ -120,22 +120,21 @@
    - **Files:** `/prisma/schema.prisma`, various API endpoints
    - **Status:** COMPLETE (2026-02-11) - Table renamed, @@map removed, frontend field names fixed
 
-2. **Volunteer Roles: Global vs Event-Specific**
+2. ✅ **Volunteer Roles: Global vs Event-Specific** - COMPLETE
    - **Issue:** Roles (overseer, keyman, elder) stored globally but should be event-specific
    - **Impact:** Unchecking keyman in Event A removes it from Event B
    - **Documentation:** `/docs/VOLUNTEER_ROLES_ARCHITECTURE.md`
    - **Effort:** Large (8-12 hours including migration)
    - **Risk:** High (data migration required)
-   - **Decision Needed:** Which architecture approach to take (3 options documented)
-   - **Status:** Awaiting stakeholder decision
+   - **Status:** COMPLETE (2026-02-11) - Event-specific role flags (isKeyman, isOverseer, isElder) implemented in event_volunteers table
 
-3. **Missing Prisma Schema Fields**
+3. ✅ **Missing Prisma Schema Fields** - COMPLETE
    - **Issue:** Code references fields not in current schema (`ivsImportBatchId`, `ivsApprovalStatus`, `ivs_import_batches`)
    - **Impact:** TypeScript errors, runtime errors, developers using `(prisma as any)` to bypass
    - **Effort:** Medium (3-4 hours)
    - **Risk:** Low (mostly cleanup)
    - **Files:** `/pages/api/events/[id]/ivs/import.ts`, `/pages/api/events/[id]/volunteers/index.ts`
-   - **Status:** Documented, ready for implementation
+   - **Status:** COMPLETE (2026-02-11) - All IVS fields exist in schema and database, Prisma client regenerated
 
 ### 🟡 Medium Priority Technical Debt (3 items)
 

@@ -152,35 +152,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         })
       }
 
-      // Check if event has positions or other dependencies
-      const positionsCount = await prisma.positions.count({
-        where: { eventId: id }
-      })
-
-      if (positionsCount > 0) {
-        return res.status(400).json({ 
-          success: false,
-          error: `Cannot delete event with ${positionsCount} position(s). Remove positions first.` 
-        })
-      }
-
-      // Delete related records first (cascade delete will handle most)
-      // Note: Database has ON DELETE CASCADE for most relations
-      
-      // Delete event_volunteers associations
-      await prisma.event_volunteers.deleteMany({ where: { eventId: id } })
-      
-      // Delete count sessions (with their position_counts via cascade)
-      await prisma.count_sessions.deleteMany({ where: { eventId: id } })
-      
-      // Delete event permissions
-      try {
-        await prisma.$executeRawUnsafe(`DELETE FROM event_permissions WHERE "eventId" = $1`, id)
-      } catch (e) {
-        console.log('Note: event_permissions table may not exist:', e.message)
-      }
-      
-      // Delete the event (cascade will handle remaining relations)
+      // Delete the event
+      // Database has ON DELETE CASCADE configured for:
+      // - positions (and their position_assignments, position_counts, position_oversight_assignments)
+      // - event_volunteers
+      // - count_sessions (and their position_counts)
+      // - event_permissions
+      // - announcements
+      // - and other related records
       await prisma.events.delete({
         where: { id }
       })

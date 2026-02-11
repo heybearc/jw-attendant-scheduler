@@ -92,20 +92,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 async function handleGetOversight(req: NextApiRequest, res: NextApiResponse, eventId: string, positionId: string) {
   console.log('📖 Getting position oversight...')
   
-  const oversight = await (prisma as any).position_oversight_assignments.findFirst({
+  const oversight = await prisma.position_oversight_assignments.findFirst({
     where: {
-      position_id: positionId,
-      event_id: eventId
+      positionId: positionId,
+      eventId: eventId
     },
     include: {
-      attendants_position_oversight_assignments_overseer_idToattendants: {
+      overseer: {
         select: {
           id: true,
           firstName: true,
           lastName: true
         }
       },
-      attendants_position_oversight_assignments_keyman_idToattendants: {
+      keyman: {
         select: {
           id: true,
           firstName: true,
@@ -151,32 +151,32 @@ async function handleSetOversight(req: NextApiRequest, res: NextApiResponse, eve
     }
 
     // Check if oversight exists
-    const existing = await (prisma as any).position_oversight_assignments.findFirst({
+    const existing = await prisma.position_oversight_assignments.findFirst({
       where: {
-        position_id: positionId,
-        event_id: eventId
+        positionId: positionId,
+        eventId: eventId
       }
     })
 
     let oversight
     if (existing) {
-      oversight = await (prisma as any).position_oversight_assignments.update({
+      oversight = await prisma.position_oversight_assignments.update({
         where: { id: existing.id },
         data: {
-          overseer_id: validatedData.overseerId || null,
-          keyman_id: validatedData.keymanId || null,
-          assigned_by: userId,
-          updated_at: new Date()
+          overseerId: validatedData.overseerId || null,
+          keymanId: validatedData.keymanId || null,
+          assignedBy: userId,
+          updatedAt: new Date()
         }
       })
     } else {
-      oversight = await (prisma as any).position_oversight_assignments.create({
+      oversight = await prisma.position_oversight_assignments.create({
         data: {
-          position_id: positionId,
-          event_id: eventId,
-          overseer_id: validatedData.overseerId || null,
-          keyman_id: validatedData.keymanId || null,
-          assigned_by: userId
+          positionId: positionId,
+          eventId: eventId,
+          overseerId: validatedData.overseerId || null,
+          keymanId: validatedData.keymanId || null,
+          assignedBy: userId
         }
       })
     }
@@ -213,10 +213,10 @@ async function handleDeleteOversight(req: NextApiRequest, res: NextApiResponse, 
   console.log('🗑️  Deleting position oversight...')
   
   try {
-    const existing = await (prisma as any).position_oversight_assignments.findFirst({
+    const existing = await prisma.position_oversight_assignments.findFirst({
       where: {
-        position_id: positionId,
-        event_id: eventId
+        positionId: positionId,
+        eventId: eventId
       }
     })
 
@@ -227,7 +227,7 @@ async function handleDeleteOversight(req: NextApiRequest, res: NextApiResponse, 
       })
     }
 
-    await (prisma as any).position_oversight_assignments.delete({
+    await prisma.position_oversight_assignments.delete({
       where: { id: existing.id }
     })
 

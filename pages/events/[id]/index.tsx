@@ -662,33 +662,33 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
                 <div className="bg-white bg-opacity-60 rounded-lg p-3">
                   <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">Circuit Overseer</div>
                   <div className="text-sm font-semibold text-gray-900">
-                    {event.circuitoverseername || 'Not Assigned'}
+                    {event.circuitOverseerName || 'Not Assigned'}
                   </div>
-                  {event.circuitoverseerphone && (
-                    <div className="text-xs text-gray-600">📞 {event.circuitoverseerphone}</div>
+                  {event.circuitOverseerPhone && (
+                    <div className="text-xs text-gray-600">📞 {event.circuitOverseerPhone}</div>
                   )}
                 </div>
                 <div className="bg-white bg-opacity-60 rounded-lg p-3">
                   <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">Assembly Overseer</div>
                   <div className="text-sm font-semibold text-gray-900">
-                    {event.assemblyoverseername || 'Not Assigned'}
+                    {event.assemblyOverseerName || 'Not Assigned'}
                   </div>
-                  {event.assemblyoverseerphone && (
-                    <div className="text-xs text-gray-600">📞 {event.assemblyoverseerphone}</div>
+                  {event.assemblyOverseerPhone && (
+                    <div className="text-xs text-gray-600">📞 {event.assemblyOverseerPhone}</div>
                   )}
                 </div>
                 <div className="bg-white bg-opacity-60 rounded-lg p-3">
                   <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">Volunteer Overseer</div>
                   <div className="text-sm font-semibold text-gray-900">
-                    {event.volunteeroverseername || 'Not Assigned'}
+                    {event.volunteerOverseerName || 'Not Assigned'}
                   </div>
-                  {event.volunteeroverseerphone && (
-                    <div className="text-xs text-gray-600">📞 {event.volunteeroverseerphone}</div>
+                  {event.volunteerOverseerPhone && (
+                    <div className="text-xs text-gray-600">📞 {event.volunteerOverseerPhone}</div>
                   )}
-                  {event.volunteeroverseerassistants && Array.isArray(event.volunteeroverseerassistants) && event.volunteeroverseerassistants.length > 0 && (
+                  {event.volunteerOverseerAssistants && Array.isArray(event.volunteerOverseerAssistants) && event.volunteerOverseerAssistants.length > 0 && (
                     <div className="mt-2 pt-2 border-t border-gray-200">
                       <div className="text-xs font-medium text-gray-500 mb-1">Assistants:</div>
-                      {event.volunteeroverseerassistants.map((assistant: any, idx: number) => (
+                      {event.volunteerOverseerAssistants.map((assistant: any, idx: number) => (
                         <div key={idx} className="text-xs text-gray-700 mb-1">
                           <span className="font-medium">{assistant.name}</span>
                           {assistant.phone && <span className="text-gray-500"> • {assistant.phone}</span>}

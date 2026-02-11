@@ -301,7 +301,6 @@ model event_volunteers {
   @@index([ivsRequestRound])
   @@index([ivsImportBatchId])
   @@index([earlyCheckinEligible])
-  @@map("event_attendants")
 }
 
 model event_documents {

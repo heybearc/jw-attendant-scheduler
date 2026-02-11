@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../../../../auth/[...nextauth]'
 import { PrismaClient } from '@prisma/client'
 import { z } from 'zod'
+import { handleApiError } from '../../../../../src/lib/apiError'
 
 const prisma = new PrismaClient()
 
@@ -109,7 +110,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
 
     } catch (error) {
-      console.error('Error updating volunteer oversight:', error)
+      // Error logged by handleApiError
       
       if (error instanceof z.ZodError) {
         return res.status(400).json({ 

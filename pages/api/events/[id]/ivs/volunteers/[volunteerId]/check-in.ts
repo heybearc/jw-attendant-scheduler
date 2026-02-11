@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../../../../../auth/[...nextauth]'
 import { PrismaClient } from '@prisma/client'
+import { handleApiError } from '../../../src/lib/apiError'
 
 const prisma = new PrismaClient()
 
@@ -77,7 +78,7 @@ export default async function handler(
 
     return res.status(200).json({ success: true })
   } catch (error) {
-    console.error('Check-in error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({
       success: false,
       message: error.message || 'Internal server error',

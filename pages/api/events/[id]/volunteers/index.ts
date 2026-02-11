@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '../../../../../src/lib/prisma'
+import { handleApiError } from '../../../../src/lib/apiError'
 
 // NEW VOLUNTEERS API ENDPOINT
 // This API manages volunteers for events
@@ -44,7 +45,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     return res.status(405).json({ success: false, error: 'Method not allowed' })
   } catch (error) {
-    console.error('Event volunteers API error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({ success: false, error: 'Internal server error' })
   }
 }
@@ -106,7 +107,7 @@ async function handleGetEventVolunteers(req: NextApiRequest, res: NextApiRespons
       }))
     })
   } catch (error) {
-    console.error('Get event volunteers error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({ success: false, error: 'Failed to fetch volunteers' })
   }
 }
@@ -182,7 +183,7 @@ async function handleCreateEventVolunteer(req: NextApiRequest, res: NextApiRespo
       }
     })
   } catch (error) {
-    console.error('Create event volunteer error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({ success: false, error: 'Failed to create volunteer' })
   }
 }
@@ -319,7 +320,7 @@ async function handleBulkImportEventVolunteers(req: NextApiRequest, res: NextApi
           created++
         }
       } catch (error: any) {
-        console.error(`Error processing volunteer ${i + 1}:`, error)
+        // Error logged by handleApiError
         errors.push({
           row: i + 1,
           email: attendants[i]?.email || 'Unknown',
@@ -344,7 +345,7 @@ async function handleBulkImportEventVolunteers(req: NextApiRequest, res: NextApi
       }
     })
   } catch (error) {
-    console.error('Bulk import event volunteers error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({ success: false, error: 'Failed to import volunteers' })
   }
 }

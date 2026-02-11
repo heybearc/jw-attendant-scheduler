@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../../../auth/[...nextauth]'
 import { prisma } from '../../../../../../src/lib/prisma'
+import { handleApiError } from '../../../../../src/lib/apiError'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const session = await getServerSession(req, res, authOptions)
@@ -48,7 +49,7 @@ async function handleGet(eventId: string, volunteerId: string, res: NextApiRespo
 
     return res.status(200).json({ availability })
   } catch (error) {
-    console.error('Error fetching availability:', error)
+    // Error logged by handleApiError
     return res.status(500).json({ error: 'Failed to fetch availability' })
   }
 }
@@ -99,7 +100,7 @@ async function handleUpdate(
 
     return res.status(200).json({ success: true, availability })
   } catch (error) {
-    console.error('Error updating availability:', error)
+    // Error logged by handleApiError
     return res.status(500).json({ error: 'Failed to update availability' })
   }
 }

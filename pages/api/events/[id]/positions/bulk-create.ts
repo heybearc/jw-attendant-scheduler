@@ -4,6 +4,7 @@ import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '../../../../../src/lib/prisma'
 import { z } from 'zod'
 import { randomUUID } from 'crypto'
+import { handleApiError } from '../../../../src/lib/apiError'
 
 // APEX GUARDIAN: Bulk Position Creation API
 // Creates numbered positions with optional shift templates
@@ -172,7 +173,7 @@ async function handleBulkCreate(req: NextApiRequest, res: NextApiResponse, event
       })
     }
     
-    console.error('Bulk create error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({ 
       success: false, 
       error: 'Failed to create positions' 

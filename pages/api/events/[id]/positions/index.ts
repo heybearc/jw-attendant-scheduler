@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '../../../../../src/lib/prisma'
 import { z } from 'zod'
+import { handleApiError } from '../../../../src/lib/apiError'
 
 // APEX GUARDIAN: Event Positions CRUD API
 // Manages positions for specific events with proper validation
@@ -55,7 +56,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(405).json({ success: false, error: 'Method not allowed' })
     }
   } catch (error) {
-    console.error('Positions API error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({ success: false, error: 'Internal server error' })
   }
 }
@@ -132,7 +133,7 @@ async function handleGetPositions(req: NextApiRequest, res: NextApiResponse, eve
       eventId
     })
   } catch (error) {
-    console.error('Get positions error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({ success: false, error: 'Failed to fetch positions' })
   }
 }
@@ -187,7 +188,7 @@ async function handleCreatePosition(req: NextApiRequest, res: NextApiResponse, e
       })
     }
 
-    console.error('Create position error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({
       success: false,
       error: 'Failed to create position'

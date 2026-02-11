@@ -4,6 +4,7 @@ import { authOptions } from '../../auth/[...nextauth]'
 import { prisma } from '../../../../src/lib/prisma'
 import { z } from 'zod'
 import crypto from 'crypto'
+import { handleApiError } from '../../../src/lib/apiError'
 
 // Validation schema for assignment creation
 const assignmentSchema = z.object({
@@ -221,7 +222,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const fs = require('fs')
     const errorMsg = `\n❌ ASSIGNMENT API ERROR at ${new Date().toISOString()}\nMessage: ${error.message}\nStack: ${error.stack}\n`
     fs.appendFileSync('/tmp/assignment-error.log', errorMsg)
-    console.error('Assignment API error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({ 
       error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error'

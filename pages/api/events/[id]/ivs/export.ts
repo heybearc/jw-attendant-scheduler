@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../../../auth/[...nextauth]'
 import { PrismaClient } from '@prisma/client'
 import * as XLSX from 'xlsx'
+import { handleApiError } from '../../../../src/lib/apiError'
 
 const prisma = new PrismaClient()
 
@@ -110,7 +111,7 @@ export default async function handler(
 
     return res.status(200).send(buffer)
   } catch (error) {
-    console.error('IVS export error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({
       success: false,
       message: error.message || 'Internal server error',

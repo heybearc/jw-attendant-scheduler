@@ -4,6 +4,7 @@ import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '../../../../../src/lib/prisma'
 import { z } from 'zod'
 import { checkEventAccess, canManagePosition } from '../../../../../src/lib/eventAccess'
+import { handleApiError } from '../../../../src/lib/apiError'
 
 // APEX GUARDIAN: Individual Position Management API
 // Handles GET, PUT, DELETE for specific positions
@@ -112,7 +113,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(405).json({ success: false, error: 'Method not allowed' })
     }
   } catch (error) {
-    console.error('Position API error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({ success: false, error: 'Internal server error' })
   }
 }
@@ -124,7 +125,7 @@ async function handleGetPosition(req: NextApiRequest, res: NextApiResponse, posi
       data: position
     })
   } catch (error) {
-    console.error('Get position error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({ success: false, error: 'Failed to fetch position' })
   }
 }
@@ -191,7 +192,7 @@ async function handleUpdatePosition(req: NextApiRequest, res: NextApiResponse, p
       })
     }
 
-    console.error('Update position error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({
       success: false,
       error: 'Failed to update position'
@@ -275,7 +276,7 @@ async function handleDeletePosition(req: NextApiRequest, res: NextApiResponse, p
       })
     }
   } catch (error) {
-    console.error('Delete position error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({
       success: false,
       error: 'Failed to delete position'

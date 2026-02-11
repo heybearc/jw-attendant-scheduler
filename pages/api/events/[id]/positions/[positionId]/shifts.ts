@@ -4,6 +4,7 @@ import { authOptions } from '../../../../auth/[...nextauth]'
 import { prisma } from '../../../../../../src/lib/prisma'
 import { z } from 'zod'
 import crypto from 'crypto'
+import { handleApiError } from '../../../../../src/lib/apiError'
 
 // Validation schema for shift creation
 const shiftSchema = z.object({
@@ -159,7 +160,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(405).json({ error: 'Method not allowed' })
     }
   } catch (error) {
-    console.error('Shift creation API error:', error)
+    // Error logged by handleApiError
     
     // Enhanced error logging
     if (error instanceof Error) {

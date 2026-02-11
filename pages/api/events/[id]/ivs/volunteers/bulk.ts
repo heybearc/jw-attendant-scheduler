@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../../../../auth/[...nextauth]'
 import { PrismaClient } from '@prisma/client'
+import { handleApiError } from '../../../../../src/lib/apiError'
 
 const prisma = new PrismaClient()
 
@@ -115,7 +116,7 @@ export default async function handler(
 
         updated++
       } catch (error) {
-        console.error(`Error updating volunteer ${volunteerId}:`, error)
+        // Error logged by handleApiError
         errors.push(`Error updating volunteer ${volunteerId}: ${error.message}`)
       }
     }
@@ -128,7 +129,7 @@ export default async function handler(
     })
 
   } catch (error) {
-    console.error('Bulk IVS volunteer update error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({
       success: false,
       message: error.message || 'Internal server error',

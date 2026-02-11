@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '../../../../../src/lib/prisma'
 import { z } from 'zod'
+import { handleApiError } from '../../../../src/lib/apiError'
 
 // APEX GUARDIAN: Bulk Position Oversight Assignment API
 // Shift-independent bulk oversight for multiple positions
@@ -189,7 +190,7 @@ async function handleBulkOversightAssignment(req: NextApiRequest, res: NextApiRe
       })
     }
     
-    console.error('Bulk oversight assignment error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({ 
       success: false, 
       error: 'Failed to assign bulk oversight',

@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '../../../../../src/lib/prisma'
 import { z } from 'zod'
+import { handleApiError } from '../../../../src/lib/apiError'
 
 const updateAnnouncementSchema = z.object({
   title: z.string().min(1).max(200).optional(),
@@ -50,7 +51,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(405).json({ error: 'Method not allowed' })
     }
   } catch (error) {
-    console.error('Announcement API error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({ error: 'Internal server error' })
   }
 }

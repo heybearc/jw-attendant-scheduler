@@ -5,6 +5,7 @@ import { PrismaClient } from '@prisma/client'
 import formidable, { File } from 'formidable'
 import * as XLSX from 'xlsx'
 import { v4 as uuidv4 } from 'uuid'
+import { handleApiError } from '../../../../src/lib/apiError'
 
 const prisma = new PrismaClient()
 
@@ -181,7 +182,7 @@ export default async function handler(
 
         imported++
       } catch (error) {
-        console.error(`[IVS Import] Error importing ${volunteer.name}:`, error)
+        // Error logged by handleApiError
         errors.push(`Error importing ${volunteer.name}: ${error.message}`)
       }
     }
@@ -205,7 +206,7 @@ export default async function handler(
       errors: errors.length > 0 ? errors : undefined,
     })
   } catch (error) {
-    console.error('IVS import error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({
       success: false,
       message: error.message || 'Internal server error',

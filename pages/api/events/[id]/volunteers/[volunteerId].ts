@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '../../../../../src/lib/prisma'
 import { checkEventAccess, canManageAttendants } from '../../../../../src/lib/eventAccess'
+import { handleApiError } from '../../../../src/lib/apiError'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { id: eventId, volunteerId } = req.query
@@ -65,7 +66,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(405).json({ error: 'Method not allowed' })
     }
   } catch (error) {
-    console.error('Volunteer API error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({ error: 'Internal server error' })
   }
 }
@@ -101,7 +102,7 @@ async function handleGetVolunteer(req: NextApiRequest, res: NextApiResponse, eve
       }
     })
   } catch (error) {
-    console.error('Get volunteer error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({ error: 'Failed to fetch volunteer' })
   }
 }
@@ -206,7 +207,7 @@ async function handleUpdateVolunteer(req: NextApiRequest, res: NextApiResponse, 
       }
     })
   } catch (error) {
-    console.error('Update volunteer error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({ error: 'Failed to update volunteer' })
   }
 }
@@ -255,7 +256,7 @@ async function handleDeleteVolunteer(req: NextApiRequest, res: NextApiResponse, 
       message: 'Volunteer removed from event'
     })
   } catch (error) {
-    console.error('Delete volunteer error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({ error: 'Failed to delete volunteer' })
   }
 }

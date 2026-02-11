@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../../../../auth/[...nextauth]'
 import { prisma } from '../../../../../../src/lib/prisma'
 import { z } from 'zod'
+import { handleApiError } from '../../../../../src/lib/apiError'
 
 // APEX GUARDIAN: Position Oversight Assignment API
 // Shift-independent oversight for positions
@@ -191,7 +192,7 @@ async function handleSetOversight(req: NextApiRequest, res: NextApiResponse, eve
       })
     }
     
-    console.error('Set oversight error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({ 
       success: false, 
       error: 'Failed to assign oversight',
@@ -227,7 +228,7 @@ async function handleDeleteOversight(req: NextApiRequest, res: NextApiResponse, 
     })
 
   } catch (error: any) {
-    console.error('Delete oversight error:', error)
+    // Error logged by handleApiError
     return res.status(500).json({ 
       success: false, 
       error: 'Failed to remove oversight' 

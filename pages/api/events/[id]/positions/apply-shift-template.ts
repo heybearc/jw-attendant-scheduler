@@ -4,6 +4,7 @@ import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '../../../../../src/lib/prisma'
 import { z } from 'zod'
 import crypto from 'crypto'
+import { handleApiError } from '../../../../src/lib/apiError'
 
 // Validation schema for applying shift templates
 const applyTemplateSchema = z.object({
@@ -164,7 +165,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(405).json({ error: 'Method not allowed' })
     }
   } catch (error) {
-    console.error('Apply shift template API error:', error)
+    // Error logged by handleApiError
     
     if (error instanceof z.ZodError) {
       return res.status(400).json({ 

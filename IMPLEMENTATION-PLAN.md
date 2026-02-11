@@ -112,13 +112,13 @@
 
 ### 🔴 High Priority Technical Debt (3 items)
 
-1. **Inconsistent Table/Field Naming (attendants → volunteers)**
+1. ✅ **Inconsistent Table/Field Naming (attendants → volunteers)** - COMPLETE
    - **Issue:** Database table `event_volunteers` mapped to old name `event_attendants`
    - **Impact:** TypeScript errors, developer confusion, inconsistent codebase
    - **Effort:** Medium (2-3 hours)
    - **Risk:** Medium (requires database migration)
    - **Files:** `/prisma/schema.prisma`, various API endpoints
-   - **Status:** Documented, awaiting implementation
+   - **Status:** COMPLETE (2026-02-11) - Table renamed, @@map removed, frontend field names fixed
 
 2. **Volunteer Roles: Global vs Event-Specific**
    - **Issue:** Roles (overseer, keyman, elder) stored globally but should be event-specific
@@ -145,18 +145,18 @@
    - **Risk:** High (requires careful migration)
    - **Status:** Documented, deferred until high priority items complete
 
-5. **Inconsistent Field Name Mapping**
+5. ✅ **Inconsistent Field Name Mapping** - MOSTLY COMPLETE
    - **Issue:** Mix of camelCase, snake_case, lowercase across models
    - **Documentation:** `/docs/PRISMA_FIELD_MAPPING.md`, `/.windsurf/rules/prisma-field-naming.md`
    - **Effort:** Medium (4-6 hours)
    - **Risk:** Medium (requires schema changes)
-   - **Status:** Documented with quick reference guide
+   - **Status:** MOSTLY COMPLETE (2026-02-11) - Removed most (prisma as any) casts, fixed overseer fields, @map directives consistent
 
-6. **Old Migration Files and Baseline Schemas**
+6. ✅ **Old Migration Files and Baseline Schemas** - COMPLETE
    - **Issue:** Multiple schema files, unclear which is authoritative
    - **Effort:** Small (1-2 hours)
    - **Risk:** Low (organizational)
-   - **Status:** Documented, low priority
+   - **Status:** COMPLETE (2026-02-11) - Old schemas archived in /prisma/archive/ with documentation
 
 ### 🟢 Low Priority Technical Debt (3 items)
 

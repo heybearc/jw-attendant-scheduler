@@ -685,6 +685,17 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
                   {event.volunteeroverseerphone && (
                     <div className="text-xs text-gray-600">📞 {event.volunteeroverseerphone}</div>
                   )}
+                  {event.volunteeroverseerassistants && Array.isArray(event.volunteeroverseerassistants) && event.volunteeroverseerassistants.length > 0 && (
+                    <div className="mt-2 pt-2 border-t border-gray-200">
+                      <div className="text-xs font-medium text-gray-500 mb-1">Assistants:</div>
+                      {event.volunteeroverseerassistants.map((assistant: any, idx: number) => (
+                        <div key={idx} className="text-xs text-gray-700 mb-1">
+                          <span className="font-medium">{assistant.name}</span>
+                          {assistant.phone && <span className="text-gray-500"> • {assistant.phone}</span>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
               {canEdit && (

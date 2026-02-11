@@ -16,14 +16,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const { id } = req.query
-  const { name } = req.body
+  let { name } = req.body
 
   if (!id || typeof id !== "string") {
     return res.status(400).json({ error: "Event ID is required" })
-  }
-
-  if (!name || typeof name !== "string") {
-    return res.status(400).json({ error: "Event name is required" })
   }
 
   try {
@@ -75,6 +71,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ error: "User not found" })
     }
 
+    // Auto-generate name if not provided
+    if (!name || typeof name !== "string") {
+      name = `${originalEvent.name} (Copy)`
+    }
+
     // Create the cloned event
     const newEventId = uuidv4()
     const clonedEvent = await prisma.events.create({
@@ -101,10 +102,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         assemblyoverseername: originalEvent.assemblyoverseername,
         assemblyoverseerphone: originalEvent.assemblyoverseerphone,
         assemblyoverseeremail: originalEvent.assemblyoverseeremail,
-        attendantoverseername: originalEvent.attendantoverseername,
-        attendantoverseerphone: originalEvent.attendantoverseerphone,
-        attendantoverseeremail: originalEvent.attendantoverseeremail,
-        attendantoverseerassistants: originalEvent.attendantoverseerassistants,
+        volunteeroverseername: originalEvent.volunteeroverseername,
+        volunteeroverseerphone: originalEvent.volunteeroverseerphone,
+        volunteeroverseeremail: originalEvent.volunteeroverseeremail,
+        volunteeroverseerassistants: originalEvent.volunteeroverseerassistants,
         settings: originalEvent.settings
       }
     })

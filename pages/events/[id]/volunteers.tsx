@@ -163,10 +163,10 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
       }
     }
     
-    window.addEventListener('scroll', handleScroll, true)
+    window.addEventListener('scroll', handleScroll, { passive: true, capture: true })
     
     return () => {
-      window.removeEventListener('scroll', handleScroll, true)
+      window.removeEventListener('scroll', handleScroll, { capture: true } as any)
     }
   }, [openDropdowns])
   

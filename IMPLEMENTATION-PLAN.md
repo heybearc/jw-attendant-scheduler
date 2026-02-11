@@ -1,8 +1,8 @@
 # Implementation Plan - TheoShift
 
-**Last Updated:** 2026-02-09  
-**Current Version:** v4.2.0  
-**Current Phase:** Phase 7 Complete - Maintenance & Feature Enhancements
+**Last Updated:** 2026-02-11  
+**Current Version:** v4.5.0  
+**Current Phase:** Technical Debt Cleanup & Feature Planning
 
 ---
 
@@ -88,17 +88,115 @@
 
 ## 🎯 Active Work (This Week)
 
-**Current Focus:** Ready for next feature work - all critical bugs resolved
+**Current Focus:** Technical Debt Cleanup & Architecture Decisions
 
-- [x] **FB-028:** Localhost redirect bug - COMPLETED (2026-02-08) - Fixed volunteer login redirects
-- [x] **qa-01 testing migration** - COMPLETED (2026-02-08) - Centralized testing with dynamic STANDBY detection
-- [x] **FB-004:** Search by name feature - COMPLETED (2026-02-07) - Added Assignments column to volunteers table
-- [x] **FB-003:** Complete schedule visibility - COMPLETED (2026-02-07) - Volunteers can see full position schedule
-- [x] **FB-012:** Bulk edit enhancement - COMPLETED (2026-02-07) - Combined shift + oversight operation
-- [x] Email content refinement - COMPLETED (2026-02-07) - Improved clarity, tone, and UX
-- [x] TypeScript error fixes - COMPLETED (2026-02-07)
-- [x] Test infrastructure improvements - COMPLETED (v4.0.2)
-- [ ] **Next:** Pick from medium priority feedback items (FB-025, FB-026, FB-027, FB-017)
+### Recently Completed (2026-02-11)
+- [x] **Event Settings & Cloning Fixes** - Fixed volunteer overseer persistence, display, and cloning issues
+- [x] **Field Naming Documentation** - Created comprehensive Prisma field mapping guides
+- [x] **Volunteer Roles Architecture Analysis** - Documented global vs event-specific roles issue
+- [x] **Technical Debt Assessment** - Catalogued 9 items with prioritization and effort estimates
+- [x] **UI Terminology Updates** - Changed "Attendant" to "Volunteer" throughout UI
+- [x] **Volunteer Creation Fix** - Fixed 500 error when adding volunteers (departmentId issue)
+
+### In Progress
+- [ ] **Technical Debt Cleanup** - Systematic cleanup of accumulated debt (see below)
+- [ ] **Architecture Decision:** Volunteer roles (global vs event-specific) - Needs stakeholder input
+- [ ] **Feature Planning:** IVS Early Check-In access model - Needs pushback/discussion
+- [ ] **Feature Planning:** In-app event-specific chat system - Needs pushback/discussion
+
+---
+
+## 🔧 Technical Debt Cleanup (NEW - Priority Work)
+
+**Documentation:** `/docs/TECHNICAL_DEBT_ASSESSMENT.md`
+
+### 🔴 High Priority Technical Debt (3 items)
+
+1. **Inconsistent Table/Field Naming (attendants → volunteers)**
+   - **Issue:** Database table `event_volunteers` mapped to old name `event_attendants`
+   - **Impact:** TypeScript errors, developer confusion, inconsistent codebase
+   - **Effort:** Medium (2-3 hours)
+   - **Risk:** Medium (requires database migration)
+   - **Files:** `/prisma/schema.prisma`, various API endpoints
+   - **Status:** Documented, awaiting implementation
+
+2. **Volunteer Roles: Global vs Event-Specific**
+   - **Issue:** Roles (overseer, keyman, elder) stored globally but should be event-specific
+   - **Impact:** Unchecking keyman in Event A removes it from Event B
+   - **Documentation:** `/docs/VOLUNTEER_ROLES_ARCHITECTURE.md`
+   - **Effort:** Large (8-12 hours including migration)
+   - **Risk:** High (data migration required)
+   - **Decision Needed:** Which architecture approach to take (3 options documented)
+   - **Status:** Awaiting stakeholder decision
+
+3. **Missing Prisma Schema Fields**
+   - **Issue:** Code references fields not in current schema (`ivsImportBatchId`, `ivsApprovalStatus`, `ivs_import_batches`)
+   - **Impact:** TypeScript errors, runtime errors, developers using `(prisma as any)` to bypass
+   - **Effort:** Medium (3-4 hours)
+   - **Risk:** Low (mostly cleanup)
+   - **Files:** `/pages/api/events/[id]/ivs/import.ts`, `/pages/api/events/[id]/volunteers/index.ts`
+   - **Status:** Documented, ready for implementation
+
+### 🟡 Medium Priority Technical Debt (3 items)
+
+4. **Dual Position Systems (event_positions + positions)**
+   - **Issue:** Two position systems coexist, code handles both everywhere
+   - **Effort:** Large (10-15 hours)
+   - **Risk:** High (requires careful migration)
+   - **Status:** Documented, deferred until high priority items complete
+
+5. **Inconsistent Field Name Mapping**
+   - **Issue:** Mix of camelCase, snake_case, lowercase across models
+   - **Documentation:** `/docs/PRISMA_FIELD_MAPPING.md`, `/.windsurf/rules/prisma-field-naming.md`
+   - **Effort:** Medium (4-6 hours)
+   - **Risk:** Medium (requires schema changes)
+   - **Status:** Documented with quick reference guide
+
+6. **Old Migration Files and Baseline Schemas**
+   - **Issue:** Multiple schema files, unclear which is authoritative
+   - **Effort:** Small (1-2 hours)
+   - **Risk:** Low (organizational)
+   - **Status:** Documented, low priority
+
+### 🟢 Low Priority Technical Debt (3 items)
+
+7. **Console Violations (Non-Passive Event Listeners)**
+8. **Commented-Out Code and Debug Logging**
+9. **Inconsistent Error Handling**
+
+**Total Estimated Effort:** 40-60 hours across all items
+
+### Cleanup Phases
+
+**Phase 1: Quick Wins (1-2 days)** - PARTIALLY COMPLETE
+- [x] Fix `departmentId` empty string issue
+- [x] Update UI terminology (Attendant → Volunteer)
+- [ ] Remove commented-out code
+- [ ] Clean up debug logging
+- [ ] Consolidate schema files
+- [ ] Fix non-passive event listeners
+
+**Phase 2: Schema Cleanup (3-5 days)**
+- [ ] Audit Prisma schema vs actual database
+- [ ] Add missing fields or remove dead references
+- [ ] Standardize field name mapping
+- [ ] Update events model to use @map directives
+- [ ] Remove all `(prisma as any)` casts
+- [ ] Regenerate Prisma client
+
+**Phase 3: Architectural Fixes (1-2 weeks)**
+- [ ] Decide on volunteer roles architecture
+- [ ] Implement event-specific roles migration
+- [ ] Migrate to single position system
+- [ ] Standardize error handling
+- [ ] Add proper logging infrastructure
+
+**Phase 4: Database Migration (1 week)**
+- [ ] Rename `event_attendants` → `event_volunteers` in database
+- [ ] Remove `@@map` directive from Prisma schema
+- [ ] Update all references in codebase
+- [ ] Test thoroughly on STANDBY
+- [ ] Deploy to production
 
 ---
 
@@ -134,6 +232,92 @@
 - [ ] **Global announcements admin page** (effort: L, NEW 2026-02-06) - Create admin portal page to manage system-wide announcements that appear on all pages (like rebranding banner). Should support: title, message, type (INFO/WARNING/URGENT), start/end dates, active/inactive toggle, dismissal settings. Currently only have event-specific announcements and code-based static banners.
 - [ ] Mobile bottom navigation expansion (effort: M) - Ensure bottom nav appears consistently on all authenticated pages
 - [ ] Admin pages mobile optimization (effort: L) - Make admin tables, forms, and UI touch-friendly for mobile
+
+---
+
+## 💭 Ideas & Feature Concepts (Needs Discussion)
+
+### 1. IVS Early Check-In Access Model
+**Status:** Needs pushback/discussion  
+**Submitted:** 2026-02-11
+
+**Current Situation:**
+- IVS Approval - Early Check-In feature exists
+- Mobile check-in and regular check-in features available
+- Currently requires team members to have application login
+
+**Question:**
+- Should volunteers need full application login for early check-in?
+- OR should we add an "Early Check-In" tab to volunteer dashboard (when in IVS event)?
+
+**Considerations:**
+- **Option A (Current):** Team members have full login access
+  - Pros: Full access to all features, easier permission management
+  - Cons: More accounts to manage, potential security concerns
+  
+- **Option B (Volunteer Dashboard):** Add check-in tab for IVS volunteers
+  - Pros: Volunteers already have login, event-specific access, better UX
+  - Cons: Need to build volunteer dashboard tab, permission complexity
+
+**Decision Needed:** Which approach aligns better with security model and user experience?
+
+### 2. Event-Specific In-App Chat System
+**Status:** Needs pushback/discussion  
+**Submitted:** 2026-02-11
+
+**Use Case:**
+- Attendant overseer needs to message team members during event
+- Example: "Child is missing" - need to alert single person or broadcast to all
+- Must be event-specific (not global chat)
+
+**Requirements:**
+- Event-scoped messaging (only for specific event)
+- One-to-one messaging (overseer → volunteer)
+- Broadcast messaging (overseer → all team members)
+- Real-time delivery
+- Mobile-friendly
+- Role-based access (overseers can send, volunteers can receive)
+
+**Technical Considerations:**
+- **Real-time:** WebSockets vs Server-Sent Events vs Polling
+- **Storage:** Database table for messages (event_messages?)
+- **Notifications:** Push notifications? Email fallback?
+- **UI:** Chat panel? Modal? Dedicated tab?
+- **Permissions:** Who can send? Who can receive? Can volunteers reply?
+
+**Architecture Options:**
+
+**Option A: Simple Broadcast System**
+- Overseer sends message to all team members
+- One-way communication (no replies)
+- Email + in-app notification
+- Simpler to implement
+
+**Option B: Full Chat System**
+- Two-way messaging
+- Real-time WebSocket connection
+- Chat history
+- Read receipts
+- More complex but more flexible
+
+**Option C: Hybrid Approach**
+- Broadcast for urgent alerts (one-way)
+- Direct messaging for coordination (two-way)
+- Email fallback for offline users
+
+**Effort Estimates:**
+- Option A: Medium (3-5 days)
+- Option B: Extra Large (2-3 weeks)
+- Option C: Large (1-2 weeks)
+
+**Questions to Answer:**
+1. Is this for real-time coordination during live events?
+2. Do volunteers need to reply or just receive?
+3. Should messages persist after event ends?
+4. What about offline users (email fallback)?
+5. Mobile app integration needed?
+
+**Decision Needed:** Scope and architecture approach before implementation
 
 ### Low Priority
 - [ ] Enhanced error messages (effort: S) - Improve error message clarity across application
@@ -178,7 +362,9 @@
 - [ ] **FB-027:** Event selection page organization (ENHANCEMENT, MEDIUM) - Better organization for admins viewing all events, add search functionality, improve parent/child relationship visualization with connectors/expanders. Clarify if parent event admins automatically get admin access to child events. *Submitted: 2026-02-04*
 - [ ] **FB-017:** Positions Page - Conflict Management (ENHANCEMENT, MEDIUM) - Highlight conflicts when scheduling manually, dynamic suggestion card to help placement without conflicts. *Submitted: 2025-10-24*
 
-### ✅ Resolved/Closed (24 items)
+### ✅ Resolved/Closed (26 items)
+- [x] **Event Settings & Cloning Issues** (BUG, HIGH, RESOLVED 2026-02-11) - Fixed volunteer overseer persistence, display on overview page, cloning 400/500 errors, position oversight assignment errors. Created comprehensive field mapping documentation. *Resolved: 2026-02-11*
+- [x] **UI Terminology Inconsistency** (BUG, MEDIUM, RESOLVED 2026-02-11) - Updated all "Attendant" references to "Volunteer" in add/import dialogs and help text. *Resolved: 2026-02-11*
 - [x] **FB-003:** Complete schedule visibility (FEATURE, MEDIUM, RESOLVED 2026-02-07) - Volunteers can now see the complete schedule for their assigned positions, showing who is assigned before and after their shift. Helps with coordination and handoffs. *Submitted: 2025-11-03*
 - [x] **FB-012:** Bulk edit enhancement (ENHANCEMENT, MEDIUM, RESOLVED 2026-02-07) - Added combined shift creation + oversight assignment operation in bulk edit modal. Users can now create shifts AND assign oversight in one action with selection preserved. *Submitted: 2025-10-24*
 - [x] **Email Content Refinement** (ENHANCEMENT, MEDIUM, RESOLVED 2026-02-07) - Improved assignment notification emails with better subject lines, clearer content, actionable guidance, and enhanced UX. More conversational tone and better mobile readability.
@@ -205,11 +391,11 @@
 - [x] **FB-022:** Test final (BUG, MEDIUM, RESOLVED) - Testing. *Submitted: 2025-10-19*
 
 ### 📊 Summary Statistics
-- **Total Feedback Items:** 27
-- **Open:** 5 (19%)
-- **Resolved/Closed:** 22 (81%)
-- **By Type:** 13 Bugs, 10 Enhancements, 5 Features
-- **By Priority:** 0 Urgent, 0 High, 27 Medium
+- **Total Feedback Items:** 29
+- **Open:** 5 (17%)
+- **Resolved/Closed:** 24 (83%)
+- **By Type:** 15 Bugs, 10 Enhancements, 5 Features
+- **By Priority:** 0 Urgent, 0 High, 29 Medium
 
 ---
 
@@ -253,6 +439,12 @@
 
 ## ✅ Recently Completed (Last 30 Days)
 
+- [x] Technical Debt Assessment & Documentation - Date: 2026-02-11
+- [x] Event Settings & Cloning Fixes - Date: 2026-02-11
+- [x] Prisma Field Mapping Documentation - Date: 2026-02-11
+- [x] Volunteer Roles Architecture Analysis - Date: 2026-02-11
+- [x] UI Terminology Updates (Attendant → Volunteer) - Date: 2026-02-11
+- [x] v4.5.0: OVERSEER Improvements - Date: 2026-02-10
 - [x] v4.3.0: Admin Console Redesign - Date: 2026-02-10
 - [x] Tab-based navigation replacing sidebar menu - Date: 2026-02-10
 - [x] Mobile hamburger menu for PWA-friendly admin access - Date: 2026-02-10

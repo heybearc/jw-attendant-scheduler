@@ -27,23 +27,48 @@ export default function IVSCheckInPage({ event, canEdit }: Props) {
   const [volunteers, setVolunteers] = useState<IVSVolunteer[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
+  const [exporting, setExporting] = useState(false)
 
+  // Auto-refresh every 5 seconds to prevent duplicate check-ins with multiple users
   useEffect(() => {
     fetchVolunteers()
+
+    // Set up polling interval
+    const pollInterval = setInterval(() => {
+      // Only poll if page is visible (Page Visibility API)
+      if (!document.hidden) {
+        fetchVolunteers(true) // Silent refresh (no loading spinner)
+      }
+    }, 5000) // 5 seconds - industry standard for collaborative tools
+
+    // Pause polling when tab is hidden, resume when visible
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchVolunteers(true) // Refresh immediately when tab becomes visible
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      clearInterval(pollInterval)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
   }, [])
 
-  const fetchVolunteers = async () => {
+  const fetchVolunteers = async (silent = false) => {
     try {
-      setLoading(true)
+      if (!silent) setLoading(true)
       const response = await fetch(`/api/events/${eventId}/ivs/volunteers`)
       if (response.ok) {
         const data = await response.json()
         setVolunteers(data.volunteers || [])
+        setLastUpdated(new Date())
       }
     } catch (error) {
       console.error('Error fetching volunteers:', error)
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
   }
 
@@ -63,6 +88,35 @@ export default function IVSCheckInPage({ event, canEdit }: Props) {
     } catch (error) {
       console.error('Error checking in:', error)
       alert('Error checking in volunteer')
+    }
+  }
+
+  const handleExport = async () => {
+    try {
+      setExporting(true)
+      const response = await fetch(`/api/events/${eventId}/ivs/checkin-export`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      if (response.ok) {
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `IVS_Early_CheckIn_Report_${event.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+      } else {
+        alert('Failed to export check-in report')
+      }
+    } catch (error) {
+      console.error('Error exporting:', error)
+      alert('Error exporting check-in report')
+    } finally {
+      setExporting(false)
     }
   }
 
@@ -89,7 +143,13 @@ export default function IVSCheckInPage({ event, canEdit }: Props) {
             ← Back
           </button>
           <h1 className="text-xl font-bold">Early Check-In</h1>
-          <div className="w-12"></div>
+          <button
+            onClick={handleExport}
+            disabled={exporting}
+            className="text-white hover:text-gray-200 text-sm disabled:opacity-50"
+          >
+            {exporting ? '...' : '📊 Export'}
+          </button>
         </div>
         
         {/* Search bar */}
@@ -101,6 +161,14 @@ export default function IVSCheckInPage({ event, canEdit }: Props) {
           className="w-full px-4 py-3 rounded-lg text-gray-900 text-lg"
           autoFocus
         />
+      </div>
+
+      {/* Last updated indicator */}
+      <div className="px-4 py-2 bg-gray-100 border-b text-center">
+        <div className="text-xs text-gray-600">
+          Last updated: {new Date(lastUpdated).toLocaleTimeString()}
+          <span className="ml-2 text-green-600">● Live</span>
+        </div>
       </div>
 
       {/* Stats */}

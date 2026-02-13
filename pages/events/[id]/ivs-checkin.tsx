@@ -29,6 +29,7 @@ export default function IVSCheckInPage({ event, canEdit }: Props) {
   const [searchTerm, setSearchTerm] = useState('')
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
   const [exporting, setExporting] = useState(false)
+  const [activeTab, setActiveTab] = useState<'pending' | 'history'>('pending')
 
   // Auto-refresh every 5 seconds to prevent duplicate check-ins with multiple users
   useEffect(() => {
@@ -120,7 +121,7 @@ export default function IVSCheckInPage({ event, canEdit }: Props) {
     }
   }
 
-  const filteredVolunteers = volunteers.filter(v => {
+  const pendingVolunteers = volunteers.filter(v => {
     if (!v.earlyCheckinEligible) return false
     if (v.checkedInAt) return false
     
@@ -130,6 +131,23 @@ export default function IVSCheckInPage({ event, canEdit }: Props) {
     
     return fullName.includes(searchLower) || congregation.includes(searchLower)
   })
+
+  const checkedInVolunteers = volunteers.filter(v => {
+    if (!v.checkedInAt) return false
+    
+    const searchLower = searchTerm.toLowerCase()
+    const fullName = `${v.firstName} ${v.lastName}`.toLowerCase()
+    const congregation = v.congregation.toLowerCase()
+    
+    return fullName.includes(searchLower) || congregation.includes(searchLower)
+  }).sort((a, b) => {
+    // Sort by check-in time, most recent first
+    const aTime = new Date(a.checkedInAt!).getTime()
+    const bTime = new Date(b.checkedInAt!).getTime()
+    return bTime - aTime
+  })
+
+  const filteredVolunteers = activeTab === 'pending' ? pendingVolunteers : checkedInVolunteers
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -171,6 +189,30 @@ export default function IVSCheckInPage({ event, canEdit }: Props) {
         </div>
       </div>
 
+      {/* Tabs */}
+      <div className="flex border-b bg-white">
+        <button
+          onClick={() => setActiveTab('pending')}
+          className={`flex-1 py-3 text-center font-semibold ${
+            activeTab === 'pending'
+              ? 'border-b-2 border-blue-600 text-blue-600'
+              : 'text-gray-600'
+          }`}
+        >
+          Pending ({volunteers.filter(v => v.earlyCheckinEligible && !v.checkedInAt).length})
+        </button>
+        <button
+          onClick={() => setActiveTab('history')}
+          className={`flex-1 py-3 text-center font-semibold ${
+            activeTab === 'history'
+              ? 'border-b-2 border-blue-600 text-blue-600'
+              : 'text-gray-600'
+          }`}
+        >
+          History ({volunteers.filter(v => v.checkedInAt).length})
+        </button>
+      </div>
+
       {/* Stats */}
       <div className="p-4 bg-white border-b">
         <div className="flex justify-around text-center">
@@ -201,35 +243,71 @@ export default function IVSCheckInPage({ event, canEdit }: Props) {
           <div className="text-center py-8 text-gray-500">Loading...</div>
         ) : filteredVolunteers.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
-            {searchTerm ? 'No volunteers found matching your search' : 'No volunteers eligible for early check-in'}
+            {activeTab === 'pending'
+              ? (searchTerm ? 'No pending volunteers found matching your search' : 'No volunteers pending check-in')
+              : (searchTerm ? 'No checked-in volunteers found matching your search' : 'No volunteers checked in yet')}
           </div>
         ) : (
           <div className="space-y-3">
-            {filteredVolunteers.map(volunteer => (
-              <div
-                key={volunteer.id}
-                className="bg-white rounded-lg shadow p-4 active:bg-gray-50"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="font-semibold text-lg">
-                      {volunteer.firstName} {volunteer.lastName}
+            {activeTab === 'pending' ? (
+              // Pending volunteers - show check-in button
+              filteredVolunteers.map(volunteer => (
+                <div
+                  key={volunteer.id}
+                  className="bg-white rounded-lg shadow p-4 active:bg-gray-50"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="font-semibold text-lg">
+                        {volunteer.firstName} {volunteer.lastName}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {volunteer.congregation}
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-600">
-                      {volunteer.congregation}
+                    <button
+                      onClick={() => handleCheckIn(volunteer.id)}
+                      className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold text-lg hover:bg-green-700 active:bg-green-800 shadow-lg"
+                    >
+                      Check In
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              // History - show checked-in volunteers with timestamp
+              filteredVolunteers.map(volunteer => (
+                <div
+                  key={volunteer.id}
+                  className="bg-white rounded-lg shadow p-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="font-semibold text-lg">
+                        {volunteer.firstName} {volunteer.lastName}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {volunteer.congregation}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        Checked in: {new Date(volunteer.checkedInAt!).toLocaleString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: 'numeric',
+                          minute: '2-digit',
+                          hour12: true
+                        })}
+                      </div>
+                    </div>
+                    <div className="text-green-600 text-2xl">
+                      ✓
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleCheckIn(volunteer.id)}
-                    className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold text-lg hover:bg-green-700 active:bg-green-800 shadow-lg"
-                  >
-                    Check In
-                  </button>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
-        )}
+        )
       </div>
     </div>
   )

@@ -43,8 +43,15 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
   const [filterDepartment, setFilterDepartment] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [filterRound, setFilterRound] = useState('')
+  const [filterCongregation, setFilterCongregation] = useState('')
+  const [searchTerm, setSearchTerm] = useState('')
   const [departments, setDepartments] = useState<string[]>([])
   const [rounds, setRounds] = useState<number[]>([])
+  const [congregations, setCongregations] = useState<string[]>([])
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(25)
+  const [sortField, setSortField] = useState<keyof IVSVolunteer>('lastName')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingVolunteer, setEditingVolunteer] = useState<IVSVolunteer | null>(null)
   const [selectedVolunteers, setSelectedVolunteers] = useState<string[]>([])
@@ -63,11 +70,13 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
         const data = await response.json()
         setVolunteers(data.volunteers || [])
         
-        // Extract unique departments and rounds
+        // Extract unique departments, rounds, and congregations
         const depts = [...new Set(data.volunteers.map((v: IVSVolunteer) => v.submittedBy).filter(Boolean))]
         const rnds = [...new Set(data.volunteers.map((v: IVSVolunteer) => v.requestRound).filter(Boolean))]
+        const congs = [...new Set(data.volunteers.map((v: IVSVolunteer) => v.congregation).filter(Boolean))]
         setDepartments(depts as string[])
         setRounds(rnds.sort() as number[])
+        setCongregations(congs.sort() as string[])
       }
     } catch (error) {
       console.error('Error fetching volunteers:', error)
@@ -328,12 +337,74 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
     }
   }
 
+  const handleSort = (field: keyof IVSVolunteer) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortField(field)
+      setSortDirection('asc')
+    }
+    setCurrentPage(1) // Reset to first page when sorting
+  }
+
   const filteredVolunteers = volunteers.filter(v => {
+    // Filter by department
     if (filterDepartment && v.submittedBy !== filterDepartment) return false
+    // Filter by status
     if (filterStatus && v.approvalStatus !== filterStatus) return false
+    // Filter by round
     if (filterRound && v.requestRound !== parseInt(filterRound)) return false
+    // Filter by congregation
+    if (filterCongregation && v.congregation !== filterCongregation) return false
+    // Search by name or congregation
+    if (searchTerm) {
+      const search = searchTerm.toLowerCase()
+      const fullName = `${v.firstName} ${v.lastName}`.toLowerCase()
+      const congregation = v.congregation.toLowerCase()
+      if (!fullName.includes(search) && !congregation.includes(search)) return false
+    }
     return true
   })
+
+  // Sort volunteers
+  const sortedVolunteers = [...filteredVolunteers].sort((a, b) => {
+    let aVal = a[sortField]
+    let bVal = b[sortField]
+    
+    // Handle undefined/null values
+    if (aVal === undefined || aVal === null) return 1
+    if (bVal === undefined || bVal === null) return -1
+    
+    // Convert to strings for comparison
+    const aStr = String(aVal).toLowerCase()
+    const bStr = String(bVal).toLowerCase()
+    
+    if (sortDirection === 'asc') {
+      return aStr < bStr ? -1 : aStr > bStr ? 1 : 0
+    } else {
+      return aStr > bStr ? -1 : aStr < bStr ? 1 : 0
+    }
+  })
+
+  // Pagination
+  const totalPages = Math.ceil(sortedVolunteers.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const paginatedVolunteers = sortedVolunteers.slice(startIndex, endIndex)
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleClearFilters = () => {
+    setFilterDepartment('')
+    setFilterStatus('')
+    setFilterRound('')
+    setFilterCongregation('')
+    setSearchTerm('')
+    setCurrentPage(1)
+  }
 
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
@@ -411,11 +482,22 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
           </div>
         </div>
 
+        {/* Search Bar */}
+        <div className="mb-4">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+            placeholder="Search by name or congregation..."
+            className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+
         {/* Filters */}
-        <div className="mb-4 flex gap-4">
+        <div className="mb-4 flex gap-4 flex-wrap">
           <select
             value={filterDepartment}
-            onChange={(e) => setFilterDepartment(e.target.value)}
+            onChange={(e) => { setFilterDepartment(e.target.value); setCurrentPage(1); }}
             className="px-3 py-2 border rounded-md"
           >
             <option value="">All Departments</option>
@@ -426,7 +508,7 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
 
           <select
             value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
+            onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }}
             className="px-3 py-2 border rounded-md"
           >
             <option value="">All Statuses</option>
@@ -438,7 +520,7 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
 
           <select
             value={filterRound}
-            onChange={(e) => setFilterRound(e.target.value)}
+            onChange={(e) => { setFilterRound(e.target.value); setCurrentPage(1); }}
             className="px-3 py-2 border rounded-md"
           >
             <option value="">All Rounds</option>
@@ -447,26 +529,43 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
             ))}
           </select>
 
-          {(filterDepartment || filterStatus || filterRound) && (
+          <select
+            value={filterCongregation}
+            onChange={(e) => { setFilterCongregation(e.target.value); setCurrentPage(1); }}
+            className="px-3 py-2 border rounded-md"
+          >
+            <option value="">All Congregations</option>
+            {congregations.map(cong => (
+              <option key={cong} value={cong}>{cong}</option>
+            ))}
+          </select>
+
+          {(filterDepartment || filterStatus || filterRound || filterCongregation || searchTerm) && (
             <button
-              onClick={() => {
-                setFilterDepartment('')
-                setFilterStatus('')
-                setFilterRound('')
-              }}
-              className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800"
+              onClick={handleClearFilters}
+              className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800 border rounded-md"
             >
               Clear Filters
             </button>
           )}
         </div>
 
+        {/* Results Summary */}
+        {!loading && sortedVolunteers.length > 0 && (
+          <div className="mb-4 text-sm text-gray-600">
+            Showing {startIndex + 1}-{Math.min(endIndex, sortedVolunteers.length)} of {sortedVolunteers.length} volunteer(s)
+            {sortedVolunteers.length !== volunteers.length && ` (filtered from ${volunteers.length} total)`}
+          </div>
+        )}
+
         {/* Volunteers Table */}
         {loading ? (
           <div className="text-center py-8">Loading...</div>
-        ) : filteredVolunteers.length === 0 ? (
+        ) : sortedVolunteers.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
-            No volunteers found. Click "Import Volunteers" to get started.
+            {volunteers.length === 0 
+              ? 'No volunteers found. Click "Import Volunteers" to get started.'
+              : 'No volunteers match your search or filters.'}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -476,23 +575,48 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
                   <th className="px-4 py-3 text-center">
                     <input
                       type="checkbox"
-                      checked={selectedVolunteers.length === filteredVolunteers.length && filteredVolunteers.length > 0}
+                      checked={selectedVolunteers.length === paginatedVolunteers.length && paginatedVolunteers.length > 0}
                       onChange={(e) => handleSelectAll(e.target.checked)}
                       className="w-4 h-4"
                     />
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Congregation</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Department</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Round</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                  <th 
+                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('lastName')}
+                  >
+                    Name {sortField === 'lastName' && (sortDirection === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th 
+                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('congregation')}
+                  >
+                    Congregation {sortField === 'congregation' && (sortDirection === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th 
+                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('submittedBy')}
+                  >
+                    Department {sortField === 'submittedBy' && (sortDirection === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th 
+                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('requestRound')}
+                  >
+                    Round {sortField === 'requestRound' && (sortDirection === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th 
+                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('approvalStatus')}
+                  >
+                    Status {sortField === 'approvalStatus' && (sortDirection === 'asc' ? '↑' : '↓')}
+                  </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Early Entry</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Check-In</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {filteredVolunteers.map(volunteer => (
+                {paginatedVolunteers.map(volunteer => (
                   <tr key={volunteer.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 text-center">
                       <input
@@ -585,6 +709,93 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
                 ))}
               </tbody>
             </table>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="mt-4 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600">Items per page:</span>
+                  <select
+                    value={itemsPerPage}
+                    onChange={(e) => {
+                      setItemsPerPage(Number(e.target.value))
+                      setCurrentPage(1)
+                    }}
+                    className="px-2 py-1 border rounded-md text-sm"
+                  >
+                    <option value={10}>10</option>
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handlePageChange(1)}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 border rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  >
+                    First
+                  </button>
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 border rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  >
+                    Previous
+                  </button>
+                  
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum
+                      if (totalPages <= 5) {
+                        pageNum = i + 1
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i
+                      } else {
+                        pageNum = currentPage - 2 + i
+                      }
+                      
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => handlePageChange(pageNum)}
+                          className={`px-3 py-1 border rounded-md text-sm ${
+                            currentPage === pageNum
+                              ? 'bg-blue-600 text-white border-blue-600'
+                              : 'hover:bg-gray-50'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 border rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  >
+                    Next
+                  </button>
+                  <button
+                    onClick={() => handlePageChange(totalPages)}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 border rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  >
+                    Last
+                  </button>
+                </div>
+
+                <div className="text-sm text-gray-600">
+                  Page {currentPage} of {totalPages}
+                </div>
+              </div>
+            )}
           </div>
         )}
 

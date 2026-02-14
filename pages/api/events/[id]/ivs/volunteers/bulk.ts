@@ -2,7 +2,6 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../../../../auth/[...nextauth]'
 import { PrismaClient } from '@prisma/client'
-import { handleApiError } from '../../../../../src/lib/apiError'
 
 const prisma = new PrismaClient()
 
@@ -58,10 +57,9 @@ export default async function handler(
 
     for (const volunteerId of volunteerIds) {
       try {
-        const eventVolunteer = await prisma.event_volunteers.findFirst({
+        const eventVolunteer = await prisma.event_volunteers.findUnique({
           where: {
-            eventId: eventId as string,
-            volunteerId: volunteerId
+            id: volunteerId
           }
         })
 

@@ -35,11 +35,10 @@ export default async function handler(
       return res.status(403).json({ success: false, message: 'Forbidden - Admin access required' })
     }
 
-    // Find volunteer by volunteerId (global volunteer ID)
-    const volunteer = await prisma.event_volunteers.findFirst({
+    // Find volunteer by event_volunteers primary key
+    const volunteer = await prisma.event_volunteers.findUnique({
       where: { 
-        eventId: eventId as string,
-        volunteerId: volunteerId as string
+        id: volunteerId as string
       },
     })
 

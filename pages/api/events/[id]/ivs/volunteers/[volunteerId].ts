@@ -2,7 +2,6 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../../../../auth/[...nextauth]'
 import { PrismaClient } from '@prisma/client'
-import { handleApiError } from '../../../../../src/lib/apiError'
 
 const prisma = new PrismaClient()
 
@@ -37,10 +36,9 @@ export default async function handler(
 
     // Handle DELETE request
     if (req.method === 'DELETE') {
-      const eventVolunteer = await prisma.event_volunteers.findFirst({
+      const eventVolunteer = await prisma.event_volunteers.findUnique({
         where: {
-          eventId: eventId as string,
-          volunteerId: volunteerId as string
+          id: volunteerId as string
         }
       })
 
@@ -73,15 +71,26 @@ export default async function handler(
       ivsSubmittedBy
     } = req.body
 
+    // Get the event_volunteers record first to get the actual volunteerId
+    const eventVolunteer = await prisma.event_volunteers.findUnique({
+      where: {
+        id: volunteerId as string
+      }
+    })
+
+    if (!eventVolunteer) {
+      return res.status(404).json({ success: false, message: 'IVS volunteer not found in event' })
+    }
+
     // Update global volunteer record if name/congregation changed
-    if (firstName || lastName || congregation) {
+    if ((firstName || lastName || congregation) && eventVolunteer.volunteerId) {
       const volunteer = await prisma.volunteers.findUnique({
-        where: { id: volunteerId as string }
+        where: { id: eventVolunteer.volunteerId }
       })
 
       if (volunteer) {
         await prisma.volunteers.update({
-          where: { id: volunteerId as string },
+          where: { id: eventVolunteer.volunteerId },
           data: {
             ...(firstName && { firstName }),
             ...(lastName && { lastName }),
@@ -140,19 +149,7 @@ export default async function handler(
       updateData.ivsSubmittedBy = ivsSubmittedBy
     }
 
-    // Find the event_volunteers record by volunteerId (the volunteer's global ID)
-    const eventVolunteer = await prisma.event_volunteers.findFirst({
-      where: {
-        eventId: eventId as string,
-        volunteerId: volunteerId as string
-      }
-    })
-
-
-    if (!eventVolunteer) {
-      return res.status(404).json({ success: false, message: 'IVS volunteer not found in event' })
-    }
-
+    // Update the event_volunteers record
     await prisma.event_volunteers.update({
       where: { id: eventVolunteer.id },
       data: updateData

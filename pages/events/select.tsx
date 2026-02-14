@@ -632,66 +632,78 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     }
   }
 
-  // Fetch events with proper permission filtering
-  const { prisma } = await import('../../src/lib/prisma')
-  const { getUserEvents } = await import('../../src/lib/eventAccess')
-  
-  // Get events user has access to (respects permissions)
-  const userEvents = await getUserEvents(session.user.id)
-  
-  // Get counts for each event
-  const eventsWithCounts = await Promise.all(
-    userEvents.map(async (event: any) => {
-      // Count volunteers by querying event_volunteers directly
-      const volunteersCount = await prisma.event_volunteers.count({
-        where: {
-          eventId: event.id,
-          isActive: true
+  try {
+    // Fetch events with proper permission filtering
+    const { prisma } = await import('../../src/lib/prisma')
+    const { getUserEvents } = await import('../../src/lib/eventAccess')
+    
+    // Get events user has access to (respects permissions)
+    const userEvents = await getUserEvents(session.user.id)
+    
+    // Get counts for each event
+    const eventsWithCounts = await Promise.all(
+      userEvents.map(async (event: any) => {
+        // Count volunteers by querying event_volunteers directly
+        const volunteersCount = await prisma.event_volunteers.count({
+          where: {
+            eventId: event.id,
+            isActive: true
+          }
+        })
+        
+        const positionsCount = await prisma.positions.count({
+          where: { eventId: event.id }
+        })
+        
+        return {
+          ...event,
+          attendantsCount: volunteersCount,
+          positionsCount: positionsCount
         }
       })
-      
-      const positionsCount = await prisma.positions.count({
-        where: { eventId: event.id }
-      })
-      
-      return {
-        ...event,
-        attendantsCount: volunteersCount,
-        positionsCount: positionsCount
-      }
+    )
+
+    // Transform events data
+    const events: Event[] = eventsWithCounts.map(event => ({
+      id: event.id,
+      name: event.name,
+      description: event.description || undefined,
+      eventType: event.eventType,
+      startDate: event.startDate ? format(event.startDate, 'yyyy-MM-dd') + 'T12:00:00' : '',
+      endDate: event.endDate ? format(event.endDate, 'yyyy-MM-dd') + 'T12:00:00' : '',
+      location: event.location || '',
+      status: event.status,
+      attendantsCount: event.attendantsCount,
+      positionsCount: event.positionsCount,
+      parentEventId: event.parentEventId || null,
+      childEvents: event.childEvents || []
+    }))
+
+    // Get user's lastSeenReleaseVersion
+    const currentUser = await prisma.users.findUnique({
+      where: { email: session.user.email },
+      select: { lastSeenReleaseVersion: true }
     })
-  )
 
-  // Transform events data
-  const events: Event[] = eventsWithCounts.map(event => ({
-    id: event.id,
-    name: event.name,
-    description: event.description || undefined,
-    eventType: event.eventType,
-    startDate: event.startDate ? format(event.startDate, 'yyyy-MM-dd') + 'T12:00:00' : '',
-    endDate: event.endDate ? format(event.endDate, 'yyyy-MM-dd') + 'T12:00:00' : '',
-    location: event.location || '',
-    status: event.status,
-    attendantsCount: event.attendantsCount,
-    positionsCount: event.positionsCount,
-    parentEventId: event.parentEventId || null,
-    childEvents: event.childEvents || []
-  }))
+    // Get latest release info for banner
+    const latestRelease = getLatestRelease()
 
-  // Get user's lastSeenReleaseVersion
-  const currentUser = await prisma.users.findUnique({
-    where: { email: session.user.email },
-    select: { lastSeenReleaseVersion: true }
-  })
-
-  // Get latest release info for banner
-  const latestRelease = getLatestRelease()
-
-  return {
-    props: {
-      events: events,
-      userLastSeenVersion: currentUser?.lastSeenReleaseVersion || null,
-      releaseSummary: latestRelease?.summary || null
+    return {
+      props: {
+        events: events,
+        userLastSeenVersion: currentUser?.lastSeenReleaseVersion || null,
+        releaseSummary: latestRelease?.summary || null
+      }
+    }
+  } catch (error) {
+    console.error('Error loading events:', error)
+    // Return empty events list on error
+    return {
+      props: {
+        events: [],
+        userLastSeenVersion: null,
+        releaseSummary: null
+      }
     }
   }
 }

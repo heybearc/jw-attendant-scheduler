@@ -697,6 +697,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     }
   } catch (error) {
     console.error('Error loading events:', error)
+    console.error('Session user ID:', session.user?.id)
+    console.error('Session user email:', session.user?.email)
+    console.error('Session user role:', session.user?.role)
     // Return empty events list on error
     return {
       props: {

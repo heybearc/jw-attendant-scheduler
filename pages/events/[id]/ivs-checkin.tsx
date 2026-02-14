@@ -92,6 +92,31 @@ export default function IVSCheckInPage({ event, canEdit }: Props) {
     }
   }
 
+  const handleUndoCheckIn = async (volunteerId: string) => {
+    if (!confirm('Undo check-in for this volunteer?')) return
+
+    try {
+      const response = await fetch(`/api/events/${eventId}/ivs/volunteers/${volunteerId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          checkedInAt: null, 
+          checkedInBy: null, 
+          checkinNotes: null 
+        }),
+      })
+
+      if (response.ok) {
+        fetchVolunteers()
+      } else {
+        alert('Failed to undo check-in')
+      }
+    } catch (error) {
+      console.error('Error undoing check-in:', error)
+      alert('Error undoing check-in')
+    }
+  }
+
   const handleExport = async () => {
     try {
       setExporting(true)
@@ -160,7 +185,7 @@ export default function IVSCheckInPage({ event, canEdit }: Props) {
           >
             ← Back
           </button>
-          <h1 className="text-xl font-bold">Early Check-In</h1>
+          <h1 className="text-xl font-bold">IVS Early Check-In</h1>
           <button
             onClick={handleExport}
             disabled={exporting}
@@ -275,13 +300,13 @@ export default function IVSCheckInPage({ event, canEdit }: Props) {
                 </div>
               ))
             ) : (
-              // History - show checked-in volunteers with timestamp
+              // History - show checked-in volunteers with timestamp and undo button
               filteredVolunteers.map(volunteer => (
                 <div
                   key={volunteer.id}
                   className="bg-white rounded-lg shadow p-4"
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-3">
                     <div className="flex-1">
                       <div className="font-semibold text-lg">
                         {volunteer.firstName} {volunteer.lastName}
@@ -299,8 +324,16 @@ export default function IVSCheckInPage({ event, canEdit }: Props) {
                         })}
                       </div>
                     </div>
-                    <div className="text-green-600 text-2xl">
-                      ✓
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="text-green-600 text-2xl">
+                        ✓
+                      </div>
+                      <button
+                        onClick={() => handleUndoCheckIn(volunteer.id)}
+                        className="px-3 py-1 bg-red-100 text-red-700 rounded-md text-xs font-medium hover:bg-red-200 active:bg-red-300"
+                      >
+                        Undo
+                      </button>
                     </div>
                   </div>
                 </div>

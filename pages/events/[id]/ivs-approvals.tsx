@@ -163,54 +163,6 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
     }
   }
 
-  const handleCheckIn = async (volunteerId: string) => {
-    const notes = prompt('Check-in notes (optional):')
-    
-    try {
-      const response = await fetch(`/api/events/${eventId}/ivs/volunteers/${volunteerId}/check-in`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ notes: notes || undefined }),
-      })
-
-      if (response.ok) {
-        alert('Volunteer checked in successfully!')
-        fetchVolunteers()
-      } else {
-        alert('Failed to check in volunteer')
-      }
-    } catch (error) {
-      console.error('Error checking in:', error)
-      alert('Error checking in volunteer')
-    }
-  }
-
-  const handleClearCheckIn = async (volunteerId: string) => {
-    if (!confirm('Clear check-in status for this volunteer?')) return
-
-    try {
-      const response = await fetch(`/api/events/${eventId}/ivs/volunteers/${volunteerId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          checkedInAt: null,
-          checkedInBy: null,
-          checkinNotes: null
-        }),
-      })
-
-      if (response.ok) {
-        alert('Check-in cleared successfully!')
-        fetchVolunteers()
-      } else {
-        alert('Failed to clear check-in')
-      }
-    } catch (error) {
-      console.error('Error clearing check-in:', error)
-      alert('Error clearing check-in')
-    }
-  }
-
   const handleEdit = (volunteer: IVSVolunteer) => {
     setEditingVolunteer(volunteer)
     setShowEditModal(true)
@@ -239,6 +191,52 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
     } catch (error) {
       console.error('Error updating approval:', error)
       alert('Error updating approval status')
+    }
+  }
+
+  const handleStatusChange = async (volunteerId: string, newStatus: string) => {
+    if (newStatus === 'Not Approved') {
+      const reason = prompt('Reason for denial:')
+      if (!reason) return
+
+      try {
+        const response = await fetch(`/api/events/${eventId}/ivs/volunteers/${volunteerId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ivsApprovalStatus: newStatus,
+            ivsDeniedReason: reason
+          }),
+        })
+
+        if (response.ok) {
+          fetchVolunteers()
+        } else {
+          alert('Failed to update approval status')
+        }
+      } catch (error) {
+        console.error('Error updating approval:', error)
+        alert('Error updating approval status')
+      }
+    } else {
+      try {
+        const response = await fetch(`/api/events/${eventId}/ivs/volunteers/${volunteerId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ivsApprovalStatus: newStatus
+          }),
+        })
+
+        if (response.ok) {
+          fetchVolunteers()
+        } else {
+          alert('Failed to update approval status')
+        }
+      } catch (error) {
+        console.error('Error updating approval:', error)
+        alert('Error updating approval status')
+      }
     }
   }
 
@@ -447,7 +445,7 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
               onClick={() => router.push(`/events/${eventId}/ivs-checkin`)}
               className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
             >
-              📱 Mobile Check-In
+              ⏰ Early Check-In
             </button>
             {volunteers.length > 0 && (
               <button
@@ -611,7 +609,6 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
                     Status {sortField === 'approvalStatus' && (sortDirection === 'asc' ? '↑' : '↓')}
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Early Entry</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Check-In</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                 </tr>
               </thead>
@@ -631,9 +628,15 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
                     <td className="px-4 py-3 text-sm">{volunteer.submittedBy}</td>
                     <td className="px-4 py-3 text-sm">Request {volunteer.requestRound}</td>
                     <td className="px-4 py-3 text-sm">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(volunteer.approvalStatus)}`}>
-                        {volunteer.approvalStatus}
-                      </span>
+                      <select
+                        value={volunteer.approvalStatus}
+                        onChange={(e) => handleStatusChange(volunteer.id, e.target.value)}
+                        className={`px-2 py-1 rounded-md text-xs font-medium border-0 cursor-pointer ${getStatusBadgeColor(volunteer.approvalStatus)}`}
+                      >
+                        <option value="Pending">Pending</option>
+                        <option value="Approved">Approved</option>
+                        <option value="Not Approved">Not Approved</option>
+                      </select>
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <button
@@ -646,24 +649,6 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
                       >
                         {volunteer.earlyCheckinEligible ? '✓ Early Entry' : 'Set Early Entry'}
                       </button>
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      {volunteer.checkedInAt ? (
-                        <div className="text-xs">
-                          <div className="text-green-600 font-medium">✓ Checked In</div>
-                          <div className="text-gray-500">{volunteer.checkedInAt}</div>
-                          <button
-                            onClick={() => handleClearCheckIn(volunteer.id)}
-                            className="mt-1 text-xs text-red-600 hover:text-red-800 underline"
-                          >
-                            Clear Check-In
-                          </button>
-                        </div>
-                      ) : volunteer.earlyCheckinEligible ? (
-                        <span className="text-gray-400">Not checked in</span>
-                      ) : (
-                        <span className="text-gray-300">-</span>
-                      )}
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <div className="flex gap-2 flex-wrap">
@@ -688,14 +673,6 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
                               Deny
                             </button>
                           </>
-                        )}
-                        {volunteer.earlyCheckinEligible && !volunteer.checkedInAt && (
-                          <button
-                            onClick={() => handleCheckIn(volunteer.id)}
-                            className="px-3 py-1 bg-purple-600 text-white rounded-md text-xs hover:bg-purple-700"
-                          >
-                            Check In
-                          </button>
                         )}
                         <button
                           onClick={() => handleDeleteVolunteer(volunteer.id, `${volunteer.firstName} ${volunteer.lastName}`)}

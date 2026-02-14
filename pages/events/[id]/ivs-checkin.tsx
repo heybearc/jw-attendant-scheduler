@@ -307,7 +307,7 @@ export default function IVSCheckInPage({ event, canEdit }: Props) {
               ))
             )}
           </div>
-        )
+        )}
       </div>
     </div>
   )

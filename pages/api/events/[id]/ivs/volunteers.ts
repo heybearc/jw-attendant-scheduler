@@ -2,7 +2,6 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../../../auth/[...nextauth]'
 import { PrismaClient } from '@prisma/client'
-import { handleApiError } from '../../../../src/lib/apiError'
 
 const prisma = new PrismaClient()
 
@@ -51,7 +50,7 @@ export default async function handler(
     })
 
     const volunteers = eventVolunteers.map(ev => ({
-      id: ev.volunteerId, // Use volunteerId so edit API can find the record
+      id: ev.id, // Use event_volunteers primary key
       firstName: ev.volunteer?.firstName || '',
       lastName: ev.volunteer?.lastName || '',
       congregation: ev.volunteer?.congregation || '',

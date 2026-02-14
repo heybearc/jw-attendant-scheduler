@@ -9,6 +9,8 @@ import { format, parseISO } from 'date-fns'
 import ReleaseBanner from '../../components/ReleaseBanner'
 import packageJson from '../../package.json'
 import { getLatestRelease } from '../../src/lib/releaseNotes'
+import { prisma } from '../../src/lib/prisma'
+import { getUserEvents } from '../../src/lib/eventAccess'
 
 interface Event {
   id: string
@@ -633,10 +635,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   }
 
   try {
-    // Fetch events with proper permission filtering
-    const { prisma } = await import('../../src/lib/prisma')
-    const { getUserEvents } = await import('../../src/lib/eventAccess')
-    
     // Get events user has access to (respects permissions)
     const userEvents = await getUserEvents(session.user.id)
     

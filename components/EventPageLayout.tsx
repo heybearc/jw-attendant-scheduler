@@ -17,7 +17,7 @@ interface EventPageLayoutProps {
     eventType?: string
     startDate?: string
   }
-  currentPage: 'overview' | 'positions' | 'volunteers' | 'oversight' | 'count-times' | 'lanyards' | 'ivs' | 'ivs-approvals' | 'documents' | 'announcements' | 'permissions' | 'edit'
+  currentPage: 'overview' | 'positions' | 'volunteers' | 'oversight' | 'count-times' | 'lanyards' | 'ivs' | 'documents' | 'announcements' | 'permissions' | 'edit'
   canEdit?: boolean
   canDelete?: boolean
   canManagePermissions?: boolean

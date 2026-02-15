@@ -101,9 +101,9 @@ export default function HelpPage({ userRole }: HelpPageProps) {
       roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN', 'VOLUNTEER']
     },
     {
-      id: 'ivs-approvals',
-      title: '📋 IVS Volunteer Approvals',
-      description: 'Manage International Volunteer Service volunteers, approvals, and early check-in',
+      id: 'ivs',
+      title: '📋 IVS Module',
+      description: 'Manage International Volunteer Service volunteers with Approvals and Early Check-In tabs',
       roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN']
     },
     {

@@ -10,10 +10,10 @@ export default function IVSApprovalsHelp() {
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              📋 IVS Volunteer Approvals
+              📋 IVS Module
             </h1>
             <p className="text-gray-600">
-              Manage International Volunteer Service (IVS) volunteers for your event
+              Manage International Volunteer Service (IVS) volunteers for your event with Approvals and Early Check-In
             </p>
           </div>
 
@@ -37,20 +37,20 @@ export default function IVSApprovalsHelp() {
           <section className="mb-8">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">🚀 Getting Started</h2>
             
-            <h3 className="text-xl font-semibold text-gray-700 mb-3">Step 1: Enable IVS Approvals</h3>
+            <h3 className="text-xl font-semibold text-gray-700 mb-3">Step 1: Enable IVS Module</h3>
             <ol className="list-decimal list-inside space-y-2 text-gray-700 mb-6 ml-4">
               <li>Go to <strong>Admin → Department Templates</strong></li>
               <li>Edit your department template</li>
               <li>Go to the <strong>Modules</strong> tab</li>
-              <li>Enable <strong>IVS Approvals</strong></li>
+              <li>Enable <strong>IVS Module</strong></li>
               <li>Save the template</li>
             </ol>
 
-            <h3 className="text-xl font-semibold text-gray-700 mb-3">Step 2: Access IVS Approvals</h3>
+            <h3 className="text-xl font-semibold text-gray-700 mb-3">Step 2: Access IVS Module</h3>
             <ol className="list-decimal list-inside space-y-2 text-gray-700 mb-6 ml-4">
               <li>Navigate to your event</li>
-              <li>Click the <strong>IVS Approvals</strong> tab</li>
-              <li>You'll see the IVS Approvals page with import/export options</li>
+              <li>Click the <strong>IVS Module</strong> tab</li>
+              <li>You'll see two tabs: <strong>Approvals</strong> and <strong>⏰ Early Check-In</strong></li>
             </ol>
           </section>
 
@@ -141,35 +141,36 @@ export default function IVSApprovalsHelp() {
             </p>
           </section>
 
-          {/* Mobile Check-In */}
+          {/* Early Check-In Tab */}
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">📱 Mobile Check-In Interface</h2>
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4">⏰ Early Check-In Tab</h2>
             
             <h3 className="text-xl font-semibold text-gray-700 mb-3">What You'll See</h3>
             <p className="text-gray-700 mb-4">
-              The mobile check-in interface is optimized for volunteers working check-in stations
+              The Early Check-In tab is optimized for volunteers working check-in stations
               on tablets or phones. It provides:
             </p>
             <ul className="list-disc list-inside space-y-2 text-gray-700 mb-6 ml-4">
               <li><strong>Large search bar</strong> - Search by name or congregation</li>
               <li><strong>Real-time stats</strong> - See pending, checked in, and total counts</li>
+              <li><strong>Collapsible sections</strong> - PENDING CHECK-IN and CHECKED IN sections</li>
               <li><strong>Big check-in buttons</strong> - Easy to tap on mobile devices</li>
-              <li><strong>Auto-filtering</strong> - Only shows volunteers who haven't checked in yet</li>
+              <li><strong>Live updates</strong> - Automatically refreshes every 5 seconds</li>
             </ul>
 
             <h3 className="text-xl font-semibold text-gray-700 mb-3">How to Use It</h3>
             <ol className="list-decimal list-inside space-y-2 text-gray-700 mb-6 ml-4">
-              <li>On the IVS Approvals page, click <strong>📱 Mobile Check-In</strong></li>
+              <li>On the IVS Module page, click the <strong>⏰ Early Check-In</strong> tab</li>
               <li>Use the search bar to find a volunteer</li>
-              <li>Tap the green <strong>Check In</strong> button</li>
-              <li>The volunteer disappears from the list (they're checked in!)</li>
+              <li>Tap the green <strong>Check In</strong> button in the PENDING section</li>
+              <li>The volunteer moves to the CHECKED IN section automatically</li>
+              <li>Use the <strong>Undo</strong> button if you need to reverse a check-in</li>
             </ol>
 
             <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-4">
               <p className="text-green-800">
-                <strong>✅ Pro Tip:</strong> Give the mobile check-in URL to volunteers working
-                the check-in table. They can use it on their phones or tablets without needing
-                to navigate through the full admin interface.
+                <strong>✅ Pro Tip:</strong> The page updates automatically every 5 seconds,
+                so multiple people can use it at the same time without conflicts.
               </p>
             </div>
           </section>

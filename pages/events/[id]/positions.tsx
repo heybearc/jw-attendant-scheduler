@@ -2837,36 +2837,27 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     })
 
     
-    // Get all active attendants with their user role
-    const allAttendants = await prisma.volunteers.findMany({
-      where: {
-        isActive: true
-      },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        formsOfService: true,
-        congregation: true,
-        isActive: true,
-        user: {
-          select: {
-            role: true
-          }
-        }
-      },
-      orderBy: [
-        { firstName: 'asc' },
-        { lastName: 'asc' }
-      ]
-    })
-
-    // Get event-attendant associations for oversight assignments (SOURCE OF TRUTH)
+    // Get event-attendant associations for this specific event (SOURCE OF TRUTH)
     const eventAssociations = await prisma.event_volunteers.findMany({
       where: {
         eventId: id as string
       },
       include: {
+        volunteer: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            formsOfService: true,
+            congregation: true,
+            isActive: true,
+            user: {
+              select: {
+                role: true
+              }
+            }
+          }
+        },
         overseer: {
           select: {
             id: true,
@@ -2884,25 +2875,27 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
       }
     })
 
-    // Create oversight map for quick lookup
-    const oversightMap = new Map();
-    eventAssociations.forEach(assoc => {
-      if (assoc.volunteerId) {
-        oversightMap.set(assoc.volunteerId, assoc)
-      }
-    })
-
-    // Merge attendants with their event-specific oversight assignments
-    const attendantsData = allAttendants.map(attendant => {
-      const association = oversightMap.get(attendant.id)
-      return {
-        ...attendant,
-        overseerId: association?.overseerId || null,
-        keymanId: association?.keymanId || null,
-        overseer: association?.overseer || null,
-        keyman: association?.keyman || null
-      }
-    })
+    // Map to attendants data with event-specific oversight
+    const attendantsData = eventAssociations
+      .filter(assoc => assoc.volunteer && assoc.volunteer.isActive)
+      .map(assoc => ({
+        id: assoc.volunteer!.id,
+        firstName: assoc.volunteer!.firstName,
+        lastName: assoc.volunteer!.lastName,
+        formsOfService: assoc.volunteer!.formsOfService,
+        congregation: assoc.volunteer!.congregation,
+        isActive: assoc.volunteer!.isActive,
+        user: assoc.volunteer!.user,
+        overseerId: assoc.overseerId || null,
+        keymanId: assoc.keymanId || null,
+        overseer: assoc.overseer || null,
+        keyman: assoc.keyman || null
+      }))
+      .sort((a, b) => {
+        const nameA = `${a.firstName} ${a.lastName}`.toLowerCase()
+        const nameB = `${b.firstName} ${b.lastName}`.toLowerCase()
+        return nameA.localeCompare(nameB)
+      })
 
     const attendantsWithOversight = attendantsData.filter(att => att.overseerId)
     

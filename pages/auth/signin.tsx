@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { signIn, getSession } from 'next-auth/react'
+import { signIn, getSession, useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/router'
 import { GetServerSideProps } from 'next'
 import Link from 'next/link'
@@ -10,6 +10,7 @@ export default function SignIn() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const { data: session } = useSession()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -40,6 +41,29 @@ export default function SignIn() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 px-4">
       <div className="max-w-md w-full space-y-8">
         <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 border border-white/20">
+          {/* Volunteer Sign-Out Notice */}
+          {session?.user?.role === 'VOLUNTEER' && (
+            <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div className="flex items-start">
+                <div className="text-yellow-400 text-lg mr-3">⚠️</div>
+                <div className="flex-1">
+                  <h3 className="text-sm font-semibold text-yellow-800 mb-1">
+                    Volunteer Session Active
+                  </h3>
+                  <p className="text-xs text-yellow-700 mb-3">
+                    You're currently signed in as a volunteer. Sign out to access admin login.
+                  </p>
+                  <button
+                    onClick={() => signOut({ callbackUrl: '/auth/signin' })}
+                    className="w-full bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors"
+                  >
+                    Sign Out Volunteer Session
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          
           {/* Header */}
           <div className="text-center mb-8">
             <div className="mx-auto mb-6 flex justify-center">
@@ -154,11 +178,15 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   const session = await getSession(context)
   
   if (session) {
-    return {
-      redirect: {
-        destination: '/',
-        permanent: false,
-      },
+    // If user is a volunteer trying to access admin login, allow it (they'll need to sign out)
+    // Otherwise redirect authenticated admin users to home
+    if (session.user?.role !== 'VOLUNTEER') {
+      return {
+        redirect: {
+          destination: '/',
+          permanent: false,
+        },
+      }
     }
   }
 

@@ -112,7 +112,7 @@ export default function VolunteerDetailsPopup({ volunteer, children, onEdit }: V
           ref={popupRef}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
-          className={`absolute z-50 w-96 bg-white rounded-lg shadow-2xl border border-gray-200 ${
+          className={`absolute z-[9999] w-96 bg-white rounded-lg shadow-2xl border border-gray-200 ${
             position === 'top' ? 'bottom-full mb-2' : 'top-full mt-2'
           }`}
           style={{ left: '0' }}

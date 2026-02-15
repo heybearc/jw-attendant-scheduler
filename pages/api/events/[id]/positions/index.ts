@@ -161,15 +161,20 @@ async function handleCreatePosition(req: NextApiRequest, res: NextApiResponse, e
 
     // Get next sequence number if not provided
     const sequence = validatedData.sequence || validatedData.positionNumber
+    const crypto = require('crypto')
+    const now = new Date()
 
     const position = await prisma.positions.create({
       data: {
+        id: crypto.randomUUID(),
         eventId,
         positionNumber: validatedData.positionNumber,
         name: validatedData.name,
         description: validatedData.description,
         area: validatedData.area,
-        sequence
+        sequence,
+        createdAt: now,
+        updatedAt: now
       },
       include: {
         shifts: true

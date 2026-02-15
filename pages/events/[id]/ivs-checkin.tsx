@@ -29,7 +29,8 @@ export default function IVSCheckInPage({ event, canEdit }: Props) {
   const [searchTerm, setSearchTerm] = useState('')
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
   const [exporting, setExporting] = useState(false)
-  const [activeTab, setActiveTab] = useState<'pending' | 'history'>('pending')
+  const [pendingCollapsed, setPendingCollapsed] = useState(false)
+  const [checkedInCollapsed, setCheckedInCollapsed] = useState(false)
 
   // Auto-refresh every 5 seconds to prevent duplicate check-ins with multiple users
   useEffect(() => {
@@ -146,33 +147,38 @@ export default function IVSCheckInPage({ event, canEdit }: Props) {
     }
   }
 
-  const pendingVolunteers = volunteers.filter(v => {
-    if (!v.earlyCheckinEligible) return false
-    if (v.checkedInAt) return false
-    
-    const searchLower = searchTerm.toLowerCase()
-    const fullName = `${v.firstName} ${v.lastName}`.toLowerCase()
-    const congregation = v.congregation.toLowerCase()
-    
-    return fullName.includes(searchLower) || congregation.includes(searchLower)
-  })
+  const searchLower = searchTerm.toLowerCase()
 
-  const checkedInVolunteers = volunteers.filter(v => {
-    if (!v.checkedInAt) return false
-    
-    const searchLower = searchTerm.toLowerCase()
-    const fullName = `${v.firstName} ${v.lastName}`.toLowerCase()
-    const congregation = v.congregation.toLowerCase()
-    
-    return fullName.includes(searchLower) || congregation.includes(searchLower)
-  }).sort((a, b) => {
-    // Sort by check-in time, most recent first
-    const aTime = new Date(a.checkedInAt!).getTime()
-    const bTime = new Date(b.checkedInAt!).getTime()
-    return bTime - aTime
-  })
+  const pendingVolunteers = volunteers
+    .filter(v => {
+      if (!v.earlyCheckinEligible) return false
+      if (v.checkedInAt) return false
+      
+      const fullName = `${v.firstName} ${v.lastName}`.toLowerCase()
+      const congregation = v.congregation.toLowerCase()
+      
+      return fullName.includes(searchLower) || congregation.includes(searchLower)
+    })
+    .sort((a, b) => {
+      // Sort alphabetically by last name
+      return `${a.lastName} ${a.firstName}`.localeCompare(`${b.lastName} ${b.firstName}`)
+    })
 
-  const filteredVolunteers = activeTab === 'pending' ? pendingVolunteers : checkedInVolunteers
+  const checkedInVolunteers = volunteers
+    .filter(v => {
+      if (!v.checkedInAt) return false
+      
+      const fullName = `${v.firstName} ${v.lastName}`.toLowerCase()
+      const congregation = v.congregation.toLowerCase()
+      
+      return fullName.includes(searchLower) || congregation.includes(searchLower)
+    })
+    .sort((a, b) => {
+      // Sort by check-in time, most recent first
+      const aTime = new Date(a.checkedInAt!).getTime()
+      const bTime = new Date(b.checkedInAt!).getTime()
+      return bTime - aTime
+    })
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -206,50 +212,18 @@ export default function IVSCheckInPage({ event, canEdit }: Props) {
         />
       </div>
 
-      {/* Last updated indicator */}
-      <div className="px-4 py-2 bg-gray-100 border-b text-center">
-        <div className="text-xs text-gray-600">
-          Last updated: {new Date(lastUpdated).toLocaleTimeString()}
-          <span className="ml-2 text-green-600">● Live</span>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex border-b bg-white">
-        <button
-          onClick={() => setActiveTab('pending')}
-          className={`flex-1 py-3 text-center font-semibold ${
-            activeTab === 'pending'
-              ? 'border-b-2 border-blue-600 text-blue-600'
-              : 'text-gray-600'
-          }`}
-        >
-          Pending ({volunteers.filter(v => v.earlyCheckinEligible && !v.checkedInAt).length})
-        </button>
-        <button
-          onClick={() => setActiveTab('history')}
-          className={`flex-1 py-3 text-center font-semibold ${
-            activeTab === 'history'
-              ? 'border-b-2 border-blue-600 text-blue-600'
-              : 'text-gray-600'
-          }`}
-        >
-          History ({volunteers.filter(v => v.checkedInAt).length})
-        </button>
-      </div>
-
       {/* Stats */}
       <div className="p-4 bg-white border-b">
         <div className="flex justify-around text-center">
           <div>
-            <div className="text-2xl font-bold text-blue-600">
-              {volunteers.filter(v => v.earlyCheckinEligible && !v.checkedInAt).length}
+            <div className="text-2xl font-bold text-orange-600">
+              {pendingVolunteers.length}
             </div>
             <div className="text-xs text-gray-600">Pending</div>
           </div>
           <div>
             <div className="text-2xl font-bold text-green-600">
-              {volunteers.filter(v => v.checkedInAt).length}
+              {checkedInVolunteers.length}
             </div>
             <div className="text-xs text-gray-600">Checked In</div>
           </div>
@@ -260,86 +234,134 @@ export default function IVSCheckInPage({ event, canEdit }: Props) {
             <div className="text-xs text-gray-600">Total Eligible</div>
           </div>
         </div>
+        <div className="mt-2 text-center text-xs text-gray-500">
+          Last updated: {new Date(lastUpdated).toLocaleTimeString()}
+          <span className="ml-2 text-green-600">● Live</span>
+        </div>
       </div>
 
-      {/* Volunteer list */}
-      <div className="p-4">
+      {/* Volunteer sections */}
+      <div className="p-4 space-y-4">
         {loading ? (
           <div className="text-center py-8 text-gray-500">Loading...</div>
-        ) : filteredVolunteers.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            {activeTab === 'pending'
-              ? (searchTerm ? 'No pending volunteers found matching your search' : 'No volunteers pending check-in')
-              : (searchTerm ? 'No checked-in volunteers found matching your search' : 'No volunteers checked in yet')}
-          </div>
         ) : (
-          <div className="space-y-3">
-            {activeTab === 'pending' ? (
-              // Pending volunteers - show check-in button
-              filteredVolunteers.map(volunteer => (
-                <div
-                  key={volunteer.id}
-                  className="bg-white rounded-lg shadow p-4 active:bg-gray-50"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="font-semibold text-lg">
-                        {volunteer.firstName} {volunteer.lastName}
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        {volunteer.congregation}
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleCheckIn(volunteer.id)}
-                      className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold text-lg hover:bg-green-700 active:bg-green-800 shadow-lg"
-                    >
-                      Check In
-                    </button>
-                  </div>
+          <>
+            {/* Pending Section */}
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+              <button
+                onClick={() => setPendingCollapsed(!pendingCollapsed)}
+                className="w-full px-4 py-3 bg-orange-50 border-l-4 border-orange-500 flex items-center justify-between hover:bg-orange-100 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">{pendingCollapsed ? '▶' : '▼'}</span>
+                  <h2 className="font-bold text-lg text-orange-900">PENDING CHECK-IN</h2>
+                  <span className="px-2 py-1 bg-orange-200 text-orange-900 rounded-full text-sm font-semibold">
+                    {pendingVolunteers.length}
+                  </span>
                 </div>
-              ))
-            ) : (
-              // History - show checked-in volunteers with timestamp and undo button
-              filteredVolunteers.map(volunteer => (
-                <div
-                  key={volunteer.id}
-                  className="bg-white rounded-lg shadow p-4"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex-1">
-                      <div className="font-semibold text-lg">
-                        {volunteer.firstName} {volunteer.lastName}
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        {volunteer.congregation}
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        Checked in: {new Date(volunteer.checkedInAt!).toLocaleString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          hour: 'numeric',
-                          minute: '2-digit',
-                          hour12: true
-                        })}
-                      </div>
+              </button>
+              
+              {!pendingCollapsed && (
+                <div className="p-4">
+                  {pendingVolunteers.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      {searchTerm ? 'No pending volunteers found matching your search' : 'No volunteers pending check-in'}
                     </div>
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="text-green-600 text-2xl">
-                        ✓
-                      </div>
-                      <button
-                        onClick={() => handleUndoCheckIn(volunteer.id)}
-                        className="px-3 py-1 bg-red-100 text-red-700 rounded-md text-xs font-medium hover:bg-red-200 active:bg-red-300"
-                      >
-                        Undo
-                      </button>
+                  ) : (
+                    <div className="space-y-3">
+                      {pendingVolunteers.map(volunteer => (
+                        <div
+                          key={volunteer.id}
+                          className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                        >
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="font-semibold text-lg">
+                                {volunteer.firstName} {volunteer.lastName}
+                              </div>
+                              <div className="text-sm text-gray-600">
+                                {volunteer.congregation}
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => handleCheckIn(volunteer.id)}
+                              className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold text-lg hover:bg-green-700 active:bg-green-800 shadow-lg whitespace-nowrap"
+                            >
+                              Check In
+                            </button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  </div>
+                  )}
                 </div>
-              ))
-            )}
-          </div>
+              )}
+            </div>
+
+            {/* Checked In Section */}
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+              <button
+                onClick={() => setCheckedInCollapsed(!checkedInCollapsed)}
+                className="w-full px-4 py-3 bg-green-50 border-l-4 border-green-500 flex items-center justify-between hover:bg-green-100 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">{checkedInCollapsed ? '▶' : '▼'}</span>
+                  <h2 className="font-bold text-lg text-green-900">CHECKED IN</h2>
+                  <span className="px-2 py-1 bg-green-200 text-green-900 rounded-full text-sm font-semibold">
+                    {checkedInVolunteers.length}
+                  </span>
+                </div>
+              </button>
+              
+              {!checkedInCollapsed && (
+                <div className="p-4">
+                  {checkedInVolunteers.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      {searchTerm ? 'No checked-in volunteers found matching your search' : 'No volunteers checked in yet'}
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {checkedInVolunteers.map(volunteer => (
+                        <div
+                          key={volunteer.id}
+                          className="border rounded-lg p-4 bg-gray-50"
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex-1">
+                              <div className="font-semibold text-lg">
+                                {volunteer.firstName} {volunteer.lastName}
+                              </div>
+                              <div className="text-sm text-gray-600">
+                                {volunteer.congregation}
+                              </div>
+                              <div className="text-xs text-gray-500 mt-1">
+                                Checked in: {new Date(volunteer.checkedInAt!).toLocaleString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  hour: 'numeric',
+                                  minute: '2-digit',
+                                  hour12: true
+                                })}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <div className="text-green-600 text-2xl">✓</div>
+                              <button
+                                onClick={() => handleUndoCheckIn(volunteer.id)}
+                                className="px-4 py-2 bg-red-100 text-red-700 rounded-md text-sm font-medium hover:bg-red-200 active:bg-red-300 whitespace-nowrap"
+                              >
+                                Undo
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </>
         )}
       </div>
     </div>

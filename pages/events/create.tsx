@@ -74,7 +74,7 @@ export default function CreateEventPage() {
   const [moduleOverrides, setModuleOverrides] = useState<Record<string, boolean>>({
     countTimes: true,
     lanyards: true,
-    ivsApprovals: true
+    ivsModule: true
   })
 
   // Fetch department templates and events
@@ -466,11 +466,11 @@ export default function CreateEventPage() {
                   <label className="flex items-center space-x-3 p-3 bg-white border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer">
                     <input
                       type="checkbox"
-                      checked={moduleOverrides.ivsApprovals}
-                      onChange={(e) => setModuleOverrides(prev => ({ ...prev, ivsApprovals: e.target.checked }))}
+                      checked={moduleOverrides.ivsModule}
+                      onChange={(e) => setModuleOverrides(prev => ({ ...prev, ivsModule: e.target.checked }))}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     />
-                    <span className="text-sm text-gray-700">📋 IVS Approvals</span>
+                    <span className="text-sm text-gray-700">📋 IVS Module</span>
                   </label>
                 </div>
               </div>

@@ -41,7 +41,7 @@ export default function EventPageLayout({
 
   const isCountTimesEnabled = moduleConfig?.countTimes === true
   const isLanyardsEnabled = moduleConfig?.lanyards === true
-  const isIVSEnabled = moduleConfig?.ivsApprovals === true
+  const isIVSEnabled = moduleConfig?.ivsModule === true
 
   const getStatusBadge = (status: string) => {
     const statusColors = {

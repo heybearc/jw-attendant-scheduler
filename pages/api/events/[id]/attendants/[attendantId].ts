@@ -168,10 +168,6 @@ async function handleUpdateAttendant(req: NextApiRequest, res: NextApiResponse, 
       data: updateData
     })
 
-      isActive: (updatedAttendant as any).isActive,
-      congregation: (updatedAttendant as any).congregation
-    })
-
     return res.status(200).json({
       success: true,
       data: {

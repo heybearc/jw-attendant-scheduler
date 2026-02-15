@@ -182,12 +182,7 @@ async function handleUpdateVolunteer(req: NextApiRequest, res: NextApiResponse, 
         },
         data: eventVolunteerUpdateData
       })
-
     }
-
-      isActive: (updatedVolunteer as any).isActive,
-      congregation: (updatedVolunteer as any).congregation
-    })
 
     return res.status(200).json({
       success: true,

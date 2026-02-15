@@ -24,27 +24,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(400).json({ error: 'Position number and name are required' })
       }
 
-      const { v4: uuidv4 } = require('uuid')
-      const now = new Date()
+      try {
+        const crypto = require('crypto')
+        const now = new Date()
 
-      const position = await prisma.positions.create({
-        data: {
-          id: uuidv4(),
-          eventId: eventId,
-          positionNumber: parseInt(positionNumber),
-          name,
-          area: area || null,
-          description: description || null,
-          sequence: parseInt(positionNumber),
-          isActive: true,
-          updatedAt: now
-        }
-      })
+        const position = await prisma.positions.create({
+          data: {
+            id: crypto.randomUUID(),
+            eventId: eventId,
+            positionNumber: parseInt(positionNumber),
+            name,
+            area: area || null,
+            description: description || null,
+            sequence: parseInt(positionNumber),
+            isActive: true,
+            createdAt: now,
+            updatedAt: now
+          }
+        })
 
-      return res.status(201).json({
-        success: true,
-        position
-      })
+        return res.status(201).json({
+          success: true,
+          position
+        })
+      } catch (error) {
+        console.error('Position creation error:', error)
+        return res.status(500).json({ 
+          error: 'Failed to create position',
+          details: error instanceof Error ? error.message : 'Unknown error'
+        })
+      }
     }
 
     if (req.method !== 'GET') {

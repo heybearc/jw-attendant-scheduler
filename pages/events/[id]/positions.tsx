@@ -2838,9 +2838,11 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
 
     
     // Get event-attendant associations for this specific event (SOURCE OF TRUTH)
+    // Exclude IVS volunteers (they have ivsImportBatchId set)
     const eventAssociations = await prisma.event_volunteers.findMany({
       where: {
-        eventId: id as string
+        eventId: id as string,
+        ivsImportBatchId: null
       },
       include: {
         volunteer: {

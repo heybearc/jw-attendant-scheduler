@@ -17,7 +17,7 @@ interface EventPageLayoutProps {
     eventType?: string
     startDate?: string
   }
-  currentPage: 'overview' | 'positions' | 'volunteers' | 'oversight' | 'count-times' | 'lanyards' | 'ivs-approvals' | 'documents' | 'announcements' | 'permissions' | 'edit'
+  currentPage: 'overview' | 'positions' | 'volunteers' | 'oversight' | 'count-times' | 'lanyards' | 'ivs' | 'ivs-approvals' | 'documents' | 'announcements' | 'permissions' | 'edit'
   canEdit?: boolean
   canDelete?: boolean
   canManagePermissions?: boolean
@@ -203,14 +203,14 @@ export default function EventPageLayout({
             )}
             {isIVSEnabled && (
               <Link
-                href={`/events/${event.id}/ivs-approvals`}
+                href={`/events/${event.id}/ivs`}
                 className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${
-                  currentPage === 'ivs-approvals'
+                  currentPage === 'ivs'
                     ? 'text-blue-600 border-b-2 border-blue-600'
                     : 'text-gray-600 hover:text-gray-900 hover:border-gray-300 border-b-2 border-transparent'
                 }`}
               >
-                ✅ IVS Approvals
+                IVS Module
               </Link>
             )}
             <Link

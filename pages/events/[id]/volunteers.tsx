@@ -1291,7 +1291,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                 </div>
                 <div className="ml-5 w-0 flex-1">
                   <dl>
-                    <dt className="text-sm font-medium text-gray-500 truncate">Total Attendants</dt>
+                    <dt className="text-sm font-medium text-gray-500 truncate">Total Volunteers</dt>
                     <dd className="text-lg font-medium text-gray-900">{stats.total}</dd>
                   </dl>
                 </div>
@@ -1345,7 +1345,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
         {/* Attendants Table */}
         <div className="bg-white shadow rounded-lg overflow-visible">
           <div className="px-4 py-5 sm:p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Attendants List</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Volunteers List</h3>
             
             {attendants.length === 0 ? (
               <div className="text-center py-8">
@@ -1355,7 +1355,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                   disabled={loading}
                   className="mt-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold py-2 px-4 rounded transition-colors"
                 >
-                  Add First Attendant
+                  Add First Volunteer
                 </button>
               </div>
             ) : (

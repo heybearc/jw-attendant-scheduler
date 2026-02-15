@@ -428,7 +428,7 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
       >
         <div className="p-6">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">IVS Volunteer Approvals</h1>
+          <h1 className="text-2xl font-bold">IVS Module</h1>
           <div className="flex gap-2 mb-4 flex-wrap">
             <button
               onClick={() => setShowImportModal(true)}

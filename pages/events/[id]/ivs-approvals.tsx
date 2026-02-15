@@ -155,7 +155,8 @@ export default function IVSApprovalsPage({ event, canEdit }: IVSApprovalsPagePro
       if (response.ok) {
         fetchVolunteers()
       } else {
-        alert('Failed to update early entry flag')
+        const data = await response.json()
+        alert(data.message || 'Failed to update early entry flag')
       }
     } catch (error) {
       console.error('Error updating early entry:', error)

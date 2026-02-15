@@ -35,6 +35,23 @@ export default async function handler(
       return res.status(403).json({ success: false, message: 'Forbidden - Admin access required' })
     }
 
+    // Check if volunteer is already checked in
+    const volunteer = await prisma.event_volunteers.findUnique({
+      where: { id: volunteerId as string },
+    })
+
+    if (!volunteer) {
+      return res.status(404).json({ success: false, message: 'Volunteer not found' })
+    }
+
+    // Prevent unchecking early entry flag if volunteer is already checked in
+    if (earlyCheckinEligible === false && volunteer.checkedInAt) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Cannot remove early entry eligibility - volunteer is already checked in. Please undo check-in first.' 
+      })
+    }
+
     // Update early entry flag
     await prisma.event_volunteers.update({
       where: { id: volunteerId as string },

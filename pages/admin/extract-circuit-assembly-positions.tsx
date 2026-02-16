@@ -1,0 +1,211 @@
+import { GetServerSideProps } from 'next'
+import { getServerSession } from 'next-auth/next'
+import { authOptions } from '../api/auth/[...nextauth]'
+import { prisma } from '../../src/lib/prisma'
+import { useState } from 'react'
+
+interface Position {
+  id: string
+  name: string
+  description: string | null
+  area: string | null
+  positionNumber: number
+  sequence: number
+}
+
+interface Props {
+  event: {
+    id: string
+    name: string
+    startDate: string
+    endDate: string
+    totalPositions: number
+  }
+  positionsByArea: Record<string, Position[]>
+}
+
+export default function ExtractCircuitAssemblyPositions({ event, positionsByArea }: Props) {
+  const [templateName, setTemplateName] = useState('Willoughby Positions')
+
+  const handleCreateTemplate = async () => {
+    if (!templateName.trim()) {
+      alert('Please enter a template name')
+      return
+    }
+
+    // Format positions for template
+    const templateData = {
+      name: templateName,
+      description: `Extracted from ${event.name}`,
+      positions: positionsByArea
+    }
+
+    console.log('Template data:', JSON.stringify(templateData, null, 2))
+    alert('Template data logged to console. Ready to create template.')
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-white shadow rounded-lg p-6">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            Extract Circuit Assembly Positions
+          </h1>
+
+          <div className="mb-6 p-4 bg-blue-50 rounded-lg">
+            <h2 className="text-lg font-semibold text-blue-900 mb-2">Event Information</h2>
+            <p><strong>Name:</strong> {event.name}</p>
+            <p><strong>Start Date:</strong> {new Date(event.startDate).toLocaleDateString()}</p>
+            <p><strong>End Date:</strong> {new Date(event.endDate).toLocaleDateString()}</p>
+            <p><strong>Total Positions:</strong> {event.totalPositions}</p>
+          </div>
+
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Template Name
+            </label>
+            <input
+              type="text"
+              value={templateName}
+              onChange={(e) => setTemplateName(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter template name"
+            />
+          </div>
+
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              Positions by Area ({Object.keys(positionsByArea).length} areas)
+            </h2>
+            
+            {Object.entries(positionsByArea).sort(([a], [b]) => a.localeCompare(b)).map(([area, positions]) => (
+              <div key={area} className="mb-6 border border-gray-200 rounded-lg p-4">
+                <h3 className="text-md font-semibold text-gray-800 mb-3 bg-gray-100 px-3 py-2 rounded">
+                  {area} ({positions.length} positions)
+                </h3>
+                <div className="space-y-2">
+                  {positions.map((pos) => (
+                    <div key={pos.id} className="pl-4 py-2 border-l-2 border-blue-300">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="font-medium text-gray-900">{pos.name}</span>
+                          <span className="ml-2 text-sm text-gray-500">
+                            #{pos.positionNumber}
+                          </span>
+                        </div>
+                      </div>
+                      {pos.description && (
+                        <p className="text-sm text-gray-600 mt-1">{pos.description}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex gap-4">
+            <button
+              onClick={handleCreateTemplate}
+              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              Create Template
+            </button>
+            <button
+              onClick={() => {
+                const dataStr = JSON.stringify({ event, positionsByArea }, null, 2)
+                const dataBlob = new Blob([dataStr], { type: 'application/json' })
+                const url = URL.createObjectURL(dataBlob)
+                const link = document.createElement('a')
+                link.href = url
+                link.download = `${templateName.replace(/\s+/g, '-').toLowerCase()}.json`
+                link.click()
+              }}
+              className="px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+            >
+              Download JSON
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const session = await getServerSession(context.req, context.res, authOptions)
+
+  if (!session || session.user.role !== 'ADMIN') {
+    return {
+      redirect: {
+        destination: '/auth/signin',
+        permanent: false
+      }
+    }
+  }
+
+  try {
+    // Find the completed circuit assembly event
+    const event = await prisma.events.findFirst({
+      where: {
+        eventType: 'CIRCUIT_ASSEMBLY'
+      },
+      orderBy: {
+        startDate: 'desc'
+      }
+    })
+
+    if (!event) {
+      return {
+        notFound: true
+      }
+    }
+
+    // Get all positions for this event
+    const positions = await prisma.positions.findMany({
+      where: {
+        eventId: event.id,
+        isActive: true
+      },
+      orderBy: [
+        { area: 'asc' },
+        { sequence: 'asc' }
+      ]
+    })
+
+    // Group positions by area
+    const positionsByArea: Record<string, Position[]> = {}
+    positions.forEach(pos => {
+      const area = pos.area || 'General'
+      if (!positionsByArea[area]) {
+        positionsByArea[area] = []
+      }
+      positionsByArea[area].push({
+        id: pos.id,
+        name: pos.name,
+        description: pos.description,
+        area: pos.area,
+        positionNumber: pos.positionNumber,
+        sequence: pos.sequence
+      })
+    })
+
+    return {
+      props: {
+        event: {
+          id: event.id,
+          name: event.name,
+          startDate: event.startDate.toISOString(),
+          endDate: event.endDate.toISOString(),
+          totalPositions: positions.length
+        },
+        positionsByArea
+      }
+    }
+  } catch (error) {
+    console.error('Error extracting positions:', error)
+    return {
+      notFound: true
+    }
+  }
+}

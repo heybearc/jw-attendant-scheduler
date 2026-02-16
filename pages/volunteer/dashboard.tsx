@@ -1198,22 +1198,7 @@ export default function VolunteerDashboard() {
             </div>
           </div>
         </div>
-      ) : (
-        /* IVS Early Check-In Tab */
-        <div className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">IVS Early Check-In</h2>
-          <p className="text-gray-600 mb-6">
-            Check in volunteers who have been approved for early entry to the convention.
-          </p>
-          
-          <div className="text-center py-12 text-gray-500">
-            <div className="text-4xl mb-4">🚧</div>
-            <p className="text-lg font-medium">Early Check-In Coming Soon</p>
-            <p className="text-sm mt-2">This feature will allow you to check in approved IVS volunteers.</p>
-          </div>
-        </div>
-      )}
-    </div>
+      </div>
     </>
   )
 }

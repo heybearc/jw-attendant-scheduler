@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { useSession } from 'next-auth/react'
+import { GetServerSideProps } from 'next'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '../api/auth/[...nextauth]'
 import Head from 'next/head'
 import Link from 'next/link'
 
@@ -224,4 +227,22 @@ export default function VolunteerSelectEvent() {
       )}
     </>
   )
+}
+
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const session = await getServerSession(context.req, context.res, authOptions)
+  
+  // If not authenticated or not a volunteer, redirect to login
+  if (!session?.user?.id || session.user.role !== 'VOLUNTEER') {
+    return {
+      redirect: {
+        destination: '/volunteer/login',
+        permanent: false,
+      },
+    }
+  }
+  
+  return {
+    props: {},
+  }
 }

@@ -773,35 +773,6 @@ export default function VolunteerDashboard() {
                 </div>
               </div>
 
-              {/* IVS Early Check-In (for IVS team members only) */}
-              {dashboardData.isIVSTeamMember && (
-                <div className="bg-gradient-to-br from-purple-50 to-blue-50 border-2 border-purple-200 shadow-lg rounded-lg">
-                  <div className="px-6 py-4 border-b border-purple-200 bg-white bg-opacity-60">
-                    <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                      <span className="text-xl mr-2">✅</span>
-                      IVS Early Check-In
-                    </h2>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Check in approved IVS volunteers for early entry
-                    </p>
-                  </div>
-                  <div className="p-6">
-                    <div className="bg-white rounded-lg border border-purple-200 p-4">
-                      <p className="text-sm text-gray-700 mb-4">
-                        As an IVS team member, you can check in other volunteers who have been approved for early entry to the convention.
-                      </p>
-                      <Link
-                        href={`/volunteer/early-checkin?eventId=${dashboardData.event.id}`}
-                        className="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors"
-                      >
-                        <span className="mr-2">✅</span>
-                        Open Check-In System
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               {/* Availability Requests */}
               {availabilityRequests.length > 0 && (
                 <div className="bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-200 shadow-lg rounded-lg">

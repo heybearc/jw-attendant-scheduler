@@ -39,13 +39,13 @@ export default function VolunteerLogin() {
     try {
       console.log('🔵 Signing in with NextAuth...')
       
-      // Use NextAuth's built-in redirect to event selection page
+      // Use NextAuth's built-in redirect to volunteer dashboard
       const result = await signIn('volunteer-pin', {
         firstName: formData.firstName,
         lastName: formData.lastName,
         congregation: formData.congregation,
         pin: formData.pin,
-        callbackUrl: '/volunteer/select-event',
+        callbackUrl: '/volunteer/dashboard',
         redirect: true
       })
 

@@ -4,6 +4,7 @@ import { authOptions } from '../../api/auth/[...nextauth]'
 import EventLayout from '../../../components/EventLayout'
 import LocationSelector from '../../../components/LocationSelector'
 import UserSearchSelect from '../../../components/UserSearchSelect'
+import PhoneInput from '../../../components/PhoneInput'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
@@ -872,18 +873,13 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
                   />
                 </div>
                 <div>
-                  <label htmlFor="departmentOverseerPhone" className="block text-sm font-medium text-gray-700 mb-1">
-                    Phone
-                  </label>
-                  <input
-                    type="tel"
+                  <PhoneInput
                     id="departmentOverseerPhone"
-                    name="departmentOverseerPhone"
+                    label="Phone"
                     value={formData.departmentOverseerPhone}
-                    onChange={handleInputChange}
+                    onChange={(value) => setFormData({ ...formData, departmentOverseerPhone: value })}
                     disabled={!!formData.departmentOverseerUserId}
                     className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${formData.departmentOverseerUserId ? 'bg-gray-50 cursor-not-allowed' : ''}`}
-                    placeholder="Phone Number"
                   />
                 </div>
                 <div>
@@ -967,14 +963,12 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Phone</label>
-                        <input
-                          type="tel"
+                        <PhoneInput
+                          label="Phone"
                           value={assistant.phone}
-                          onChange={(e) => updateAssistant(index, 'phone', e.target.value)}
+                          onChange={(value) => updateAssistant(index, 'phone', value)}
                           disabled={!!(assistant as any).userId}
                           className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${(assistant as any).userId ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                          placeholder="555-0123"
                         />
                       </div>
                       <div>
@@ -1074,14 +1068,12 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Phone</label>
-                        <input
-                          type="tel"
+                        <PhoneInput
+                          label="Phone"
                           value={keyman.phone}
-                          onChange={(e) => updateKeyman(index, 'phone', e.target.value)}
+                          onChange={(value) => updateKeyman(index, 'phone', value)}
                           disabled={!!(keyman as any).userId}
                           className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${(keyman as any).userId ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                          placeholder="555-0123"
                         />
                       </div>
                       <div>

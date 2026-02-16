@@ -2,6 +2,7 @@ import { GetServerSideProps } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../../api/auth/[...nextauth]'
 import AdminLayout from '../../../../components/AdminLayout'
+import PhoneInput from '../../../../components/PhoneInput'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 
@@ -253,16 +254,12 @@ export default function EditUserPage() {
               </div>
 
               <div>
-                <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-                  Phone Number
-                </label>
-                <input
-                  type="tel"
+                <PhoneInput
                   id="phone"
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  label="Phone Number"
                   value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  placeholder="555-123-4567"
+                  onChange={(value) => setFormData({ ...formData, phone: value })}
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 />
               </div>
             </div>

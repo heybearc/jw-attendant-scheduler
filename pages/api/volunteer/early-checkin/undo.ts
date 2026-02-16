@@ -25,18 +25,30 @@ export default async function handler(
       return res.status(400).json({ success: false, message: 'Event ID and Volunteer ID required' })
     }
 
-    // Verify user is an IVS volunteer for this event
-    const ivsVolunteer = await prisma.event_volunteers.findFirst({
-      where: {
-        eventId: eventId,
-        userId: session.user.id,
-        ivsSubmittedBy: 'IVS',
-        ivsApprovalStatus: 'Approved',
-      },
+    // Verify user is an IVS team member (has position assignment) for this event
+    const event = await prisma.events.findUnique({
+      where: { id: eventId },
+      select: { eventType: true, departmentTemplateId: true }
     })
 
-    if (!ivsVolunteer) {
-      return res.status(403).json({ success: false, message: 'Access denied - IVS volunteer access required' })
+    const isIVSEvent = event?.eventType === 'REGIONAL_CONVENTION' || 
+                       event?.departmentTemplateId === 'dept-info-volunteer'
+    
+    if (!isIVSEvent) {
+      return res.status(403).json({ success: false, message: 'This is not an IVS event' })
+    }
+
+    const ivsTeamMember = await prisma.position_assignments.findFirst({
+      where: {
+        volunteerId: session.user.id,
+        positions: {
+          eventId: eventId
+        }
+      }
+    })
+
+    if (!ivsTeamMember) {
+      return res.status(403).json({ success: false, message: 'Access denied - IVS team member access required' })
     }
 
     // Undo check-in by clearing the fields

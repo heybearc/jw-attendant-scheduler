@@ -222,15 +222,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
     }
 
-    // Check if volunteer is an IVS team member (approved IVS volunteer)
-    const ivsTeamMember = await prisma.event_volunteers.findFirst({
+    // Check if volunteer is an IVS team member
+    // IVS team members are volunteers assigned to positions in dept-info-volunteer events
+    const isIVSEvent = event.eventType === 'REGIONAL_CONVENTION' || 
+                       (await prisma.events.findUnique({
+                         where: { id: eventId as string },
+                         select: { departmentTemplateId: true }
+                       }))?.departmentTemplateId === 'dept-info-volunteer'
+    
+    const ivsTeamMember = isIVSEvent ? await prisma.position_assignments.findFirst({
       where: {
         volunteerId: volunteerId as string,
-        eventId: eventId as string,
-        ivsSubmittedBy: 'IVS',
-        ivsApprovalStatus: 'Approved'
+        positions: {
+          eventId: eventId as string
+        }
       }
-    })
+    }) : null
 
     // Get active count sessions for this event
     const activeCountSessions = await prisma.count_sessions.findMany({

@@ -10,6 +10,7 @@ interface User {
   firstName: string
   lastName: string
   email: string
+  phone?: string
   role: string
   isActive: boolean
   volunteer?: {
@@ -41,6 +42,7 @@ export default function EditUserPage() {
     firstName: '',
     lastName: '',
     email: '',
+    phone: '',
     role: 'VOLUNTEER',
     isActive: true,
     linkedVolunteerId: ''
@@ -71,6 +73,7 @@ export default function EditUserPage() {
           firstName: userData.firstName,
           lastName: userData.lastName,
           email: userData.email,
+          phone: userData.phone || '',
           role: userData.role,
           isActive: userData.isActive,
           linkedVolunteerId: userData.volunteer?.id || ''
@@ -234,18 +237,34 @@ export default function EditUserPage() {
               </div>
             </div>
 
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email Address *
-              </label>
-              <input
-                type="email"
-                id="email"
-                required
-                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                  Email Address *
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  required
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  id="phone"
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  placeholder="555-123-4567"
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

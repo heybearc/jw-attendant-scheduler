@@ -307,7 +307,19 @@ export default function EditUserPage() {
                 id="linkedVolunteerId"
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 value={formData.linkedVolunteerId}
-                onChange={(e) => setFormData({ ...formData, linkedVolunteerId: e.target.value })}
+                onChange={(e) => {
+                  const volunteerId = e.target.value
+                  setFormData({ ...formData, linkedVolunteerId: volunteerId })
+                  
+                  // Auto-populate phone from selected volunteer if user doesn't have one
+                  if (volunteerId && !formData.phone) {
+                    const selectedVolunteer = availableVolunteers.find(v => v.id === volunteerId) || 
+                                             (user?.volunteer?.id === volunteerId ? user.volunteer : null)
+                    if (selectedVolunteer && (selectedVolunteer as any).phone) {
+                      setFormData(prev => ({ ...prev, phone: (selectedVolunteer as any).phone }))
+                    }
+                  }
+                }}
               >
                 <option value="">No volunteer linked</option>
                 {/* Show currently linked volunteer if exists */}

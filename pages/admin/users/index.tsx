@@ -357,7 +357,11 @@ export default function UsersPage({ users: initialUsers, pagination: initialPagi
                         </span>
                       ) : (
                         <Link
-                          href={`/admin/users?page=${pagination.page - 1}${search ? `&search=${search}` : ''}${roleFilter ? `&role=${roleFilter}` : ''}`}
+                          href={`/admin/users?${new URLSearchParams({
+                            page: String(pagination.page - 1),
+                            ...(search && { search }),
+                            ...(roleFilter && { role: roleFilter })
+                          }).toString()}`}
                           className="px-3 py-1 text-sm rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
                         >
                           Previous
@@ -372,7 +376,11 @@ export default function UsersPage({ users: initialUsers, pagination: initialPagi
                         </span>
                       ) : (
                         <Link
-                          href={`/admin/users?page=${pagination.page + 1}${search ? `&search=${search}` : ''}${roleFilter ? `&role=${roleFilter}` : ''}`}
+                          href={`/admin/users?${new URLSearchParams({
+                            page: String(pagination.page + 1),
+                            ...(search && { search }),
+                            ...(roleFilter && { role: roleFilter })
+                          }).toString()}`}
                           className="px-3 py-1 text-sm rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
                         >
                           Next

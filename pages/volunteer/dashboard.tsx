@@ -131,6 +131,7 @@ export default function VolunteerDashboard() {
   const [availabilityRequests, setAvailabilityRequests] = useState<AvailabilityRequest[]>([])
   const [respondingToRequest, setRespondingToRequest] = useState<string | null>(null)
   const [isMobile, setIsMobile] = useState(false)
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'checkin'>('dashboard')
 
   useEffect(() => {
     // Detect mobile on mount and window resize
@@ -650,6 +651,35 @@ export default function VolunteerDashboard() {
             </p>
           </div>
 
+          {/* Tab Navigation for IVS Team Members */}
+          {dashboardData.isIVSTeamMember && (
+            <div className="mb-6 border-b border-gray-200">
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setActiveTab('dashboard')}
+                  className={`px-4 py-2 font-semibold transition-colors border-b-2 ${
+                    activeTab === 'dashboard'
+                      ? 'border-blue-600 text-blue-600'
+                      : 'border-transparent text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  📋 Dashboard
+                </button>
+                <button
+                  onClick={() => setActiveTab('checkin')}
+                  className={`px-4 py-2 font-semibold transition-colors border-b-2 ${
+                    activeTab === 'checkin'
+                      ? 'border-purple-600 text-purple-600'
+                      : 'border-transparent text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  ✅ Early Check-In
+                </button>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'dashboard' && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main Content */}
             <div className="lg:col-span-2 space-y-8">
@@ -1195,6 +1225,23 @@ export default function VolunteerDashboard() {
             </div>
           </div>
         </div>
+      )}
+
+          {/* Early Check-In Tab */}
+          {activeTab === 'checkin' && dashboardData.isIVSTeamMember && (
+            <div className="bg-white shadow rounded-lg p-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">IVS Early Check-In</h2>
+              <p className="text-gray-600 mb-6">
+                Check in volunteers who have been approved for early entry to the convention.
+              </p>
+              
+              <div className="text-center py-12 text-gray-500">
+                <div className="text-4xl mb-4">✅</div>
+                <p className="text-lg font-medium">Early Check-In System</p>
+                <p className="text-sm mt-2">This feature will display volunteers approved for early entry.</p>
+              </div>
+            </div>
+          )}
       </div>
     </>
   )

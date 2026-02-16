@@ -29,7 +29,7 @@ export default function ExtractCircuitAssemblyPositions({ event, positionsByArea
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
   const handlePopulateTemplate = async () => {
-    if (!confirm('This will populate the Position Templates in the Attendants department template. Continue?')) {
+    if (!confirm('This will populate the Position Templates in the Attendants - Willoughby department template. Continue?')) {
       return
     }
 
@@ -41,7 +41,7 @@ export default function ExtractCircuitAssemblyPositions({ event, positionsByArea
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          departmentTemplateId: 'dept-attendants',
+          departmentTemplateId: 'dept-attendants-willoughby',
           positions: positionsByArea
         })
       })
@@ -63,6 +63,46 @@ export default function ExtractCircuitAssemblyPositions({ event, positionsByArea
       setMessage({
         type: 'error',
         text: 'An error occurred while populating position templates'
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleApplyToEvent = async () => {
+    const eventName = prompt('Enter the event name to apply these positions to (e.g., "Attendants - Circuit Assembly"):')
+    if (!eventName) return
+
+    setLoading(true)
+    setMessage(null)
+
+    try {
+      const response = await fetch('/api/admin/apply-positions-to-event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          eventName: eventName.trim(),
+          positions: positionsByArea
+        })
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setMessage({
+          type: 'success',
+          text: `Successfully created ${data.positionsCreated} positions for event "${data.eventName}"!`
+        })
+      } else {
+        setMessage({
+          type: 'error',
+          text: data.error || 'Failed to apply positions to event'
+        })
+      }
+    } catch (error) {
+      setMessage({
+        type: 'error',
+        text: 'An error occurred while applying positions to event'
       })
     } finally {
       setLoading(false)
@@ -124,7 +164,7 @@ export default function ExtractCircuitAssemblyPositions({ event, positionsByArea
             ))}
           </div>
 
-          <div className="flex gap-4">
+          <div className="flex gap-4 flex-wrap">
             <button
               onClick={handlePopulateTemplate}
               disabled={loading}
@@ -132,7 +172,16 @@ export default function ExtractCircuitAssemblyPositions({ event, positionsByArea
                 loading ? 'opacity-50 cursor-not-allowed' : ''
               }`}
             >
-              {loading ? 'Populating...' : 'Populate Attendants Position Templates'}
+              {loading ? 'Working...' : 'Populate Willoughby Template'}
+            </button>
+            <button
+              onClick={handleApplyToEvent}
+              disabled={loading}
+              className={`px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
+                loading ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              {loading ? 'Working...' : 'Apply to Existing Event'}
             </button>
             <button
               onClick={() => {

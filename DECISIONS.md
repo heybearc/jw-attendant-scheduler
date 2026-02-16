@@ -430,6 +430,30 @@ This document tracks significant technical decisions made during development.
 **Decision:** Shift test strategy from UI-specific element checks to API/console error validation. Add graceful skip logic when preconditions aren't met (mobile dashboard not rendering, features not implemented, no test data).  
 **Consequences:** Tests now skip gracefully instead of failing when features aren't available. More resilient to UI changes. Focus on functional validation (API responses, console errors) rather than specific DOM structure. Achieved 100% pass rate (103/120 passing, 17 intentional skips).
 
+### D-TS-017: Hybrid Approach for Event Oversight Fields
+**Date:** 2026-02-16  
+**Context:** Event oversight roles (Department Overseer, Assistants, Keymen) needed better data integrity while maintaining flexibility for non-system users.  
+**Decision:** Implement hybrid approach - free-text fields with optional user linking. When linked, auto-populate from user profile and make read-only. Unlink to return to manual entry.  
+**Consequences:** Improved data accuracy for system users, maintained flexibility for external contacts, reduced duplicate data entry, phone/email auto-sync from user profiles.
+
+### D-TS-018: Reusable PhoneInput Component for Formatting
+**Date:** 2026-02-16  
+**Context:** Phone numbers inconsistently formatted across application (user management, event oversight, volunteers).  
+**Decision:** Create reusable `PhoneInput` component with automatic formatting to `(XXX) XXX-XXXX` format. Apply across all phone fields.  
+**Consequences:** Consistent phone formatting throughout app, better UX with auto-formatting on input, existing values formatted on mount, single source of truth for phone formatting logic.
+
+### D-TS-019: Test Against STANDBY Before Release
+**Date:** 2026-02-16  
+**Context:** Tests were running against LIVE (BLUE) instead of STANDBY (GREEN) before releases, causing false failures.  
+**Decision:** Configure qa-01 `.env.test` to point to STANDBY environment before running `/test-release`. Update after traffic switch.  
+**Consequences:** Tests validate actual code being released, fewer false positives, better pre-release confidence, requires manual `.env.test` update during release workflow.
+
+### D-TS-020: Mark Migrations as Applied Rather Than Re-run
+**Date:** 2026-02-16  
+**Context:** STANDBY sync failed when migrations already applied to shared database but not marked in Prisma migration table.  
+**Decision:** Use `npx prisma migrate resolve --applied` to mark migrations as applied when database already has the schema changes.  
+**Consequences:** Avoids migration conflicts during STANDBY sync, requires manual verification that schema matches migration, cleaner sync process.
+
 ---
 
 ## Shared Decisions

@@ -2,7 +2,7 @@ import { GetServerSideProps } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../api/auth/[...nextauth]'
 import AdminLayout from '../../../components/AdminLayout'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { prisma } from '../../../src/lib/prisma'
 import { format, parseISO } from 'date-fns'
@@ -43,6 +43,14 @@ export default function UsersPage({ users: initialUsers, pagination: initialPagi
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
   const [roleFilter, setRoleFilter] = useState(initialRoleFilter)
   const [pagination, setPagination] = useState(initialPagination)
+
+  // Update state when props change (e.g., pagination navigation)
+  useEffect(() => {
+    setUsers(initialUsers)
+    setPagination(initialPagination)
+    setSearch(initialSearch)
+    setRoleFilter(initialRoleFilter)
+  }, [initialUsers, initialPagination, initialSearch, initialRoleFilter])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()

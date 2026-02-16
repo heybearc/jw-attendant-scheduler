@@ -3,7 +3,6 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../../auth/[...nextauth]'
 import { prisma } from '../../../../src/lib/prisma'
 import bcrypt from 'bcryptjs'
-import { handleApiError } from '../../../src/lib/apiError'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -65,10 +64,11 @@ async function handleGetUser(req: NextApiRequest, res: NextApiResponse, id: stri
 }
 
 async function handleUpdateUser(req: NextApiRequest, res: NextApiResponse, id: string) {
-  const { firstName, lastName, email, role, isActive, linkedVolunteerId, newPassword, sendResetEmail } = req.body
+  const { firstName, lastName, email, phone, role, isActive, linkedVolunteerId, newPassword, sendResetEmail } = req.body
 
   try {
     // Handle volunteer linking/unlinking
+    let linkedVolunteer: any = null
     if (linkedVolunteerId !== undefined) {
       // First, unlink any volunteers currently linked to this user
       await prisma.volunteers.updateMany({
@@ -79,7 +79,7 @@ async function handleUpdateUser(req: NextApiRequest, res: NextApiResponse, id: s
       if (linkedVolunteerId) {
         // Then link the new volunteer to this user
         // Also unlink this volunteer from any other user first
-        await prisma.volunteers.update({
+        linkedVolunteer = await prisma.volunteers.update({
           where: { id: linkedVolunteerId },
           data: { userId: id }
         })
@@ -92,17 +92,26 @@ async function handleUpdateUser(req: NextApiRequest, res: NextApiResponse, id: s
       passwordHash = await bcrypt.hash(newPassword, 12)
     }
 
+    // Build update data
+    const updateData: any = {
+      ...(firstName && { firstName }),
+      ...(lastName && { lastName }),
+      ...(email && { email }),
+      ...(phone !== undefined && { phone: phone || null }),
+      ...(role && { role }),
+      ...(typeof isActive === 'boolean' && { isActive }),
+      ...(passwordHash && { passwordHash }),
+      updatedAt: new Date()
+    }
+
+    // If linking to a volunteer and user doesn't have a phone, pull from volunteer
+    if (linkedVolunteer && !phone && linkedVolunteer.phone) {
+      updateData.phone = linkedVolunteer.phone
+    }
+
     const user = await prisma.users.update({
       where: { id },
-      data: {
-        ...(firstName && { firstName }),
-        ...(lastName && { lastName }),
-        ...(email && { email }),
-        ...(role && { role }),
-        ...(typeof isActive === 'boolean' && { isActive }),
-        ...(passwordHash && { passwordHash }),
-        updatedAt: new Date()
-      },
+      data: updateData,
       include: {
         volunteer: {
           select: {

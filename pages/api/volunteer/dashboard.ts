@@ -327,49 +327,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           type: ann.type,
           createdAt: ann.createdAt.toISOString()
         })),
-        documents: documents.length > 0 ? documents : [
-          // Fallback test documents if no published documents found
-          {
-            id: "doc-1",
-            title: "Assembly Instructions",
-            description: "Important instructions for all attendants",
-            fileName: "assembly-instructions.pdf",
-            fileSize: 245760,
-            fileType: "application/pdf",
-            fileUrl: "/api/documents/doc-1/download",
-            publishedAt: "2025-10-14T10:00:00.000Z"
-          },
-          {
-            id: "doc-2", 
-            title: "Emergency Procedures",
-            description: "Emergency contact information and procedures",
-            fileName: "emergency-procedures.pdf",
-            fileSize: 189440,
-            fileType: "application/pdf",
-            fileUrl: "/api/documents/doc-2/download",
-            publishedAt: "2025-10-14T09:30:00.000Z"
-          },
-          {
-            id: "doc-3",
-            title: "Station 22 Specific Instructions",
-            description: "Detailed instructions for Station 22 attendants",
-            fileName: "station-22-instructions.pdf",
-            fileSize: 156320,
-            fileType: "application/pdf",
-            fileUrl: "/api/documents/doc-3/download",
-            publishedAt: "2025-10-14T08:15:00.000Z"
-          },
-          {
-            id: "doc-4",
-            title: "Assembly Schedule",
-            description: "Complete schedule for the Circuit Assembly",
-            fileName: "assembly-schedule.pdf",
-            fileSize: 298760,
-            fileType: "application/pdf",
-            fileUrl: "/api/documents/doc-4/download",
-            publishedAt: "2025-10-14T07:45:00.000Z"
-          }
-        ],
+        documents: documents,
         oversightContacts
       }
     })

@@ -918,13 +918,41 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
                   <div key={index} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                     <div className="flex justify-between items-center mb-3">
                       <span className="text-sm font-medium text-gray-700">Assistant {index + 1}</span>
-                      <button
-                        type="button"
-                        onClick={() => removeAssistant(index)}
-                        className="text-red-600 hover:text-red-800 text-sm font-medium"
-                      >
-                        Remove
-                      </button>
+                      <div className="flex gap-2">
+                        <div className="relative">
+                          {(assistant as any).userId ? (
+                            <button
+                              type="button"
+                              onClick={() => handleUnlinkAssistant(index)}
+                              className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+                            >
+                              🔗 Linked
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleLinkUser('assistant', index)}
+                              className="px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 transition-colors"
+                            >
+                              🔗 Link
+                            </button>
+                          )}
+                          {showUserSearch && searchTarget === 'assistant' && searchTargetIndex === index && (
+                            <UserSearchSelect
+                              onSelect={handleUserSelect}
+                              onClose={() => setShowUserSearch(false)}
+                              placeholder="Search for user..."
+                            />
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeAssistant(index)}
+                          className="text-red-600 hover:text-red-800 text-sm font-medium"
+                        >
+                          Remove
+                        </button>
+                      </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       <div>
@@ -933,7 +961,8 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
                           type="text"
                           value={assistant.name}
                           onChange={(e) => updateAssistant(index, 'name', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                          disabled={!!(assistant as any).userId}
+                          className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${(assistant as any).userId ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                           placeholder="Full Name"
                         />
                       </div>
@@ -943,7 +972,8 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
                           type="tel"
                           value={assistant.phone}
                           onChange={(e) => updateAssistant(index, 'phone', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                          disabled={!!(assistant as any).userId}
+                          className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${(assistant as any).userId ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                           placeholder="555-0123"
                         />
                       </div>
@@ -953,7 +983,8 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
                           type="email"
                           value={assistant.email}
                           onChange={(e) => updateAssistant(index, 'email', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                          disabled={!!(assistant as any).userId}
+                          className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${(assistant as any).userId ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                           placeholder="email@example.com"
                         />
                       </div>
@@ -994,13 +1025,41 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
                   <div key={index} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                     <div className="flex justify-between items-center mb-3">
                       <span className="text-sm font-medium text-gray-700">Keyman {index + 1}</span>
-                      <button
-                        type="button"
-                        onClick={() => removeKeyman(index)}
-                        className="text-red-600 hover:text-red-800 text-sm font-medium"
-                      >
-                        Remove
-                      </button>
+                      <div className="flex gap-2">
+                        <div className="relative">
+                          {(keyman as any).userId ? (
+                            <button
+                              type="button"
+                              onClick={() => handleUnlinkKeyman(index)}
+                              className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+                            >
+                              🔗 Linked
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleLinkUser('keyman', index)}
+                              className="px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 transition-colors"
+                            >
+                              🔗 Link
+                            </button>
+                          )}
+                          {showUserSearch && searchTarget === 'keyman' && searchTargetIndex === index && (
+                            <UserSearchSelect
+                              onSelect={handleUserSelect}
+                              onClose={() => setShowUserSearch(false)}
+                              placeholder="Search for user..."
+                            />
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeKeyman(index)}
+                          className="text-red-600 hover:text-red-800 text-sm font-medium"
+                        >
+                          Remove
+                        </button>
+                      </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       <div>
@@ -1009,7 +1068,8 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
                           type="text"
                           value={keyman.name}
                           onChange={(e) => updateKeyman(index, 'name', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                          disabled={!!(keyman as any).userId}
+                          className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${(keyman as any).userId ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                           placeholder="Full Name"
                         />
                       </div>
@@ -1019,7 +1079,8 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
                           type="tel"
                           value={keyman.phone}
                           onChange={(e) => updateKeyman(index, 'phone', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                          disabled={!!(keyman as any).userId}
+                          className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${(keyman as any).userId ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                           placeholder="555-0123"
                         />
                       </div>
@@ -1029,7 +1090,8 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
                           type="email"
                           value={keyman.email}
                           onChange={(e) => updateKeyman(index, 'email', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                          disabled={!!(keyman as any).userId}
+                          className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${(keyman as any).userId ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                           placeholder="email@example.com"
                         />
                       </div>
@@ -1238,11 +1300,12 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       status: event.status,
       // APEX GUARDIAN: Oversight Management Fields
       departmentTemplateId: event.departmentTemplateId || '',
-      departmentOverseerName: event.departmentOverseerName,
-      departmentOverseerPhone: event.departmentOverseerPhone,
-      departmentOverseerEmail: event.departmentOverseerEmail,
-      departmentOverseerAssistants: event.departmentOverseerAssistants,
-      keyman: event.keyman,
+      departmentOverseerName: (event as any).departmentOverseerName,
+      departmentOverseerPhone: (event as any).departmentOverseerPhone,
+      departmentOverseerEmail: (event as any).departmentOverseerEmail,
+      departmentOverseerUserId: (event as any).departmentOverseerUserId,
+      departmentOverseerAssistants: (event as any).departmentOverseerAssistants,
+      keyman: (event as any).keyman,
       createdAt: event.createdAt?.toISOString() || null,
       updatedAt: event.updatedAt?.toISOString() || null
     }

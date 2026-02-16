@@ -66,7 +66,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           name, description, eventType, startDate, endDate, startTime, endTime, location, status, capacity, attendantsNeeded, volunteersNeeded,
           departmentTemplateId,
           // APEX GUARDIAN: Oversight Management Fields
-          departmentOverseerName, departmentOverseerPhone, departmentOverseerEmail,
+          departmentOverseerName, departmentOverseerPhone, departmentOverseerEmail, departmentOverseerUserId,
           departmentOverseerAssistants,
           keyman
         } = bodyData
@@ -106,6 +106,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (departmentOverseerName !== undefined) updateData.departmentOverseerName = departmentOverseerName || null
         if (departmentOverseerPhone !== undefined) updateData.departmentOverseerPhone = departmentOverseerPhone || null
         if (departmentOverseerEmail !== undefined) updateData.departmentOverseerEmail = departmentOverseerEmail || null
+        if (departmentOverseerUserId !== undefined) updateData.departmentOverseerUserId = departmentOverseerUserId || null
         if (departmentOverseerAssistants !== undefined) updateData.departmentOverseerAssistants = departmentOverseerAssistants || []
         if (keyman !== undefined) updateData.keyman = keyman || []
 

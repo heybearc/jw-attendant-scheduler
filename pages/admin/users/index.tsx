@@ -291,7 +291,9 @@ export default function UsersPage({ users: initialUsers, pagination: initialPagi
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="relative inline-block text-left">
                             <button
-                              onClick={() => setOpenDropdown(openDropdown === user.id ? null : user.id)}
+                              onClick={(e) => {
+                                setOpenDropdown(openDropdown === user.id ? null : user.id)
+                              }}
                               className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                             >
                               Actions
@@ -301,7 +303,7 @@ export default function UsersPage({ users: initialUsers, pagination: initialPagi
                             </button>
 
                             {openDropdown === user.id && (
-                              <div className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
+                              <div className="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5" style={{ zIndex: 9999 }}>
                                 <div className="py-1" role="menu">
                                   <Link
                                     href={`/admin/users/${user.id}/edit`}

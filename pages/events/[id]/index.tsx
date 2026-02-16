@@ -458,7 +458,7 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-500">Attendants Needed</label>
+                  <label className="block text-sm font-medium text-gray-500"><VolunteerText plural /> Needed</label>
                   <p className="mt-1 text-sm font-semibold text-gray-900">
                     {event.attendantsNeeded ? event.attendantsNeeded.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') : 'Not specified'}
                   </p>
@@ -807,6 +807,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       where: { id: id as string },
       include: {
         event_volunteers: {
+          where: {
+            ivsApprovalStatus: null
+          },
           include: {
             volunteer: {
               select: {

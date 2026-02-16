@@ -81,7 +81,20 @@ export default function DepartmentTemplateModal({ isOpen, onClose, onSave, depar
         setTerminology(department.terminology as Terminology)
       }
       if (department.positionTemplates) {
-        setPositionTemplates(department.positionTemplates as PositionTemplate[])
+        // Handle both array format and object format (from Circuit Assembly extraction)
+        const templates = department.positionTemplates as any
+        if (Array.isArray(templates)) {
+          setPositionTemplates(templates as PositionTemplate[])
+        } else if (typeof templates === 'object') {
+          // Convert object format to array format
+          const arrayTemplates: PositionTemplate[] = []
+          Object.values(templates).forEach((areaPositions: any) => {
+            if (Array.isArray(areaPositions)) {
+              arrayTemplates.push(...areaPositions)
+            }
+          })
+          setPositionTemplates(arrayTemplates)
+        }
       }
     } else {
       resetForm()

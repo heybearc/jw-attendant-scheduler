@@ -24,10 +24,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ success: false, error: 'Volunteer not found' })
     }
 
-    // Get published documents using proper Prisma queries
+    // Get published documents for THIS EVENT ONLY
     const publishedDocs = await prisma.document_publications.findMany({
       where: {
-        volunteerId: volunteerId as string
+        volunteerId: volunteerId as string,
+        event_documents: {
+          eventId: eventId as string
+        }
       },
       include: {
         event_documents: true

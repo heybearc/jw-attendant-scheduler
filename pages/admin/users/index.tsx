@@ -225,7 +225,7 @@ export default function UsersPage({ users: initialUsers, pagination: initialPagi
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto" style={{ overflow: 'visible' }}>
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
@@ -249,7 +249,7 @@ export default function UsersPage({ users: initialUsers, pagination: initialPagi
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-white divide-y divide-gray-200" style={{ overflow: 'visible' }}>
                     {users.map((user) => (
                       <tr key={user.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">

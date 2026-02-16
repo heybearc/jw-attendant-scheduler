@@ -25,23 +25,48 @@ interface Props {
 }
 
 export default function ExtractCircuitAssemblyPositions({ event, positionsByArea }: Props) {
-  const [templateName, setTemplateName] = useState('Willoughby Positions')
+  const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
-  const handleCreateTemplate = async () => {
-    if (!templateName.trim()) {
-      alert('Please enter a template name')
+  const handlePopulateTemplate = async () => {
+    if (!confirm('This will populate the Position Templates in the Attendants department template. Continue?')) {
       return
     }
 
-    // Format positions for template
-    const templateData = {
-      name: templateName,
-      description: `Extracted from ${event.name}`,
-      positions: positionsByArea
-    }
+    setLoading(true)
+    setMessage(null)
 
-    console.log('Template data:', JSON.stringify(templateData, null, 2))
-    alert('Template data logged to console. Ready to create template.')
+    try {
+      const response = await fetch('/api/admin/populate-position-templates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          departmentTemplateId: 'dept-attendants',
+          positions: positionsByArea
+        })
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setMessage({
+          type: 'success',
+          text: `Successfully populated ${data.template.positionCount} position templates in ${data.template.name} department!`
+        })
+      } else {
+        setMessage({
+          type: 'error',
+          text: data.error || 'Failed to populate position templates'
+        })
+      }
+    } catch (error) {
+      setMessage({
+        type: 'error',
+        text: 'An error occurred while populating position templates'
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -60,18 +85,13 @@ export default function ExtractCircuitAssemblyPositions({ event, positionsByArea
             <p><strong>Total Positions:</strong> {event.totalPositions}</p>
           </div>
 
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Template Name
-            </label>
-            <input
-              type="text"
-              value={templateName}
-              onChange={(e) => setTemplateName(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter template name"
-            />
-          </div>
+          {message && (
+            <div className={`mb-6 p-4 rounded-lg ${
+              message.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'
+            }`}>
+              {message.text}
+            </div>
+          )}
 
           <div className="mb-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
@@ -106,10 +126,13 @@ export default function ExtractCircuitAssemblyPositions({ event, positionsByArea
 
           <div className="flex gap-4">
             <button
-              onClick={handleCreateTemplate}
-              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              onClick={handlePopulateTemplate}
+              disabled={loading}
+              className={`px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                loading ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
             >
-              Create Template
+              {loading ? 'Populating...' : 'Populate Attendants Position Templates'}
             </button>
             <button
               onClick={() => {
@@ -118,7 +141,7 @@ export default function ExtractCircuitAssemblyPositions({ event, positionsByArea
                 const url = URL.createObjectURL(dataBlob)
                 const link = document.createElement('a')
                 link.href = url
-                link.download = `${templateName.replace(/\s+/g, '-').toLowerCase()}.json`
+                link.download = `circuit-assembly-positions.json`
                 link.click()
               }}
               className="px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"

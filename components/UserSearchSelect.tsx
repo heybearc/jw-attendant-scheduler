@@ -29,9 +29,12 @@ export default function UserSearchSelect({ onSelect, onClose, placeholder = "Sea
       try {
         const response = await fetch('/api/users')
         if (response.ok) {
-          const data = await response.json()
-          setUsers(data.users || [])
-          setFilteredUsers(data.users || [])
+          const result = await response.json()
+          const userList = result.data || []
+          setUsers(userList)
+          setFilteredUsers(userList)
+        } else {
+          console.error('Failed to fetch users:', response.status)
         }
       } catch (error) {
         console.error('Error fetching users:', error)

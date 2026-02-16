@@ -114,7 +114,7 @@ model volunteers {
   userId                        String?                          @unique
   firstName                     String
   lastName                      String
-  email                         String
+  email                         String                           @unique
   phone                         String?
   availabilityStatus            String?                          @default("AVAILABLE")
   isAvailable                   Boolean                          @default(true)

@@ -454,6 +454,20 @@ This document tracks significant technical decisions made during development.
 **Decision:** Use `npx prisma migrate resolve --applied` to mark migrations as applied when database already has the schema changes.  
 **Consequences:** Avoids migration conflicts during STANDBY sync, requires manual verification that schema matches migration, cleaner sync process.
 
+### D-TS-021: Global Volunteer Registry with Event-Scoped Access
+**Date:** 2026-02-16  
+**Context:** Volunteers table was creating duplicate records (same person appearing 3-5 times) because it was being used both as a global registry and event-specific records. This caused PIN management issues, data inconsistency, and bloated database. Original intent was event isolation, but this conflicts with how volunteer coordination works in practice - same volunteers serve across multiple events within the same organization.  
+**Decision:** Treat `volunteers` table as a **global registry** - one person = one volunteer record. Event association managed via `event_volunteers` junction table. Data isolation enforced through query filters and permissions, not duplicate data. Add unique constraint on `volunteers.email`. Update volunteer creation logic to search-first, create-if-not-found. Implement event-scoped query helpers to prevent data leaking between events.  
+**Consequences:** 
+- ✅ Eliminates duplicate volunteer records (industry standard pattern used by Eventbrite, SignUpGenius, VolunteerLocal)
+- ✅ Volunteer portal login works consistently (one PIN per person)
+- ✅ Better UX - volunteers don't re-enter info for each event
+- ✅ Easier to track volunteer history and engagement across events
+- ✅ Contact info updates propagate everywhere
+- ⚠️ Requires migration to merge existing duplicate records
+- ⚠️ Event isolation achieved via permissions/query filters, not data structure
+- ⚠️ All volunteer queries must be scoped by eventId to prevent cross-event data leaking
+
 ---
 
 ## Shared Decisions

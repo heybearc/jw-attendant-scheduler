@@ -1224,7 +1224,7 @@ export default function VolunteerDashboard() {
               </div>
             </div>
           </div>
-      )}
+          )}
 
           {/* Early Check-In Tab */}
           {activeTab === 'checkin' && dashboardData.isIVSTeamMember && (
@@ -1242,6 +1242,7 @@ export default function VolunteerDashboard() {
             </div>
           )}
         </div>
+      </div>
     </>
   )
 }

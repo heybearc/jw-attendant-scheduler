@@ -73,7 +73,7 @@ export default function UserSearchSelect({ onSelect, onClose, placeholder = "Sea
   }, [onClose])
 
   return (
-    <div ref={dropdownRef} className="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+    <div ref={dropdownRef} className="absolute z-50 mt-1 w-96 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
       <div className="sticky top-0 bg-white p-2 border-b border-gray-200">
         <input
           type="text"

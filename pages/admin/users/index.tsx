@@ -209,7 +209,7 @@ export default function UsersPage({ users: initialUsers, pagination: initialPagi
         )}
 
         {/* Users Table */}
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <div className="bg-white rounded-lg shadow-md">
           {users.length === 0 ? (
             <div className="text-center py-8">
               <div className="text-4xl mb-4">👥</div>

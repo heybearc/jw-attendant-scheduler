@@ -293,7 +293,7 @@ export default function UsersPage({ users: initialUsers, pagination: initialPagi
                             </button>
 
                             {openDropdown === user.id && (
-                              <div className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+                              <div className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
                                 <div className="py-1" role="menu">
                                   <Link
                                     href={`/admin/users/${user.id}/edit`}
@@ -351,29 +351,33 @@ export default function UsersPage({ users: initialUsers, pagination: initialPagi
                       {pagination.total} results
                     </div>
                     <div className="flex space-x-2">
-                      <Link
-                        href={`/admin/users?page=${pagination.page - 1}${search ? `&search=${search}` : ''}${roleFilter ? `&role=${roleFilter}` : ''}`}
-                        className={`px-3 py-1 text-sm rounded ${
-                          pagination.page <= 1 
-                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                        }`}
-                      >
-                        Previous
-                      </Link>
+                      {pagination.page <= 1 ? (
+                        <span className="px-3 py-1 text-sm rounded bg-gray-100 text-gray-400 cursor-not-allowed">
+                          Previous
+                        </span>
+                      ) : (
+                        <Link
+                          href={`/admin/users?page=${pagination.page - 1}${search ? `&search=${search}` : ''}${roleFilter ? `&role=${roleFilter}` : ''}`}
+                          className="px-3 py-1 text-sm rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
+                        >
+                          Previous
+                        </Link>
+                      )}
                       <span className="px-3 py-1 text-sm bg-blue-600 text-white rounded">
                         {pagination.page} of {pagination.pages}
                       </span>
-                      <Link
-                        href={`/admin/users?page=${pagination.page + 1}${search ? `&search=${search}` : ''}${roleFilter ? `&role=${roleFilter}` : ''}`}
-                        className={`px-3 py-1 text-sm rounded ${
-                          pagination.page >= pagination.pages 
-                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                        }`}
-                      >
-                        Next
-                      </Link>
+                      {pagination.page >= pagination.pages ? (
+                        <span className="px-3 py-1 text-sm rounded bg-gray-100 text-gray-400 cursor-not-allowed">
+                          Next
+                        </span>
+                      ) : (
+                        <Link
+                          href={`/admin/users?page=${pagination.page + 1}${search ? `&search=${search}` : ''}${roleFilter ? `&role=${roleFilter}` : ''}`}
+                          className="px-3 py-1 text-sm rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
+                        >
+                          Next
+                        </Link>
+                      )}
                     </div>
                   </div>
                 </div>

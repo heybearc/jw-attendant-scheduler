@@ -385,6 +385,7 @@ model events {
   departmentOverseerEmail        String?                          @map("department_overseer_email")
   departmentOverseerName         String?                          @map("department_overseer_name")
   departmentOverseerPhone        String?                          @map("department_overseer_phone")
+  departmentOverseerUserId       String?                          @map("department_overseer_user_id")
   keyman                         Json?                            @default("[]")
   parentEventId                  String?                          @map("parent_event_id")
   locationRef                    locations?                       @relation(fields: [locationId], references: [id], onDelete: SetNull)

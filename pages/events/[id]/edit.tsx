@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../../api/auth/[...nextauth]'
 import EventLayout from '../../../components/EventLayout'
 import LocationSelector from '../../../components/LocationSelector'
+import UserSearchSelect from '../../../components/UserSearchSelect'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
@@ -33,6 +34,7 @@ interface EventFormData {
   departmentOverseerName: string
   departmentOverseerPhone: string
   departmentOverseerEmail: string
+  departmentOverseerUserId: string
   departmentOverseerAssistants: string // JSON string for form handling
   keyman: string // JSON string for form handling
 }
@@ -58,8 +60,9 @@ interface Event {
   departmentOverseerName?: string
   departmentOverseerPhone?: string
   departmentOverseerEmail?: string
-  departmentOverseerAssistants?: any[] // JSONB array
-  keyman?: any[] // JSONB array
+  departmentOverseerUserId?: string
+  departmentOverseerAssistants?: any[] // JSONB array with {name, phone, email, userId?}
+  keyman?: any[] // JSONB array with {name, phone, email, userId?}
 }
 
 interface DepartmentTemplate {
@@ -101,11 +104,17 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
     departmentOverseerName: event.departmentOverseerName || '',
     departmentOverseerPhone: event.departmentOverseerPhone || '',
     departmentOverseerEmail: event.departmentOverseerEmail || '',
+    departmentOverseerUserId: event.departmentOverseerUserId || '',
     departmentOverseerAssistants: JSON.stringify(event.departmentOverseerAssistants || []),
     keyman: JSON.stringify(event.keyman || [])
   })
 
   const [errors, setErrors] = useState<Partial<EventFormData>>({})
+  
+  // User search dropdown state
+  const [showUserSearch, setShowUserSearch] = useState(false)
+  const [searchTarget, setSearchTarget] = useState<'overseer' | 'assistant' | 'keyman' | null>(null)
+  const [searchTargetIndex, setSearchTargetIndex] = useState<number | null>(null)
   
   // Parse assistants from JSON string for UI management
   const [assistants, setAssistants] = useState<Array<{name: string, phone: string, email: string}>>(() => {
@@ -166,6 +175,65 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
   const updateKeyman = (index: number, field: 'name' | 'phone' | 'email', value: string) => {
     setKeymen(keymen.map((keyman, i) => 
       i === index ? { ...keyman, [field]: value } : keyman
+    ))
+  }
+
+  // User linking handlers
+  const handleLinkUser = (target: 'overseer' | 'assistant' | 'keyman', index?: number) => {
+    setSearchTarget(target)
+    setSearchTargetIndex(index ?? null)
+    setShowUserSearch(true)
+  }
+
+  const handleUserSelect = (user: any) => {
+    if (searchTarget === 'overseer') {
+      setFormData(prev => ({
+        ...prev,
+        departmentOverseerName: `${user.firstName} ${user.lastName}`,
+        departmentOverseerPhone: user.phone || '',
+        departmentOverseerEmail: user.email,
+        departmentOverseerUserId: user.id
+      }))
+    } else if (searchTarget === 'assistant' && searchTargetIndex !== null) {
+      setAssistants(assistants.map((assistant, i) => 
+        i === searchTargetIndex ? {
+          name: `${user.firstName} ${user.lastName}`,
+          phone: user.phone || '',
+          email: user.email,
+          userId: user.id
+        } : assistant
+      ))
+    } else if (searchTarget === 'keyman' && searchTargetIndex !== null) {
+      setKeymen(keymen.map((keyman, i) => 
+        i === searchTargetIndex ? {
+          name: `${user.firstName} ${user.lastName}`,
+          phone: user.phone || '',
+          email: user.email,
+          userId: user.id
+        } : keyman
+      ))
+    }
+    setShowUserSearch(false)
+    setSearchTarget(null)
+    setSearchTargetIndex(null)
+  }
+
+  const handleUnlinkOverseer = () => {
+    setFormData(prev => ({
+      ...prev,
+      departmentOverseerUserId: ''
+    }))
+  }
+
+  const handleUnlinkAssistant = (index: number) => {
+    setAssistants(assistants.map((assistant, i) => 
+      i === index ? { ...assistant, userId: undefined } : assistant
+    ))
+  }
+
+  const handleUnlinkKeyman = (index: number) => {
+    setKeymen(keymen.map((keyman, i) => 
+      i === index ? { ...keyman, userId: undefined } : keyman
     ))
   }
 
@@ -753,12 +821,40 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
             
             {/* Department Overseer */}
             <div className="mb-6">
-              <h4 className="text-md font-medium text-gray-800 mb-4 flex items-center">
-                <span className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center mr-3">
-                  <span className="text-white text-sm">👥</span>
-                </span>
-                Department Overseer
-              </h4>
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-md font-medium text-gray-800 flex items-center">
+                  <span className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center mr-3">
+                    <span className="text-white text-sm">👥</span>
+                  </span>
+                  Department Overseer
+                </h4>
+                <div className="relative">
+                  {formData.departmentOverseerUserId ? (
+                    <button
+                      type="button"
+                      onClick={handleUnlinkOverseer}
+                      className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+                    >
+                      🔗 Linked • Click to Unlink
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleLinkUser('overseer')}
+                      className="px-3 py-1 text-sm bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 transition-colors"
+                    >
+                      🔗 Link to User
+                    </button>
+                  )}
+                  {showUserSearch && searchTarget === 'overseer' && (
+                    <UserSearchSelect
+                      onSelect={handleUserSelect}
+                      onClose={() => setShowUserSearch(false)}
+                      placeholder="Search for user..."
+                    />
+                  )}
+                </div>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label htmlFor="departmentOverseerName" className="block text-sm font-medium text-gray-700 mb-1">
@@ -770,7 +866,8 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
                     name="departmentOverseerName"
                     value={formData.departmentOverseerName}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled={!!formData.departmentOverseerUserId}
+                    className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${formData.departmentOverseerUserId ? 'bg-gray-50 cursor-not-allowed' : ''}`}
                     placeholder="Department Overseer Name"
                   />
                 </div>
@@ -784,7 +881,8 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
                     name="departmentOverseerPhone"
                     value={formData.departmentOverseerPhone}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled={!!formData.departmentOverseerUserId}
+                    className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${formData.departmentOverseerUserId ? 'bg-gray-50 cursor-not-allowed' : ''}`}
                     placeholder="Phone Number"
                   />
                 </div>
@@ -798,7 +896,8 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
                     name="departmentOverseerEmail"
                     value={formData.departmentOverseerEmail}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled={!!formData.departmentOverseerUserId}
+                    className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${formData.departmentOverseerUserId ? 'bg-gray-50 cursor-not-allowed' : ''}`}
                     placeholder="Email Address"
                   />
                 </div>

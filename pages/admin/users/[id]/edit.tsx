@@ -311,13 +311,16 @@ export default function EditUserPage() {
                   const volunteerId = e.target.value
                   setFormData({ ...formData, linkedVolunteerId: volunteerId })
                   
-                  // Auto-populate phone from selected volunteer if user doesn't have one
-                  if (volunteerId && !formData.phone) {
+                  // Auto-populate phone from selected volunteer
+                  if (volunteerId) {
                     const selectedVolunteer = availableVolunteers.find(v => v.id === volunteerId) || 
                                              (user?.volunteer?.id === volunteerId ? user.volunteer : null)
                     if (selectedVolunteer && (selectedVolunteer as any).phone) {
                       setFormData(prev => ({ ...prev, phone: (selectedVolunteer as any).phone }))
                     }
+                  } else {
+                    // Clear phone if unlinking volunteer
+                    setFormData(prev => ({ ...prev, phone: '' }))
                   }
                 }}
               >

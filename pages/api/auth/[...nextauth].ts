@@ -116,15 +116,14 @@ export const authOptions: NextAuthOptions = {
       return session
     },
     async redirect({ url, baseUrl }) {
-      // If it's a default redirect (no specific callback), route based on the provider
-      if (url === baseUrl || url === `${baseUrl}/`) {
-        // Default to admin event selection
-        return `${baseUrl}/events/select`
-      }
-      
-      // If callback URL is provided and valid, use it
+      // If callback URL is provided and valid, use it (e.g., /volunteer/select-event)
       if (url.startsWith(baseUrl)) {
         return url
+      }
+      
+      // If it's a default redirect (no specific callback), route to admin event selection
+      if (url === baseUrl || url === `${baseUrl}/`) {
+        return `${baseUrl}/events/select`
       }
       
       // Fallback to base URL

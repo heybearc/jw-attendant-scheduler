@@ -277,6 +277,39 @@ For issues or questions:
   - User management pagination fixes
   - Actions dropdown visibility improvements
 
+- **v4.8.0** (2026-02-15) - IVS Module with Tab Navigation
+  - Redesigned IVS Module with tab-based interface
+  - Improved Early Check-In experience with collapsible sections
+  - Volunteer portal early check-in
+  - Early entry flag protection
+  - Real-time updates and live stats
+
+- **v4.7.0** (2026-02-11) - Infrastructure & Stability Improvements
+  - Enhanced system stability and performance
+  - Behind-the-scenes optimizations
+  - Improved reliability
+
+- **v4.6.0** (2026-02-11) - System Improvements
+  - Enhanced stability and performance
+  - General system optimizations
+
+- **v4.5.0** (2026-02-10) - Event Creation Help & Onboarding
+  - Event creation help and guidance
+  - Improved onboarding experience
+
+- **v4.4.0** (2026-02-10) - IVS Volunteer Approvals
+  - Complete IVS volunteer management system
+  - Approval workflow for international volunteers
+  - IVS volunteer tracking and organization
+
+- **v4.3.0** (2026-02-10) - Redesigned Admin Console
+  - Modern admin console interface
+  - Improved administrative workflows
+
+- **v4.2.1** (2026-02-09) - Release Notes Improvements
+  - Enhanced release notes page with search and filtering
+  - Better update history navigation
+
 - **v4.2.0** (2026-02-09) - Location Library
   - Centralized location management with Google Maps integration
   - LocationSelector component with autocomplete

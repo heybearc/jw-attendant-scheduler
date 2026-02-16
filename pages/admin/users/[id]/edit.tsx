@@ -26,6 +26,7 @@ interface Volunteer {
   firstName: string
   lastName: string
   email: string
+  phone?: string
   congregation: string
   isActive: boolean
 }

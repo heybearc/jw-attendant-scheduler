@@ -2,7 +2,6 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../auth/[...nextauth]'
 import { prisma } from '../../../../src/lib/prisma'
-import { handleApiError } from '../../../src/lib/apiError'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -27,6 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         firstName: true,
         lastName: true,
         email: true,
+        phone: true,
         congregation: true,
         isActive: true
       },

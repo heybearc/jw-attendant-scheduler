@@ -15,7 +15,7 @@ Theocratic Shift Scheduler is a comprehensive web application designed to manage
 - **Event Templates** - Copy events with positions and settings
 - **Location Library** - Centralized location management with Google Maps integration
 
-### Location Library (NEW in v4.2.0)
+### Location Library (NEW in v4.9.0)
 - **Saved Locations** - Create and reuse frequently used event locations
 - **Google Maps Integration** - Address autocomplete and geocoding
 - **Map Preview** - Interactive maps with markers and directions
@@ -269,6 +269,13 @@ For issues or questions:
 4. Contact the project maintainer for deployment access
 
 ## 🔄 Version History
+
+- **v4.9.0** (2026-02-16) - Event Oversight User Linking & Phone Formatting
+  - Event oversight user linking (Department Overseer, Assistants, Keymen)
+  - Automatic phone number formatting across all phone fields
+  - Phone auto-population from linked volunteer records
+  - User management pagination fixes
+  - Actions dropdown visibility improvements
 
 - **v4.2.0** (2026-02-09) - Location Library
   - Centralized location management with Google Maps integration

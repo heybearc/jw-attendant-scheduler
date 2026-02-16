@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { formatPhoneNumber } from '../src/lib/formatPhone'
 
 interface PhoneInputProps {
@@ -23,6 +24,16 @@ export default function PhoneInput({
   className = 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
   label
 }: PhoneInputProps) {
+  // Format existing value when component mounts or value changes externally
+  useEffect(() => {
+    if (value) {
+      const formatted = formatPhoneNumber(value)
+      if (formatted !== value) {
+        onChange(formatted)
+      }
+    }
+  }, [value])
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatPhoneNumber(e.target.value)
     onChange(formatted)

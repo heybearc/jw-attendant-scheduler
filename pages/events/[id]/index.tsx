@@ -654,34 +654,49 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
                 <h3 className="text-lg font-bold text-gray-900">Oversight Command</h3>
               </div>
               <div className="space-y-3">
-                <div className="bg-white bg-opacity-60 rounded-lg p-3">
-                  <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">Department Overseer</div>
-                  <div className="text-sm font-semibold text-gray-900">
-                    {event.departmentOverseerName || 'Not Assigned'}
-                  </div>
+                <div className="bg-white bg-opacity-60 rounded-lg p-4">
+                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Department Overseer</div>
+                  <div className="text-base font-bold text-gray-900">{event.departmentOverseerName}</div>
                   {event.departmentOverseerPhone && (
-                    <div className="text-xs text-gray-600">📞 {event.departmentOverseerPhone}</div>
+                    <div className="flex items-center gap-1 mt-1 text-sm text-gray-600">
+                      <span>📞</span>
+                      <span>{event.departmentOverseerPhone}</span>
+                    </div>
                   )}
+                  {event.departmentOverseerEmail && (
+                    <div className="flex items-center gap-1 mt-0.5 text-xs text-gray-500">
+                      <span>✉️</span>
+                      <span>{event.departmentOverseerEmail}</span>
+                    </div>
+                  )}
+                  
                   {event.departmentOverseerAssistants && Array.isArray(event.departmentOverseerAssistants) && event.departmentOverseerAssistants.length > 0 && (
-                    <div className="mt-2 pt-2 border-t border-gray-200">
-                      <div className="text-xs font-medium text-gray-500 mb-1">Assistants:</div>
-                      {event.departmentOverseerAssistants.map((assistant: any, idx: number) => (
-                        <div key={idx} className="text-xs text-gray-700 mb-1">
-                          <span className="font-medium">{assistant.name}</span>
-                          {assistant.phone && <span className="text-gray-500"> • {assistant.phone}</span>}
-                        </div>
-                      ))}
+                    <div className="mt-3 pt-3 border-t border-gray-200">
+                      <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Assistants</div>
+                      <div className="space-y-2">
+                        {event.departmentOverseerAssistants.map((assistant: any, idx: number) => (
+                          <div key={idx} className="text-sm">
+                            <div className="font-medium text-gray-800">{assistant.name}</div>
+                            {assistant.phone && (
+                              <div className="text-xs text-gray-600 mt-0.5">📞 {assistant.phone}</div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
+                
                 {event.keyman && Array.isArray(event.keyman) && event.keyman.length > 0 && (
-                  <div className="bg-white bg-opacity-60 rounded-lg p-3">
-                    <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">Keymen</div>
-                    <div className="space-y-1 mt-1">
+                  <div className="bg-white bg-opacity-60 rounded-lg p-4">
+                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Keymen</div>
+                    <div className="space-y-2">
                       {event.keyman.map((keyman: any, idx: number) => (
-                        <div key={idx} className="text-xs text-gray-700">
-                          <span className="font-medium">{keyman.name}</span>
-                          {keyman.phone && <span className="text-gray-500"> • {keyman.phone}</span>}
+                        <div key={idx} className="text-sm">
+                          <div className="font-medium text-gray-800">{keyman.name}</div>
+                          {keyman.phone && (
+                            <div className="text-xs text-gray-600 mt-0.5">📞 {keyman.phone}</div>
+                          )}
                         </div>
                       ))}
                     </div>

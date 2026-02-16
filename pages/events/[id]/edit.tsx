@@ -30,16 +30,11 @@ interface EventFormData {
   status: string
   departmentTemplateId: string
   // APEX GUARDIAN: Oversight Management Fields
-  circuitOverseerName: string
-  circuitOverseerPhone: string
-  circuitOverseerEmail: string
-  assemblyOverseerName: string
-  assemblyOverseerPhone: string
-  assemblyOverseerEmail: string
-  volunteerOverseerName: string
-  volunteerOverseerPhone: string
-  volunteerOverseerEmail: string
-  volunteerOverseerAssistants: string // JSON string for form handling
+  departmentOverseerName: string
+  departmentOverseerPhone: string
+  departmentOverseerEmail: string
+  departmentOverseerAssistants: string // JSON string for form handling
+  keyman: string // JSON string for form handling
 }
 
 interface Event {
@@ -60,16 +55,11 @@ interface Event {
   createdAt: string
   updatedAt: string
   // APEX GUARDIAN: Oversight Management Fields
-  circuitOverseerName?: string
-  circuitOverseerPhone?: string
-  circuitOverseerEmail?: string
-  assemblyOverseerName?: string
-  assemblyOverseerPhone?: string
-  assemblyOverseerEmail?: string
-  volunteerOverseerName?: string
-  volunteerOverseerPhone?: string
-  volunteerOverseerEmail?: string
-  volunteerOverseerAssistants?: any[] // JSONB array
+  departmentOverseerName?: string
+  departmentOverseerPhone?: string
+  departmentOverseerEmail?: string
+  departmentOverseerAssistants?: any[] // JSONB array
+  keyman?: any[] // JSONB array
 }
 
 interface DepartmentTemplate {
@@ -108,16 +98,11 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
     status: event.status || 'UPCOMING',
     departmentTemplateId: event.departmentTemplateId || '',
     // APEX GUARDIAN: Oversight Management Fields
-    circuitOverseerName: event.circuitOverseerName || '',
-    circuitOverseerPhone: event.circuitOverseerPhone || '',
-    circuitOverseerEmail: event.circuitOverseerEmail || '',
-    assemblyOverseerName: event.assemblyOverseerName || '',
-    assemblyOverseerPhone: event.assemblyOverseerPhone || '',
-    assemblyOverseerEmail: event.assemblyOverseerEmail || '',
-    volunteerOverseerName: event.volunteerOverseerName || '',
-    volunteerOverseerPhone: event.volunteerOverseerPhone || '',
-    volunteerOverseerEmail: event.volunteerOverseerEmail || '',
-    volunteerOverseerAssistants: JSON.stringify(event.volunteerOverseerAssistants || [])
+    departmentOverseerName: event.departmentOverseerName || '',
+    departmentOverseerPhone: event.departmentOverseerPhone || '',
+    departmentOverseerEmail: event.departmentOverseerEmail || '',
+    departmentOverseerAssistants: JSON.stringify(event.departmentOverseerAssistants || []),
+    keyman: JSON.stringify(event.keyman || [])
   })
 
   const [errors, setErrors] = useState<Partial<EventFormData>>({})
@@ -125,7 +110,16 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
   // Parse assistants from JSON string for UI management
   const [assistants, setAssistants] = useState<Array<{name: string, phone: string, email: string}>>(() => {
     try {
-      return JSON.parse(formData.volunteerOverseerAssistants)
+      return JSON.parse(formData.departmentOverseerAssistants)
+    } catch {
+      return []
+    }
+  })
+
+  // Parse keymen from JSON string for UI management
+  const [keymen, setKeymen] = useState<Array<{name: string, phone: string, email: string}>>(() => {
+    try {
+      return JSON.parse(formData.keyman)
     } catch {
       return []
     }
@@ -135,9 +129,17 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
   useEffect(() => {
     setFormData(prev => ({
       ...prev,
-      volunteerOverseerAssistants: JSON.stringify(assistants)
+      departmentOverseerAssistants: JSON.stringify(assistants)
     }))
   }, [assistants])
+
+  // Sync keymen array back to formData when it changes
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      keyman: JSON.stringify(keymen)
+    }))
+  }, [keymen])
 
   const addAssistant = () => {
     setAssistants([...assistants, { name: '', phone: '', email: '' }])
@@ -150,6 +152,20 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
   const updateAssistant = (index: number, field: 'name' | 'phone' | 'email', value: string) => {
     setAssistants(assistants.map((assistant, i) => 
       i === index ? { ...assistant, [field]: value } : assistant
+    ))
+  }
+
+  const addKeyman = () => {
+    setKeymen([...keymen, { name: '', phone: '', email: '' }])
+  }
+
+  const removeKeyman = (index: number) => {
+    setKeymen(keymen.filter((_, i) => i !== index))
+  }
+
+  const updateKeyman = (index: number, field: 'name' | 'phone' | 'email', value: string) => {
+    setKeymen(keymen.map((keyman, i) => 
+      i === index ? { ...keyman, [field]: value } : keyman
     ))
   }
 
@@ -281,20 +297,22 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
         // Note: departmentTemplateId and locationId removed - they cause Prisma errors as relation fields
         // locationId is sent separately for raw SQL update
         // APEX GUARDIAN: Oversight Management Fields
-        circuitOverseerName: formData.circuitOverseerName || undefined,
-        circuitOverseerPhone: formData.circuitOverseerPhone || undefined,
-        circuitOverseerEmail: formData.circuitOverseerEmail || undefined,
-        assemblyOverseerName: formData.assemblyOverseerName || undefined,
-        assemblyOverseerPhone: formData.assemblyOverseerPhone || undefined,
-        assemblyOverseerEmail: formData.assemblyOverseerEmail || undefined,
-        volunteerOverseerName: formData.volunteerOverseerName || undefined,
-        volunteerOverseerPhone: formData.volunteerOverseerPhone || undefined,
-        volunteerOverseerEmail: formData.volunteerOverseerEmail || undefined,
-        volunteerOverseerAssistants: (() => {
+        departmentOverseerName: formData.departmentOverseerName || undefined,
+        departmentOverseerPhone: formData.departmentOverseerPhone || undefined,
+        departmentOverseerEmail: formData.departmentOverseerEmail || undefined,
+        departmentOverseerAssistants: (() => {
           try {
-            return formData.volunteerOverseerAssistants ? JSON.parse(formData.volunteerOverseerAssistants) : []
+            return formData.departmentOverseerAssistants ? JSON.parse(formData.departmentOverseerAssistants) : []
           } catch (e) {
-            console.error('Invalid JSON in volunteerOverseerAssistants:', formData.volunteerOverseerAssistants)
+            console.error('Invalid JSON in departmentOverseerAssistants:', formData.departmentOverseerAssistants)
+            return []
+          }
+        })(),
+        keyman: (() => {
+          try {
+            return formData.keyman ? JSON.parse(formData.keyman) : []
+          } catch (e) {
+            console.error('Invalid JSON in keyman:', formData.keyman)
             return []
           }
         })()
@@ -733,160 +751,52 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
           <div className="bg-white shadow rounded-lg p-6">
             <h3 className="text-lg font-medium text-gray-900 mb-6">Oversight Management</h3>
             
-            {/* Circuit Overseer */}
-            <div className="mb-6">
-              <h4 className="text-md font-medium text-gray-800 mb-4 flex items-center">
-                <span className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
-                  <span className="text-white text-sm">🏛️</span>
-                </span>
-                Circuit Overseer
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label htmlFor="circuitOverseerName" className="block text-sm font-medium text-gray-700 mb-1">
-                    Name
-                  </label>
-                  <input
-                    type="text"
-                    id="circuitOverseerName"
-                    name="circuitOverseerName"
-                    value={formData.circuitOverseerName}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Circuit Overseer Name"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="circuitOverseerPhone" className="block text-sm font-medium text-gray-700 mb-1">
-                    Phone
-                  </label>
-                  <input
-                    type="tel"
-                    id="circuitOverseerPhone"
-                    name="circuitOverseerPhone"
-                    value={formData.circuitOverseerPhone}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Phone Number"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="circuitOverseerEmail" className="block text-sm font-medium text-gray-700 mb-1">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    id="circuitOverseerEmail"
-                    name="circuitOverseerEmail"
-                    value={formData.circuitOverseerEmail}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Email Address"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Assembly Overseer */}
-            <div className="mb-6">
-              <h4 className="text-md font-medium text-gray-800 mb-4 flex items-center">
-                <span className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center mr-3">
-                  <span className="text-white text-sm">🏢</span>
-                </span>
-                Assembly Overseer
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label htmlFor="assemblyOverseerName" className="block text-sm font-medium text-gray-700 mb-1">
-                    Name
-                  </label>
-                  <input
-                    type="text"
-                    id="assemblyOverseerName"
-                    name="assemblyOverseerName"
-                    value={formData.assemblyOverseerName}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Assembly Overseer Name"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="assemblyOverseerPhone" className="block text-sm font-medium text-gray-700 mb-1">
-                    Phone
-                  </label>
-                  <input
-                    type="tel"
-                    id="assemblyOverseerPhone"
-                    name="assemblyOverseerPhone"
-                    value={formData.assemblyOverseerPhone}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Phone Number"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="assemblyOverseerEmail" className="block text-sm font-medium text-gray-700 mb-1">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    id="assemblyOverseerEmail"
-                    name="assemblyOverseerEmail"
-                    value={formData.assemblyOverseerEmail}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Email Address"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Volunteer Overseer */}
+            {/* Department Overseer */}
             <div className="mb-6">
               <h4 className="text-md font-medium text-gray-800 mb-4 flex items-center">
                 <span className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center mr-3">
                   <span className="text-white text-sm">👥</span>
                 </span>
-                Volunteer Overseer
+                Department Overseer
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label htmlFor="volunteerOverseerName" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="departmentOverseerName" className="block text-sm font-medium text-gray-700 mb-1">
                     Name
                   </label>
                   <input
                     type="text"
-                    id="volunteerOverseerName"
-                    name="volunteerOverseerName"
-                    value={formData.volunteerOverseerName}
+                    id="departmentOverseerName"
+                    name="departmentOverseerName"
+                    value={formData.departmentOverseerName}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Volunteer Overseer Name"
+                    placeholder="Department Overseer Name"
                   />
                 </div>
                 <div>
-                  <label htmlFor="volunteerOverseerPhone" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="departmentOverseerPhone" className="block text-sm font-medium text-gray-700 mb-1">
                     Phone
                   </label>
                   <input
                     type="tel"
-                    id="volunteerOverseerPhone"
-                    name="volunteerOverseerPhone"
-                    value={formData.volunteerOverseerPhone}
+                    id="departmentOverseerPhone"
+                    name="departmentOverseerPhone"
+                    value={formData.departmentOverseerPhone}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Phone Number"
                   />
                 </div>
                 <div>
-                  <label htmlFor="volunteerOverseerEmail" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="departmentOverseerEmail" className="block text-sm font-medium text-gray-700 mb-1">
                     Email
                   </label>
                   <input
                     type="email"
-                    id="volunteerOverseerEmail"
-                    name="volunteerOverseerEmail"
-                    value={formData.volunteerOverseerEmail}
+                    id="departmentOverseerEmail"
+                    name="departmentOverseerEmail"
+                    value={formData.departmentOverseerEmail}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Email Address"
@@ -895,13 +805,13 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
               </div>
             </div>
 
-            {/* Volunteer Overseer Assistants */}
-            <div>
+            {/* Department Overseer Assistants */}
+            <div className="mb-6">
               <h4 className="text-md font-medium text-gray-800 mb-4 flex items-center">
                 <span className="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center mr-3">
                   <span className="text-white text-sm">🤝</span>
                 </span>
-                Volunteer Overseer Assistants
+                Department Overseer Assistants
               </h4>
               
               <div className="space-y-4">

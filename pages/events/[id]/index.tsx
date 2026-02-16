@@ -34,17 +34,12 @@ interface Event {
     customFields?: Record<string, any>
     moduleOverrides?: Record<string, boolean>
   } | null
-  // APEX GUARDIAN: Oversight Management Fields (database field names - all lowercase)
-  circuitoverseername?: string
-  circuitoverseerphone?: string
-  circuitoverseeremail?: string
-  assemblyoverseername?: string
-  assemblyoverseerphone?: string
-  assemblyoverseeremail?: string
-  volunteeroverseername?: string
-  volunteeroverseerphone?: string
-  volunteeroverseeremail?: string
-  volunteeroverseerassistants?: any[]
+  // APEX GUARDIAN: Oversight Management Fields
+  departmentOverseerName?: string
+  departmentOverseerPhone?: string
+  departmentOverseerEmail?: string
+  departmentOverseerAssistants?: any[]
+  keyman?: any[]
   childEvents?: Array<{
     id: string
     name: string
@@ -660,35 +655,17 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
               </div>
               <div className="space-y-3">
                 <div className="bg-white bg-opacity-60 rounded-lg p-3">
-                  <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">Circuit Overseer</div>
+                  <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">Department Overseer</div>
                   <div className="text-sm font-semibold text-gray-900">
-                    {event.circuitOverseerName || 'Not Assigned'}
+                    {event.departmentOverseerName || 'Not Assigned'}
                   </div>
-                  {event.circuitOverseerPhone && (
-                    <div className="text-xs text-gray-600">📞 {event.circuitOverseerPhone}</div>
+                  {event.departmentOverseerPhone && (
+                    <div className="text-xs text-gray-600">📞 {event.departmentOverseerPhone}</div>
                   )}
-                </div>
-                <div className="bg-white bg-opacity-60 rounded-lg p-3">
-                  <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">Assembly Overseer</div>
-                  <div className="text-sm font-semibold text-gray-900">
-                    {event.assemblyOverseerName || 'Not Assigned'}
-                  </div>
-                  {event.assemblyOverseerPhone && (
-                    <div className="text-xs text-gray-600">📞 {event.assemblyOverseerPhone}</div>
-                  )}
-                </div>
-                <div className="bg-white bg-opacity-60 rounded-lg p-3">
-                  <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">Volunteer Overseer</div>
-                  <div className="text-sm font-semibold text-gray-900">
-                    {event.volunteerOverseerName || 'Not Assigned'}
-                  </div>
-                  {event.volunteerOverseerPhone && (
-                    <div className="text-xs text-gray-600">📞 {event.volunteerOverseerPhone}</div>
-                  )}
-                  {event.volunteerOverseerAssistants && Array.isArray(event.volunteerOverseerAssistants) && event.volunteerOverseerAssistants.length > 0 && (
+                  {event.departmentOverseerAssistants && Array.isArray(event.departmentOverseerAssistants) && event.departmentOverseerAssistants.length > 0 && (
                     <div className="mt-2 pt-2 border-t border-gray-200">
                       <div className="text-xs font-medium text-gray-500 mb-1">Assistants:</div>
-                      {event.volunteerOverseerAssistants.map((assistant: any, idx: number) => (
+                      {event.departmentOverseerAssistants.map((assistant: any, idx: number) => (
                         <div key={idx} className="text-xs text-gray-700 mb-1">
                           <span className="font-medium">{assistant.name}</span>
                           {assistant.phone && <span className="text-gray-500"> • {assistant.phone}</span>}
@@ -697,6 +674,19 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
                     </div>
                   )}
                 </div>
+                {event.keyman && Array.isArray(event.keyman) && event.keyman.length > 0 && (
+                  <div className="bg-white bg-opacity-60 rounded-lg p-3">
+                    <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">Keymen</div>
+                    <div className="space-y-1 mt-1">
+                      {event.keyman.map((keyman: any, idx: number) => (
+                        <div key={idx} className="text-xs text-gray-700">
+                          <span className="font-medium">{keyman.name}</span>
+                          {keyman.phone && <span className="text-gray-500"> • {keyman.phone}</span>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
               {canEdit && (
                 <div className="mt-4 pt-3 border-t border-yellow-200">

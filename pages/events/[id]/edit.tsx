@@ -880,6 +880,82 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
                 )}
               </div>
             </div>
+
+            {/* Keymen */}
+            <div>
+              <h4 className="text-md font-medium text-gray-800 mb-4 flex items-center">
+                <span className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
+                  <span className="text-white text-sm">🔑</span>
+                </span>
+                Keymen
+              </h4>
+              
+              <div className="space-y-4">
+                {keymen.map((keyman, index) => (
+                  <div key={index} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <div className="flex justify-between items-center mb-3">
+                      <span className="text-sm font-medium text-gray-700">Keyman {index + 1}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeKeyman(index)}
+                        className="text-red-600 hover:text-red-800 text-sm font-medium"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Name</label>
+                        <input
+                          type="text"
+                          value={keyman.name}
+                          onChange={(e) => updateKeyman(index, 'name', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                          placeholder="Full Name"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Phone</label>
+                        <input
+                          type="tel"
+                          value={keyman.phone}
+                          onChange={(e) => updateKeyman(index, 'phone', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                          placeholder="555-0123"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Email</label>
+                        <input
+                          type="email"
+                          value={keyman.email}
+                          onChange={(e) => updateKeyman(index, 'email', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                          placeholder="email@example.com"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                
+                <button
+                  type="button"
+                  onClick={addKeyman}
+                  className="w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-500 hover:text-blue-600 transition-colors flex items-center justify-center"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Add Keyman
+                </button>
+                
+                {keymen.length === 0 && (
+                  <p className="text-sm text-gray-500 text-center py-4">
+                    No keymen added yet. Click "Add Keyman" to add one.
+                  </p>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Submit Buttons */}

@@ -66,10 +66,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           name, description, eventType, startDate, endDate, startTime, endTime, location, status, capacity, attendantsNeeded, volunteersNeeded,
           departmentTemplateId,
           // APEX GUARDIAN: Oversight Management Fields
-          circuitOverseerName, circuitOverseerPhone, circuitOverseerEmail,
-          assemblyOverseerName, assemblyOverseerPhone, assemblyOverseerEmail,
-          volunteerOverseerName, volunteerOverseerPhone, volunteerOverseerEmail,
-          volunteerOverseerAssistants
+          departmentOverseerName, departmentOverseerPhone, departmentOverseerEmail,
+          departmentOverseerAssistants,
+          keyman
         } = bodyData
 
         // APEX GUARDIAN: Build update data dynamically to avoid Prisma type issues
@@ -103,17 +102,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }
         }
 
-        // Add oversight fields if provided (note: all oversight fields use lowercase in schema)
-        if (circuitOverseerName !== undefined) updateData.circuitoverseername = circuitOverseerName || null
-        if (circuitOverseerPhone !== undefined) updateData.circuitoverseerphone = circuitOverseerPhone || null
-        if (circuitOverseerEmail !== undefined) updateData.circuitoverseeremail = circuitOverseerEmail || null
-        if (assemblyOverseerName !== undefined) updateData.assemblyoverseername = assemblyOverseerName || null
-        if (assemblyOverseerPhone !== undefined) updateData.assemblyoverseerphone = assemblyOverseerPhone || null
-        if (assemblyOverseerEmail !== undefined) updateData.assemblyoverseeremail = assemblyOverseerEmail || null
-        if (volunteerOverseerName !== undefined) updateData.volunteeroverseername = volunteerOverseerName || null
-        if (volunteerOverseerPhone !== undefined) updateData.volunteeroverseerphone = volunteerOverseerPhone || null
-        if (volunteerOverseerEmail !== undefined) updateData.volunteeroverseeremail = volunteerOverseerEmail || null
-        if (volunteerOverseerAssistants !== undefined) updateData.volunteeroverseerassistants = volunteerOverseerAssistants || []
+        // Add oversight fields if provided
+        if (departmentOverseerName !== undefined) updateData.departmentOverseerName = departmentOverseerName || null
+        if (departmentOverseerPhone !== undefined) updateData.departmentOverseerPhone = departmentOverseerPhone || null
+        if (departmentOverseerEmail !== undefined) updateData.departmentOverseerEmail = departmentOverseerEmail || null
+        if (departmentOverseerAssistants !== undefined) updateData.departmentOverseerAssistants = departmentOverseerAssistants || []
+        if (keyman !== undefined) updateData.keyman = keyman || []
 
         // Update the event using Prisma relations
         const event = await prisma.events.update({

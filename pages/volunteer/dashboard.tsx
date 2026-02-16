@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { format, parseISO } from 'date-fns'
 import dynamic from 'next/dynamic'
 import AnnouncementBanner from '../../components/AnnouncementBanner'
+import EarlyCheckinPanel from '../../components/EarlyCheckinPanel'
 
 // Lazy load mobile dashboard (only loaded on mobile devices)
 const MobileVolunteerDashboard = dynamic(() => import('../../components/MobileVolunteerDashboard'), {
@@ -1228,17 +1229,12 @@ export default function VolunteerDashboard() {
 
           {/* Early Check-In Tab */}
           {activeTab === 'checkin' && dashboardData.isIVSTeamMember && (
-            <div className="bg-white shadow rounded-lg p-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">IVS Early Check-In</h2>
-              <p className="text-gray-600 mb-6">
-                Check in volunteers who have been approved for early entry to the convention.
-              </p>
-              
-              <div className="text-center py-12 text-gray-500">
-                <div className="text-4xl mb-4">✅</div>
-                <p className="text-lg font-medium">Early Check-In System</p>
-                <p className="text-sm mt-2">This feature will display volunteers approved for early entry.</p>
-              </div>
+            <div className="bg-white shadow rounded-lg overflow-hidden" style={{ height: 'calc(100vh - 300px)' }}>
+              <EarlyCheckinPanel 
+                eventId={dashboardData.event.id}
+                eventName={dashboardData.event.name}
+                showHeader={false}
+              />
             </div>
           )}
         </div>

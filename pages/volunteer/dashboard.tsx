@@ -1224,7 +1224,6 @@ export default function VolunteerDashboard() {
               </div>
             </div>
           </div>
-        </div>
       )}
 
           {/* Early Check-In Tab */}
@@ -1242,7 +1241,7 @@ export default function VolunteerDashboard() {
               </div>
             </div>
           )}
-      </div>
+        </div>
     </>
   )
 }

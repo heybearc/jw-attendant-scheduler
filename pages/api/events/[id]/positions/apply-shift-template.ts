@@ -4,7 +4,6 @@ import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '../../../../../src/lib/prisma'
 import { z } from 'zod'
 import crypto from 'crypto'
-import { handleApiError } from '../../../../src/lib/apiError'
 
 // Validation schema for applying shift templates
 const applyTemplateSchema = z.object({
@@ -53,6 +52,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     switch (req.method) {
       case 'POST':
+        console.log('======================================')
+        console.log('Apply Shift Template - Request Body:', JSON.stringify(req.body, null, 2))
+        console.log('======================================')
         const validatedData = applyTemplateSchema.parse(req.body)
         
         // Get the shift template

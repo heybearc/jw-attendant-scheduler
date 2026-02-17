@@ -65,6 +65,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const { 
           name, description, eventType, startDate, endDate, startTime, endTime, location, status, capacity, attendantsNeeded, volunteersNeeded,
           departmentTemplateId,
+          settings, // Event settings (modules and terminology)
           // APEX GUARDIAN: Oversight Management Fields
           departmentOverseerName, departmentOverseerPhone, departmentOverseerEmail, departmentOverseerUserId,
           departmentOverseerAssistants,
@@ -101,6 +102,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }
           }
         }
+
+        // Add settings field if provided (modules and terminology)
+        if (settings !== undefined) updateData.settings = settings
 
         // Add oversight fields if provided
         if (departmentOverseerName !== undefined) updateData.departmentOverseerName = departmentOverseerName || null

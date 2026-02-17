@@ -127,8 +127,34 @@ export default function EventOversightDashboard() {
     fetchOversightData()
   }, [eventId])
 
-  if (status === 'loading' || loading || error || !oversightData) {
-    return null
+  if (status === 'loading' || loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-2">Error Loading Oversight Data</h1>
+          <p className="text-gray-600">{error}</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!oversightData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">No Data Available</h1>
+          <p className="text-gray-600">Unable to load oversight data</p>
+        </div>
+      </div>
+    )
   }
 
   const { event, permissions, statistics, overseers, assistantOverseers, keymen, coverageGaps } = oversightData

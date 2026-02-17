@@ -557,7 +557,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
       
       const success = await positionService.applyShiftTemplate({
         positionIds: Array.from(selectedPositions),
-        shiftTemplateId: templateType
+        templateType: templateType
       })
       
       if (success) {
@@ -2488,7 +2488,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                     
                     const success = await positionService.applyShiftTemplate({
                       positionIds: Array.from(selectedPositions),
-                      shiftTemplateId: templateType
+                      templateType: templateType
                     })
                     
                     if (success) {

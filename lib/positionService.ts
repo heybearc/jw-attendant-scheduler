@@ -61,7 +61,7 @@ export interface BulkOversightData {
 
 export interface ApplyShiftTemplateData {
   positionIds: string[]
-  shiftTemplateId: string
+  templateType: string
 }
 
 export interface CreateAssignmentData {

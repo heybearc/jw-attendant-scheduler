@@ -189,10 +189,9 @@ function CountTimesSummary({ event }: { event: Event }) {
   )
 }
 
-export default function EventDetailsPage({ event: initialEvent, canEdit, canDelete, canManageContent, canManagePermissions }: EventDetailsPageProps) {
+export default function EventDetailsPage({ event, canEdit, canDelete, canManageContent, canManagePermissions }: EventDetailsPageProps) {
   const router = useRouter()
   const [showCloneModal, setShowCloneModal] = useState(false)
-  const [event, setEvent] = useState<Event | null>(initialEvent)
 
   const getStatusBadge = (status: string) => {
     const statusColors = {

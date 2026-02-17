@@ -343,8 +343,20 @@ export default function EventDetailsPage({ event: initialEvent, canEdit, canDele
     window.URL.revokeObjectURL(url)
   }
 
+  // Debug: Log event data
+  console.log('Event data:', event)
+  console.log('Event exists:', !!event)
+  
   if (!event) {
-    return null
+    console.error('No event data available')
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Event Not Found</h1>
+          <p className="text-gray-600">Unable to load event data</p>
+        </div>
+      </div>
+    )
   }
 
   // Use event.settings.modules as primary source, fall back to template

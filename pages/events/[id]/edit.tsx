@@ -5,6 +5,7 @@ import EventLayout from '../../../components/EventLayout'
 import LocationSelector from '../../../components/LocationSelector'
 import UserSearchSelect from '../../../components/UserSearchSelect'
 import PhoneInput from '../../../components/PhoneInput'
+import EventModulesTab from '../../../components/EventModulesTab'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
@@ -55,6 +56,24 @@ interface Event {
   volunteersNeeded?: number
   status: string
   departmentTemplateId?: string
+  settings?: {
+    modules?: {
+      countTimes: boolean
+      lanyards: boolean
+      ivsModule: boolean
+      positions: boolean
+      documents: boolean
+      announcements: boolean
+    }
+    terminology?: {
+      volunteer: string
+      position: string
+      shift: string
+      assignment: string
+    }
+    customFields?: Record<string, any>
+    moduleOverrides?: Record<string, boolean>
+  }
   createdAt: string
   updatedAt: string
   // APEX GUARDIAN: Oversight Management Fields
@@ -86,6 +105,24 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
   const [submitting, setSubmitting] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showCloneConfirm, setShowCloneConfirm] = useState(false)
+  const [activeTab, setActiveTab] = useState<'basic' | 'modules' | 'oversight'>('basic')
+  
+  // Module and terminology state (with backward compatibility)
+  const [modules, setModules] = useState({
+    countTimes: event.settings?.modules?.countTimes ?? true,
+    lanyards: event.settings?.modules?.lanyards ?? true,
+    ivsModule: event.settings?.modules?.ivsModule ?? false,
+    positions: event.settings?.modules?.positions ?? true,
+    documents: event.settings?.modules?.documents ?? true,
+    announcements: event.settings?.modules?.announcements ?? true
+  })
+  
+  const [terminology, setTerminology] = useState({
+    volunteer: event.settings?.terminology?.volunteer ?? 'Volunteer',
+    position: event.settings?.terminology?.position ?? 'Position',
+    shift: event.settings?.terminology?.shift ?? 'Shift',
+    assignment: event.settings?.terminology?.assignment ?? 'Assignment'
+  })
 
   const [formData, setFormData] = useState<EventFormData>({
     name: event.name || '',
@@ -364,6 +401,14 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
         volunteersNeeded: formData.volunteersNeeded ? parseInt(formData.volunteersNeeded) : undefined,
         status: formData.status,
         departmentTemplateId: formData.departmentTemplateId || null,
+        // Event settings (modules and terminology)
+        settings: {
+          modules,
+          terminology,
+          // Preserve any existing custom fields or module overrides
+          ...(event.settings?.customFields && { customFields: event.settings.customFields }),
+          ...(event.settings?.moduleOverrides && { moduleOverrides: event.settings.moduleOverrides })
+        },
         // Note: locationId sent separately for raw SQL update
         // APEX GUARDIAN: Oversight Management Fields
         departmentOverseerName: formData.departmentOverseerName || undefined,

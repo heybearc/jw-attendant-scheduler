@@ -31,6 +31,20 @@ interface Event {
   parentEventId?: string | null
   departmentTemplateId?: string | null
   settings?: {
+    modules?: {
+      countTimes?: boolean
+      lanyards?: boolean
+      ivsModule?: boolean
+      positions?: boolean
+      documents?: boolean
+      announcements?: boolean
+    }
+    terminology?: {
+      volunteer?: string
+      position?: string
+      shift?: string
+      assignment?: string
+    }
     customFields?: Record<string, any>
     moduleOverrides?: Record<string, boolean>
   } | null
@@ -340,10 +354,28 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
     return null
   }
 
+  // Use event.settings.modules as primary source, fall back to template
+  const effectiveModuleConfig: ModuleConfig | null = event.settings?.modules 
+    ? {
+        countTimes: event.settings.modules.countTimes ?? true,
+        lanyards: event.settings.modules.lanyards ?? true,
+        ivsModule: event.settings.modules.ivsModule ?? false,
+        positions: event.settings.modules.positions ?? true,
+        documents: event.settings.modules.documents ?? true,
+        announcements: event.settings.modules.announcements ?? true,
+        customFields: []
+      }
+    : (event.departmentTemplate?.moduleConfig as ModuleConfig | null)
+
+  // Use event.settings.terminology as primary source, fall back to template
+  const effectiveTerminology: Terminology | null = event.settings?.terminology
+    ? event.settings.terminology
+    : (event.departmentTemplate?.terminology as Terminology | null)
+
   return (
     <TemplateProvider
-      moduleConfig={event.departmentTemplate?.moduleConfig as ModuleConfig | null}
-      terminology={event.departmentTemplate?.terminology as Terminology | null}
+      moduleConfig={effectiveModuleConfig}
+      terminology={effectiveTerminology}
       positionTemplates={event.departmentTemplate?.positionTemplates as PositionTemplate[] | null}
       departmentTemplateName={event.departmentTemplate?.name}
       eventModuleOverrides={event.settings?.moduleOverrides || null}

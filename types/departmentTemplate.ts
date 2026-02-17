@@ -22,6 +22,8 @@ export interface ModuleConfig {
   lanyards: boolean
   positions: boolean
   ivsModule: boolean
+  documents?: boolean
+  announcements?: boolean
   customFields: CustomField[]
 }
 

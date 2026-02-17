@@ -6,6 +6,7 @@ import LocationSelector from '../../../components/LocationSelector'
 import UserSearchSelect from '../../../components/UserSearchSelect'
 import PhoneInput from '../../../components/PhoneInput'
 import EventModulesTab from '../../../components/EventModulesTab'
+import CloneEventModal, { CloneOptions } from '../../../components/CloneEventModal'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
@@ -474,26 +475,25 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
     }
   }
 
-  const handleCloneEvent = async () => {
-    if (!showCloneConfirm) {
-      setShowCloneConfirm(true)
-      return
-    }
-
+  const handleCloneEvent = async (options: CloneOptions) => {
     try {
       const response = await fetch(`/api/events/${eventId}/clone`, {
-        method: 'POST'
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(options)
       })
+
       const data = await response.json()
 
       if (data.success) {
+        setShowCloneConfirm(false)
         router.push(`/events/${data.data.id}`)
       } else {
         setError(data.error || 'Failed to clone event')
         setShowCloneConfirm(false)
       }
     } catch (err) {
-      setError('An error occurred while cloning the event')
+      setError('Failed to clone event')
       setShowCloneConfirm(false)
     }
   }
@@ -1246,31 +1246,16 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
               <div>
                 <h4 className="text-sm font-medium text-gray-900">Clone This Event</h4>
                 <p className="text-sm text-gray-600 mt-1">
-                  Create a duplicate of this event with all settings and positions
+                  Create a duplicate with granular control over what to clone
                 </p>
               </div>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={handleCloneEvent}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    showCloneConfirm
-                      ? 'bg-blue-600 text-white hover:bg-blue-700'
-                      : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  {showCloneConfirm ? 'Confirm Clone' : '📋 Clone Event'}
-                </button>
-                {showCloneConfirm && (
-                  <button
-                    type="button"
-                    onClick={() => setShowCloneConfirm(false)}
-                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-300 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                )}
-              </div>
+              <button
+                type="button"
+                onClick={() => setShowCloneConfirm(true)}
+                className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors"
+              >
+                📋 Clone Event
+              </button>
             </div>
 
             {/* Delete Event */}
@@ -1307,6 +1292,14 @@ export default function EditEventPage({ event, departmentTemplates }: EditEventP
           </div>
         </div>
       </div>
+
+      {/* Clone Event Modal */}
+      <CloneEventModal
+        isOpen={showCloneConfirm}
+        onClose={() => setShowCloneConfirm(false)}
+        onConfirm={handleCloneEvent}
+        eventName={event.name}
+      />
     </EventLayout>
   )
 }

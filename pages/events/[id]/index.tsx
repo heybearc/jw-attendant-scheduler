@@ -7,6 +7,7 @@ import { TemplateProvider, useModuleConfig } from '../../../contexts/TemplateCon
 import { VolunteerText } from '../../../components/DynamicText'
 import { CustomFieldsDisplay } from '../../../components/CustomFieldsRenderer'
 import { SafeDate } from '../../../components/SafeDate'
+import CloneEventModal, { CloneOptions } from '../../../components/CloneEventModal'
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
@@ -192,10 +193,9 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
   const router = useRouter()
   
   // APEX GUARDIAN: Remove client-side fetching, use server-side props
-  const [loading] = useState(false)
-  const [error] = useState('')
-
-  // Date formatting now handled by SafeDate component to prevent hydration errors
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [showCloneModal, setShowCloneModal] = useState(false)
 
   const getStatusBadge = (status: string) => {
     const statusColors = {
@@ -291,25 +291,21 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
     }
   }
 
-  const handleCloneEvent = async () => {
+  const handleCloneEvent = async (options: CloneOptions) => {
     if (!event) return
-    
-    const eventName = prompt('Enter name for the cloned event:', `${event.name} (Copy)`)
-    if (!eventName) return
 
     try {
       const response = await fetch(`/api/events/${event.id}/clone`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({
-          name: eventName
-        })
+        body: JSON.stringify(options)
       })
 
       const data = await response.json()
 
       if (response.ok && data.success) {
+        setShowCloneModal(false)
         alert(data.data.message || 'Event cloned successfully!')
         router.push(`/events/${data.data.id}`)
       } else {

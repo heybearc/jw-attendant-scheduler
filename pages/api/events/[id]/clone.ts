@@ -3,7 +3,6 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "../../auth/[...nextauth]"
 import { prisma } from "../../../../src/lib/prisma"
 import { v4 as uuidv4 } from 'uuid'
-import { handleApiError } from '../../../src/lib/apiError'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -17,7 +16,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const { id } = req.query
-  let { name } = req.body
+  let { 
+    name,
+    clonePositions = true,
+    cloneVolunteers = false,
+    cloneAssignments = false,
+    cloneLanyards = true,
+    clonePermissions = true,
+    cloneSettings = true,
+    cloneOversight = true
+  } = req.body
 
   if (!id || typeof id !== "string") {
     return res.status(400).json({ error: "Event ID is required" })
@@ -90,24 +98,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         createdBy: user.id,
         departmentTemplateId: originalEvent.departmentTemplateId,
         updatedAt: new Date(),
-        // Clone oversight details
-        circuitOverseerName: originalEvent.circuitOverseerName,
-        circuitOverseerPhone: originalEvent.circuitOverseerPhone,
-        circuitOverseerEmail: originalEvent.circuitOverseerEmail,
-        assemblyOverseerName: originalEvent.assemblyOverseerName,
-        assemblyOverseerPhone: originalEvent.assemblyOverseerPhone,
-        assemblyOverseerEmail: originalEvent.assemblyOverseerEmail,
-        volunteerOverseerName: originalEvent.volunteerOverseerName,
-        volunteerOverseerPhone: originalEvent.volunteerOverseerPhone,
-        volunteerOverseerEmail: originalEvent.volunteerOverseerEmail,
-        volunteerOverseerAssistants: originalEvent.volunteerOverseerAssistants ?? undefined,
-        settings: originalEvent.settings ?? undefined
+        // Clone oversight details (if enabled)
+        ...(cloneOversight && {
+          circuitOverseerName: originalEvent.circuitOverseerName,
+          circuitOverseerPhone: originalEvent.circuitOverseerPhone,
+          circuitOverseerEmail: originalEvent.circuitOverseerEmail,
+          assemblyOverseerName: originalEvent.assemblyOverseerName,
+          assemblyOverseerPhone: originalEvent.assemblyOverseerPhone,
+          assemblyOverseerEmail: originalEvent.assemblyOverseerEmail,
+          volunteerOverseerName: originalEvent.volunteerOverseerName,
+          volunteerOverseerPhone: originalEvent.volunteerOverseerPhone,
+          volunteerOverseerEmail: originalEvent.volunteerOverseerEmail,
+          volunteerOverseerAssistants: originalEvent.volunteerOverseerAssistants ?? undefined
+        }),
+        // Clone settings (if enabled)
+        ...(cloneSettings && {
+          settings: originalEvent.settings ?? undefined
+        })
       }
     })
 
-    // Clone event_volunteers
+    // Clone event_volunteers (if enabled)
     const volunteerMapping = new Map<string, string>()
-    for (const eventVolunteer of originalEvent.event_volunteers) {
+    if (cloneVolunteers) {
+      for (const eventVolunteer of originalEvent.event_volunteers) {
       const newVolunteerId = uuidv4()
       volunteerMapping.set(eventVolunteer.id, newVolunteerId)
       
@@ -126,11 +140,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           updatedAt: new Date()
         }
       })
+      }
     }
 
-    // Clone positions
+    // Clone positions (if enabled)
     const positionMapping = new Map<string, string>()
-    if (originalEvent.positions.length > 0) {
+    if (clonePositions && originalEvent.positions.length > 0) {
       for (const position of originalEvent.positions) {
       const newPositionId = uuidv4()
       positionMapping.set(position.id, newPositionId)
@@ -168,8 +183,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         })
       }
 
-      // Clone assignments for this position
-      for (const assignment of position.assignments) {
+      // Clone assignments for this position (if enabled and volunteers are cloned)
+      if (cloneAssignments && cloneVolunteers) {
+        for (const assignment of position.assignments) {
         const newShiftId = assignment.shiftId ? shiftMapping.get(assignment.shiftId) : null
         
         // Only clone if there's a volunteerId
@@ -184,6 +200,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               assignedBy: user.id
             }
           })
+        }
         }
       }
 
@@ -203,8 +220,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
     }
 
-    // Clone lanyards (if lanyard settings exist)
-    if (originalEvent.lanyard_settings) {
+    // Clone lanyards (if enabled and lanyard settings exist)
+    if (cloneLanyards && originalEvent.lanyard_settings) {
       // First create lanyard_settings for the new event
       const newLanyardSettingsId = uuidv4()
       await prisma.lanyard_settings.create({
@@ -236,10 +253,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Note: We intentionally do NOT clone count_sessions as those are event-specific
     // and should start fresh for each event
 
-    // Clone event permissions
-    const originalPermissions = await prisma.event_permissions.findMany({
+    // Clone event permissions (if enabled)
+    const originalPermissions = clonePermissions ? await prisma.event_permissions.findMany({
       where: { eventId: id }
-    })
+    }) : []
 
     for (const permission of originalPermissions) {
       console.log(`[CLONE] Cloning permission for user ${permission.userId} with role ${permission.role}`)

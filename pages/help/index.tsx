@@ -30,8 +30,20 @@ export default function HelpPage({ userRole }: HelpPageProps) {
     },
     {
       id: 'event-management',
-      title: '� Event Management',
+      title: '📅 Event Management',
       description: 'Managing existing events, editing details, and exporting data',
+      roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN']
+    },
+    {
+      id: 'event-settings',
+      title: '⚙️ Event Settings & Modules',
+      description: 'Customize modules and terminology for each event',
+      roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN']
+    },
+    {
+      id: 'cloning-events',
+      title: '📋 Cloning Events',
+      description: 'Duplicate events with granular control over what gets copied',
       roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN']
     },
     {

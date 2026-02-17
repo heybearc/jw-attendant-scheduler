@@ -96,6 +96,26 @@
 - Updated .env.postgresql, backup scripts, and MCP health checks to match
 - Legacy ACLs (is_jw_attendant) preserved until Feb 1, 2026 for domain migration
 
+### D-TS-027: Temporary Permission Workaround for David Jersak
+**Date:** 2026-02-17  
+**Context:** David Jersak (Circuit Assembly event admin) unable to create shifts due to system role check instead of event permission check  
+**Decision:** Temporarily elevated David's system role from ASSISTANT_OVERSEER to OVERSEER as workaround until proper fix deployed  
+**Status:** ⚠️ TEMPORARY WORKAROUND - Needs proper fix (see TD-002)  
+**Implementation:**
+- User: David Jersak (Davidmj3412@gmail.com)
+- Changed: role from ASSISTANT_OVERSEER → OVERSEER
+- Applied: Production BLUE node (10.92.3.24, container 134)
+- Date: 2026-02-17
+**Consequences:**
+- David can now create shifts and manage positions
+- Bypasses event permission system (not ideal)
+- **MUST REVERT** after TD-002 fix is deployed
+- Highlights critical bug in permission enforcement
+**Related:**
+- Bug Report: `/docs/URGENT-BUG-EVENT-PERMISSIONS.md`
+- Tech Debt: TD-002 in TECH-DEBT.md
+- Affected APIs: shifts.ts, bulk-oversight.ts, overseer.ts
+
 ### D-TS-008: Phase 4C Scope Revision - Focus on Notifications and Confirmations
 **Date:** 2026-01-25  
 **Context:** Evaluated Phase 4C features against actual needs. Clone event feature already handles event metadata but not positions/assignments.  

@@ -88,8 +88,35 @@ export default function EventOversightDashboard() {
           throw new Error('Failed to fetch oversight data')
         }
 
-        const data = await response.json()
-        setOversightData(data)
+        const result = await response.json()
+        
+        // API returns data nested under 'data' property
+        if (result.success && result.data) {
+          const { event, oversight, statistics } = result.data
+          setOversightData({
+            event,
+            permissions: {
+              canEdit: true, // TODO: Get from API
+              canDelete: false,
+              canManagePermissions: false
+            },
+            statistics: {
+              totalPositions: statistics.totalPositions,
+              positionsWithOversight: statistics.positionsWithOversight,
+              positionsWithoutOversight: statistics.totalPositions - statistics.positionsWithOversight,
+              coveragePercentage: statistics.coveragePercentage,
+              overseerCount: statistics.overseerCount,
+              assistantOverseerCount: statistics.assistantOverseerCount,
+              keymanCount: statistics.keymanCount
+            },
+            overseers: oversight.overseers || [],
+            assistantOverseers: oversight.assistantOverseers || [],
+            keymen: oversight.keymen || [],
+            coverageGaps: oversight.coverageGaps || []
+          })
+        } else {
+          throw new Error('Invalid API response')
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred')
       } finally {

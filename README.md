@@ -268,7 +268,20 @@ For issues or questions:
 3. Create a new issue with detailed information
 4. Contact the project maintainer for deployment access
 
-## 🔄 Version History
+## � Version History
+
+- **v4.11.0** (2026-02-17) - Event-Centric Configuration & Enhanced Cloning
+  - Event-specific module settings and terminology customization
+  - Granular clone options modal for selective event duplication
+  - Module enforcement in navigation and dashboards
+  - Critical bug fixes for event pages and shift templates
+
+- **v4.10.0** (2026-02-16) - Early Check-in System User Linking & Phone Formatting
+  - Event oversight user linking (Department Overseer, Assistants, Keymen)
+  - Automatic phone number formatting across all phone fields
+  - Phone auto-population from linked volunteer records
+  - User management pagination fixes
+  - Actions dropdown visibility improvements
 
 - **v4.9.0** (2026-02-16) - Event Oversight User Linking & Phone Formatting
   - Event oversight user linking (Department Overseer, Assistants, Keymen)

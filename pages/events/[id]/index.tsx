@@ -191,10 +191,6 @@ function CountTimesSummary({ event }: { event: Event }) {
 
 export default function EventDetailsPage({ event, canEdit, canDelete, canManageContent, canManagePermissions }: EventDetailsPageProps) {
   const router = useRouter()
-  
-  // APEX GUARDIAN: Remove client-side fetching, use server-side props
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [showCloneModal, setShowCloneModal] = useState(false)
 
   const getStatusBadge = (status: string) => {
@@ -346,7 +342,7 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
     window.URL.revokeObjectURL(url)
   }
 
-  if (loading || error || !event) {
+  if (!event) {
     return null
   }
 

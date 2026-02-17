@@ -1014,6 +1014,12 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     // Only ADMIN can manage permissions
     const canManagePerms = await canManagePermissions(userId, id as string)
 
+    console.log('======================================')
+    console.log('EVENT PAGE - Returning props for event:', id)
+    console.log('Event name:', transformedEvent.name)
+    console.log('Event has settings:', !!transformedEvent.settings)
+    console.log('======================================')
+
     return {
       props: {
         event: transformedEvent,

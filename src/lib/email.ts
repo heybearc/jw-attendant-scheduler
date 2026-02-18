@@ -56,8 +56,7 @@ async function getEmailConfig(): Promise<EmailConfig | null> {
           smtpPassword = emailConfig.config.gmailAppPassword;
           smtpHost = emailConfig.config.smtpServer || smtpHost;
           smtpPort = parseInt(emailConfig.config.smtpPort) || smtpPort;
-          // Port 587 uses STARTTLS (secure=false); port 465 uses SSL (secure=true)
-          smtpSecure = smtpPort === 465;
+          smtpSecure = emailConfig.config.smtpSecure !== undefined ? emailConfig.config.smtpSecure : smtpSecure;
         } else if (emailConfig.authType === 'smtp' && emailConfig.config) {
           smtpUser = emailConfig.config.smtpUser;
           smtpPassword = emailConfig.config.smtpPassword;

@@ -15,6 +15,7 @@ import { useBulkOperations } from '../../../hooks/useBulkOperations'
 import { useShifts } from '../../../hooks/useShifts'
 import { useOversight } from '../../../hooks/useOversight'
 import { useExport } from '../../../hooks/useExport'
+import { buildVolunteerAssignmentMap, getConflictsForShift } from '../../../hooks/useConflicts'
 import CreatePositionModal from '../../../components/CreatePositionModal'
 import ShiftModal from '../../../components/ShiftModal'
 import OverseerModal from '../../../components/OverseerModal'
@@ -141,6 +142,254 @@ interface Volunteer {
 }
 // Type alias for Attendant
 type Attendant = Volunteer
+
+// ============================================================================
+// AssignVolunteerModal - Conflict-aware volunteer assignment modal
+// ============================================================================
+
+interface AssignVolunteerModalProps {
+  position: Position
+  selectedShift: any | null
+  filteredAttendants: Attendant[]
+  conflictMap: Map<string, import('../../../hooks/useConflicts').ConflictResult>
+  eventId: string
+  onClose: () => void
+  onSuccess: () => void
+  formatTime: (t: string) => string
+}
+
+function AssignVolunteerModal({
+  position,
+  selectedShift,
+  filteredAttendants,
+  conflictMap,
+  eventId,
+  onClose,
+  onSuccess,
+  formatTime
+}: AssignVolunteerModalProps) {
+  const [selectedVolunteerId, setSelectedVolunteerId] = React.useState('')
+  const [selectedShiftId, setSelectedShiftId] = React.useState(selectedShift?.id || '')
+  const [search, setSearch] = React.useState('')
+  const [inlineError, setInlineError] = React.useState<string | null>(null)
+  const [submitting, setSubmitting] = React.useState(false)
+
+  const conflict = selectedVolunteerId ? conflictMap.get(selectedVolunteerId) : null
+
+  const visibleAttendants = filteredAttendants.filter(a => {
+    if (!search) return true
+    const full = `${a.firstName} ${a.lastName} ${a.congregation || ''}`.toLowerCase()
+    return full.includes(search.toLowerCase())
+  })
+
+  // Sort: no-conflict first, then conflict
+  const sorted = [...visibleAttendants].sort((a, b) => {
+    const ac = conflictMap.get(a.id)?.hasConflict ? 1 : 0
+    const bc = conflictMap.get(b.id)?.hasConflict ? 1 : 0
+    return ac - bc
+  })
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setInlineError(null)
+
+    if (!selectedVolunteerId) { setInlineError('Please select a volunteer.'); return }
+    if (!selectedShiftId) { setInlineError('Please select a shift.'); return }
+
+    setSubmitting(true)
+    try {
+      const response = await fetch(`/api/events/${eventId}/assignments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          positionId: position.id,
+          volunteerId: selectedVolunteerId,
+          shiftId: selectedShiftId,
+          role: 'VOLUNTEER'
+        })
+      })
+
+      if (response.ok) {
+        onSuccess()
+      } else {
+        const errorData = await response.json()
+        if (response.status === 409) {
+          if (errorData.conflictType === 'TIME_OVERLAP') {
+            const details = errorData.conflicts?.map((c: any) => `${c.positionName} — ${c.shiftName}`).join(', ')
+            setInlineError(`Time conflict: volunteer is already assigned to ${details}.`)
+          } else if (errorData.conflictType === 'ALL_DAY_CONFLICT') {
+            setInlineError(errorData.message || 'All-day shift conflict.')
+          } else if (errorData.conflictType === 'DUPLICATE_SHIFT_ASSIGNMENT') {
+            setInlineError('This volunteer is already assigned to this shift.')
+          } else if (errorData.conflictType === 'SHIFT_FULL') {
+            setInlineError('This shift already has a volunteer assigned.')
+          } else if (errorData.conflictType === 'ROLE_OCCUPIED') {
+            setInlineError(errorData.message || 'This role is already filled for this shift.')
+          } else {
+            setInlineError(errorData.message || 'Assignment conflict — unable to assign.')
+          }
+        } else {
+          setInlineError(errorData.error || 'Failed to assign volunteer.')
+        }
+      }
+    } catch {
+      setInlineError('Network error — please try again.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+      <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="mt-3">
+          {/* Header */}
+          <div className="flex items-start justify-between mb-4">
+            <div>
+              <h3 className="text-lg font-medium text-gray-900">
+                Assign Volunteer
+              </h3>
+              <p className="text-sm text-gray-500 mt-0.5">{position.name}</p>
+            </div>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 ml-4 mt-0.5">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit}>
+            {/* Shift selector */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Shift</label>
+              <select
+                value={selectedShiftId}
+                onChange={e => { setSelectedShiftId(e.target.value); setInlineError(null) }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                required
+              >
+                <option value="">Select a shift...</option>
+                {position.shifts?.map(shift => (
+                  <option key={shift.id} value={shift.id}>
+                    {shift.name}{!shift.isAllDay && shift.startTime ? ` (${formatTime(shift.startTime)} – ${formatTime(shift.endTime || '')})` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Volunteer search */}
+            <div className="mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Volunteer</label>
+              <input
+                type="text"
+                placeholder="Search by name or congregation..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              />
+            </div>
+
+            {/* Volunteer list */}
+            <div className="max-h-52 overflow-y-auto border border-gray-200 rounded-md mb-4">
+              {sorted.length === 0 ? (
+                <p className="text-sm text-gray-500 p-3 text-center">No volunteers found</p>
+              ) : (
+                sorted.map(attendant => {
+                  const c = conflictMap.get(attendant.id)
+                  const hasConflict = c?.hasConflict
+                  const isSelected = selectedVolunteerId === attendant.id
+                  return (
+                    <button
+                      key={attendant.id}
+                      type="button"
+                      onClick={() => { setSelectedVolunteerId(attendant.id); setInlineError(null) }}
+                      className={`w-full text-left px-3 py-2.5 flex items-center justify-between transition-colors border-b border-gray-100 last:border-0 ${
+                        isSelected
+                          ? 'bg-blue-50 border-blue-200'
+                          : 'hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className="min-w-0">
+                        <span className="text-sm font-medium text-gray-900 block truncate">
+                          {attendant.firstName} {attendant.lastName}
+                        </span>
+                        {attendant.congregation && (
+                          <span className="text-xs text-gray-500">{attendant.congregation}</span>
+                        )}
+                        {hasConflict && isSelected && (
+                          <span className="text-xs text-amber-700 block mt-0.5">{c!.message}</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5 ml-2 shrink-0">
+                        {hasConflict && (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                            </svg>
+                            Conflict
+                          </span>
+                        )}
+                        {isSelected && (
+                          <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </div>
+                    </button>
+                  )
+                })
+              )}
+            </div>
+
+            {/* Conflict warning (selected volunteer has conflict) */}
+            {conflict?.hasConflict && !inlineError && (
+              <div className="mb-4 flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
+                <svg className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                </svg>
+                <div>
+                  <p className="text-sm font-medium text-amber-800">Scheduling conflict</p>
+                  <p className="text-xs text-amber-700 mt-0.5">{conflict.message}</p>
+                  <p className="text-xs text-amber-600 mt-1">You can still assign — coordinators can override conflicts.</p>
+                </div>
+              </div>
+            )}
+
+            {/* Inline error from API */}
+            {inlineError && (
+              <div className="mb-4 flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-md">
+                <svg className="w-4 h-4 text-red-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                <p className="text-sm text-red-700">{inlineError}</p>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={submitting || !selectedVolunteerId || !selectedShiftId}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white text-sm rounded-md transition-colors"
+              >
+                {submitting ? 'Assigning...' : 'Assign Volunteer'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ============================================================================
 
 interface EventPositionsProps {
   eventId: string
@@ -1608,16 +1857,41 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                                 {attendantAssignments.length > 0 ? (
                                   <div className="space-y-1">
                                     {attendantAssignments.map(assignment => {
-                                      // Attendant assignments should be green
                                       const roleColor = 'text-green-700'
                                       const bgColor = 'bg-green-50 border-green-100'
+                                      // Check if this volunteer has a conflict with any OTHER shift on this event
+                                      const volunteerId = assignment.volunteer?.id
+                                      const assignmentMapForRow = buildVolunteerAssignmentMap(positions)
+                                      const volunteerShifts = volunteerId ? (assignmentMapForRow.get(volunteerId) || []) : []
+                                      const hasRowConflict = volunteerShifts.length > 1 && (() => {
+                                        // Check if any two of their shifts overlap
+                                        for (let i = 0; i < volunteerShifts.length; i++) {
+                                          for (let j = i + 1; j < volunteerShifts.length; j++) {
+                                            const a = volunteerShifts[i].shift
+                                            const b = volunteerShifts[j].shift
+                                            if (a.isAllDay || b.isAllDay) return true
+                                            if (a.startTime && a.endTime && b.startTime && b.endTime) {
+                                              if (a.endTime > b.startTime && a.startTime < b.endTime) return true
+                                            }
+                                          }
+                                        }
+                                        return false
+                                      })()
                                       
                                       return (
-                                        <div key={assignment.id} className={`flex items-center justify-between ${bgColor} border rounded px-2 py-1`}>
-                                          <div className="flex items-center">
-                                            <span className={`text-xs font-medium ${roleColor}`}>
+                                        <div key={assignment.id} className={`flex items-center justify-between ${hasRowConflict ? 'bg-amber-50 border-amber-200' : bgColor} border rounded px-2 py-1`}>
+                                          <div className="flex items-center gap-1.5">
+                                            <span className={`text-xs font-medium ${hasRowConflict ? 'text-amber-800' : roleColor}`}>
                                               {assignment.volunteer?.firstName} {assignment.volunteer?.lastName}
                                             </span>
+                                            {hasRowConflict && (
+                                              <span className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700" title="This volunteer has overlapping shift assignments">
+                                                <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                                                </svg>
+                                                Conflict
+                                              </span>
+                                            )}
                                           </div>
                                           <button
                                             onClick={() => handleRemoveAssignment(assignment.id)}
@@ -1920,176 +2194,49 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
         />
 
         {/* Assign Volunteer Modal */}
-        {showAssignAttendantModal && selectedPosition && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-              <div className="mt-3">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  Assign Volunteer to {selectedPosition.name}
-                  {selectedShift && (
-                    <div className="text-sm text-gray-600 mt-1">
-                      Shift: {selectedShift.name} {!selectedShift.isAllDay && `(${formatTime12Hour(selectedShift.startTime || '')} - ${formatTime12Hour(selectedShift.endTime || '')})`}
-                    </div>
-                  )}
-                </h3>
-                <form onSubmit={async (e) => {
-                  e.preventDefault()
-                  const formData = new FormData(e.currentTarget)
-                  const volunteerId = formData.get('volunteerId') as string
-                  const shiftId = formData.get('shiftId') as string
-                  
-                  if (!volunteerId) {
-                    alert('Please select a volunteer')
-                    return
-                  }
-                  
-                  if (!shiftId) {
-                    alert('Please select a shift')
-                    return
-                  }
+        {showAssignAttendantModal && selectedPosition && (() => {
+          // Build conflict map from current positions data
+          const assignmentMap = buildVolunteerAssignmentMap(positions)
 
-                  try {
-                    const response = await fetch(`/api/events/${eventId}/assignments`, {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        positionId: selectedPosition.id,
-                        volunteerId: volunteerId,
-                        shiftId: shiftId,
-                        role: 'VOLUNTEER'
-                      })
-                    })
+          // Determine active shift for conflict checking
+          const activeShiftId = selectedShift?.id
+          const activeShift = activeShiftId
+            ? selectedPosition.shifts?.find(s => s.id === activeShiftId) || selectedShift
+            : selectedPosition.shifts?.[0] || null
 
-                    if (response.ok) {
-                      alert('Attendant assigned successfully')
-                      setShowAssignAttendantModal(false)
-                      setSelectedShift(null)
-                      router.reload()
-                    } else {
-                      const errorData = await response.json()
-                      
-                      // Handle specific conflict types
-                      if (response.status === 409) {
-                        if (errorData.conflictType === 'DUPLICATE_SHIFT_ASSIGNMENT') {
-                          alert('⚠️ Conflict: This attendant is already assigned to this shift.')
-                        } else if (errorData.conflictType === 'TIME_OVERLAP') {
-                          alert(`⚠️ Time Conflict: This attendant has conflicting assignments:\n\n${errorData.conflicts?.map(c => `• ${c.positionName} - ${c.shiftName}`).join('\n')}\n\nPlease choose a different attendant or shift.`)
-                        } else if (errorData.conflictType === 'SHIFT_FULL') {
-                          alert('⚠️ Shift Full: This shift already has the maximum number of attendants assigned (1).')
-                        } else if (errorData.conflictType === 'ROLE_OCCUPIED') {
-                          alert(`⚠️ Role Occupied: ${errorData.message}`)
-                        } else {
-                          alert(`⚠️ Assignment Conflict: ${errorData.message || 'Unable to assign volunteer to this shift.'}`)
-                        }
-                      } else {
-                        alert(`Failed to assign volunteer: ${errorData.error || 'Unknown error'}`)
-                      }
-                    }
-                  } catch (error) {
-                    console.error('Error assigning volunteer:', error)
-                    alert('Failed to assign volunteer')
-                  }
-                }}>
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Select Volunteer
-                      {(() => {
-                        const positionOverseer = selectedPosition.assignments?.find(a => a.role === 'OVERSEER')?.attendant
-                        const positionKeyman = selectedPosition.assignments?.find(a => a.role === 'KEYMAN')?.attendant
-                        
-                        if (positionOverseer || positionKeyman) {
-                          return (
-                            <span className="text-xs text-orange-600 font-normal block mt-1">
-                              Showing all attendants (hierarchy filtering temporarily disabled)
-                            </span>
-                          )
-                        }
-                        return null
-                      })()}
-                    </label>
-                    <select 
-                      name="volunteerId"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    >
-                      <option value="">Select a volunteer...</option>
-                      {(() => {
-                        // APEX GUARDIAN: Get oversight from position.oversight array
-                        const oversight = selectedPosition.oversight && selectedPosition.oversight.length > 0 ? selectedPosition.oversight[0] : null
-                        const positionOverseer = oversight?.overseer
-                        const positionKeyman = oversight?.keyman
-                        
-                        // Filter attendants based on position's oversight
-                        let filteredAttendants = attendants?.filter(att => att.isActive) || []
-                        
-                        // APEX GUARDIAN: Debug attendant data first
-                        
-                        // APEX GUARDIAN: EXACT overseer matching filtering
-                        if (positionOverseer || positionKeyman) {
-                          // Show ONLY attendants assigned to the SAME overseer/keyman as this position
-                          const beforeFilter = filteredAttendants.length
-                          filteredAttendants = filteredAttendants.filter(attendant => {
-                            // Must match the exact overseer or keyman of this position
-                            const matchesOverseer = positionOverseer && attendant.overseerId === positionOverseer.id
-                            const matchesKeyman = positionKeyman && attendant.keymanId === positionKeyman.id
-                            return matchesOverseer || matchesKeyman
-                          })
-                          
-                          
-                        }
-                        
-                        return filteredAttendants.map(attendant => (
-                          <option key={attendant.id} value={attendant.id}>
-                            {attendant.firstName} {attendant.lastName}
-                            {attendant.congregation && ` (${attendant.congregation})`}
-                          </option>
-                        ))
-                      })()}
-                    </select>
-                  </div>
+          // Get oversight filtering
+          const oversight = selectedPosition.oversight && selectedPosition.oversight.length > 0 ? selectedPosition.oversight[0] : null
+          const positionOverseer = oversight?.overseer
+          const positionKeyman = oversight?.keyman
+          let filteredAttendants = attendants?.filter(att => att.isActive) || []
+          if (positionOverseer || positionKeyman) {
+            filteredAttendants = filteredAttendants.filter(attendant => {
+              const matchesOverseer = positionOverseer && attendant.overseerId === positionOverseer.id
+              const matchesKeyman = positionKeyman && attendant.keymanId === positionKeyman.id
+              return matchesOverseer || matchesKeyman
+            })
+          }
 
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Select Shift
-                    </label>
-                    <select 
-                      name="shiftId"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                      defaultValue={selectedShift?.id || ''}
-                    >
-                      <option value="">Select a shift...</option>
-                      {selectedPosition.shifts?.map(shift => (
-                        <option key={shift.id} value={shift.id}>
-                          {shift.name} {!shift.isAllDay && `(${formatTime12Hour(shift.startTime || '')} - ${formatTime12Hour(shift.endTime || '')})`}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+          // Compute conflicts for all volunteers against the active shift
+          const conflictMap = getConflictsForShift(
+            filteredAttendants.map(a => a.id),
+            activeShift,
+            assignmentMap
+          )
 
-                  <div className="flex justify-end space-x-3 mt-6">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowAssignAttendantModal(false)
-                        setSelectedShift(null)
-                      }}
-                      className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
-                    >
-                      Assign Volunteer
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-        )}
+          return (
+            <AssignVolunteerModal
+              position={selectedPosition}
+              selectedShift={selectedShift}
+              filteredAttendants={filteredAttendants}
+              conflictMap={conflictMap}
+              eventId={eventId}
+              onClose={() => { setShowAssignAttendantModal(false); setSelectedShift(null) }}
+              onSuccess={() => { setShowAssignAttendantModal(false); setSelectedShift(null); router.reload() }}
+              formatTime={formatTime12Hour}
+            />
+          )
+        })()}
 
         {/* Redesigned Bulk Operations Modal */}
         {showBulkEditModal && selectedPositions.size > 0 && (

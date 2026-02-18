@@ -6,6 +6,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../api/auth/[...nextauth]'
 import Head from 'next/head'
 import Link from 'next/link'
+import PWABottomNav from '../../components/PWABottomNav'
 
 interface Event {
   id: string
@@ -126,7 +127,7 @@ export default function VolunteerSelectEvent() {
         <title>Select Event | TheoShift</title>
       </Head>
 
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8 pb-24">
         <div className="max-w-2xl mx-auto">
           {/* Header */}
           <div className="text-center mb-8">
@@ -225,6 +226,7 @@ export default function VolunteerSelectEvent() {
           </div>
         </div>
       )}
+      <PWABottomNav activeTab="select-event" />
     </>
   )
 }

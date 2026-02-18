@@ -4,6 +4,7 @@ import { authOptions } from '../api/auth/[...nextauth]'
 import { useRouter } from 'next/router'
 import { PrismaClient } from '@prisma/client'
 import EarlyCheckinPanel from '../../components/EarlyCheckinPanel'
+import PWABottomNav from '../../components/PWABottomNav'
 
 const prisma = new PrismaClient()
 
@@ -35,13 +36,14 @@ export default function VolunteerEarlyCheckinPage({ event, hasAccess }: EarlyChe
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-20">
       <EarlyCheckinPanel 
         eventId={event.id}
         eventName={event.name}
         showHeader={true}
         onBack={() => router.push('/volunteer/dashboard')}
       />
+      <PWABottomNav activeTab="checkin" />
     </div>
   )
 }

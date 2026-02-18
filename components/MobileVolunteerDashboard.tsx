@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { format, parseISO } from 'date-fns'
 import Link from 'next/link'
+import PWABottomNav from './PWABottomNav'
 
 interface Assignment {
   id: string
@@ -101,6 +102,7 @@ export default function MobileVolunteerDashboard({
   const [expandedAssignment, setExpandedAssignment] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
   const [respondingToRequest, setRespondingToRequest] = useState<string | null>(null)
+  const [viewingDoc, setViewingDoc] = useState<Document | null>(null)
 
   const formatTime = (time: string) => {
     if (!time || time === 'All Day') return 'All Day'
@@ -571,14 +573,12 @@ export default function MobileVolunteerDashboard({
                       Published {new Date(doc.publishedAt).toLocaleDateString()}
                     </div>
                     
-                    <a
-                      href={doc.fileUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <button
+                      onClick={() => setViewingDoc(doc)}
                       className="block w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white text-center rounded-lg font-medium transition-colors touch-manipulation"
                     >
                       👁️ View Document
-                    </a>
+                    </button>
                   </div>
                 </div>
               ))
@@ -586,6 +586,64 @@ export default function MobileVolunteerDashboard({
           </div>
         )}
       </div>
+
+      {/* In-App Document Viewer Modal — avoids target=_blank PWA trap on iPhone */}
+      {viewingDoc && (
+        <div className="fixed inset-0 z-50 bg-black flex flex-col">
+          {/* Viewer Header */}
+          <div className="flex items-center justify-between bg-gray-900 text-white px-4 py-3 flex-shrink-0">
+            <button
+              onClick={() => setViewingDoc(null)}
+              className="flex items-center space-x-2 text-white touch-manipulation min-h-[44px] pr-4"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              <span className="text-sm font-medium">Back</span>
+            </button>
+            <p className="text-sm font-semibold truncate flex-1 text-center px-2">{viewingDoc.title}</p>
+            <a
+              href={viewingDoc.fileUrl}
+              download
+              className="text-blue-300 text-sm touch-manipulation min-h-[44px] flex items-center pl-4"
+            >
+              ⬇️
+            </a>
+          </div>
+          {/* Viewer Content */}
+          <div className="flex-1 overflow-hidden">
+            {viewingDoc.fileType.includes('pdf') ? (
+              <iframe
+                src={viewingDoc.fileUrl}
+                className="w-full h-full border-0"
+                title={viewingDoc.title}
+              />
+            ) : viewingDoc.fileType.includes('image') ? (
+              <div className="flex items-center justify-center h-full bg-black p-4">
+                <img
+                  src={viewingDoc.fileUrl}
+                  alt={viewingDoc.title}
+                  className="max-w-full max-h-full object-contain"
+                />
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full bg-gray-900 text-white p-8 text-center">
+                <div className="text-6xl mb-4">📎</div>
+                <p className="text-lg font-medium mb-2">{viewingDoc.title}</p>
+                <p className="text-sm text-gray-400 mb-6">{viewingDoc.fileName}</p>
+                <a
+                  href={viewingDoc.fileUrl}
+                  download
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium touch-manipulation"
+                >
+                  ⬇️ Download File
+                </a>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      <PWABottomNav activeTab="dashboard" />
     </div>
   )
 }

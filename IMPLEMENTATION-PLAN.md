@@ -1,108 +1,52 @@
 # Implementation Plan - TheoShift
 
-**Last Updated:** 2026-02-11  
-**Current Version:** v4.5.0  
-**Current Phase:** Technical Debt Cleanup & Feature Planning
+**Last Updated:** 2026-02-18  
+**Current Version:** v4.13.0  
+**Current Phase:** Feature Development
 
 ---
 
-## 🎯 Recent Completions (Feb 9, 2026)
+## 🎯 Recent Completions (Feb 18, 2026)
 
-### ✅ v4.2.0 Released - FB-025 Location Library
-**Completed:** Centralized location management with Google Maps integration.
+### ✅ v4.13.0 Released - FB-017 Positions Page Conflict Management + D-024 Compliance
+**Completed:** Conflict detection on positions page, email improvements, feedback API D-024 compliance.
 
-**Version:** v4.2.0  
-**Released:** 2026-02-09  
-**Status:** Live on theoshift.com (BLUE)
-
-**Changes:**
-- Implemented FB-025: Location Library with Google Maps integration
-- Created LocationSelector component with autocomplete
-- Built admin locations page with CRUD operations (/admin/locations)
-- Added map preview and directions integration
-- Implemented usage tracking for popular locations
-- Fixed Prisma relation handling for locationId
-- Fixed volunteer overseer field casing issues
-- Configured SSH keys on qa-01 for passwordless access
-- E2E tests: 52/53 passed (98% pass rate)
-- Repository security implementation for external contributors
-- Created SECURITY.md and sanitized DEPLOYMENT_GUIDE.md
-- Removed sensitive infrastructure files from git tracking
-
-### ✅ v4.1.1 Released - FB-028 Localhost Redirect Bug Fix
-**Completed:** Fixed critical volunteer login redirect bug and improved testing infrastructure.
-
-**Version:** v4.1.1  
-**Released:** 2026-02-08  
+**Version:** v4.13.0  
+**Released:** 2026-02-18  
 **Status:** Live on theoshift.com (GREEN)
 
 **Changes:**
-- Fixed FB-028: Volunteer login localhost:3001 redirect bug
-- Fixed hardcoded localhost fallbacks in 5 API files
-- Fixed NextAuth redirect logic for volunteer logins
-- Migrated E2E tests to qa-01 centralized testing infrastructure
-- Implemented dynamic STANDBY detection for blue-green testing
-- Created helper scripts for automated STANDBY testing
-- Updated workflows and documentation
-- Promoted qa-01 dynamic STANDBY testing pattern to control plane
+- FB-017: Conflict detection in AssignVolunteerModal — amber badge, conflict details, coordinator override
+- Fixed `positionName` undefined in conflict API response (missing `positions` relation in Prisma query)
+- Reactive conflict map computation inside modal (responds to shift selection changes)
+- Assignment emails: show shift name, "All Day" vs times, changed "event coordinator" → "overseer"
+- D-024 compliance: feedback status API now accepts `resolutionComment`, validates RESOLVED requires one
+- D-024 compliance: status-changed email sent to submitter on every feedback status update
+- Added Conflict Detection section to managing-assignments help page
+- Playwright tests for conflict detection (FB-017)
+- Documented MCP PM2 process name mismatch in PROMOTE-TO-CONTROL-PLANE.md
+- FB-017 resolution email sent to submitter (corylallen@gmail.com)
 
-### ✅ v4.0.2 Released - Test Infrastructure & Stability
-**Completed:** Test infrastructure improvements and 100% test pass rate achieved.
-
-**Version:** v4.0.2  
-**Released:** 2026-02-06  
-**Status:** Superseded by v4.1.1
-
-**Changes:**
-- Container-local test runner infrastructure (`test:e2e:container`)
-- 100% test pass rate (52/52 passing)
-- TypeScript error fixes in positions page
-- Test suite cleanup (removed 21 obsolete tests)
-- Improved test reliability and timing
-
-### ✅ v3.11.0 Released - UI Modernization + Bug Fixes
-**Completed:** Volunteers and Positions pages modernized with clean, professional interfaces. Drag-and-drop assignment bug fixed.
-
-**Version:** v3.11.0  
-**Released:** 2026-02-05  
-**Status:** Superseded by v4.0.2
-
-**Volunteers Page:**
-- Replaced large header with compact design and inline stats pills (All/Active/Inactive)
-- Added contextual bulk actions toolbar (appears when volunteers selected)
-- Replaced large filter section with compact horizontal filter bar
-- Cleaner, more data-dense professional interface
-- Improved mobile responsiveness
-
-**Positions Page:**
-- Reduced 8+ overwhelming buttons to 4 clean primary actions
-- Grouped secondary actions (Export, Templates, Notifications, Clear) into "More" dropdown
-- Replaced emoji-heavy buttons with clean SVG icons
-- Added professional segmented view toggle (List/Grid)
-- Moved "Show Inactive" into Filters dropdown as checkbox
-- Contextual bulk operations toolbar when positions selected
-
-**Result:** Both pages now follow industry standards similar to Airtable, Linear, and Notion. Deployed to STANDBY for review.
+### ✅ Earlier Releases (v4.2.0 – v4.12.x)
+- v4.2.0: FB-025 Location Library with Google Maps integration
+- v4.1.1: FB-028 Volunteer login localhost redirect bug fix
+- v4.0.2: Test infrastructure & stability (100% pass rate)
+- v3.11.0: UI Modernization — Volunteers & Positions pages
 
 ---
 
 ## 🎯 Active Work (This Week)
 
-**Current Focus:** Technical Debt Cleanup & Architecture Decisions
+**Current Focus:** Feature Development — next backlog items
 
-### Recently Completed (2026-02-11)
-- [x] **Event Settings & Cloning Fixes** - Fixed volunteer overseer persistence, display, and cloning issues
-- [x] **Field Naming Documentation** - Created comprehensive Prisma field mapping guides
-- [x] **Volunteer Roles Architecture Analysis** - Documented global vs event-specific roles issue
-- [x] **Technical Debt Assessment** - Catalogued 9 items with prioritization and effort estimates
-- [x] **UI Terminology Updates** - Changed "Attendant" to "Volunteer" throughout UI
-- [x] **Volunteer Creation Fix** - Fixed 500 error when adding volunteers (departmentId issue)
+### Recently Completed (2026-02-18)
+- [x] **v4.13.0** - FB-017 conflict detection, email fixes, D-024 feedback compliance — released to LIVE
+- [x] **All Technical Debt** - All 9 debt items resolved (see section below)
+- [x] **All Feedback Items** - 0 open feedback items in production system
 
 ### In Progress
-- [ ] **Technical Debt Cleanup** - Systematic cleanup of accumulated debt (see below)
-- [ ] **Architecture Decision:** Volunteer roles (global vs event-specific) - Needs stakeholder input
-- [ ] **Feature Planning:** IVS Early Check-In access model - Needs pushback/discussion
-- [ ] **Feature Planning:** In-app event-specific chat system - Needs pushback/discussion
+- [ ] **Feature Planning:** IVS Early Check-In access model - Needs discussion (see Ideas section)
+- [ ] **Feature Planning:** In-app event-specific chat system - Needs discussion (see Ideas section)
 
 ---
 
@@ -245,7 +189,7 @@
     - Department list management for filtering
   - **Use Case:** IVS department manages volunteer approval workflow across multiple departments (import spreadsheets, track approval status, coordinate with service committees, export results). Separate from IVS department's own 20-volunteer scheduling needs (uses standard event workflow).
 - [x] **Admin portal redesign with tabs layout** (effort: XL, COMPLETED 2026-02-10) - Redesigned admin console with tab-based navigation instead of sidebar menu. Implemented mobile hamburger menu for PWA-friendly admin access. Improved organization of admin functions into logical groups (Event Management, Admin Functions, Help). **Deployed as v4.3.0.**
-- [ ] Email content refinement for assignment notifications (effort: M) - Improve clarity, tone, and user experience of notification emails
+- [x] Email content refinement for assignment notifications (effort: M, COMPLETE v4.13.0) - Shift name, All Day display, overseer terminology
 
 ### Medium Priority
 - [ ] **Global announcements admin page** (effort: L, NEW 2026-02-06) - Create admin portal page to manage system-wide announcements that appear on all pages (like rebranding banner). Should support: title, message, type (INFO/WARNING/URGENT), start/end dates, active/inactive toggle, dismissal settings. Currently only have event-specific announcements and code-based static banners.
@@ -371,7 +315,7 @@
 
 ## 💡 User Feedback & Feature Requests
 
-**Total: 29 items from production feedback system**
+**Total: 30 items from production feedback system**
 
 ### 🔴 Open - High/Urgent Priority (0 items)
 - None currently
@@ -379,7 +323,8 @@
 ### 🟡 Open - Medium Priority (0 items)
 - None currently
 
-### ✅ Resolved/Closed (29 items)
+### ✅ Resolved/Closed (30 items)
+- [x] **FB-017:** Positions Page - Conflict Management (FEATURE, HIGH, RESOLVED 2026-02-18) - Conflict detection in AssignVolunteerModal with amber badge, details, coordinator override. *Resolved: 2026-02-18*
 - [x] **Event Settings & Cloning Issues** (BUG, HIGH, RESOLVED 2026-02-11) - Fixed volunteer overseer persistence, display on overview page, cloning 400/500 errors, position oversight assignment errors. Created comprehensive field mapping documentation. *Resolved: 2026-02-11*
 - [x] **UI Terminology Inconsistency** (BUG, MEDIUM, RESOLVED 2026-02-11) - Updated all "Attendant" references to "Volunteer" in add/import dialogs and help text. *Resolved: 2026-02-11*
 - [x] **FB-003:** Complete schedule visibility (FEATURE, MEDIUM, RESOLVED 2026-02-07) - Volunteers can now see the complete schedule for their assigned positions, showing who is assigned before and after their shift. Helps with coordination and handoffs. *Submitted: 2025-11-03*
@@ -408,11 +353,11 @@
 - [x] **FB-022:** Test final (BUG, MEDIUM, RESOLVED) - Testing. *Submitted: 2025-10-19*
 
 ### 📊 Summary Statistics
-- **Total Feedback Items:** 29
-- **Open:** 5 (17%)
-- **Resolved/Closed:** 24 (83%)
-- **By Type:** 15 Bugs, 10 Enhancements, 5 Features
-- **By Priority:** 0 Urgent, 0 High, 29 Medium
+- **Total Feedback Items:** 30
+- **Open:** 0 (0%)
+- **Resolved/Closed:** 30 (100%)
+- **By Type:** 15 Bugs, 10 Enhancements, 5 Features, 1 Feature (FB-017)
+- **By Priority:** 0 Urgent, 0 High, 30 Medium
 
 ---
 
@@ -456,6 +401,9 @@
 
 ## ✅ Recently Completed (Last 30 Days)
 
+- [x] v4.13.0: FB-017 Conflict Detection + D-024 Feedback Compliance - Date: 2026-02-18
+- [x] FB-017 resolution email sent to submitter - Date: 2026-02-18
+- [x] All feedback items resolved (0 open) - Date: 2026-02-18
 - [x] Technical Debt Assessment & Documentation - Date: 2026-02-11
 - [x] Event Settings & Cloning Fixes - Date: 2026-02-11
 - [x] Prisma Field Mapping Documentation - Date: 2026-02-11
@@ -463,22 +411,11 @@
 - [x] UI Terminology Updates (Attendant → Volunteer) - Date: 2026-02-11
 - [x] v4.5.0: OVERSEER Improvements - Date: 2026-02-10
 - [x] v4.3.0: Admin Console Redesign - Date: 2026-02-10
-- [x] Tab-based navigation replacing sidebar menu - Date: 2026-02-10
-- [x] Mobile hamburger menu for PWA-friendly admin access - Date: 2026-02-10
-- [x] 100% test pass rate (81/81 tests) - Date: 2026-02-10
 - [x] v4.1.1: FB-028 localhost redirect bug fix - Date: 2026-02-08
-- [x] qa-01 testing migration with dynamic STANDBY detection - Date: 2026-02-08
-- [x] Promoted qa-01 testing pattern to control plane - Date: 2026-02-08
 - [x] FB-003: Complete schedule visibility for volunteers - Date: 2026-02-07
 - [x] FB-012: Combined shift + oversight bulk operation - Date: 2026-02-07
 - [x] Email content refinement (assignment notifications) - Date: 2026-02-07
-- [x] v4.0.2: Test Infrastructure & Stability - Date: 2026-02-06
-- [x] Container-local test runner (100% pass rate) - Date: 2026-02-06
-- [x] FB-004: Search by name with assignments display - Date: 2026-02-07
-- [x] TypeScript error fixes in positions page - Date: 2026-02-07
 - [x] v3.11.0: UI Modernization (Volunteers & Positions) - Date: 2026-02-05
-- [x] Drag-and-drop assignment bug fix - Date: 2026-02-05
-- [x] Phase 7: Mobile Optimization (v3.8.0) - Date: 2026-02-02
 
 ---
 

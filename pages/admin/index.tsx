@@ -78,6 +78,14 @@ export default function AdminDashboard({ user, stats, userLastSeenVersion, relea
       icon: '🔐',
       color: 'bg-orange-50 hover:bg-orange-100 border-orange-200',
       iconColor: 'text-orange-600'
+    },
+    {
+      title: 'Global Announcements',
+      description: 'System-wide banners shown to all users',
+      href: '/admin/global-announcements',
+      icon: '📢',
+      color: 'bg-teal-50 hover:bg-teal-100 border-teal-200',
+      iconColor: 'text-teal-600'
     }
   ]
 

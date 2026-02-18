@@ -82,6 +82,24 @@ model announcements {
   @@index([startDate], map: "announcements_startdate_idx")
 }
 
+model global_announcements {
+  id        String    @id
+  title     String
+  message   String
+  type      String    @default("INFO")
+  isActive  Boolean   @default(true)
+  startDate DateTime? @db.Timestamp(6)
+  endDate   DateTime? @db.Timestamp(6)
+  createdBy String
+  createdAt DateTime  @default(now()) @db.Timestamp(6)
+  updatedAt DateTime  @default(now()) @db.Timestamp(6)
+  users     users     @relation(fields: [createdBy], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([isActive], map: "global_announcements_isactive_idx")
+  @@index([startDate], map: "global_announcements_startdate_idx")
+  @@index([endDate], map: "global_announcements_enddate_idx")
+}
+
 model assignments {
   id                 String                     @id
   eventId            String
@@ -604,6 +622,7 @@ model users {
   Session                        Session[]
   user_activity                  user_activity[]
   announcements                  announcements[]
+  global_announcements           global_announcements[]
   assignments                    assignments[]
   volunteer                      volunteers?
   event_volunteers               event_volunteers[]

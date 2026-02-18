@@ -169,15 +169,28 @@ async function handleUpdateVolunteer(req: NextApiRequest, res: NextApiResponse, 
     })
 
     // Update event-specific roles if provided
+    console.log(`[ROLE-UPDATE] isOverseer=${JSON.stringify(isOverseer)} isKeyman=${JSON.stringify(isKeyman)} volunteerId=${volunteerId} eventId=${eventId}`)
     if (isOverseer !== undefined || isKeyman !== undefined) {
       const eventVolunteerUpdateData: any = {}
       if (isOverseer !== undefined) eventVolunteerUpdateData.isOverseer = isOverseer
       if (isKeyman !== undefined) eventVolunteerUpdateData.isKeyman = isKeyman
       eventVolunteerUpdateData.updatedAt = new Date()
 
-      // event_volunteers rows may link via userId (when volunteerId col is null)
-      // or via volunteerId col — try both to cover all record types
       const volunteerUserId = existingVolunteer.userId
+      console.log(`[ROLE-UPDATE] volunteerUserId=${volunteerUserId} updateData=${JSON.stringify(eventVolunteerUpdateData)}`)
+
+      // First: find matching rows to confirm they exist
+      const existing = await prisma.event_volunteers.findMany({
+        where: {
+          eventId: eventId,
+          OR: [
+            { volunteerId: volunteerId },
+            ...(volunteerUserId ? [{ userId: volunteerUserId }] : [])
+          ]
+        },
+        select: { id: true, volunteerId: true, userId: true, isOverseer: true }
+      })
+      console.log(`[ROLE-UPDATE] Found ${existing.length} matching event_volunteers rows: ${JSON.stringify(existing)}`)
 
       const updated = await prisma.event_volunteers.updateMany({
         where: {
@@ -190,7 +203,9 @@ async function handleUpdateVolunteer(req: NextApiRequest, res: NextApiResponse, 
         data: eventVolunteerUpdateData
       })
 
-      console.log(`Updated ${updated.count} event_volunteers row(s) for volunteerId=${volunteerId} userId=${volunteerUserId}`)
+      console.log(`[ROLE-UPDATE] updateMany result: count=${updated.count}`)
+    } else {
+      console.log(`[ROLE-UPDATE] Skipped — isOverseer and isKeyman both undefined in request body`)
     }
 
     return res.status(200).json({

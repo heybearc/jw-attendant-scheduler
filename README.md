@@ -268,7 +268,13 @@ For issues or questions:
 3. Create a new issue with detailed information
 4. Contact the project maintainer for deployment access
 
-## � Version History
+## 📝 Version History
+
+- **v4.12.0** (2026-02-18) - Phase 4 Cleanup & Architectural Simplification
+  - Removed deprecated template systems (department templates, assignment templates)
+  - Removed position-level oversight page (replaced by event-level oversight)
+  - Simplified admin navigation and event tabs
+  - Reduced codebase by 3,555 lines while maintaining backward compatibility
 
 - **v4.11.0** (2026-02-17) - Event-Centric Configuration & Enhanced Cloning
   - Event-specific module settings and terminology customization

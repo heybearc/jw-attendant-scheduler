@@ -27,13 +27,6 @@ interface Event {
   startDate: string
   endDate: string
   status: string
-  departmentTemplate?: {
-    id: string
-    name: string
-    moduleConfig?: any
-    terminology?: any
-    positionTemplates?: any
-  } | null
 }
 
 interface Volunteer {
@@ -74,11 +67,9 @@ interface EventLanyardsPageProps {
   canManagePermissions: boolean
   moduleConfig?: any
   terminology?: any
-  positionTemplates?: any
-  departmentTemplateName?: string
 }
 
-export default function EventLanyardsPage({ eventId, event, lanyards, attendants, lanyardSettings, stats, canEdit, canDelete, canManagePermissions, moduleConfig, terminology, positionTemplates, departmentTemplateName }: EventLanyardsPageProps) {
+export default function EventLanyardsPage({ eventId, event, lanyards, attendants, lanyardSettings, stats, canEdit, canDelete, canManagePermissions, moduleConfig, terminology }: EventLanyardsPageProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -353,8 +344,6 @@ export default function EventLanyardsPage({ eventId, event, lanyards, attendants
         canManagePermissions={canManagePermissions}
         moduleConfig={moduleConfig}
         terminology={terminology}
-        positionTemplates={positionTemplates}
-        departmentTemplateName={departmentTemplateName}
       >
         <div className="max-w-7xl mx-auto">
           <div className="animate-pulse">
@@ -376,8 +365,6 @@ export default function EventLanyardsPage({ eventId, event, lanyards, attendants
         canManagePermissions={canManagePermissions}
         moduleConfig={moduleConfig}
         terminology={terminology}
-        positionTemplates={positionTemplates}
-        departmentTemplateName={departmentTemplateName}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="bg-red-50 border-l-4 border-red-400 p-6 rounded-lg shadow-sm">
@@ -445,8 +432,6 @@ export default function EventLanyardsPage({ eventId, event, lanyards, attendants
         canManagePermissions={canManagePermissions}
         moduleConfig={moduleConfig}
         terminology={terminology}
-        positionTemplates={positionTemplates}
-        departmentTemplateName={departmentTemplateName}
       >
         {/* Export Information Form - Visible on screen and in print */}
       <div className="max-w-7xl mx-auto mb-6">
@@ -988,36 +973,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   try {
     const { prisma } = await import('../../../src/lib/prisma')
     
-    // Phase 3B: Check if Lanyards module is enabled for this event
-    const eventTemplate = await prisma.events.findUnique({
-      where: { id: id as string },
-      select: {
-        departmentTemplate: {
-          select: {
-            id: true,
-            name: true,
-            moduleConfig: true,
-            terminology: true,
-            positionTemplates: true
-          }
-        }
-      }
-    })
-    
-    // If event has a department template with moduleConfig, check if lanyards is disabled
-    if (eventTemplate?.departmentTemplate?.moduleConfig) {
-      const moduleConfig = eventTemplate.departmentTemplate.moduleConfig as any
-      if (moduleConfig.lanyards === false) {
-        // Lanyards module is disabled for this event
-        return {
-          redirect: {
-            destination: `/events/${id}`,
-            permanent: false,
-          },
-        }
-      }
-    }
-    
     // Fetch event with lanyards and attendants data
     const eventData = await prisma.events.findUnique({
       where: { id: id as string },
@@ -1060,14 +1015,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       eventType: eventData.eventType,
       startDate: eventData.startDate?.toISOString() || null,
       endDate: eventData.endDate?.toISOString() || null,
-      status: eventData.status,
-      departmentTemplate: eventTemplate?.departmentTemplate ? {
-        id: eventTemplate.departmentTemplate.id,
-        name: eventTemplate.departmentTemplate.name,
-        moduleConfig: eventTemplate.departmentTemplate.moduleConfig,
-        terminology: eventTemplate.departmentTemplate.terminology,
-        positionTemplates: eventTemplate.departmentTemplate.positionTemplates
-      } : null
+      status: eventData.status
     }
     
 
@@ -1137,10 +1085,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         canEdit,
         canDelete,
         canManagePermissions: canManagePerms,
-        moduleConfig: eventTemplate?.departmentTemplate?.moduleConfig || null,
-        terminology: eventTemplate?.departmentTemplate?.terminology || null,
-        positionTemplates: eventTemplate?.departmentTemplate?.positionTemplates || null,
-        departmentTemplateName: eventTemplate?.departmentTemplate?.name || undefined
+        moduleConfig: null,
+        terminology: null
       }
     }
   } catch (error) {

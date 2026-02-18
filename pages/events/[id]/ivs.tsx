@@ -17,12 +17,7 @@ export default function IVSModulePage({ event, canEdit }: IVSModulePageProps) {
   const [activeTab, setActiveTab] = useState<'approvals' | 'checkin'>('approvals')
 
   return (
-    <TemplateProvider
-      moduleConfig={event.departmentTemplate?.moduleConfig || null}
-      terminology={event.departmentTemplate?.terminology || null}
-      positionTemplates={event.departmentTemplate?.positionTemplates || null}
-      departmentTemplateName={event.departmentTemplate?.name}
-    >
+    <TemplateProvider>
       <EventPageLayout
         event={event}
         currentPage="ivs"
@@ -88,9 +83,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   try {
     const event = await prisma.events.findUnique({
       where: { id },
-      include: {
-        departmentTemplate: true,
-      },
     })
 
     if (!event) {

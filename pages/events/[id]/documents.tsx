@@ -28,12 +28,6 @@ interface Event {
   startDate: string
   endDate: string
   status: string
-  departmentTemplate?: {
-    moduleConfig?: any
-    terminology?: any
-    positionTemplates?: any
-    name?: string
-  }
 }
 
 interface Volunteer {
@@ -242,10 +236,8 @@ export default function EventDocumentsPage({ eventId, event, documents, canEdit,
         canEdit={canEdit}
         canDelete={canDelete}
         canManagePermissions={canManagePermissions}
-        moduleConfig={event.departmentTemplate?.moduleConfig || null}
-        terminology={event.departmentTemplate?.terminology || null}
-        positionTemplates={event.departmentTemplate?.positionTemplates || null}
-        departmentTemplateName={event.departmentTemplate?.name}
+        moduleConfig={null}
+        terminology={null}
       >
           <div className="max-w-7xl mx-auto">
             <div className="mb-6">
@@ -599,17 +591,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     // Fetch event
     const event = await prisma.events.findUnique({
       where: { id: id as string },
-      include: {
-        departmentTemplate: {
-          select: {
-            id: true,
-            name: true,
-            moduleConfig: true,
-            terminology: true,
-            positionTemplates: true
-          }
-        }
-      }
     })
 
     if (!event) {

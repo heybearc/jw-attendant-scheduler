@@ -15,13 +15,6 @@ interface Event {
   startDate: string
   endDate: string
   status: string
-  departmentTemplate?: {
-    id: string
-    name: string
-    moduleConfig?: any
-    terminology?: any
-    positionTemplates?: any
-  } | null
 }
 
 interface Volunteer {
@@ -79,11 +72,9 @@ interface EventVolunteersPageProps {
   stats: VolunteerStats
   moduleConfig?: any
   terminology?: any
-  positionTemplates?: any
-  departmentTemplateName?: string
 }
 
-export default function EventAttendantsPage({ eventId, event, attendants, canManageContent, canEdit, canDelete, canManagePermissions, stats, moduleConfig, terminology, positionTemplates, departmentTemplateName }: EventVolunteersPageProps) {
+export default function EventAttendantsPage({ eventId, event, attendants, canManageContent, canEdit, canDelete, canManagePermissions, stats, moduleConfig, terminology }: EventVolunteersPageProps) {
   const router = useRouter()
   const [showAddModal, setShowAddModal] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
@@ -926,8 +917,6 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
       canManagePermissions={canManagePermissions}
       moduleConfig={moduleConfig}
       terminology={terminology}
-      positionTemplates={positionTemplates}
-      departmentTemplateName={departmentTemplateName}
     >
       <div className="max-w-7xl mx-auto">
         {/* Compact Header with Inline Stats */}
@@ -2545,15 +2534,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     const eventData = await prisma.events.findUnique({
       where: { id: id as string },
       include: {
-        departmentTemplate: {
-          select: {
-            id: true,
-            name: true,
-            moduleConfig: true,
-            terminology: true,
-            positionTemplates: true
-          }
-        },
         positions: {
           include: {
             assignments: {
@@ -2789,14 +2769,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           eventType: eventData.eventType,
           startDate: eventData.startDate?.toISOString() || '',
           endDate: eventData.endDate?.toISOString() || '',
-          status: eventData.status,
-          departmentTemplate: eventData.departmentTemplate ? {
-            id: eventData.departmentTemplate.id,
-            name: eventData.departmentTemplate.name,
-            moduleConfig: eventData.departmentTemplate.moduleConfig,
-            terminology: eventData.departmentTemplate.terminology,
-            positionTemplates: eventData.departmentTemplate.positionTemplates
-          } : null
+          status: eventData.status
         },
         attendants: attendants,
         canManageContent,
@@ -2808,10 +2781,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           active: attendants.filter(a => a.isActive).length,
           inactive: attendants.filter(a => !a.isActive).length
         },
-        moduleConfig: eventData.departmentTemplate?.moduleConfig || null,
-        terminology: eventData.departmentTemplate?.terminology || null,
-        positionTemplates: eventData.departmentTemplate?.positionTemplates || null,
-        departmentTemplateName: eventData.departmentTemplate?.name || undefined
+        moduleConfig: null,
+        terminology: null
       }
     };
   } catch (error) {

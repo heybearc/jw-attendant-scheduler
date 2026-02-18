@@ -146,52 +146,6 @@ model volunteers {
   volunteer_availability        volunteer_availability[]
 }
 
-// NEW: Department system models (backward compatible - coexists with volunteers)
-model department_templates {
-  id                   String                 @id @default(uuid())
-  name                 String                 @unique
-  description          String?
-  parentId             String?
-  icon                 String?
-  sortOrder            Int                    @default(0)
-  isActive             Boolean                @default(true)
-  createdAt            DateTime               @default(now())
-  updatedAt            DateTime               @updatedAt
-  // Phase 3: Template-driven configuration
-  moduleConfig         Json? // Module toggles: countTimes, lanyards, positions, customFields
-  terminology          Json? // Label overrides: volunteer, position, shift, assignment
-  positionTemplates    Json? // Pre-configured position templates
-  parent               department_templates?  @relation("DepartmentHierarchy", fields: [parentId], references: [id])
-  children             department_templates[] @relation("DepartmentHierarchy")
-  event_departments    event_departments[]
-  events               events[]
-  assignment_templates assignment_templates[]
-
-  @@index([parentId])
-}
-
-model event_departments {
-  id             String                @id @default(uuid())
-  eventId        String
-  templateId     String?
-  name           String
-  description    String?
-  parentId       String?
-  isActive       Boolean               @default(true)
-  customSettings Json?
-  sortOrder      Int                   @default(0)
-  createdAt      DateTime              @default(now())
-  updatedAt      DateTime              @updatedAt
-  event          events                @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  template       department_templates? @relation(fields: [templateId], references: [id])
-  parent         event_departments?    @relation("EventDepartmentHierarchy", fields: [parentId], references: [id])
-  children       event_departments[]   @relation("EventDepartmentHierarchy")
-
-  @@unique([eventId, name])
-  @@index([eventId])
-  @@index([parentId])
-}
-
 model count_sessions {
   id              String             @id
   eventId         String
@@ -389,7 +343,6 @@ model events {
   keyman                         Json?                            @default("[]")
   parentEventId                  String?                          @map("parent_event_id")
   locationRef                    locations?                       @relation(fields: [locationId], references: [id], onDelete: SetNull)
-  departmentTemplateId           String?                          @map("department_template_id")
   notificationSettings           Json?                            @map("notification_settings")
   announcements                  announcements[]
   assignments                    assignments[]
@@ -401,15 +354,12 @@ model events {
   oversight_assignments          oversight_assignments[]
   position_oversight_assignments position_oversight_assignments[]
   positions                      positions[]
-  event_departments              event_departments[]
   volunteer_availability         volunteer_availability[]
   ivs_import_batches             ivs_import_batches[]
   parentEvent                    events?                          @relation("EventHierarchy", fields: [parentEventId], references: [id], onDelete: Cascade)
   childEvents                    events[]                         @relation("EventHierarchy")
-  departmentTemplate             department_templates?            @relation(fields: [departmentTemplateId], references: [id], onDelete: SetNull)
 
   @@index([parentEventId])
-  @@index([departmentTemplateId])
 }
 
 model feedback {
@@ -664,7 +614,6 @@ model users {
   position_assignments           position_assignments[]
   position_oversight_assignments position_oversight_assignments[]
   shift_templates                shift_templates[]
-  assignment_templates           assignment_templates[]
   locations                      locations[]
   ivs_import_batches             ivs_import_batches[]
 }
@@ -690,28 +639,6 @@ model assignment_notifications {
   @@index([notificationType])
   @@index([status])
   @@index([sentAt])
-}
-
-model assignment_templates {
-  id                   String                @id @default(uuid())
-  name                 String
-  description          String?
-  departmentTemplateId String?               @map("department_template_id")
-  eventType            String?               @map("event_type")
-  createdBy            String                @map("created_by")
-  createdAt            DateTime              @default(now()) @map("created_at")
-  updatedAt            DateTime              @updatedAt @map("updated_at")
-  usageCount           Int                   @default(0) @map("usage_count")
-  lastUsedAt           DateTime?             @map("last_used_at")
-  positions            Json
-  departmentTemplate   department_templates? @relation(fields: [departmentTemplateId], references: [id], onDelete: SetNull)
-  creator              users                 @relation(fields: [createdBy], references: [id], onDelete: Cascade)
-
-  @@unique([name, createdBy])
-  @@index([departmentTemplateId])
-  @@index([createdBy])
-  @@index([eventType])
-  @@index([usageCount])
 }
 
 model volunteer_availability {

@@ -192,12 +192,7 @@ export default function EventPermissionsPage() {
 
   if (!canManage) {
     return (
-      <TemplateProvider
-        moduleConfig={event.departmentTemplate?.moduleConfig || null}
-        terminology={event.departmentTemplate?.terminology || null}
-        positionTemplates={event.departmentTemplate?.positionTemplates || null}
-        departmentTemplateName={event.departmentTemplate?.name}
-      >
+      <TemplateProvider>
         <EventPageLayout
           event={event}
           currentPage="permissions"
@@ -216,12 +211,7 @@ export default function EventPermissionsPage() {
   }
 
   return (
-    <TemplateProvider
-      moduleConfig={event.departmentTemplate?.moduleConfig || null}
-      terminology={event.departmentTemplate?.terminology || null}
-      positionTemplates={event.departmentTemplate?.positionTemplates || null}
-      departmentTemplateName={event.departmentTemplate?.name}
-    >
+    <TemplateProvider>
       <EventPageLayout
         event={event}
         currentPage="permissions"

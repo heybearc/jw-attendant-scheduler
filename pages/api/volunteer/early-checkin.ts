@@ -28,11 +28,10 @@ export default async function handler(
     // Verify user is an IVS team member (has position assignment) for this event
     const event = await prisma.events.findUnique({
       where: { id: eventId },
-      select: { eventType: true, departmentTemplateId: true }
+      select: { eventType: true }
     })
 
-    const isIVSEvent = event?.eventType === 'REGIONAL_CONVENTION' || 
-                       event?.departmentTemplateId === 'dept-info-volunteer'
+    const isIVSEvent = event?.eventType === 'REGIONAL_CONVENTION'
     
     if (!isIVSEvent) {
       return res.status(403).json({ success: false, message: 'This is not an IVS event' })

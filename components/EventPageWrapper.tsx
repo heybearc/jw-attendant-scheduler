@@ -11,7 +11,7 @@ interface EventPageWrapperProps {
     eventType?: string
     startDate?: string
   }
-  currentPage: 'overview' | 'positions' | 'volunteers' | 'oversight' | 'count-times' | 'lanyards' | 'documents' | 'announcements' | 'permissions' | 'edit'
+  currentPage: 'overview' | 'positions' | 'volunteers' | 'count-times' | 'lanyards' | 'ivs' | 'documents' | 'announcements' | 'permissions' | 'edit'
   canEdit?: boolean
   canDelete?: boolean
   canManagePermissions?: boolean
@@ -19,8 +19,6 @@ interface EventPageWrapperProps {
   onExport?: () => void
   moduleConfig?: any
   terminology?: any
-  positionTemplates?: any
-  departmentTemplateName?: string
 }
 
 /**
@@ -46,16 +44,12 @@ export default function EventPageWrapper({
   onStatusChange,
   onExport,
   moduleConfig = null,
-  terminology = null,
-  positionTemplates = null,
-  departmentTemplateName = undefined
+  terminology = null
 }: EventPageWrapperProps) {
   return (
     <TemplateProvider
       moduleConfig={moduleConfig}
       terminology={terminology}
-      positionTemplates={positionTemplates}
-      departmentTemplateName={departmentTemplateName}
     >
       <EventPageLayout
         event={event}

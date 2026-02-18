@@ -40,11 +40,9 @@ interface EventAnnouncementsPageProps {
   canManagePermissions: boolean
   moduleConfig?: any
   terminology?: any
-  positionTemplates?: any
-  departmentTemplateName?: string
 }
 
-export default function EventAnnouncementsPage({ eventId, event, announcements, canManage, canEdit, canDelete, canManagePermissions, moduleConfig, terminology, positionTemplates, departmentTemplateName }: EventAnnouncementsPageProps) {
+export default function EventAnnouncementsPage({ eventId, event, announcements, canManage, canEdit, canDelete, canManagePermissions, moduleConfig, terminology }: EventAnnouncementsPageProps) {
   const router = useRouter()
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -161,8 +159,6 @@ export default function EventAnnouncementsPage({ eventId, event, announcements, 
       canManagePermissions={canManagePermissions}
       moduleConfig={moduleConfig}
       terminology={terminology}
-      positionTemplates={positionTemplates}
-      departmentTemplateName={departmentTemplateName}
     >
         <div className="max-w-7xl mx-auto">
           {/* Header */}
@@ -410,15 +406,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         status: true,
         eventType: true,
         startDate: true,
-        departmentTemplate: {
-          select: {
-            id: true,
-            name: true,
-            moduleConfig: true,
-            terminology: true,
-            positionTemplates: true
-          }
-        }
       }
     })
 
@@ -465,8 +452,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           name: event.name,
           status: event.status,
           eventType: event.eventType,
-          startDate: event.startDate?.toISOString() || new Date().toISOString(),
-          departmentTemplate: event.departmentTemplate
+          startDate: event.startDate?.toISOString() || new Date().toISOString()
         },
         announcements: announcements.map(a => ({
           id: a.id,
@@ -486,10 +472,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         canEdit,
         canDelete,
         canManagePermissions: canManagePerms,
-        moduleConfig: event.departmentTemplate?.moduleConfig || null,
-        terminology: event.departmentTemplate?.terminology || null,
-        positionTemplates: event.departmentTemplate?.positionTemplates || null,
-        departmentTemplateName: event.departmentTemplate?.name || undefined
+        moduleConfig: null,
+        terminology: null
       }
     }
   } catch (error) {

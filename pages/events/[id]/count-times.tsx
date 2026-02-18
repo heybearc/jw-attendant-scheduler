@@ -55,13 +55,6 @@ interface Event {
   status: string
   eventType: string
   startDate: string
-  departmentTemplate?: {
-    id: string
-    name: string
-    moduleConfig?: any
-    terminology?: any
-    positionTemplates?: any
-  } | null
 }
 
 interface CountStats {
@@ -81,11 +74,9 @@ interface CountTimesPageProps {
   stats: CountStats
   moduleConfig?: any
   terminology?: any
-  positionTemplates?: any
-  departmentTemplateName?: string
 }
 
-export default function CountTimesPage({ eventId, event, countSessions, canManageContent, canEdit, canDelete, canManagePermissions, stats, moduleConfig, terminology, positionTemplates, departmentTemplateName }: CountTimesPageProps) {
+export default function CountTimesPage({ eventId, event, countSessions, canManageContent, canEdit, canDelete, canManagePermissions, stats, moduleConfig, terminology }: CountTimesPageProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -167,8 +158,6 @@ export default function CountTimesPage({ eventId, event, countSessions, canManag
       canManagePermissions={canManagePermissions}
       moduleConfig={moduleConfig}
       terminology={terminology}
-      positionTemplates={positionTemplates}
-      departmentTemplateName={departmentTemplateName}
     >
         <div className="max-w-7xl mx-auto">
           {/* Header */}
@@ -365,45 +354,10 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   try {
     const { prisma } = await import('../../../src/lib/prisma')
     
-    // Phase 3B: Check if Count Times module is enabled for this event
-    const eventTemplate = await prisma.events.findUnique({
-      where: { id: id as string },
-      select: {
-        departmentTemplate: {
-          select: {
-            moduleConfig: true
-          }
-        }
-      }
-    })
-    
-    // If event has a department template with moduleConfig, check if countTimes is disabled
-    if (eventTemplate?.departmentTemplate?.moduleConfig) {
-      const moduleConfig = eventTemplate.departmentTemplate.moduleConfig as any
-      if (moduleConfig.countTimes === false) {
-        // Count Times module is disabled for this event
-        return {
-          redirect: {
-            destination: `/events/${id}`,
-            permanent: false,
-          },
-        }
-      }
-    }
-    
     // Fetch event with count sessions and position counts data
     const eventData = await prisma.events.findUnique({
       where: { id: id as string },
       include: {
-        departmentTemplate: {
-          select: {
-            id: true,
-            name: true,
-            moduleConfig: true,
-            terminology: true,
-            positionTemplates: true
-          }
-        },
         count_sessions: {
           include: {
             position_counts: {
@@ -439,8 +393,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       name: eventData.name,
       status: eventData.status,
       eventType: eventData.eventType,
-      startDate: eventData.startDate?.toISOString() || new Date().toISOString(),
-      departmentTemplate: eventData.departmentTemplate
+      startDate: eventData.startDate?.toISOString() || new Date().toISOString()
     }
 
     // Transform count sessions data
@@ -490,10 +443,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           active: countSessions.filter(s => s.isActive).length,
           completed: countSessions.filter(s => s.status === 'COMPLETED').length
         },
-        moduleConfig: eventData.departmentTemplate?.moduleConfig || null,
-        terminology: eventData.departmentTemplate?.terminology || null,
-        positionTemplates: eventData.departmentTemplate?.positionTemplates || null,
-        departmentTemplateName: eventData.departmentTemplate?.name || undefined
+        moduleConfig: null,
+        terminology: null
       }
     }
   } catch (error) {

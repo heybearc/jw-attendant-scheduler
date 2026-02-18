@@ -1,11 +1,25 @@
 import { createContext, useContext, ReactNode } from 'react'
-import { ModuleConfig, Terminology, PositionTemplate } from '../types/departmentTemplate'
+
+export interface ModuleConfig {
+  countTimes: boolean
+  lanyards: boolean
+  ivsModule: boolean
+  positions: boolean
+  documents: boolean
+  announcements: boolean
+  customFields?: any[]
+}
+
+export interface Terminology {
+  volunteer?: string
+  position?: string
+  shift?: string
+  assignment?: string
+}
 
 interface TemplateContextValue {
   moduleConfig: ModuleConfig | null
   terminology: Terminology | null
-  positionTemplates: PositionTemplate[] | null
-  departmentTemplateName?: string
 }
 
 const TemplateContext = createContext<TemplateContextValue | undefined>(undefined)
@@ -14,8 +28,6 @@ interface TemplateProviderProps {
   children: ReactNode
   moduleConfig?: ModuleConfig | null
   terminology?: Terminology | null
-  positionTemplates?: PositionTemplate[] | null
-  departmentTemplateName?: string
   eventModuleOverrides?: Record<string, boolean> | null
 }
 
@@ -23,11 +35,8 @@ export function TemplateProvider({
   children,
   moduleConfig = null,
   terminology = null,
-  positionTemplates = null,
-  departmentTemplateName,
   eventModuleOverrides = null
 }: TemplateProviderProps) {
-  // Merge template config with event-specific overrides
   const mergedModuleConfig = moduleConfig ? {
     ...moduleConfig,
     ...(eventModuleOverrides || {})
@@ -37,9 +46,7 @@ export function TemplateProvider({
     <TemplateContext.Provider
       value={{
         moduleConfig: mergedModuleConfig,
-        terminology,
-        positionTemplates,
-        departmentTemplateName
+        terminology
       }}
     >
       {children}
@@ -76,11 +83,6 @@ export function useTerminology() {
     assignment: getLabel('assignment', 'Assignment'),
     getLabel
   }
-}
-
-export function usePositionTemplates() {
-  const { positionTemplates } = useTemplateContext()
-  return positionTemplates || []
 }
 
 export function useIsModuleEnabled(moduleName: keyof ModuleConfig): boolean {

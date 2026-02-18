@@ -5,7 +5,6 @@ import Head from 'next/head'
 import Link from 'next/link'
 import EventPageWrapper from '../../../components/EventPageWrapper'
 import BulkPositionCreator from '../../../components/BulkPositionCreator'
-import PositionTemplateModal from '../../../components/PositionTemplateModal'
 import PositionGridView from '../../../components/PositionGridView'
 import { AutoAssignmentEngine } from '../../../lib/autoAssignmentEngine'
 import { createPositionService } from '../../../lib/positionService'
@@ -105,19 +104,6 @@ interface Event {
   startDate: string
   endDate: string
   status: string
-  departmentTemplate?: {
-    id: string
-    name: string
-    moduleConfig?: any
-    terminology?: any
-    positionTemplates?: Array<{
-      id: string
-      name: string
-      description?: string
-      capacity?: number
-      sortOrder: number
-    }>
-  } | null
 }
 
 interface Stats {
@@ -168,10 +154,8 @@ interface EventPositionsProps {
   canManagePermissions: boolean
   moduleConfig?: any
   terminology?: any
-  positionTemplates?: any
-  departmentTemplateName?: string
 }
-export default function EventPositionsPage({ eventId, event, positions: initialPositions, attendants, stats, canManageContent, canEdit, canDelete, canManagePermissions, moduleConfig, terminology, positionTemplates, departmentTemplateName }: EventPositionsProps) {
+export default function EventPositionsPage({ eventId, event, positions: initialPositions, attendants, stats, canManageContent, canEdit, canDelete, canManagePermissions, moduleConfig, terminology }: EventPositionsProps) {
   const router = useRouter()
   
   // Initialize services
@@ -961,8 +945,6 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
       canManagePermissions={canManagePermissions}
       moduleConfig={moduleConfig}
       terminology={terminology}
-      positionTemplates={positionTemplates}
-      departmentTemplateName={departmentTemplateName}
     >
       <Head>
         <title>{event?.name ? `${event.name} - Positions` : 'Event Positions'} | Theocratic Shift Scheduler</title>
@@ -1169,19 +1151,6 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                       </button>
                       {canManageContent && (
                         <>
-                          <div className="border-t border-gray-200 my-1"></div>
-                          {event.departmentTemplate?.positionTemplates && 
-                           (event.departmentTemplate.positionTemplates as any[]).length > 0 && (
-                            <button
-                              onClick={() => { setShowTemplateModal(true); setShowActionsMenu(false); }}
-                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                              </svg>
-                              <span>Create from Template</span>
-                            </button>
-                          )}
                           <button
                             onClick={async () => {
                               setShowActionsMenu(false)
@@ -1909,18 +1878,6 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
             </div>
           )}
         </div>
-
-        {/* Position Template Modal */}
-        {showTemplateModal && event.departmentTemplate?.positionTemplates && (
-          <PositionTemplateModal
-            isOpen={showTemplateModal}
-            onClose={() => setShowTemplateModal(false)}
-            templates={event.departmentTemplate.positionTemplates as any[]}
-            departmentName={event.departmentTemplate.name}
-            eventId={eventId}
-            onSuccess={() => router.reload()}
-          />
-        )}
 
         {/* Bulk Position Creator Modal */}
         {showBulkCreator && (
@@ -2743,15 +2700,6 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     const eventData = await prisma.events.findUnique({
       where: { id: id as string },
       include: {
-        departmentTemplate: {
-          select: {
-            id: true,
-            name: true,
-            moduleConfig: true,
-            terminology: true,
-            positionTemplates: true
-          }
-        },
         positions: {
           include: {
             assignments: {
@@ -2912,14 +2860,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
       eventType: eventData.eventType,
       startDate: eventData.startDate?.toISOString() || null,
       endDate: eventData.endDate?.toISOString() || null,
-      status: eventData.status,
-      departmentTemplate: eventData.departmentTemplate ? {
-        id: eventData.departmentTemplate.id,
-        name: eventData.departmentTemplate.name,
-        moduleConfig: eventData.departmentTemplate.moduleConfig,
-        terminology: eventData.departmentTemplate.terminology,
-        positionTemplates: eventData.departmentTemplate.positionTemplates
-      } : null
+      status: eventData.status
     }
 
     // Transform positions data - REMOVED: Using positionsWithOversight directly instead
@@ -2950,10 +2891,8 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
         canEdit,
         canDelete,
         canManagePermissions: canManagePerms,
-        moduleConfig: eventData.departmentTemplate?.moduleConfig || null,
-        terminology: eventData.departmentTemplate?.terminology || null,
-        positionTemplates: eventData.departmentTemplate?.positionTemplates || null,
-        departmentTemplateName: eventData.departmentTemplate?.name || undefined
+        moduleConfig: null,
+        terminology: null
       }
     }
 

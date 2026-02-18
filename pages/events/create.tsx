@@ -7,8 +7,6 @@ import LocationSelector from '../../components/LocationSelector'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
-import { CustomField } from '../../types/departmentTemplate'
-
 interface EventFormData {
   name: string
   description: string
@@ -22,18 +20,7 @@ interface EventFormData {
   capacity: string
   attendantsNeeded: string
   status: string
-  departmentTemplateId: string
   parentEventId: string
-}
-
-interface DepartmentTemplate {
-  id: string
-  name: string
-  icon: string | null
-  parentId: string | null
-  moduleConfig?: {
-    customFields?: CustomField[]
-  }
 }
 
 interface Event {
@@ -48,7 +35,6 @@ export default function CreateEventPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  const [departmentTemplates, setDepartmentTemplates] = useState<DepartmentTemplate[]>([])
   const [events, setEvents] = useState<Event[]>([])
   const [loadingData, setLoadingData] = useState(true)
 
@@ -65,7 +51,6 @@ export default function CreateEventPage() {
     capacity: '',
     attendantsNeeded: '',
     status: 'UPCOMING',
-    departmentTemplateId: '',
     parentEventId: ''
   })
 
@@ -77,21 +62,12 @@ export default function CreateEventPage() {
     ivsModule: true
   })
 
-  // Fetch department templates and events
+  // Fetch events for parent event selector
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [templatesRes, eventsRes] = await Promise.all([
-          fetch('/api/admin/department-templates'),
-          fetch('/api/events?includeChildCount=true')
-        ])
-        
-        const templatesData = await templatesRes.json()
+        const eventsRes = await fetch('/api/events?includeChildCount=true')
         const eventsData = await eventsRes.json()
-        
-        if (templatesData.success) {
-          setDepartmentTemplates(templatesData.data)
-        }
         
         if (eventsData.success && eventsData.data.events) {
           // Filter out events that are already children (to prevent nested hierarchies)
@@ -242,11 +218,6 @@ export default function CreateEventPage() {
       if (formData.attendantsNeeded) submitData.attendantsNeeded = parseInt(formData.attendantsNeeded)
       
       // Only add UUID fields if they have valid non-empty values
-      const deptId = formData.departmentTemplateId?.trim()
-      if (deptId && deptId !== '') {
-        submitData.departmentTemplateId = deptId
-      }
-      
       const parentId = formData.parentEventId?.trim()
       if (parentId && parentId !== '') {
         submitData.parentEventId = parentId
@@ -374,40 +345,16 @@ export default function CreateEventPage() {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="bg-white shadow rounded-lg p-6 space-y-6">
-          {/* Department Configuration - MOVED TO TOP */}
-          <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
+          {/* Event Hierarchy */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
             <h3 className="text-lg font-medium text-gray-900 mb-2 flex items-center">
-              <span className="text-2xl mr-2">🎯</span>
-              Department Configuration
+              <span className="text-2xl mr-2">🔗</span>
+              Event Hierarchy
             </h3>
             <p className="text-sm text-gray-600 mb-4">
-              Choose a department template to customize available features and terminology for this event
+              Optionally link this event to a parent event
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label htmlFor="departmentTemplateId" className="block text-sm font-medium text-gray-700 mb-1">
-                  Department Template
-                </label>
-                <select
-                  id="departmentTemplateId"
-                  name="departmentTemplateId"
-                  value={formData.departmentTemplateId}
-                  onChange={handleInputChange}
-                  disabled={loadingData}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 bg-white"
-                >
-                  <option value="">No template (all features enabled)</option>
-                  {departmentTemplates.map(template => (
-                    <option key={template.id} value={template.id}>
-                      {template.icon} {template.name}
-                    </option>
-                  ))}
-                </select>
-                <p className="mt-1 text-xs text-gray-500">
-                  Controls which features are available (Count Times, Lanyards, etc.)
-                </p>
-              </div>
-
               <div>
                 <label htmlFor="parentEventId" className="block text-sm font-medium text-gray-700 mb-1">
                   Parent Event
@@ -432,49 +379,6 @@ export default function CreateEventPage() {
                 </p>
               </div>
             </div>
-
-            {/* Module Overrides - Show when template is selected */}
-            {formData.departmentTemplateId && (
-              <div className="mt-6 pt-6 border-t border-blue-200">
-                <h4 className="text-sm font-medium text-gray-900 mb-3">
-                  📋 Available Modules for This Event
-                </h4>
-                <p className="text-xs text-gray-600 mb-4">
-                  Customize which modules are enabled for this specific event. Unchecked modules won't appear in the event navigation.
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <label className="flex items-center space-x-3 p-3 bg-white border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={moduleOverrides.countTimes}
-                      onChange={(e) => setModuleOverrides(prev => ({ ...prev, countTimes: e.target.checked }))}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <span className="text-sm text-gray-700">⏱️ Count Times</span>
-                  </label>
-
-                  <label className="flex items-center space-x-3 p-3 bg-white border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={moduleOverrides.lanyards}
-                      onChange={(e) => setModuleOverrides(prev => ({ ...prev, lanyards: e.target.checked }))}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <span className="text-sm text-gray-700">🎫 Lanyards</span>
-                  </label>
-
-                  <label className="flex items-center space-x-3 p-3 bg-white border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={moduleOverrides.ivsModule}
-                      onChange={(e) => setModuleOverrides(prev => ({ ...prev, ivsModule: e.target.checked }))}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <span className="text-sm text-gray-700">📋 IVS Module</span>
-                  </label>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Basic Information */}
@@ -687,29 +591,6 @@ export default function CreateEventPage() {
               </div>
             </div>
           </div>
-
-          {/* Custom Fields - Rendered dynamically based on selected department template */}
-          {formData.departmentTemplateId && (() => {
-            const selectedTemplate = departmentTemplates.find(t => t.id === formData.departmentTemplateId)
-            const customFields = selectedTemplate?.moduleConfig?.customFields || []
-            
-            if (customFields.length > 0) {
-              return (
-                <CustomFieldsRenderer
-                  fields={customFields}
-                  values={customFieldValues}
-                  onChange={(fieldName, value) => {
-                    setCustomFieldValues(prev => ({
-                      ...prev,
-                      [fieldName]: value
-                    }))
-                  }}
-                  errors={customFieldErrors}
-                />
-              )
-            }
-            return null
-          })()}
 
           {/* Submit Buttons */}
           <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">

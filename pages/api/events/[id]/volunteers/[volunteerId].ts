@@ -175,13 +175,22 @@ async function handleUpdateVolunteer(req: NextApiRequest, res: NextApiResponse, 
       if (isKeyman !== undefined) eventVolunteerUpdateData.isKeyman = isKeyman
       eventVolunteerUpdateData.updatedAt = new Date()
 
-      await prisma.event_volunteers.updateMany({
+      // event_volunteers rows may link via userId (when volunteerId col is null)
+      // or via volunteerId col — try both to cover all record types
+      const volunteerUserId = existingVolunteer.userId
+
+      const updated = await prisma.event_volunteers.updateMany({
         where: {
           eventId: eventId,
-          volunteerId: volunteerId
+          OR: [
+            { volunteerId: volunteerId },
+            ...(volunteerUserId ? [{ userId: volunteerUserId }] : [])
+          ]
         },
         data: eventVolunteerUpdateData
       })
+
+      console.log(`Updated ${updated.count} event_volunteers row(s) for volunteerId=${volunteerId} userId=${volunteerUserId}`)
     }
 
     return res.status(200).json({

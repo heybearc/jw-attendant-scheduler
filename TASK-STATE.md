@@ -2,34 +2,52 @@
 
 **Last updated:** 2026-02-18  
 **Current branch:** main  
-**Working on:** v4.12.0 Phase 4 cleanup - deployed to STANDBY, ready for LIVE
+**Working on:** v4.12.1 Complete template cleanup - deployed to STANDBY, ready for LIVE
 
 ---
 
 ## Current Task
-**v4.12.0 Phase 4 Cleanup - Template System Removal** - ✅ STANDBY DEPLOYED
+**v4.12.1 Complete Template System Cleanup** - ✅ STANDBY DEPLOYED
 
 ### What I'm doing right now
-Completed Phase 4 cleanup: removed all deprecated template systems (department templates, assignment templates, position-level oversight) and all associated UI. 14 files deleted (3,555 lines). v4.12.0 committed and pushed. STANDBY (BLUE) has the cleanup code built and running. Template UI removed from admin dashboard and event forms. Ready to deploy to LIVE.
+Completed comprehensive template system cleanup. Removed ALL remaining template UI and backend references that were missed in v4.12.0:
+- Removed Department Template warning banner from event overview
+- Removed Department Template relationship card from event overview  
+- Removed Department Template dropdown from event edit form
+- Removed departmentTemplateId from all API endpoints (create, update, clone)
+- Removed departmentTemplate type imports and Prisma queries
+- event.settings is now the single source of truth for modules/terminology
+
+v4.12.1 committed, pushed, deployed to STANDBY (BLUE - 10.92.3.24). Build successful, PM2 running. Ready to deploy to LIVE.
 
 ### Recent completions
 
-**Today (2026-02-18):**
-- ✅ Created database backup before cleanup (521KB, `/root/backups/theoshift_pre_phase4_cleanup_20260218_073211.sql.gz`)
-- ✅ Removed oversight page (`/pages/events/[id]/oversight.tsx`) and API
-- ✅ Removed department templates admin page (`/pages/admin/departments.tsx`)
-- ✅ Removed assignment templates pages (3 pages)
-- ✅ Removed position extraction tools (admin page + 3 API endpoints)
-- ✅ Removed `DepartmentTemplateModal` component (1,197 lines)
-- ✅ Removed `types/departmentTemplate.ts`
-- ✅ Removed Oversight tab from `EventPageLayout` navigation
-- ✅ Removed Departments/Templates tabs from `AdminLayout`
-- ✅ Removed Department Templates and Assignment Templates cards from admin dashboard
-- ✅ Removed `departmentTemplateId` dropdown from event edit form
-- ✅ Removed Department Configuration section from event create form
-- ✅ Bumped version to v4.12.0 with release notes
+**Today (2026-02-18) - v4.12.1 Complete Template Cleanup:**
+- ✅ Removed Department Template warning banner from event overview page
+- ✅ Removed Department Template relationship card from event overview
+- ✅ Removed Department Template dropdown from event edit form (Basic Info tab)
+- ✅ Removed departmentTemplateId from EventFormData interface
+- ✅ Removed departmentTemplateId from Event interface
+- ✅ Removed DepartmentTemplate interface and departmentTemplates prop
+- ✅ Removed departmentTemplates Prisma query from edit page getServerSideProps
+- ✅ Removed departmentTemplateId from events/index.ts API (create schema + data)
+- ✅ Removed departmentTemplateId from events/[id].ts API (update destructuring)
+- ✅ Removed departmentTemplateId from events/[id]/clone.ts API
+- ✅ Removed departmentTemplate type imports from event overview
+- ✅ Cleaned up TemplateProvider to use event.settings as single source of truth
+- ✅ Committed as "Complete Phase 4 cleanup - remove all remaining template UI"
 - ✅ Deployed to STANDBY (BLUE) - build successful, PM2 running
-- ✅ Verified deleted pages return 404 on STANDBY
+
+**Earlier Today (2026-02-18) - v4.12.0 Initial Cleanup:**
+- ✅ Created database backup before cleanup (521KB)
+- ✅ Removed oversight page and API
+- ✅ Removed department templates admin page
+- ✅ Removed assignment templates pages (3 pages)
+- ✅ Removed position extraction tools
+- ✅ Removed DepartmentTemplateModal component (1,197 lines)
+- ✅ Removed types/departmentTemplate.ts
+- ✅ Removed template navigation tabs
+- ✅ Deployed to STANDBY (BLUE)
 
 **2026-02-17 (v4.11.0):**
 - ✅ Fixed shift template application errors (templateType field)
@@ -480,10 +498,14 @@ Completed Phase 4 cleanup: removed all deprecated template systems (department t
 - Repository significantly cleaner and organized
 
 ### Next steps
-1. **Deploy v4.12.0 to LIVE** - Pull latest on GREEN (10.92.3.22), `npm run build`, `pm2 restart theoshift`
-2. **Run `/release`** - Switch traffic from BLUE to GREEN (or verify which is currently LIVE)
-3. **Run `/sync`** - Sync the old LIVE server with v4.12.0
-4. **Note:** The `positions.tsx` lint error (`Argument of type 'string' is not assignable to parameter of type 'never'` at line 693) is a pre-existing issue unrelated to today's cleanup — investigate separately
+1. **Verify template UI removed on STANDBY** - Check blue.theoshift.com:
+   - Admin dashboard should have NO template cards
+   - Event edit form should have NO Department Template dropdown
+   - Event overview should have NO template warning banner or relationship card
+2. **Deploy v4.12.1 to LIVE** - Pull latest on GREEN (10.92.3.22), `npm run build`, `pm2 restart theoshift`
+3. **Run `/release`** - Switch traffic from BLUE to GREEN
+4. **Run `/sync`** - Sync the old LIVE server with v4.12.1
+5. **Note:** The `positions.tsx` lint error at line 693 is pre-existing, unrelated to template cleanup
 
 ---
 

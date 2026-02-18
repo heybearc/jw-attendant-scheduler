@@ -111,7 +111,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }
           },
           include: {
-            shift: true
+            shift: true,
+            positions: {
+              select: { name: true }
+            }
           }
         })
         
@@ -146,8 +149,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           
           if (conflictingAssignments.length > 0) {
             const conflicts = conflictingAssignments.map((assignment: any) => ({
-              positionName: assignment.positions?.name || assignment.shift?.positions?.name,
-              shiftName: assignment.shift?.name,
+              positionName: assignment.positions?.name || 'Unknown position',
+              shiftName: assignment.shift?.name || 'Unknown shift',
               startTime: assignment.shift?.startTime,
               endTime: assignment.shift?.endTime
             }))

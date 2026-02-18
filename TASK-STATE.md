@@ -2,25 +2,21 @@
 
 **Last updated:** 2026-02-18  
 **Current branch:** main  
-**Working on:** v4.12.1 Complete template system + database cleanup - deployed to STANDBY, ready for LIVE
+**Working on:** Planning next feature work (v4.13.0)
 
 ---
 
 ## Current Task
-**v4.12.1 Complete Template System + Database Cleanup** - ✅ STANDBY DEPLOYED
+**Planning v4.13.0** - Reviewing open feedback and implementation plan backlog
 
 ### What I'm doing right now
-Completed comprehensive template system cleanup including full database debt removal:
-- Removed ALL orphaned API files, pages, components, and types
-- Cleaned all event pages (positions, volunteers, count-times, announcements, documents, lanyards, ivs, permissions)
-- Fixed all volunteer API IVS checks to use eventType-only (no more departmentTemplateId)
-- Cleaned Prisma schema: removed department_templates, event_departments, assignment_templates models
-- Ran destructive migration on STANDBY DB: dropped 3 tables + departmentTemplateId column
-- Regenerated Prisma client on STANDBY
-- event.settings is now the single source of truth for modules/terminology
-- Zero remaining template references in codebase (verified by grep)
+All systems operational. v4.12.1 fully released to LIVE (BLUE). Both environments synced.
 
-v4.12.1 committed, pushed, deployed to STANDBY (BLUE - 10.92.3.24). Build successful, PM2 running. Ready to deploy to LIVE.
+**Open feedback items (all others resolved/closed):**
+- FB-017: Positions Page - Conflict Management (MEDIUM, open)
+- FB-027: Event selection page organization - ✅ RESOLVED (search already implemented)
+- FB-016 follow-up: Volunteer Details popup - ✅ RESOLVED (VolunteerDetailsPopup component live)
+- FB-026: Feedback notifications banner - ✅ CLOSED (will not implement)
 
 ### Recent completions
 
@@ -501,14 +497,8 @@ v4.12.1 committed, pushed, deployed to STANDBY (BLUE - 10.92.3.24). Build succes
 - Repository significantly cleaner and organized
 
 ### Next steps
-1. **Verify template UI removed on STANDBY** - Check blue.theoshift.com:
-   - Admin dashboard should have NO template cards
-   - Event edit form should have NO Department Template dropdown
-   - Event overview should have NO template warning banner or relationship card
-2. **Deploy v4.12.1 to LIVE** - Pull latest on GREEN (10.92.3.22), `npm run build`, `pm2 restart theoshift`
-3. **Run `/release`** - Switch traffic from BLUE to GREEN
-4. **Run `/sync`** - Sync the old LIVE server with v4.12.1
-5. **Note:** The `positions.tsx` lint error at line 693 is pre-existing, unrelated to template cleanup
+- Review implementation plan backlog and pick next feature
+- Top candidates: FB-017 (conflict management), global announcements admin page, mobile nav expansion
 
 ---
 
@@ -544,12 +534,6 @@ v4.12.1 committed, pushed, deployed to STANDBY (BLUE - 10.92.3.24). Build succes
 ---
 
 ## Exact Next Command
-**Tomorrow morning:** Run `/start-day` then deploy v4.12.0 to LIVE:
+**Next session:** Run `/start-day` to load context, then pick next feature from backlog.
 
-```bash
-ssh root@10.92.3.22 "cd /opt/theoshift && git pull origin main && npm run build && pm2 restart theoshift"
-```
-
-Then run `/release` to switch traffic, and `/sync` to update the old LIVE server.
-
-**Known lint issue to investigate:** `positions.tsx` line 693 - `Argument of type 'string' is not assignable to parameter of type 'never'` — pre-existing, not introduced today.
+**Known lint issue (pre-existing, non-blocking):** `positions.tsx` line 677 - `Argument of type 'string' is not assignable to parameter of type 'never'`

@@ -60,8 +60,8 @@ export function generateAssignmentCreatedEmail(data: AssignmentEmailData): strin
       <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
         <!-- Header -->
         <div style="background-color: #10b981; color: white; padding: 30px 20px; text-align: center;">
-          <h1 style="margin: 0; font-size: 28px; font-weight: bold;">✅ New Assignment</h1>
-          <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">You've been assigned to serve!</p>
+          <h1 style="margin: 0; font-size: 24px; font-weight: bold;">New Assignment</h1>
+          <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">You have been assigned to serve at an upcoming event.</p>
         </div>
 
         <!-- Main Content -->
@@ -69,7 +69,7 @@ export function generateAssignmentCreatedEmail(data: AssignmentEmailData): strin
           <h2 style="color: #374151; margin: 0 0 20px 0;">Hello ${data.volunteerFirstName}!</h2>
           
           <p style="color: #6b7280; line-height: 1.6; margin: 0 0 20px 0;">
-            Thank you for your willingness to serve! You have been assigned to an upcoming event. Below are the details of your assignment.
+            Thank you for your willingness to serve. Here are the details of your assignment.
           </p>
 
           <!-- Event Details -->
@@ -148,36 +148,18 @@ export function generateAssignmentCreatedEmail(data: AssignmentEmailData): strin
             </a>
           </div>
 
-          <!-- Important Information -->
-          <div style="background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px; margin: 20px 0;">
-            <h4 style="color: #1e40af; margin: 0 0 10px 0;">ℹ️ What You Need to Know</h4>
-            <ul style="color: #1e40af; margin: 0; padding-left: 20px; line-height: 1.6;">
-              <li><strong>Arrive early:</strong> Please arrive 15 minutes before your shift to receive any last-minute instructions</li>
-              <li><strong>Dress code:</strong> Dress appropriately for your assignment (business casual or as directed)</li>
-              <li><strong>Questions?</strong> Contact your overseer listed above for any clarifications</li>
-              <li><strong>Can't make it?</strong> If you cannot fulfill this assignment, notify your overseer as soon as possible so we can find a replacement</li>
-            </ul>
-          </div>
-
           <!-- Support -->
-          <div style="margin: 30px 0;">
-            <h3 style="color: #374151; margin: 0 0 15px 0;">Need Help?</h3>
-            <p style="color: #6b7280; line-height: 1.6; margin: 0;">
-              <strong>Have questions?</strong> Contact ${data.overseerName ? 'your overseer listed above' : 'your event coordinator'} for assistance.<br>
-              <strong>Need to make changes?</strong> Reach out as soon as possible so arrangements can be made.<br>
-              <strong>Technical issues?</strong> Contact your system administrator for help accessing your assignment details.
+          <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; margin: 20px 0;">
+            <p style="color: #6b7280; line-height: 1.6; margin: 0; font-size: 14px;">
+              If you have questions or are unable to fulfill this assignment, please contact ${data.overseerName ? `<strong>${data.overseerName}</strong>` : 'your event coordinator'} as soon as possible.
             </p>
           </div>
         </div>
 
         <!-- Footer -->
         <div style="background-color: #374151; color: #d1d5db; padding: 20px; text-align: center;">
-          <p style="margin: 0; font-size: 14px;">
-            TheoShift - Supporting Theocratic Event Coordination
-          </p>
-          <p style="margin: 10px 0 0 0; font-size: 12px; opacity: 0.8;">
-            This email was sent automatically. Please do not reply to this email.
-          </p>
+          <p style="margin: 0; font-size: 14px;">TheoShift</p>
+          <p style="margin: 6px 0 0 0; font-size: 12px; opacity: 0.7;">This is an automated message. To make changes, contact your event coordinator.</p>
         </div>
       </div>
     </body>
@@ -199,8 +181,8 @@ export function generateAssignmentUpdatedEmail(data: AssignmentUpdateData): stri
       <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
         <!-- Header -->
         <div style="background-color: #f59e0b; color: white; padding: 30px 20px; text-align: center;">
-          <h1 style="margin: 0; font-size: 28px; font-weight: bold;">🔄 Assignment Updated</h1>
-          <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Your assignment has been modified</p>
+          <h1 style="margin: 0; font-size: 24px; font-weight: bold;">Assignment Updated</h1>
+          <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Your assignment details have changed — please review below.</p>
         </div>
 
         <!-- Main Content -->
@@ -250,22 +232,17 @@ export function generateAssignmentUpdatedEmail(data: AssignmentUpdateData): stri
           </div>
 
           <!-- Support -->
-          <div style="margin: 30px 0;">
-            <p style="color: #6b7280; line-height: 1.6; margin: 0;">
-              <strong>Questions about the changes?</strong> Contact your overseer for clarification.<br>
-              <strong>Can't serve with the new schedule?</strong> Let your overseer know immediately so we can make alternative arrangements.
+          <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; margin: 20px 0;">
+            <p style="color: #6b7280; line-height: 1.6; margin: 0; font-size: 14px;">
+              If you have questions or cannot serve with the updated schedule, please contact your overseer as soon as possible.
             </p>
           </div>
         </div>
 
         <!-- Footer -->
         <div style="background-color: #374151; color: #d1d5db; padding: 20px; text-align: center;">
-          <p style="margin: 0; font-size: 14px;">
-            TheoShift - Supporting Theocratic Event Coordination
-          </p>
-          <p style="margin: 10px 0 0 0; font-size: 12px; opacity: 0.8;">
-            This email was sent automatically. Please do not reply to this email.
-          </p>
+          <p style="margin: 0; font-size: 14px;">TheoShift</p>
+          <p style="margin: 6px 0 0 0; font-size: 12px; opacity: 0.7;">This is an automated message. To make changes, contact your event coordinator.</p>
         </div>
       </div>
     </body>
@@ -287,8 +264,8 @@ export function generateAssignmentCancelledEmail(data: AssignmentCancelledData):
       <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
         <!-- Header -->
         <div style="background-color: #ef4444; color: white; padding: 30px 20px; text-align: center;">
-          <h1 style="margin: 0; font-size: 28px; font-weight: bold;">❌ Assignment Cancelled</h1>
-          <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Your assignment has been cancelled</p>
+          <h1 style="margin: 0; font-size: 24px; font-weight: bold;">Assignment Cancelled</h1>
+          <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Your assignment has been removed — no action is needed.</p>
         </div>
 
         <!-- Main Content -->
@@ -336,21 +313,17 @@ export function generateAssignmentCancelledEmail(data: AssignmentCancelledData):
           </div>
 
           <!-- Support -->
-          <div style="margin: 30px 0;">
-            <p style="color: #6b7280; line-height: 1.6; margin: 0;">
-              If you have questions about this cancellation, please contact your overseer or system administrator.
+          <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; margin: 20px 0;">
+            <p style="color: #6b7280; line-height: 1.6; margin: 0; font-size: 14px;">
+              If you have questions about this cancellation, please contact your overseer.
             </p>
           </div>
         </div>
 
         <!-- Footer -->
         <div style="background-color: #374151; color: #d1d5db; padding: 20px; text-align: center;">
-          <p style="margin: 0; font-size: 14px;">
-            TheoShift - Supporting Theocratic Event Coordination
-          </p>
-          <p style="margin: 10px 0 0 0; font-size: 12px; opacity: 0.8;">
-            This email was sent automatically. Please do not reply to this email.
-          </p>
+          <p style="margin: 0; font-size: 14px;">TheoShift</p>
+          <p style="margin: 6px 0 0 0; font-size: 12px; opacity: 0.7;">This is an automated message. To make changes, contact your event coordinator.</p>
         </div>
       </div>
     </body>
@@ -372,8 +345,8 @@ export function generateAssignmentReminderEmail(data: AssignmentReminderData): s
       <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
         <!-- Header -->
         <div style="background-color: #8b5cf6; color: white; padding: 30px 20px; text-align: center;">
-          <h1 style="margin: 0; font-size: 28px; font-weight: bold;">⏰ Assignment Reminder</h1>
-          <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Your assignment is coming up!</p>
+          <h1 style="margin: 0; font-size: 24px; font-weight: bold;">Assignment Reminder</h1>
+          <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Your assignment is coming up in ${data.hoursUntilEvent} hours.</p>
         </div>
 
         <!-- Main Content -->
@@ -381,7 +354,7 @@ export function generateAssignmentReminderEmail(data: AssignmentReminderData): s
           <h2 style="color: #374151; margin: 0 0 20px 0;">Hello ${data.volunteerFirstName}!</h2>
           
           <p style="color: #6b7280; line-height: 1.6; margin: 0 0 20px 0;">
-            This is a friendly reminder that you have an assignment coming up in <strong>${data.hoursUntilEvent} hours</strong>. We're looking forward to working with you!
+            This is a reminder that you have an upcoming assignment. Here are your details.
           </p>
 
           <!-- Event Details -->
@@ -450,18 +423,6 @@ export function generateAssignmentReminderEmail(data: AssignmentReminderData): s
             </a>
           </div>
 
-          <!-- Checklist -->
-          <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0;">
-            <h4 style="color: #92400e; margin: 0 0 10px 0;">✅ Quick Preparation Checklist</h4>
-            <ul style="color: #92400e; margin: 0; padding-left: 20px; line-height: 1.6;">
-              <li><strong>Timing:</strong> Arrive 15 minutes early for any last-minute briefing</li>
-              <li><strong>Attire:</strong> Dress appropriately for your role (business casual recommended)</li>
-              <li><strong>Instructions:</strong> Review any special notes or requirements above</li>
-              <li><strong>Contact:</strong> Reach out to your overseer if you have any questions or concerns</li>
-              <li><strong>Backup plan:</strong> If an emergency arises, contact your overseer immediately</li>
-            </ul>
-          </div>
-
           ${data.overseerName ? `
           <!-- Overseer Contact -->
           <div style="margin: 20px 0;">
@@ -476,12 +437,8 @@ export function generateAssignmentReminderEmail(data: AssignmentReminderData): s
 
         <!-- Footer -->
         <div style="background-color: #374151; color: #d1d5db; padding: 20px; text-align: center;">
-          <p style="margin: 0; font-size: 14px;">
-            TheoShift - Supporting Theocratic Event Coordination
-          </p>
-          <p style="margin: 10px 0 0 0; font-size: 12px; opacity: 0.8;">
-            This email was sent automatically. Please do not reply to this email.
-          </p>
+          <p style="margin: 0; font-size: 14px;">TheoShift</p>
+          <p style="margin: 6px 0 0 0; font-size: 12px; opacity: 0.7;">This is an automated message. To make changes, contact your event coordinator.</p>
         </div>
       </div>
     </body>
@@ -500,19 +457,19 @@ export async function sendAssignmentNotification(
   switch (type) {
     case 'created':
       html = generateAssignmentCreatedEmail(data as AssignmentEmailData)
-      subject = `✅ Your Assignment: ${(data as AssignmentEmailData).eventName} - ${(data as AssignmentEmailData).positionName}`
+      subject = `Your assignment for ${(data as AssignmentEmailData).eventName}`
       break
     case 'updated':
       html = generateAssignmentUpdatedEmail(data as AssignmentUpdateData)
-      subject = `🔄 Assignment Change: ${(data as AssignmentUpdateData).eventName} - Please Review`
+      subject = `Assignment updated: ${(data as AssignmentUpdateData).eventName}`
       break
     case 'cancelled':
       html = generateAssignmentCancelledEmail(data as AssignmentCancelledData)
-      subject = `❌ Assignment Cancelled: ${(data as AssignmentCancelledData).eventName} - No Action Needed`
+      subject = `Assignment cancelled: ${(data as AssignmentCancelledData).eventName}`
       break
     case 'reminder':
       html = generateAssignmentReminderEmail(data as AssignmentReminderData)
-      subject = `⏰ Reminder: Your assignment is in ${(data as AssignmentReminderData).hoursUntilEvent} hours - ${(data as AssignmentReminderData).eventName}`
+      subject = `Reminder: Your assignment for ${(data as AssignmentReminderData).eventName} is in ${(data as AssignmentReminderData).hoursUntilEvent} hours`
       break
     default:
       throw new Error(`Unknown notification type: ${type}`)

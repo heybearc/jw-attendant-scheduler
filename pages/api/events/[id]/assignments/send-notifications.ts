@@ -4,16 +4,7 @@ import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '../../../../../src/lib/prisma'
 import nodemailer from 'nodemailer'
 import { generateAssignmentCreatedEmail } from '../../../../../src/lib/assignmentEmails'
-import fs from 'fs'
-import { handleApiError } from '../../../../src/lib/apiError'
-
-const logToFile = (message: string) => {
-  try {
-    fs.appendFileSync('/tmp/notification-debug.log', `${new Date().toISOString()} - ${message}\n`)
-  } catch (e) {
-    // Ignore file write errors
-  }
-}
+import { handleApiError } from '../../../../../src/lib/apiError'
 
 // Send email using database configuration (same pattern as availability-request)
 async function sendAssignmentEmail(to: string, subject: string, html: string) {
@@ -68,12 +59,9 @@ async function sendAssignmentEmail(to: string, subject: string, html: string) {
  */
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  logToFile('=== SEND NOTIFICATIONS CALLED ===')
   try {
     const session = await getServerSession(req, res, authOptions)
-    logToFile(`Session: ${session ? 'Present' : 'Missing'}`)
     if (!session) {
-      logToFile('ERROR: No session - returning 401')
       return res.status(401).json({ error: 'Unauthorized' })
     }
 
@@ -137,13 +125,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Get unique volunteers from assignments
     const volunteerIds = [...new Set(assignments.map(a => a.volunteerId))]
     
-    logToFile(`Found ${volunteerIds.length} volunteer(s) for ${assignments.length} assignment(s)`)
-    logToFile(`Volunteer IDs: ${JSON.stringify(volunteerIds)}`)
-    
-    process.stderr.write(`📧 Sending notifications to ${volunteerIds.length} volunteer(s) for ${assignments.length} assignment(s)...\n`)
-    process.stderr.write(`Volunteer IDs: ${JSON.stringify(volunteerIds)}\n`)
-    process.stderr.write(`Sample assignment: ${JSON.stringify(assignments[0])}\n`)
-
     let sent = 0
     let failed = 0
     const errors: string[] = []
@@ -151,8 +132,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Send one notification per volunteer (consolidates all their assignments)
     for (const volunteerId of volunteerIds) {
       const volunteerAssignments = assignments.filter(a => a.volunteerId === volunteerId)
-      
-      logToFile(`Processing volunteer ${volunteerId} with ${volunteerAssignments.length} assignment(s)`)
       
       try {
         // Get full assignment details with volunteer and event info
@@ -216,30 +195,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           eventName: event.name,
           eventDate,
           eventLocation: event.location || event.venue || 'Location TBD',
-          positionName: assignment.positions.positionName,
+          positionName: assignment.positions.name,
           positionNumber: assignment.positions.positionNumber,
           shiftStart,
           shiftEnd,
           overseerName,
           overseerEmail,
-          overseerPhone,
+          overseerPhone: overseerPhone ?? undefined,
           eventUrl: `${process.env.NEXTAUTH_URL}/events/${event.id}/positions`
         })
 
         // Send email directly (same pattern as availability-request)
         await sendAssignmentEmail(
           volunteerEmail,
-          `New Assignment: ${event.name}`,
+          `Your assignment for ${event.name}`,
           emailHtml
         )
 
         sent++
-        logToFile(`SUCCESS: Email sent to ${volunteerEmail}`)
       } catch (error: any) {
         failed++
         errors.push(`Volunteer ${volunteerId}: ${error.message}`)
-        logToFile(`FAILED: ${error.message}`)
-        // Error logged by handleApiError
       }
     }
 

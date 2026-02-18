@@ -2719,6 +2719,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         keyman: association?.keyman || null,
         profileVerificationRequired: attendant.profileVerificationRequired || false,
         profileVerifiedAt: attendant.profileVerifiedAt?.toISOString() || null,
+        isOverseer: association?.isOverseer ?? false,
+        isKeyman: association?.isKeyman ?? false,
         availability: availability || null,
         assignments: []
       });

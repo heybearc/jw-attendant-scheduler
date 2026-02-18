@@ -1,20 +1,45 @@
 # TheoShift Task State
 
-**Last updated:** 2026-02-11 (8:28 PM)  
+**Last updated:** 2026-02-18  
 **Current branch:** main  
-**Working on:** v4.7.0 released to production - ALL technical debt cleanup complete
+**Working on:** v4.12.0 Phase 4 cleanup - deployed to STANDBY, ready for LIVE
 
 ---
 
 ## Current Task
-**v4.7.0 Released - Infrastructure & Stability** - ✅ COMPLETE
+**v4.12.0 Phase 4 Cleanup - Template System Removal** - ✅ STANDBY DEPLOYED
 
 ### What I'm doing right now
-Successfully completed ALL technical debt cleanup (9/9 items) and released v4.7.0 to production. Removed 267 debug console.log statements (78% reduction), migrated 122 API endpoints to centralized error handling (98% coverage), and achieved 100% test pass rate. Both LIVE and STANDBY environments synced and healthy. IVS module assessed at 80% complete. Ready for next development cycle.
+Completed Phase 4 cleanup: removed all deprecated template systems (department templates, assignment templates, position-level oversight) and all associated UI. 14 files deleted (3,555 lines). v4.12.0 committed and pushed. STANDBY (BLUE) has the cleanup code built and running. Template UI removed from admin dashboard and event forms. Ready to deploy to LIVE.
 
 ### Recent completions
 
-**Today (2026-02-11 - Full Day):**
+**Today (2026-02-18):**
+- ✅ Created database backup before cleanup (521KB, `/root/backups/theoshift_pre_phase4_cleanup_20260218_073211.sql.gz`)
+- ✅ Removed oversight page (`/pages/events/[id]/oversight.tsx`) and API
+- ✅ Removed department templates admin page (`/pages/admin/departments.tsx`)
+- ✅ Removed assignment templates pages (3 pages)
+- ✅ Removed position extraction tools (admin page + 3 API endpoints)
+- ✅ Removed `DepartmentTemplateModal` component (1,197 lines)
+- ✅ Removed `types/departmentTemplate.ts`
+- ✅ Removed Oversight tab from `EventPageLayout` navigation
+- ✅ Removed Departments/Templates tabs from `AdminLayout`
+- ✅ Removed Department Templates and Assignment Templates cards from admin dashboard
+- ✅ Removed `departmentTemplateId` dropdown from event edit form
+- ✅ Removed Department Configuration section from event create form
+- ✅ Bumped version to v4.12.0 with release notes
+- ✅ Deployed to STANDBY (BLUE) - build successful, PM2 running
+- ✅ Verified deleted pages return 404 on STANDBY
+
+**2026-02-17 (v4.11.0):**
+- ✅ Fixed shift template application errors (templateType field)
+- ✅ Fixed event detail page gray screen (hydration mismatch)
+- ✅ Added event-specific module settings and terminology
+- ✅ Added granular clone options modal
+- ✅ Created help pages for event settings and cloning
+- ✅ Released v4.11.0 to LIVE
+
+**2026-02-11 (v4.7.0 - Full Day):**
 
 **v4.7.0 Release (Infrastructure & Stability Improvements)**
 - ✅ Completed ALL 9 technical debt items (100% cleanup achieved)
@@ -455,15 +480,10 @@ Successfully completed ALL technical debt cleanup (9/9 items) and released v4.7.
 - Repository significantly cleaner and organized
 
 ### Next steps
-1. **Review IVS Module completion options**
-   - Option A: Production Ready (7-10 hours) - Complete Phase 5 advanced config + Phase 3 search/pagination + Phase 6 real-time updates
-   - Option B: Minimum Enhancement (5-7 hours) - Complete Phase 5 advanced config + Phase 3 search/pagination
-   - Option C: Enterprise Grade (16-24 hours) - Everything in Option A + Phase 6 reporting + comprehensive testing
-
-2. **Pick next priority item from IMPLEMENTATION-PLAN.md**
-   - High priority: Email content refinement (M effort, 4-6 hours)
-   - Medium priority: Global announcements admin page (L effort, 8-12 hours)
-   - Medium priority: Mobile bottom navigation expansion (M effort, 4-6 hours)
+1. **Deploy v4.12.0 to LIVE** - Pull latest on GREEN (10.92.3.22), `npm run build`, `pm2 restart theoshift`
+2. **Run `/release`** - Switch traffic from BLUE to GREEN (or verify which is currently LIVE)
+3. **Run `/sync`** - Sync the old LIVE server with v4.12.0
+4. **Note:** The `positions.tsx` lint error (`Argument of type 'string' is not assignable to parameter of type 'never'` at line 693) is a pre-existing issue unrelated to today's cleanup — investigate separately
 
 ---
 
@@ -499,11 +519,12 @@ Successfully completed ALL technical debt cleanup (9/9 items) and released v4.7.
 ---
 
 ## Exact Next Command
-**Tomorrow morning:** Run `/start-day` to load context and review IVS Module completion options.
+**Tomorrow morning:** Run `/start-day` then deploy v4.12.0 to LIVE:
 
-**Then decide:** Choose between IVS Module completion (Option A/B/C) or pick next priority feature from IMPLEMENTATION-PLAN.md:
-- Email content refinement (High priority, 4-6 hours)
-- Global announcements admin page (Medium priority, 8-12 hours)
-- Mobile bottom navigation expansion (Medium priority, 4-6 hours)
+```bash
+ssh root@10.92.3.22 "cd /opt/theoshift && git pull origin main && npm run build && pm2 restart theoshift"
+```
 
-**For work items and priorities:** See IMPLEMENTATION-PLAN.md for complete backlog, roadmap, bugs, and feature requests.
+Then run `/release` to switch traffic, and `/sync` to update the old LIVE server.
+
+**Known lint issue to investigate:** `positions.tsx` line 693 - `Argument of type 'string' is not assignable to parameter of type 'never'` — pre-existing, not introduced today.

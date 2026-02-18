@@ -371,18 +371,15 @@
 
 ## 💡 User Feedback & Feature Requests
 
-**Total: 27 items from production feedback system**
+**Total: 29 items from production feedback system**
 
 ### 🔴 Open - High/Urgent Priority (0 items)
 - None currently
 
-### 🟡 Open - Medium Priority (3 items)
-- [ ] **FB-025:** Location library (ENHANCEMENT, MEDIUM) - Track previously used locations with addresses, Google Maps integration, search/autocomplete when creating events to avoid retyping same information. *Submitted: 2026-02-04*
-- [ ] **FB-026:** Feedback notifications banner (ENHANCEMENT, MEDIUM) - Implement feedback notifications banner like LDC Tools, add paste screenshot capability to feedback form. *Submitted: 2026-02-04*
-- [ ] **FB-027:** Event selection page organization (ENHANCEMENT, MEDIUM) - Better organization for admins viewing all events, add search functionality, improve parent/child relationship visualization with connectors/expanders. Clarify if parent event admins automatically get admin access to child events. *Submitted: 2026-02-04*
-- [ ] **FB-017:** Positions Page - Conflict Management (ENHANCEMENT, MEDIUM) - Highlight conflicts when scheduling manually, dynamic suggestion card to help placement without conflicts. *Submitted: 2025-10-24*
+### 🟡 Open - Medium Priority (0 items)
+- None currently
 
-### ✅ Resolved/Closed (26 items)
+### ✅ Resolved/Closed (29 items)
 - [x] **Event Settings & Cloning Issues** (BUG, HIGH, RESOLVED 2026-02-11) - Fixed volunteer overseer persistence, display on overview page, cloning 400/500 errors, position oversight assignment errors. Created comprehensive field mapping documentation. *Resolved: 2026-02-11*
 - [x] **UI Terminology Inconsistency** (BUG, MEDIUM, RESOLVED 2026-02-11) - Updated all "Attendant" references to "Volunteer" in add/import dialogs and help text. *Resolved: 2026-02-11*
 - [x] **FB-003:** Complete schedule visibility (FEATURE, MEDIUM, RESOLVED 2026-02-07) - Volunteers can now see the complete schedule for their assigned positions, showing who is assigned before and after their shift. Helps with coordination and handoffs. *Submitted: 2025-11-03*

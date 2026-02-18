@@ -30,6 +30,8 @@ interface Volunteer {
   associationId: string
   profileVerificationRequired?: boolean
   profileVerifiedAt?: string | null
+  isOverseer?: boolean
+  isKeyman?: boolean
   overseerId?: string | null
   keymanId?: string | null
   overseer?: {
@@ -366,8 +368,8 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
         : attendant.formsOfService || '',
       notes: '',
       isActive: attendant.isActive,
-      isOverseer: (attendant as any).isOverseer || false,
-      isKeyman: (attendant as any).isKeyman || false
+      isOverseer: attendant.isOverseer ?? false,
+      isKeyman: attendant.isKeyman ?? false
     })
     setEditingAttendant(attendant)
     setShowAddModal(true)

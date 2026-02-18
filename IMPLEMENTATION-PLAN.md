@@ -37,15 +37,22 @@
 
 ## 🎯 Active Work (This Week)
 
-**Current Focus:** Feature Development — next backlog items
+**Current Focus:** Feature Development — v4.14.0 PWA + Global Announcements
 
-### Recently Completed (2026-02-18)
+### Recently Completed (2026-02-18) — v4.14.0 on STANDBY
 - [x] **v4.13.0** - FB-017 conflict detection, email fixes, D-024 feedback compliance — released to LIVE
 - [x] **All Technical Debt** - All 9 debt items resolved (see section below)
 - [x] **All Feedback Items** - 0 open feedback items in production system
+- [x] **IVS Early Check-In** - Confirmed fully implemented (admin IVS tab + volunteer dashboard tab + APIs)
+- [x] **PWA: iPhone document trap fix** - Replaced `target=_blank` with in-app fullscreen modal viewer (back button, PDF iframe, image viewer, download)
+- [x] **PWA: Bottom navigation** - `PWABottomNav` component added to Dashboard, Early Check-In, Select Event pages with iOS safe-area-inset support
+- [x] **Global Announcements Admin Page** - `/admin/global-announcements` with full CRUD, type/date/active controls; DB migration applied; ADMIN-only API
+- [x] **Policy:** All new features must be optimized for mobile/PWA including offline capability
 
-### In Progress
-- [ ] **Feature Planning:** IVS Early Check-In access model - Needs discussion (see Ideas section)
+### In Progress / Next
+- [ ] **Release v4.14.0** - Test on standby, bump version, switch traffic
+- [ ] **PWA Offline:** Cache volunteer data (assignments, documents) for offline use
+- [ ] **Global Announcements Banner:** Wire `GlobalAnnouncementBanner` component into app layout so banners actually display to users
 - [ ] **Feature Planning:** In-app event-specific chat system - Needs discussion (see Ideas section)
 
 ---

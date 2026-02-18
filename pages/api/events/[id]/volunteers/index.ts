@@ -84,25 +84,25 @@ async function handleGetEventVolunteers(req: NextApiRequest, res: NextApiRespons
       ]
     })
 
-    // Filter and map to get volunteers with verification data
-    const volunteersWithAssignments = eventVolunteers
-      .filter(ev => ev.volunteer && ev.volunteer.isActive)
-      .map(ev => ev.volunteer!)
+    // Filter and map to get volunteers with verification data + event-specific role flags
+    const activeEventVolunteers = eventVolunteers.filter(ev => ev.volunteer && ev.volunteer.isActive)
 
     return res.status(200).json({
       success: true,
-      volunteers: volunteersWithAssignments.map(volunteer => ({
-        id: volunteer.id,
-        name: `${volunteer.firstName} ${volunteer.lastName}`,
-        firstName: volunteer.firstName,
-        lastName: volunteer.lastName,
-        email: volunteer.email,
-        phone: volunteer.phone,
-        congregation: volunteer.congregation,
-        formsOfService: volunteer.formsOfService,
-        isActive: volunteer.isActive,
-        profileVerificationRequired: volunteer.profileVerificationRequired,
-        profileVerifiedAt: volunteer.profileVerifiedAt,
+      volunteers: activeEventVolunteers.map(ev => ({
+        id: ev.volunteer!.id,
+        name: `${ev.volunteer!.firstName} ${ev.volunteer!.lastName}`,
+        firstName: ev.volunteer!.firstName,
+        lastName: ev.volunteer!.lastName,
+        email: ev.volunteer!.email,
+        phone: ev.volunteer!.phone,
+        congregation: ev.volunteer!.congregation,
+        formsOfService: ev.volunteer!.formsOfService,
+        isActive: ev.volunteer!.isActive,
+        profileVerificationRequired: ev.volunteer!.profileVerificationRequired,
+        profileVerifiedAt: ev.volunteer!.profileVerifiedAt,
+        isOverseer: ev.isOverseer ?? false,
+        isKeyman: ev.isKeyman ?? false,
         assignments: []
       }))
     })

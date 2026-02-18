@@ -2,41 +2,44 @@
 
 **Last updated:** 2026-02-18  
 **Current branch:** main  
-**Working on:** v4.12.1 Complete template cleanup - deployed to STANDBY, ready for LIVE
+**Working on:** v4.12.1 Complete template system + database cleanup - deployed to STANDBY, ready for LIVE
 
 ---
 
 ## Current Task
-**v4.12.1 Complete Template System Cleanup** - ✅ STANDBY DEPLOYED
+**v4.12.1 Complete Template System + Database Cleanup** - ✅ STANDBY DEPLOYED
 
 ### What I'm doing right now
-Completed comprehensive template system cleanup. Removed ALL remaining template UI and backend references that were missed in v4.12.0:
-- Removed Department Template warning banner from event overview
-- Removed Department Template relationship card from event overview  
-- Removed Department Template dropdown from event edit form
-- Removed departmentTemplateId from all API endpoints (create, update, clone)
-- Removed departmentTemplate type imports and Prisma queries
+Completed comprehensive template system cleanup including full database debt removal:
+- Removed ALL orphaned API files, pages, components, and types
+- Cleaned all event pages (positions, volunteers, count-times, announcements, documents, lanyards, ivs, permissions)
+- Fixed all volunteer API IVS checks to use eventType-only (no more departmentTemplateId)
+- Cleaned Prisma schema: removed department_templates, event_departments, assignment_templates models
+- Ran destructive migration on STANDBY DB: dropped 3 tables + departmentTemplateId column
+- Regenerated Prisma client on STANDBY
 - event.settings is now the single source of truth for modules/terminology
+- Zero remaining template references in codebase (verified by grep)
 
 v4.12.1 committed, pushed, deployed to STANDBY (BLUE - 10.92.3.24). Build successful, PM2 running. Ready to deploy to LIVE.
 
 ### Recent completions
 
-**Today (2026-02-18) - v4.12.1 Complete Template Cleanup:**
-- ✅ Removed Department Template warning banner from event overview page
-- ✅ Removed Department Template relationship card from event overview
-- ✅ Removed Department Template dropdown from event edit form (Basic Info tab)
-- ✅ Removed departmentTemplateId from EventFormData interface
-- ✅ Removed departmentTemplateId from Event interface
-- ✅ Removed DepartmentTemplate interface and departmentTemplates prop
-- ✅ Removed departmentTemplates Prisma query from edit page getServerSideProps
-- ✅ Removed departmentTemplateId from events/index.ts API (create schema + data)
-- ✅ Removed departmentTemplateId from events/[id].ts API (update destructuring)
-- ✅ Removed departmentTemplateId from events/[id]/clone.ts API
-- ✅ Removed departmentTemplate type imports from event overview
-- ✅ Cleaned up TemplateProvider to use event.settings as single source of truth
-- ✅ Committed as "Complete Phase 4 cleanup - remove all remaining template UI"
-- ✅ Deployed to STANDBY (BLUE) - build successful, PM2 running
+**Today (2026-02-18) - v4.12.1 Complete Template + Database Cleanup:**
+- ✅ Deleted 7 orphaned API files (department-templates x2, assignment-templates x3, event departments x2)
+- ✅ Deleted 3 orphaned pages (departments.tsx, help/department-templates.tsx, help/position-templates.tsx)
+- ✅ Deleted 2 orphaned components (PositionTemplateModal.tsx, CustomFieldsRenderer.tsx)
+- ✅ Deleted orphaned type file (types/assignmentTemplate.ts)
+- ✅ Cleaned TemplateContext: removed positionTemplates, departmentTemplateName, inlined types
+- ✅ Cleaned EventPageWrapper: removed positionTemplates, departmentTemplateName props
+- ✅ Cleaned all 8 event pages: removed departmentTemplate interface, props, Prisma includes
+- ✅ Fixed 3 volunteer early-checkin APIs + dashboard: eventType-only IVS check
+- ✅ Fixed events/[id].ts API: removed departmentTemplate Prisma include
+- ✅ Removed departmentTemplateId from events/index.ts, events/[id].ts, events/[id]/clone.ts
+- ✅ Cleaned Prisma schema: removed department_templates, event_departments, assignment_templates models
+- ✅ Ran migration on STANDBY DB: dropped 3 tables + departmentTemplateId column
+- ✅ Regenerated Prisma client on STANDBY
+- ✅ Built and deployed to STANDBY (BLUE) - build successful, PM2 online
+- ✅ Zero template references remaining (verified by grep)
 
 **Earlier Today (2026-02-18) - v4.12.0 Initial Cleanup:**
 - ✅ Created database backup before cleanup (521KB)

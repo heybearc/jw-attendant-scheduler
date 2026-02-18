@@ -121,6 +121,39 @@ export default function ManagingAssignmentsPage({ userRole }: ManagingAssignment
                   </div>
                 </div>
 
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-6">
+                  <h3 className="text-lg font-semibold text-amber-900 mb-4">⚠️ Conflict Detection</h3>
+                  <div className="space-y-3">
+                    <p className="text-amber-800">
+                      When you open the <strong>Assign Volunteer</strong> dialog, TheoShift automatically checks each volunteer for scheduling conflicts with the selected shift.
+                    </p>
+                    <div className="space-y-2">
+                      <div className="bg-white border border-amber-200 rounded p-3">
+                        <p className="text-sm font-semibold text-amber-900 mb-1">What you'll see</p>
+                        <ul className="space-y-1 text-sm text-amber-800">
+                          <li>• Volunteers with no conflicts appear at the top of the list</li>
+                          <li>• An amber <strong>Conflict</strong> badge appears next to any volunteer with an overlapping shift</li>
+                          <li>• Selecting a conflicted volunteer shows a details message explaining which position and shift overlaps</li>
+                        </ul>
+                      </div>
+                      <div className="bg-white border border-amber-200 rounded p-3">
+                        <p className="text-sm font-semibold text-amber-900 mb-1">Types of conflicts detected</p>
+                        <ul className="space-y-1 text-sm text-amber-800">
+                          <li>• <strong>Time overlap:</strong> The volunteer is already assigned to another shift that runs at the same time</li>
+                          <li>• <strong>All-day conflict:</strong> The volunteer has an all-day shift, or you are assigning them to an all-day shift when they already have others</li>
+                          <li>• <strong>Duplicate shift:</strong> The volunteer is already assigned to this exact shift</li>
+                        </ul>
+                      </div>
+                      <div className="bg-white border border-amber-200 rounded p-3">
+                        <p className="text-sm font-semibold text-amber-900 mb-1">Overriding a conflict</p>
+                        <p className="text-sm text-amber-800">
+                          Coordinators can still assign a conflicted volunteer by selecting them and clicking <strong>Assign Volunteer</strong>. The conflict warning is informational — you have the final say.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="bg-white border border-gray-200 rounded-lg p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Step 4: Monitor and Adjust</h3>
                   <div className="space-y-3">

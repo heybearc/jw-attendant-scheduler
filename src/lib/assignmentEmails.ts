@@ -14,8 +14,10 @@ interface AssignmentEmailData {
   eventLocation: string
   positionName: string
   positionNumber: number
+  shiftName?: string
   shiftStart: string
   shiftEnd: string
+  isAllDay?: boolean
   overseerName?: string
   overseerEmail?: string
   overseerPhone?: string
@@ -99,13 +101,15 @@ export function generateAssignmentCreatedEmail(data: AssignmentEmailData): strin
                 <td style="padding: 8px 0; color: #1e40af; font-weight: 500;">Position:</td>
                 <td style="padding: 8px 0; color: #1e3a8a; font-weight: bold;">${data.positionName} (#${data.positionNumber})</td>
               </tr>
+              ${data.shiftName ? `
               <tr>
-                <td style="padding: 8px 0; color: #1e40af; font-weight: 500;">Shift Start:</td>
-                <td style="padding: 8px 0; color: #1e3a8a;">${data.shiftStart}</td>
+                <td style="padding: 8px 0; color: #1e40af; font-weight: 500;">Shift:</td>
+                <td style="padding: 8px 0; color: #1e3a8a;">${data.shiftName}</td>
               </tr>
+              ` : ''}
               <tr>
-                <td style="padding: 8px 0; color: #1e40af; font-weight: 500;">Shift End:</td>
-                <td style="padding: 8px 0; color: #1e3a8a;">${data.shiftEnd}</td>
+                <td style="padding: 8px 0; color: #1e40af; font-weight: 500;">Time:</td>
+                <td style="padding: 8px 0; color: #1e3a8a;">${data.isAllDay ? 'All Day' : `${data.shiftStart} – ${data.shiftEnd}`}</td>
               </tr>
             </table>
             ${data.notes ? `
@@ -151,7 +155,7 @@ export function generateAssignmentCreatedEmail(data: AssignmentEmailData): strin
           <!-- Support -->
           <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; margin: 20px 0;">
             <p style="color: #6b7280; line-height: 1.6; margin: 0; font-size: 14px;">
-              If you have questions or are unable to fulfill this assignment, please contact ${data.overseerName ? `<strong>${data.overseerName}</strong>` : 'your event coordinator'} as soon as possible.
+              If you have questions or are unable to fulfill this assignment, please contact ${data.overseerName ? `<strong>${data.overseerName}</strong>` : 'your overseer'} as soon as possible.
             </p>
           </div>
         </div>
@@ -159,7 +163,7 @@ export function generateAssignmentCreatedEmail(data: AssignmentEmailData): strin
         <!-- Footer -->
         <div style="background-color: #374151; color: #d1d5db; padding: 20px; text-align: center;">
           <p style="margin: 0; font-size: 14px;">TheoShift</p>
-          <p style="margin: 6px 0 0 0; font-size: 12px; opacity: 0.7;">This is an automated message. To make changes, contact your event coordinator.</p>
+          <p style="margin: 6px 0 0 0; font-size: 12px; opacity: 0.7;">This is an automated message. To make changes, contact your overseer.</p>
         </div>
       </div>
     </body>
@@ -242,7 +246,7 @@ export function generateAssignmentUpdatedEmail(data: AssignmentUpdateData): stri
         <!-- Footer -->
         <div style="background-color: #374151; color: #d1d5db; padding: 20px; text-align: center;">
           <p style="margin: 0; font-size: 14px;">TheoShift</p>
-          <p style="margin: 6px 0 0 0; font-size: 12px; opacity: 0.7;">This is an automated message. To make changes, contact your event coordinator.</p>
+          <p style="margin: 6px 0 0 0; font-size: 12px; opacity: 0.7;">This is an automated message. To make changes, contact your overseer.</p>
         </div>
       </div>
     </body>
@@ -323,7 +327,7 @@ export function generateAssignmentCancelledEmail(data: AssignmentCancelledData):
         <!-- Footer -->
         <div style="background-color: #374151; color: #d1d5db; padding: 20px; text-align: center;">
           <p style="margin: 0; font-size: 14px;">TheoShift</p>
-          <p style="margin: 6px 0 0 0; font-size: 12px; opacity: 0.7;">This is an automated message. To make changes, contact your event coordinator.</p>
+          <p style="margin: 6px 0 0 0; font-size: 12px; opacity: 0.7;">This is an automated message. To make changes, contact your overseer.</p>
         </div>
       </div>
     </body>
@@ -438,7 +442,7 @@ export function generateAssignmentReminderEmail(data: AssignmentReminderData): s
         <!-- Footer -->
         <div style="background-color: #374151; color: #d1d5db; padding: 20px; text-align: center;">
           <p style="margin: 0; font-size: 14px;">TheoShift</p>
-          <p style="margin: 6px 0 0 0; font-size: 12px; opacity: 0.7;">This is an automated message. To make changes, contact your event coordinator.</p>
+          <p style="margin: 6px 0 0 0; font-size: 12px; opacity: 0.7;">This is an automated message. To make changes, contact your overseer.</p>
         </div>
       </div>
     </body>

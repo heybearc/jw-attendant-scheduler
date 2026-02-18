@@ -178,8 +178,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         })
 
         // Format shift times
-        const shiftStart = assignment.shift?.startTime || 'Not specified'
-        const shiftEnd = assignment.shift?.endTime || 'Not specified'
+        const isAllDay = assignment.shift?.isAllDay || false
+        const shiftName = assignment.shift?.name
+        const shiftStart = assignment.shift?.startTime || ''
+        const shiftEnd = assignment.shift?.endTime || ''
 
         // Get overseer info if exists
         const overseer = assignment.overseer
@@ -197,8 +199,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           eventLocation: event.location || event.venue || 'Location TBD',
           positionName: assignment.positions.name,
           positionNumber: assignment.positions.positionNumber,
+          shiftName,
           shiftStart,
           shiftEnd,
+          isAllDay,
           overseerName,
           overseerEmail,
           overseerPhone: overseerPhone ?? undefined,

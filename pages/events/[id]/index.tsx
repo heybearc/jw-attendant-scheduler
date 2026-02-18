@@ -12,7 +12,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { format } from 'date-fns'
-import { ModuleConfig, Terminology, PositionTemplate, CustomField } from '../../../types/departmentTemplate'
+// Template types removed - using event.settings directly
 
 interface Event {
   id: string
@@ -30,7 +30,6 @@ interface Event {
   createdAt: string
   updatedAt: string
   parentEventId?: string | null
-  departmentTemplateId?: string | null
   settings?: {
     modules?: {
       countTimes?: boolean
@@ -66,14 +65,6 @@ interface Event {
   parentEvent?: {
     id: string
     name: string
-  } | null
-  departmentTemplate?: {
-    id: string
-    name: string
-    description?: string
-    moduleConfig?: ModuleConfig | null
-    terminology?: Terminology | null
-    positionTemplates?: PositionTemplate[] | null
   } | null
   countStats?: {
     peakAttendance: number | null
@@ -358,8 +349,8 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
     )
   }
 
-  // Use event.settings.modules as primary source, fall back to template
-  const effectiveModuleConfig: ModuleConfig | null = event.settings?.modules 
+  // Use event.settings.modules directly
+  const effectiveModuleConfig = event.settings?.modules
     ? {
         countTimes: event.settings.modules.countTimes ?? true,
         lanyards: event.settings.modules.lanyards ?? true,
@@ -369,19 +360,15 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
         announcements: event.settings.modules.announcements ?? true,
         customFields: []
       }
-    : (event.departmentTemplate?.moduleConfig as ModuleConfig | null)
+    : null
 
-  // Use event.settings.terminology as primary source, fall back to template
-  const effectiveTerminology: Terminology | null = event.settings?.terminology
-    ? event.settings.terminology
-    : (event.departmentTemplate?.terminology as Terminology | null)
+  // Use event.settings.terminology directly
+  const effectiveTerminology = event.settings?.terminology || null
 
   return (
     <TemplateProvider
       moduleConfig={effectiveModuleConfig}
       terminology={effectiveTerminology}
-      positionTemplates={event.departmentTemplate?.positionTemplates as PositionTemplate[] | null}
-      departmentTemplateName={event.departmentTemplate?.name}
       eventModuleOverrides={event.settings?.moduleOverrides || null}
     >
       <EventPageLayout
@@ -399,37 +386,6 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
         onStatusChange={handleStatusChange}
       >
 
-        {/* Admin Notice: No Department Template Configured */}
-        {!event.departmentTemplate && canEdit && (
-          <div className="mb-6 bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-amber-800">
-                  Default Template in Use
-                </h3>
-                <div className="mt-2 text-sm text-amber-700">
-                  <p>
-                    This event is using the default template with generic "Volunteer" terminology and all features enabled. 
-                    To customize terminology and available features for this event type, an admin should configure a department template.
-                  </p>
-                </div>
-                <div className="mt-4">
-                  <Link
-                    href={`/events/${event.id}/edit`}
-                    className="text-sm font-medium text-amber-800 hover:text-amber-900 underline"
-                  >
-                    Configure Department Template →
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* APEX GUARDIAN: Event Command Center Dashboard */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -497,8 +453,8 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
               </div>
             </div>
 
-            {/* Parent Event & Department Template Info */}
-            {(event.parentEvent || event.departmentTemplate) && (
+            {/* Parent Event Info */}
+            {event.parentEvent && (
               <div className="bg-white shadow-lg rounded-xl p-6 border border-gray-200">
                 <div className="flex items-center mb-4">
                   <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center mr-4">
@@ -506,44 +462,18 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
                   </div>
                   <h3 className="text-xl font-bold text-gray-900">Event Relationships</h3>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {event.parentEvent && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <label className="block text-sm font-medium text-blue-700 mb-2">Parent Event</label>
-                      <Link
-                        href={`/events/${event.parentEvent.id}`}
-                        className="text-blue-600 hover:text-blue-800 font-semibold hover:underline"
-                      >
-                        {event.parentEvent.name} →
-                      </Link>
-                    </div>
-                  )}
-                  {event.departmentTemplate && (
-                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                      <label className="block text-sm font-medium text-purple-700 mb-2">Department Template</label>
-                      <p className="text-purple-900 font-semibold">{event.departmentTemplate.name}</p>
-                      {event.departmentTemplate.description && (
-                        <p className="text-sm text-purple-700 mt-1">{event.departmentTemplate.description}</p>
-                      )}
-                    </div>
-                  )}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <label className="block text-sm font-medium text-blue-700 mb-2">Parent Event</label>
+                  <Link
+                    href={`/events/${event.parentEvent.id}`}
+                    className="text-blue-600 hover:text-blue-800 font-semibold hover:underline"
+                  >
+                    {event.parentEvent.name} →
+                  </Link>
                 </div>
               </div>
             )}
 
-            {/* Custom Fields Display */}
-            {event.departmentTemplate?.moduleConfig && event.settings?.customFields && (() => {
-              const customFields = (event.departmentTemplate.moduleConfig as any)?.customFields as CustomField[] || []
-              if (customFields.length > 0) {
-                return (
-                  <CustomFieldsDisplay
-                    fields={customFields}
-                    values={event.settings.customFields}
-                  />
-                )
-              }
-              return null
-            })()}
 
             {/* Child Events Section */}
             {event.childEvents && event.childEvents.length > 0 && (
@@ -883,16 +813,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
             id: true,
             name: true
           }
-        },
-        departmentTemplate: {
-          select: {
-            id: true,
-            name: true,
-            description: true,
-            moduleConfig: true,
-            terminology: true,
-            positionTemplates: true
-          }
         }
       }
     })
@@ -982,7 +902,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         endDate: child.endDate ? format(child.endDate, 'yyyy-MM-dd') : null
       })) || [],
       parentEvent: (event as any).parentEvent || null,
-      departmentTemplate: (event as any).departmentTemplate || null,
       _count: {
         event_volunteers: (event as any).event_volunteers?.length || 0,
         assignments: totalAssignments,

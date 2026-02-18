@@ -64,7 +64,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         
         const { 
           name, description, eventType, startDate, endDate, startTime, endTime, location, status, capacity, attendantsNeeded, volunteersNeeded,
-          departmentTemplateId,
           settings, // Event settings (modules and terminology)
           // APEX GUARDIAN: Oversight Management Fields
           departmentOverseerName, departmentOverseerPhone, departmentOverseerEmail, departmentOverseerUserId,

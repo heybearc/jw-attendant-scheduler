@@ -96,7 +96,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         volunteersNeeded: originalEvent.volunteersNeeded,
         status: 'UPCOMING',
         createdBy: user.id,
-        departmentTemplateId: originalEvent.departmentTemplateId,
         updatedAt: new Date(),
         // Clone oversight details (if enabled)
         ...(cloneOversight && {

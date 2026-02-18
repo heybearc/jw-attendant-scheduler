@@ -22,7 +22,6 @@ const eventSchema = z.object({
   attendantsNeeded: z.number().int().min(0).optional(),
   status: z.enum(['ARCHIVED', 'UPCOMING', 'CURRENT', 'COMPLETED', 'CANCELLED']).default('UPCOMING'),
   parentEventId: z.string().optional(),
-  departmentTemplateId: z.string().optional(),
 })
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -263,8 +262,7 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse, userId: str
       status: data.status as any,
       createdBy: userId,
       updatedAt: new Date(),
-      parentEventId: data.parentEventId,
-      departmentTemplateId: data.departmentTemplateId
+      parentEventId: data.parentEventId
     },
     include: {
       _count: {

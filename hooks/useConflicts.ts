@@ -42,6 +42,7 @@ export function buildVolunteerAssignmentMap(
   positions: Array<{
     name: string
     assignments?: Array<{
+      volunteer?: { id: string } | null
       attendant?: { id: string } | null
       shift?: ShiftTime | null
       shiftId?: string
@@ -52,7 +53,7 @@ export function buildVolunteerAssignmentMap(
 
   for (const position of positions) {
     for (const assignment of position.assignments || []) {
-      const volunteerId = assignment.attendant?.id
+      const volunteerId = (assignment.volunteer as any)?.id || (assignment.attendant as any)?.id
       const shift = assignment.shift
       if (!volunteerId || !shift) continue
 

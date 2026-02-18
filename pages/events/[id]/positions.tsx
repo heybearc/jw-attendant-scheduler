@@ -151,7 +151,7 @@ interface AssignVolunteerModalProps {
   position: Position
   selectedShift: any | null
   filteredAttendants: Attendant[]
-  conflictMap: Map<string, import('../../../hooks/useConflicts').ConflictResult>
+  allPositions: Position[]
   eventId: string
   onClose: () => void
   onSuccess: () => void
@@ -162,7 +162,7 @@ function AssignVolunteerModal({
   position,
   selectedShift,
   filteredAttendants,
-  conflictMap,
+  allPositions,
   eventId,
   onClose,
   onSuccess,
@@ -173,6 +173,23 @@ function AssignVolunteerModal({
   const [search, setSearch] = React.useState('')
   const [inlineError, setInlineError] = React.useState<string | null>(null)
   const [submitting, setSubmitting] = React.useState(false)
+
+  // Build assignment map once from all positions data
+  const assignmentMap = React.useMemo(
+    () => buildVolunteerAssignmentMap(allPositions),
+    [allPositions]
+  )
+
+  // Recompute conflict map whenever the selected shift changes
+  const activeShift = React.useMemo(() => {
+    if (!selectedShiftId) return position.shifts?.[0] || null
+    return position.shifts?.find(s => s.id === selectedShiftId) || null
+  }, [selectedShiftId, position.shifts])
+
+  const conflictMap = React.useMemo(
+    () => getConflictsForShift(filteredAttendants.map(a => a.id), activeShift, assignmentMap),
+    [filteredAttendants, activeShift, assignmentMap]
+  )
 
   const conflict = selectedVolunteerId ? conflictMap.get(selectedVolunteerId) : null
 
@@ -2195,15 +2212,6 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
 
         {/* Assign Volunteer Modal */}
         {showAssignAttendantModal && selectedPosition && (() => {
-          // Build conflict map from current positions data
-          const assignmentMap = buildVolunteerAssignmentMap(positions)
-
-          // Determine active shift for conflict checking
-          const activeShiftId = selectedShift?.id
-          const activeShift = activeShiftId
-            ? selectedPosition.shifts?.find(s => s.id === activeShiftId) || selectedShift
-            : selectedPosition.shifts?.[0] || null
-
           // Get oversight filtering
           const oversight = selectedPosition.oversight && selectedPosition.oversight.length > 0 ? selectedPosition.oversight[0] : null
           const positionOverseer = oversight?.overseer
@@ -2217,19 +2225,12 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
             })
           }
 
-          // Compute conflicts for all volunteers against the active shift
-          const conflictMap = getConflictsForShift(
-            filteredAttendants.map(a => a.id),
-            activeShift,
-            assignmentMap
-          )
-
           return (
             <AssignVolunteerModal
               position={selectedPosition}
               selectedShift={selectedShift}
               filteredAttendants={filteredAttendants}
-              conflictMap={conflictMap}
+              allPositions={positions}
               eventId={eventId}
               onClose={() => { setShowAssignAttendantModal(false); setSelectedShift(null) }}
               onSuccess={() => { setShowAssignAttendantModal(false); setSelectedShift(null); router.reload() }}

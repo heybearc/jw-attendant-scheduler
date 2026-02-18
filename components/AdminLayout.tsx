@@ -39,8 +39,6 @@ export default function AdminLayout({ children, title, breadcrumbs = [], userLas
   const adminTabs = [
     { label: 'Dashboard', href: '/admin', icon: '🏠' },
     { label: 'Users', href: '/admin/users', icon: '👥' },
-    { label: 'Departments', href: '/admin/departments', icon: '🏢' },
-    { label: 'Templates', href: '/admin/assignment-templates', icon: '📋' },
     { label: 'Locations', href: '/admin/locations', icon: '📍' },
     { label: 'Feedback', href: '/admin/feedback', icon: '💬' },
     { label: 'Health', href: '/admin/health', icon: '💚' },

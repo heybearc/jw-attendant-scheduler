@@ -17,7 +17,7 @@ interface EventPageLayoutProps {
     eventType?: string
     startDate?: string
   }
-  currentPage: 'overview' | 'positions' | 'volunteers' | 'oversight' | 'count-times' | 'lanyards' | 'ivs' | 'documents' | 'announcements' | 'permissions' | 'edit'
+  currentPage: 'overview' | 'positions' | 'volunteers' | 'count-times' | 'lanyards' | 'ivs' | 'documents' | 'announcements' | 'permissions' | 'edit'
   canEdit?: boolean
   canDelete?: boolean
   canManagePermissions?: boolean
@@ -171,16 +171,6 @@ export default function EventPageLayout({
               }`}
             >
               👥 <VolunteerText plural />
-            </Link>
-            <Link
-              href={`/events/${event.id}/oversight`}
-              className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${
-                currentPage === 'oversight'
-                  ? 'text-blue-600 border-b-2 border-blue-600'
-                  : 'text-gray-600 hover:text-gray-900 hover:border-gray-300 border-b-2 border-transparent'
-              }`}
-            >
-              🔍 Oversight
             </Link>
             {isCountTimesEnabled && (
               <Link

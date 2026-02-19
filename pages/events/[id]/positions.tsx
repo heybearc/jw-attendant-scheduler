@@ -2987,7 +2987,9 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
         overseerId: assoc.overseerId || null,
         keymanId: assoc.keymanId || null,
         overseer: assoc.overseer || null,
-        keyman: assoc.keyman || null
+        keyman: assoc.keyman || null,
+        isOverseer: assoc.isOverseer ?? false,
+        isKeyman: assoc.isKeyman ?? false
       }))
       .sort((a, b) => {
         const nameA = `${a.firstName} ${a.lastName}`.toLowerCase()

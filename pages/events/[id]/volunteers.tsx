@@ -429,11 +429,11 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
     }
 
     try {
-      const response = await fetch('/api/attendant/force-verification', {
+      const response = await fetch('/api/volunteer/force-verification', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          attendantId: attendant.id
+          volunteerId: attendant.id
         })
       })
 
@@ -820,11 +820,11 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
 
           if (pin) {
             updates.push(
-              fetch('/api/attendant/set-pin', {
+              fetch('/api/volunteer/set-pin', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                  attendantId: attendant.id,
+                  volunteerId: attendant.id,
                   pin,
                   autoGenerate: false
                 })

@@ -24,7 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Set profile verification requirement using raw SQL to avoid Prisma client issues
     await prisma.$executeRaw`
-      UPDATE attendants 
+      UPDATE volunteers 
       SET "profileVerificationRequired" = true, "updatedAt" = NOW() 
       WHERE id = ${volunteerId}
     `

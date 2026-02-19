@@ -16,7 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     // Update volunteer's verification status
     await prisma.$executeRaw`
-      UPDATE attendants 
+      UPDATE volunteers 
       SET "profileVerifiedAt" = NOW(),
           "profileVerificationRequired" = false
       WHERE id = ${volunteerId}

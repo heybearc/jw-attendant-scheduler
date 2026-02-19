@@ -45,7 +45,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Update volunteer profile, clear verification requirement, and update PIN
     if (pinHash) {
       await prisma.$executeRaw`
-        UPDATE attendants 
+        UPDATE volunteers 
         SET email = ${email || ''}, 
             phone = ${formattedPhone}, 
             "pinHash" = ${pinHash},
@@ -56,7 +56,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       `
     } else {
       await prisma.$executeRaw`
-        UPDATE attendants 
+        UPDATE volunteers 
         SET email = ${email || ''}, 
             phone = ${formattedPhone}, 
             "profileVerificationRequired" = false,

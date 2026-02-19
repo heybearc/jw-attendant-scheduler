@@ -30,11 +30,11 @@ export default function VolunteerPINManagement({ attendants }: Props) {
     setMessage(null)
 
     try {
-      const response = await fetch('/api/attendant/set-pin', {
+      const response = await fetch('/api/volunteer/set-pin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          attendantId,
+          volunteerId: attendantId,
           pin: customPin,
           autoGenerate
         })

@@ -42,15 +42,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   // Allow all authenticated users to view events
-  // Only ADMIN and OVERSEER can create events (handled in POST method)
+  // ADMIN, OVERSEER, ASSISTANT_OVERSEER can create events (handled in POST method)
 
   try {
     switch (req.method) {
       case 'GET':
         return await handleGet(req, res, user.id)
       case 'POST':
-        // Only ADMIN and OVERSEER can create events
-        if (!['ADMIN', 'OVERSEER'].includes(user.role)) {
+        // ADMIN, OVERSEER, and ASSISTANT_OVERSEER can create events
+        if (!['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER'].includes(user.role)) {
           return res.status(403).json({ error: 'Insufficient permissions to create events' })
         }
         return await handlePost(req, res, user.id)

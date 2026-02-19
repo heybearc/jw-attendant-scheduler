@@ -3,7 +3,7 @@
  */
 
 import { test, expect } from '@playwright/test'
-import { getBaseUrl, getTestCredentials } from './helpers/test-config'
+import { getBaseUrl, getTestCredentials, getValidEventId } from './helpers/test-config'
 
 const BASE_URL = getBaseUrl()
 const credentials = getTestCredentials()
@@ -20,7 +20,7 @@ test.describe('Test Other Event Pages', () => {
   })
 
   test('check if /events/[id]/positions works', async ({ page }) => {
-    const eventId = '7a14c6ac-18c3-4c98-9b07-ba853d30f144'
+    const eventId = await getValidEventId(page)
     const response = await page.goto(`${BASE_URL}/events/${eventId}/positions`)
     
     console.log('Positions page status:', response?.status())
@@ -39,7 +39,7 @@ test.describe('Test Other Event Pages', () => {
   })
 
   test('check if /events/[id]/volunteers works (renamed from attendants)', async ({ page }) => {
-    const eventId = '7a14c6ac-18c3-4c98-9b07-ba853d30f144'
+    const eventId = await getValidEventId(page)
     const response = await page.goto(`${BASE_URL}/events/${eventId}/volunteers`)
     
     console.log('Volunteers page status:', response?.status())

@@ -33,22 +33,16 @@ test.describe('FB-029: Volunteer Details Popup', () => {
 
   test('should display volunteer names as clickable elements', async ({ page }) => {
     // Wait for page to load
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
+    await page.waitForTimeout(1000)
     
     // Look for volunteer name cells in table - use filter with regex
     const volunteerNames = page.locator('td').filter({ hasText: /[A-Z][a-z]+ [A-Z][a-z]+/ })
     
-    // Wait for at least one volunteer name to appear
-    await volunteerNames.first().waitFor({ state: 'visible', timeout: 5000 }).catch(() => {})
-    
-    if (await volunteerNames.count() > 0) {
-      const firstName = volunteerNames.first()
-      await expect(firstName).toBeVisible()
-      
-      // Just verify the name is displayed - don't require specific cursor-pointer class
-      // (the popup functionality may or may not be implemented yet)
+    const count = await volunteerNames.count()
+    if (count > 0) {
+      await expect(volunteerNames.first()).toBeVisible()
     } else {
-      // If no volunteers found, skip test
       test.skip()
     }
   })

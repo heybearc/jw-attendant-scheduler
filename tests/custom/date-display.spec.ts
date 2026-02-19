@@ -25,7 +25,7 @@ test.describe('Date Display Verification', () => {
     // Click first event
     await page.click('button:has-text("Select Event")')
     await page.waitForURL('**/events/**')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('load')
     
     // Look for any date on the page - event details should have dates
     const pageContent = await page.content()

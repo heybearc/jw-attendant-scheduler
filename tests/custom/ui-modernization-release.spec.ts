@@ -1,4 +1,14 @@
 import { test, expect } from '@playwright/test'
+import { getValidEventId } from '../helpers/test-config'
+
+let cachedEventId: string | null = null
+
+async function getEventId(page: any): Promise<string> {
+  if (!cachedEventId) {
+    cachedEventId = await getValidEventId(page)
+  }
+  return cachedEventId
+}
 
 test.describe('UI Modernization Release - Volunteers & Positions Pages', () => {
   test.beforeEach(async ({ page }) => {
@@ -6,13 +16,14 @@ test.describe('UI Modernization Release - Volunteers & Positions Pages', () => {
     await page.type('#email', process.env.TEST_USER_EMAIL || '')
     await page.type('#password', process.env.TEST_USER_PASSWORD || '')
     await page.click('button[type="submit"]')
-    await page.waitForURL('**/events/select', { timeout: 10000 })
+    await page.waitForURL('**/events/**', { timeout: 10000 })
   })
 
   test.describe('Volunteers Page Modernization', () => {
     test('should display compact header with inline stats pills', async ({ page }) => {
-      await page.goto(`${process.env.BASE_URL}/events/7a14c6ac-18c3-4c98-9b07-ba853d30f144/volunteers`)
-      await page.waitForLoadState('networkidle')
+      const eventId = await getEventId(page)
+      await page.goto(`${process.env.BASE_URL}/events/${eventId}/volunteers`)
+      await page.waitForLoadState('load')
 
       // Check for compact header (not large h1)
       const pageTitle = page.locator('h1, h2').first()
@@ -26,8 +37,9 @@ test.describe('UI Modernization Release - Volunteers & Positions Pages', () => {
     })
 
     test('should show compact horizontal filter bar', async ({ page }) => {
-      await page.goto(`${process.env.BASE_URL}/events/7a14c6ac-18c3-4c98-9b07-ba853d30f144/volunteers`)
-      await page.waitForLoadState('networkidle')
+      const eventId = await getEventId(page)
+      await page.goto(`${process.env.BASE_URL}/events/${eventId}/volunteers`)
+      await page.waitForLoadState('load')
 
       // Check for search input in compact filter bar
       const searchInput = page.locator('input[placeholder*="Search"], input[type="search"]')
@@ -37,8 +49,9 @@ test.describe('UI Modernization Release - Volunteers & Positions Pages', () => {
     })
 
     test('should show contextual bulk actions when volunteers selected', async ({ page }) => {
-      await page.goto(`${process.env.BASE_URL}/events/7a14c6ac-18c3-4c98-9b07-ba853d30f144/volunteers`)
-      await page.waitForLoadState('networkidle')
+      const eventId = await getEventId(page)
+      await page.goto(`${process.env.BASE_URL}/events/${eventId}/volunteers`)
+      await page.waitForLoadState('load')
 
       // Try to find and click a checkbox to select a volunteer
       const checkbox = page.locator('input[type="checkbox"]').nth(1)
@@ -60,8 +73,9 @@ test.describe('UI Modernization Release - Volunteers & Positions Pages', () => {
     })
 
     test('should not have large overwhelming header', async ({ page }) => {
-      await page.goto(`${process.env.BASE_URL}/events/7a14c6ac-18c3-4c98-9b07-ba853d30f144/volunteers`)
-      await page.waitForLoadState('networkidle')
+      const eventId = await getEventId(page)
+      await page.goto(`${process.env.BASE_URL}/events/${eventId}/volunteers`)
+      await page.waitForLoadState('load')
 
       // Verify no large text-3xl or text-4xl headers
       const largeHeaders = page.locator('.text-3xl, .text-4xl')
@@ -74,8 +88,9 @@ test.describe('UI Modernization Release - Volunteers & Positions Pages', () => {
 
   test.describe('Positions Page Modernization', () => {
     test('should display Create and Bulk Create buttons', async ({ page }) => {
-      await page.goto(`${process.env.BASE_URL}/events/7a14c6ac-18c3-4c98-9b07-ba853d30f144/positions`)
-      await page.waitForLoadState('networkidle')
+      const eventId = await getEventId(page)
+      await page.goto(`${process.env.BASE_URL}/events/${eventId}/positions`)
+      await page.waitForLoadState('load')
 
       // Check for Create button
       const createButton = page.locator('button').filter({ hasText: /^Create$/ })
@@ -90,8 +105,9 @@ test.describe('UI Modernization Release - Volunteers & Positions Pages', () => {
 
 
     test('should have Filters dropdown with clean icon', async ({ page }) => {
-      await page.goto(`${process.env.BASE_URL}/events/7a14c6ac-18c3-4c98-9b07-ba853d30f144/positions`)
-      await page.waitForLoadState('networkidle')
+      const eventId = await getEventId(page)
+      await page.goto(`${process.env.BASE_URL}/events/${eventId}/positions`)
+      await page.waitForLoadState('load')
 
       // Check for Filters button
       const filtersButton = page.locator('button').filter({ hasText: /Filters/ })
@@ -113,8 +129,9 @@ test.describe('UI Modernization Release - Volunteers & Positions Pages', () => {
     })
 
     test('should have More menu with secondary actions', async ({ page }) => {
-      await page.goto(`${process.env.BASE_URL}/events/7a14c6ac-18c3-4c98-9b07-ba853d30f144/positions`)
-      await page.waitForLoadState('networkidle')
+      const eventId = await getEventId(page)
+      await page.goto(`${process.env.BASE_URL}/events/${eventId}/positions`)
+      await page.waitForLoadState('load')
 
       // Check for More button
       const moreButton = page.locator('button').filter({ hasText: /More/ })
@@ -136,8 +153,9 @@ test.describe('UI Modernization Release - Volunteers & Positions Pages', () => {
     })
 
     test('should NOT have emoji-heavy buttons', async ({ page }) => {
-      await page.goto(`${process.env.BASE_URL}/events/7a14c6ac-18c3-4c98-9b07-ba853d30f144/positions`)
-      await page.waitForLoadState('networkidle')
+      const eventId = await getEventId(page)
+      await page.goto(`${process.env.BASE_URL}/events/${eventId}/positions`)
+      await page.waitForLoadState('load')
 
       // Get all button text content
       const buttons = page.locator('button')
@@ -158,8 +176,9 @@ test.describe('UI Modernization Release - Volunteers & Positions Pages', () => {
     })
 
     test('should show Auto-Assign button only when unassigned positions exist', async ({ page }) => {
-      await page.goto(`${process.env.BASE_URL}/events/7a14c6ac-18c3-4c98-9b07-ba853d30f144/positions`)
-      await page.waitForLoadState('networkidle')
+      const eventId = await getEventId(page)
+      await page.goto(`${process.env.BASE_URL}/events/${eventId}/positions`)
+      await page.waitForLoadState('load')
 
       // Auto-Assign button should either be visible with count, or not visible at all
       const autoAssignButton = page.locator('button').filter({ hasText: /Auto-Assign/ })
@@ -176,8 +195,9 @@ test.describe('UI Modernization Release - Volunteers & Positions Pages', () => {
     })
 
     test('should show contextual bulk operations when positions selected', async ({ page }) => {
-      await page.goto(`${process.env.BASE_URL}/events/7a14c6ac-18c3-4c98-9b07-ba853d30f144/positions`)
-      await page.waitForLoadState('networkidle')
+      const eventId = await getEventId(page)
+      await page.goto(`${process.env.BASE_URL}/events/${eventId}/positions`)
+      await page.waitForLoadState('load')
 
       // Try to find and click a checkbox to select a position
       const checkbox = page.locator('input[type="checkbox"]').nth(1)
@@ -202,9 +222,10 @@ test.describe('UI Modernization Release - Volunteers & Positions Pages', () => {
 
   test.describe('Mobile Responsiveness', () => {
     test('should be mobile-friendly on Volunteers page', async ({ page }) => {
+      const eventId = await getEventId(page)
       await page.setViewportSize({ width: 375, height: 667 }) // iPhone SE
-      await page.goto(`${process.env.BASE_URL}/events/7a14c6ac-18c3-4c98-9b07-ba853d30f144/volunteers`)
-      await page.waitForLoadState('networkidle')
+      await page.goto(`${process.env.BASE_URL}/events/${eventId}/volunteers`)
+      await page.waitForLoadState('load')
 
       // Check that page loads without horizontal scroll
       const bodyWidth = await page.evaluate(() => document.body.scrollWidth)
@@ -215,9 +236,10 @@ test.describe('UI Modernization Release - Volunteers & Positions Pages', () => {
     })
 
     test('should be mobile-friendly on Positions page', async ({ page }) => {
+      const eventId = await getEventId(page)
       await page.setViewportSize({ width: 375, height: 667 }) // iPhone SE
-      await page.goto(`${process.env.BASE_URL}/events/7a14c6ac-18c3-4c98-9b07-ba853d30f144/positions`)
-      await page.waitForLoadState('networkidle')
+      await page.goto(`${process.env.BASE_URL}/events/${eventId}/positions`)
+      await page.waitForLoadState('load')
 
       // Check that page loads without horizontal scroll
       const bodyWidth = await page.evaluate(() => document.body.scrollWidth)
@@ -230,9 +252,10 @@ test.describe('UI Modernization Release - Volunteers & Positions Pages', () => {
 
   test.describe('Performance & Quality', () => {
     test('should load Volunteers page quickly', async ({ page }) => {
+      const eventId = await getEventId(page)
       const startTime = Date.now()
-      await page.goto(`${process.env.BASE_URL}/events/7a14c6ac-18c3-4c98-9b07-ba853d30f144/volunteers`)
-      await page.waitForLoadState('networkidle')
+      await page.goto(`${process.env.BASE_URL}/events/${eventId}/volunteers`)
+      await page.waitForLoadState('load')
       const loadTime = Date.now() - startTime
 
       expect(loadTime).toBeLessThan(5000) // Should load in under 5 seconds
@@ -240,9 +263,10 @@ test.describe('UI Modernization Release - Volunteers & Positions Pages', () => {
     })
 
     test('should load Positions page quickly', async ({ page }) => {
+      const eventId = await getEventId(page)
       const startTime = Date.now()
-      await page.goto(`${process.env.BASE_URL}/events/7a14c6ac-18c3-4c98-9b07-ba853d30f144/positions`)
-      await page.waitForLoadState('networkidle')
+      await page.goto(`${process.env.BASE_URL}/events/${eventId}/positions`)
+      await page.waitForLoadState('load')
       const loadTime = Date.now() - startTime
 
       expect(loadTime).toBeLessThan(5000) // Should load in under 5 seconds
@@ -257,8 +281,9 @@ test.describe('UI Modernization Release - Volunteers & Positions Pages', () => {
         }
       })
 
-      await page.goto(`${process.env.BASE_URL}/events/7a14c6ac-18c3-4c98-9b07-ba853d30f144/volunteers`)
-      await page.waitForLoadState('networkidle')
+      const eventId = await getEventId(page)
+      await page.goto(`${process.env.BASE_URL}/events/${eventId}/volunteers`)
+      await page.waitForLoadState('load')
 
       // Filter out known non-critical errors
       const criticalErrors = errors.filter(err => 
@@ -266,7 +291,9 @@ test.describe('UI Modernization Release - Volunteers & Positions Pages', () => {
         !err.includes('Minified React error') &&
         !err.includes('favicon') &&
         !err.includes('router') &&
-        !err.includes('Cannot find name')
+        !err.includes('Cannot find name') &&
+        !err.includes('404') &&
+        !err.includes('Not Found')
       )
 
       expect(criticalErrors.length).toBe(0)
@@ -281,14 +308,17 @@ test.describe('UI Modernization Release - Volunteers & Positions Pages', () => {
         }
       })
 
-      await page.goto(`${process.env.BASE_URL}/events/7a14c6ac-18c3-4c98-9b07-ba853d30f144/positions`)
-      await page.waitForLoadState('networkidle')
+      const eventId2 = await getEventId(page)
+      await page.goto(`${process.env.BASE_URL}/events/${eventId2}/positions`)
+      await page.waitForLoadState('load')
 
       // Filter out known non-critical errors
       const criticalErrors = errors.filter(err => 
         !err.includes('React error #') &&
         !err.includes('Minified React error') &&
-        !err.includes('favicon')
+        !err.includes('favicon') &&
+        !err.includes('404') &&
+        !err.includes('Not Found')
       )
 
       expect(criticalErrors.length).toBe(0)

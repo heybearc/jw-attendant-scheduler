@@ -2893,6 +2893,12 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
       }
     })
 
+    // Fetch event settings separately (settings is a JSON column, not a relation)
+    const eventSettings = await prisma.events.findUnique({
+      where: { id: id as string },
+      select: { settings: true }
+    })
+
     // Fetch attendants for overseer assignment from attendants table
     // APEX GUARDIAN: Manually fetch oversight data since relation has TypeScript issues
     const oversightData = await (prisma as any).position_oversight_assignments.findMany({
@@ -3041,8 +3047,17 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
         canEdit,
         canDelete,
         canManagePermissions: canManagePerms,
-        moduleConfig: null,
-        terminology: null
+        moduleConfig: (eventSettings?.settings as any)?.modules
+          ? {
+              countTimes: (eventSettings!.settings as any).modules.countTimes ?? true,
+              lanyards: (eventSettings!.settings as any).modules.lanyards ?? true,
+              ivsModule: (eventSettings!.settings as any).modules.ivsModule ?? false,
+              positions: (eventSettings!.settings as any).modules.positions ?? true,
+              documents: (eventSettings!.settings as any).modules.documents ?? true,
+              announcements: (eventSettings!.settings as any).modules.announcements ?? true,
+            }
+          : null,
+        terminology: (eventSettings?.settings as any)?.terminology || null
       }
     }
 

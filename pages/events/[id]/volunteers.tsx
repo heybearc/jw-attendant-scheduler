@@ -2517,6 +2517,12 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     const fs = require('fs')
     fs.appendFileSync('/tmp/attendants-debug.log', `\n🔍 ATTENDANTS: Fetching for event ${id} at ${new Date().toISOString()}\n`)
     const { prisma } = await import('../../../src/lib/prisma')
+
+    // Fetch event settings for moduleConfig
+    const eventSettings = await prisma.events.findUnique({
+      where: { id: id as string },
+      select: { settings: true }
+    })
     
     // Fetch event with position assignments (NEW SYSTEM - same as positions page)
     const eventData = await prisma.events.findUnique({
@@ -2771,8 +2777,17 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           active: attendants.filter(a => a.isActive).length,
           inactive: attendants.filter(a => !a.isActive).length
         },
-        moduleConfig: null,
-        terminology: null
+        moduleConfig: (eventSettings?.settings as any)?.modules
+          ? {
+              countTimes: (eventSettings!.settings as any).modules.countTimes ?? true,
+              lanyards: (eventSettings!.settings as any).modules.lanyards ?? true,
+              ivsModule: (eventSettings!.settings as any).modules.ivsModule ?? false,
+              positions: (eventSettings!.settings as any).modules.positions ?? true,
+              documents: (eventSettings!.settings as any).modules.documents ?? true,
+              announcements: (eventSettings!.settings as any).modules.announcements ?? true,
+            }
+          : null,
+        terminology: (eventSettings?.settings as any)?.terminology || null
       }
     };
   } catch (error) {

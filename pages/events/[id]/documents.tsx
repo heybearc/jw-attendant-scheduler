@@ -46,9 +46,11 @@ interface EventDocumentsPageProps {
   canDelete: boolean
   canManagePermissions: boolean
   attendants: Volunteer[]
+  moduleConfig?: any
+  terminology?: any
 }
 
-export default function EventDocumentsPage({ eventId, event, documents, canEdit, canDelete, canManagePermissions, attendants }: EventDocumentsPageProps) {
+export default function EventDocumentsPage({ eventId, event, documents, canEdit, canDelete, canManagePermissions, attendants, moduleConfig, terminology }: EventDocumentsPageProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -236,8 +238,8 @@ export default function EventDocumentsPage({ eventId, event, documents, canEdit,
         canEdit={canEdit}
         canDelete={canDelete}
         canManagePermissions={canManagePermissions}
-        moduleConfig={null}
-        terminology={null}
+        moduleConfig={moduleConfig}
+        terminology={terminology}
       >
           <div className="max-w-7xl mx-auto">
             <div className="mb-6">
@@ -651,6 +653,17 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       }
     })
 
+    const eventModuleConfig = (event.settings as any)?.modules
+      ? {
+          countTimes: (event.settings as any).modules.countTimes ?? true,
+          lanyards: (event.settings as any).modules.lanyards ?? true,
+          ivsModule: (event.settings as any).modules.ivsModule ?? false,
+          positions: (event.settings as any).modules.positions ?? true,
+          documents: (event.settings as any).modules.documents ?? true,
+          announcements: (event.settings as any).modules.announcements ?? true,
+        }
+      : null
+
     return {
       props: {
         eventId: id as string,
@@ -663,7 +676,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         canEdit,
         canDelete,
         canManagePermissions: canManagePerms,
-        attendants
+        attendants,
+        moduleConfig: eventModuleConfig,
+        terminology: (event.settings as any)?.terminology || null
       },
     }
   } catch (error) {

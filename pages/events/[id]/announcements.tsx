@@ -398,16 +398,22 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   try {
     const { prisma } = await import('../../../src/lib/prisma')
 
-    const event = await prisma.events.findUnique({
-      where: { id: id as string },
-      select: {
-        id: true, 
-        name: true,
-        status: true,
-        eventType: true,
-        startDate: true,
-      }
-    })
+    const [event, eventSettings] = await Promise.all([
+      prisma.events.findUnique({
+        where: { id: id as string },
+        select: {
+          id: true, 
+          name: true,
+          status: true,
+          eventType: true,
+          startDate: true,
+        }
+      }),
+      prisma.events.findUnique({
+        where: { id: id as string },
+        select: { settings: true }
+      })
+    ])
 
     if (!event) {
       return { notFound: true }
@@ -472,8 +478,17 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         canEdit,
         canDelete,
         canManagePermissions: canManagePerms,
-        moduleConfig: null,
-        terminology: null
+        moduleConfig: (eventSettings?.settings as any)?.modules
+          ? {
+              countTimes: (eventSettings!.settings as any).modules.countTimes ?? true,
+              lanyards: (eventSettings!.settings as any).modules.lanyards ?? true,
+              ivsModule: (eventSettings!.settings as any).modules.ivsModule ?? false,
+              positions: (eventSettings!.settings as any).modules.positions ?? true,
+              documents: (eventSettings!.settings as any).modules.documents ?? true,
+              announcements: (eventSettings!.settings as any).modules.announcements ?? true,
+            }
+          : null,
+        terminology: (eventSettings?.settings as any)?.terminology || null
       }
     }
   } catch (error) {

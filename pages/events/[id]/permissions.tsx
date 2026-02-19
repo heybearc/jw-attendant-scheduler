@@ -190,9 +190,21 @@ export default function EventPermissionsPage() {
     )
   }
 
+  const moduleConfig = event?.settings?.modules
+    ? {
+        countTimes: event.settings.modules.countTimes ?? true,
+        lanyards: event.settings.modules.lanyards ?? true,
+        ivsModule: event.settings.modules.ivsModule ?? false,
+        positions: event.settings.modules.positions ?? true,
+        documents: event.settings.modules.documents ?? true,
+        announcements: event.settings.modules.announcements ?? true,
+      }
+    : null
+  const terminology = event?.settings?.terminology || null
+
   if (!canManage) {
     return (
-      <TemplateProvider>
+      <TemplateProvider moduleConfig={moduleConfig} terminology={terminology}>
         <EventPageLayout
           event={event}
           currentPage="permissions"
@@ -211,7 +223,7 @@ export default function EventPermissionsPage() {
   }
 
   return (
-    <TemplateProvider>
+    <TemplateProvider moduleConfig={moduleConfig} terminology={terminology}>
       <EventPageLayout
         event={event}
         currentPage="permissions"

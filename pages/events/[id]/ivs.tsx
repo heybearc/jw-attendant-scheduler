@@ -16,8 +16,20 @@ interface IVSModulePageProps {
 export default function IVSModulePage({ event, canEdit }: IVSModulePageProps) {
   const [activeTab, setActiveTab] = useState<'approvals' | 'checkin'>('approvals')
 
+  const moduleConfig = event?.settings?.modules
+    ? {
+        countTimes: event.settings.modules.countTimes ?? true,
+        lanyards: event.settings.modules.lanyards ?? true,
+        ivsModule: event.settings.modules.ivsModule ?? false,
+        positions: event.settings.modules.positions ?? true,
+        documents: event.settings.modules.documents ?? true,
+        announcements: event.settings.modules.announcements ?? true,
+      }
+    : null
+  const terminology = event?.settings?.terminology || null
+
   return (
-    <TemplateProvider>
+    <TemplateProvider moduleConfig={moduleConfig} terminology={terminology}>
       <EventPageLayout
         event={event}
         currentPage="ivs"

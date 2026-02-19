@@ -45,9 +45,9 @@ test.describe('Phase 7: Mobile Volunteer Features', () => {
     
     await page.waitForURL(/\/volunteer\/(select-event|dashboard)/, { timeout: 10000 })
     
-    // If on select-event, click the first event card
+    // If on select-event, click the first event card (div containing event name h3)
     if (page.url().includes('/select-event')) {
-      await page.locator('.cursor-pointer').first().click()
+      await page.locator('div.cursor-pointer:has(h3)').first().click()
       await page.waitForURL(/\/volunteer\/dashboard/, { timeout: 10000 })
     }
     
@@ -70,7 +70,7 @@ test.describe('Phase 7: Mobile Volunteer Features', () => {
     await page.waitForURL(/\/volunteer\/(select-event|dashboard)/, { timeout: 10000 })
     
     if (page.url().includes('/select-event')) {
-      await page.locator('.cursor-pointer').first().click()
+      await page.locator('div.cursor-pointer:has(h3)').first().click()
       await page.waitForURL(/\/volunteer\/dashboard/, { timeout: 10000 })
     }
     
@@ -93,7 +93,7 @@ test.describe('Phase 7: Mobile Volunteer Features', () => {
     await page.waitForURL(/\/volunteer\/(select-event|dashboard)/, { timeout: 10000 })
     
     if (page.url().includes('/select-event')) {
-      await page.locator('.cursor-pointer').first().click()
+      await page.locator('div.cursor-pointer:has(h3)').first().click()
       await page.waitForURL(/\/volunteer\/dashboard/, { timeout: 10000 })
     }
     
@@ -116,7 +116,7 @@ test.describe('Phase 7: Mobile Volunteer Features', () => {
     await page.waitForURL(/\/volunteer\/(select-event|dashboard)/, { timeout: 10000 })
     
     if (page.url().includes('/select-event')) {
-      await page.locator('.cursor-pointer').first().click()
+      await page.locator('div.cursor-pointer:has(h3)').first().click()
       await page.waitForURL(/\/volunteer\/dashboard/, { timeout: 10000 })
     }
     
@@ -143,7 +143,7 @@ test.describe('Phase 7: Mobile Volunteer Features', () => {
     await page.waitForURL(/\/volunteer\/(select-event|dashboard)/, { timeout: 10000 })
     
     if (page.url().includes('/select-event')) {
-      await page.locator('.cursor-pointer').first().click()
+      await page.locator('div.cursor-pointer:has(h3)').first().click()
       await page.waitForURL(/\/volunteer\/dashboard/, { timeout: 10000 })
     }
     
@@ -164,7 +164,7 @@ test.describe('Phase 7: Mobile Volunteer Features', () => {
     await page.waitForURL(/\/volunteer\/(select-event|dashboard)/, { timeout: 10000 })
     
     if (page.url().includes('/select-event')) {
-      await page.locator('.cursor-pointer').first().click()
+      await page.locator('div.cursor-pointer:has(h3)').first().click()
       await page.waitForURL(/\/volunteer\/dashboard/, { timeout: 10000 })
     }
     

@@ -53,15 +53,7 @@ test.describe('Phase 7: Mobile Volunteer Features', () => {
     
     await page.waitForLoadState('load')
     
-    const mobileHeader = page.locator('h1:has-text("Hi,")')
-    await mobileHeader.waitFor({ state: 'visible', timeout: 10000 }).catch(() => {})
-    
-    if (!(await mobileHeader.isVisible())) {
-      test.skip()
-      return
-    }
-    
-    await expect(page.locator('button:has-text("Assignments")')).toBeVisible({ timeout: 5000 })
+    await expect(page.locator('button:has-text("Assignments")')).toBeVisible({ timeout: 15000 })
     await expect(page.locator('button:has-text("Availability")')).toBeVisible()
     await expect(page.locator('button:has-text("Contacts")')).toBeVisible()
     await expect(page.locator('button:has-text("Documents")')).toBeVisible()
@@ -84,16 +76,8 @@ test.describe('Phase 7: Mobile Volunteer Features', () => {
     
     await page.waitForLoadState('load')
     
-    const mobileHeader = page.locator('h1:has-text("Hi,")')
-    await mobileHeader.waitFor({ state: 'visible', timeout: 10000 }).catch(() => {})
-    
-    if (!(await mobileHeader.isVisible())) {
-      test.skip()
-      return
-    }
-    
     const documentsTab = page.locator('button:has-text("Documents")')
-    await expect(documentsTab).toBeVisible({ timeout: 5000 })
+    await expect(documentsTab).toBeVisible({ timeout: 15000 })
     await documentsTab.click()
     await page.waitForTimeout(1000)
   })
@@ -115,16 +99,8 @@ test.describe('Phase 7: Mobile Volunteer Features', () => {
     
     await page.waitForLoadState('load')
     
-    const mobileHeader = page.locator('h1:has-text("Hi,")')
-    await mobileHeader.waitFor({ state: 'visible', timeout: 10000 }).catch(() => {})
-    
-    if (!(await mobileHeader.isVisible())) {
-      test.skip()
-      return
-    }
-    
     const signOutButton = page.locator('button[aria-label="Sign Out"]')
-    await expect(signOutButton).toBeVisible({ timeout: 5000 })
+    await expect(signOutButton).toBeVisible({ timeout: 15000 })
     await signOutButton.click()
     await page.waitForURL(/\/(volunteer\/login|auth\/signin)/, { timeout: 5000 })
   })
@@ -194,16 +170,8 @@ test.describe('Phase 7: Mobile Volunteer Features', () => {
     
     await page.waitForLoadState('load')
     
-    const mobileHeader = page.locator('h1:has-text("Hi,")')
-    await mobileHeader.waitFor({ state: 'visible', timeout: 10000 }).catch(() => {})
-    
-    if (!(await mobileHeader.isVisible())) {
-      test.skip()
-      return
-    }
-    
     const refreshButton = page.locator('button[aria-label="Refresh"]')
-    await expect(refreshButton).toBeVisible({ timeout: 5000 })
+    await expect(refreshButton).toBeVisible({ timeout: 15000 })
     await refreshButton.first().click()
     await page.waitForTimeout(1000)
     await expect(page.locator('button:has-text("Assignments")')).toBeVisible()

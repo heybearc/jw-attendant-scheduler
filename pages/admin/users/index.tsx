@@ -177,7 +177,7 @@ export default function UsersPage({ users: initialUsers, pagination: initialPagi
         </div>
 
         {/* Search and Filter */}
-        <form onSubmit={handleSearch} className="flex space-x-4">
+        <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1">
             <input
               type="text"
@@ -225,7 +225,7 @@ export default function UsersPage({ users: initialUsers, pagination: initialPagi
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto" style={{ overflow: 'visible' }}>
+              <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>

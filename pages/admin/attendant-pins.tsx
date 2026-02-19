@@ -113,6 +113,7 @@ export default function VolunteerPINManagement({ attendants }: Props) {
 
           {/* Volunteers Table */}
           <div className="bg-white shadow rounded-lg overflow-hidden">
+            <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -192,6 +193,7 @@ export default function VolunteerPINManagement({ attendants }: Props) {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
 
           {/* Instructions */}
@@ -241,7 +243,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
   // Check which attendants have PINs using raw query
   const pinsCheck = await prisma.$queryRaw<Array<{ id: string, pinHash: string | null }>>`
-    SELECT id, "pinHash" FROM attendants WHERE "isActive" = true
+    SELECT id, "pinHash" FROM volunteers WHERE "isActive" = true
   `
 
   const pinsMap = new Map(pinsCheck.map(p => [p.id, !!p.pinHash]))

@@ -10,6 +10,8 @@ interface Volunteer {
   firstName: string
   lastName: string
   formsOfService?: string | string[]
+  isOverseer?: boolean
+  isKeyman?: boolean
 }
 
 interface OverseerFormData {
@@ -20,7 +22,7 @@ interface OverseerFormData {
 interface OverseerModalProps {
   isOpen: boolean
   position: Position | null
-  attendants: Attendant[]
+  attendants: Volunteer[]
   formData: OverseerFormData
   onClose: () => void
   onSubmit: (e: React.FormEvent) => void
@@ -38,19 +40,8 @@ export default function OverseerModal({
 }: OverseerModalProps) {
   if (!isOpen || !position) return null
 
-  const overseers = attendants?.filter(att => {
-    const formsOfService = Array.isArray(att.formsOfService) 
-      ? att.formsOfService 
-      : (typeof att.formsOfService === 'string' ? att.formsOfService.split(',').map(s => s.trim()) : [])
-    return formsOfService.some(form => form.toLowerCase() === 'overseer')
-  }) || []
-
-  const keymen = attendants?.filter(att => {
-    const formsOfService = Array.isArray(att.formsOfService) 
-      ? att.formsOfService 
-      : (typeof att.formsOfService === 'string' ? att.formsOfService.split(',').map(s => s.trim()) : [])
-    return formsOfService.some(form => form.toLowerCase() === 'keyman')
-  }) || []
+  const overseers = attendants?.filter(att => att.isOverseer) || []
+  const keymen = attendants?.filter(att => att.isKeyman) || []
 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">

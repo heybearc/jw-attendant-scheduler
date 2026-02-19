@@ -123,8 +123,8 @@ export default function VolunteerDashboard() {
   const [pinUpdateMessage, setPinUpdateMessage] = useState('')
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [editProfileData, setEditProfileData] = useState({ email: '', phone: '' })
-  const [countValue, setCountValue] = useState('')
-  const [countNotes, setCountNotes] = useState('')
+  const [countValues, setCountValues] = useState<Map<string, string>>(new Map())
+  const [countNotes, setCountNotes] = useState<Map<string, string>>(new Map())
   const [submittingCount, setSubmittingCount] = useState(false)
   const [countSuccess, setCountSuccess] = useState('')
   const [submittedCounts, setSubmittedCounts] = useState<Map<string, {count: number, notes?: string}>>(new Map())
@@ -367,6 +367,7 @@ export default function VolunteerDashboard() {
   }
 
   const handleSubmitCount = async (sessionId: string) => {
+    const countValue = countValues.get(sessionId) || ''
     if (!countValue || !dashboardData?.assignments[0]) {
       return
     }
@@ -375,8 +376,8 @@ export default function VolunteerDashboard() {
     setCountSuccess('')
 
     try {
-      // Get the first assignment's position ID (attendant's station)
       const firstAssignment = dashboardData.assignments[0]
+      const notes = countNotes.get(sessionId) || ''
       
       const response = await fetch(`/api/events/${selectedEventId}/count-sessions/${sessionId}/counts`, {
         method: 'POST',
@@ -384,7 +385,7 @@ export default function VolunteerDashboard() {
         body: JSON.stringify({
           positionId: firstAssignment.positionId,
           attendeeCount: parseInt(countValue),
-          notes: countNotes || undefined
+          notes: notes || undefined
         })
       })
 
@@ -392,12 +393,10 @@ export default function VolunteerDashboard() {
 
       if (result.success) {
         setCountSuccess('Count submitted successfully!')
-        // Store the submitted count
         setSubmittedCounts(prev => new Map(prev).set(sessionId, {
           count: parseInt(countValue),
-          notes: countNotes || undefined
+          notes: notes || undefined
         }))
-        // Don't clear the form - keep the values visible
         setTimeout(() => setCountSuccess(''), 3000)
       } else {
         alert(result.error || 'Failed to submit count')
@@ -966,8 +965,8 @@ export default function VolunteerDashboard() {
                                 <input
                                   type="number"
                                   min="0"
-                                  value={countValue}
-                                  onChange={(e) => setCountValue(e.target.value)}
+                                  value={countValues.get(session.id) || ''}
+                                  onChange={(e) => setCountValues(prev => new Map(prev).set(session.id, e.target.value))}
                                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                   placeholder="Enter count"
                                   disabled={submittingCount}
@@ -979,8 +978,8 @@ export default function VolunteerDashboard() {
                                   Notes (optional)
                                 </label>
                                 <textarea
-                                  value={countNotes}
-                                  onChange={(e) => setCountNotes(e.target.value)}
+                                  value={countNotes.get(session.id) || ''}
+                                  onChange={(e) => setCountNotes(prev => new Map(prev).set(session.id, e.target.value))}
                                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                   placeholder="e.g., Combined count for Stations 2 and 3"
                                   rows={2}
@@ -991,7 +990,7 @@ export default function VolunteerDashboard() {
                               <div className="flex gap-2">
                                 <button
                                   onClick={() => handleSubmitCount(session.id)}
-                                  disabled={submittingCount || !countValue}
+                                  disabled={submittingCount || !countValues.get(session.id)}
                                   className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                 >
                                   {submittingCount ? 'Submitting...' : hasSubmitted ? 'Update Count' : 'Submit Count'}
@@ -1000,8 +999,8 @@ export default function VolunteerDashboard() {
                                   <button
                                     onClick={() => {
                                       setEditingSession(null)
-                                      setCountValue(submittedData?.count.toString() || '')
-                                      setCountNotes(submittedData?.notes || '')
+                                      setCountValues(prev => new Map(prev).set(session.id, submittedData?.count.toString() || ''))
+                                      setCountNotes(prev => new Map(prev).set(session.id, submittedData?.notes || ''))
                                     }}
                                     className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
                                   >

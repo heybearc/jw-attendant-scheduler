@@ -4,7 +4,7 @@ import { authOptions } from '../../auth/[...nextauth]'
 import { prisma } from '../../../../src/lib/prisma'
 import { z } from 'zod'
 import crypto from 'crypto'
-import { handleApiError } from '../../../src/lib/apiError'
+import { handleApiError } from '@/lib/apiError'
 
 // Validation schema for assignment creation
 const assignmentSchema = z.object({
@@ -144,7 +144,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             if (!shift || shift.isAllDay) return false
             
             // Check for time overlap
-            return shift.endTime > targetShift.startTime && shift.startTime < targetShift.endTime
+            return shift.endTime! > targetShift.startTime! && shift.startTime! < targetShift.endTime!
           })
           
           if (conflictingAssignments.length > 0) {

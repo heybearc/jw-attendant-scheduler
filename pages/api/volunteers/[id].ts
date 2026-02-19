@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../auth/[...nextauth]'
 import { prisma } from '../../../src/lib/prisma'
-import { handleApiError } from '../../src/lib/apiError'
+import { handleApiError } from '@/lib/apiError'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const session = await getServerSession(req, res, authOptions)
@@ -61,20 +61,14 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse, id: string) 
           role: true
         }
       },
-      event_volunteers: {
+      event_volunteers_primary: {
         include: {
-          event: {
+          events: {
             select: {
               id: true,
               name: true,
               startDate: true,
               endDate: true
-            }
-          },
-          department: {
-            select: {
-              id: true,
-              name: true
             }
           }
         }
@@ -161,7 +155,7 @@ async function handleDelete(req: NextApiRequest, res: NextApiResponse, id: strin
   const volunteer = await prisma.volunteers.findUnique({
     where: { id },
     include: {
-      event_volunteers: {
+      event_volunteers_primary: {
         select: { id: true }
       }
     }
@@ -171,7 +165,7 @@ async function handleDelete(req: NextApiRequest, res: NextApiResponse, id: strin
     return res.status(404).json({ success: false, error: 'Volunteer not found' })
   }
 
-  if (volunteer.event_volunteers.length > 0) {
+  if (volunteer.event_volunteers_primary.length > 0) {
     return res.status(400).json({
       success: false,
       error: 'Cannot delete volunteer with event assignments. Remove from events first.'

@@ -270,14 +270,14 @@ export async function grantEventPermission(
       eventId,
       role,
       scopeType: scopeType || null,
-      scopeIds: scopeIds || null,
+      scopeIds: (scopeIds || null) as any,
       createdAt: new Date(),
       updatedAt: new Date()
     },
     update: {
       role,
       scopeType: scopeType || null,
-      scopeIds: scopeIds || null,
+      scopeIds: (scopeIds || null) as any,
       updatedAt: new Date()
     }
   })

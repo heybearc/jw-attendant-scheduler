@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '../../../../../src/lib/prisma'
 import { z } from 'zod'
-import { handleApiError } from '../../../../src/lib/apiError'
+import { handleApiError } from '@/lib/apiError'
 
 // APEX GUARDIAN: Event Positions CRUD API
 // Manages positions for specific events with proper validation
@@ -95,7 +95,7 @@ async function handleGetPositions(req: NextApiRequest, res: NextApiResponse, eve
         ...(includeAssignments && {
           assignments: {
             include: {
-              attendant: {
+              volunteer: {
                 select: {
                   id: true,
                   firstName: true,

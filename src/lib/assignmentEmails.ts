@@ -11,7 +11,7 @@ interface AssignmentEmailData {
   volunteerEmail: string
   eventName: string
   eventDate: string
-  eventLocation: string
+  eventLocation?: string
   positionName: string
   positionNumber: number
   shiftName?: string

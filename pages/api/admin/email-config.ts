@@ -4,7 +4,7 @@ import { authOptions } from '../auth/[...nextauth]'
 import { prisma } from '../../../src/lib/prisma'
 import nodemailer from 'nodemailer'
 import { randomUUID } from 'crypto'
-import { handleApiError } from '../../src/lib/apiError'
+import { handleApiError } from '@/lib/apiError'
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   const session = await getServerSession(req, res, authOptions)

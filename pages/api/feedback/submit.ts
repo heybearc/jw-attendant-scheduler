@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../auth/[...nextauth]'
 import { prisma } from '../../../src/lib/prisma'
-import { handleApiError } from '../../src/lib/apiError'
+import { handleApiError } from '@/lib/apiError'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const session = await getServerSession(req, res, authOptions)
@@ -95,36 +95,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Create feedback record
       const feedback = await prisma.feedback.create({
         data: {
+          id: `fb_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           feedbackNumber,
-          type: type.toUpperCase(),
+          type: type.toUpperCase() as any,
           title: title.trim(),
           description: description.trim(),
-          priority: (priority || 'MEDIUM').toUpperCase(),
-          submittedBy: user.id
-        },
-        include: {
-          user: {
-            select: {
-              firstName: true,
-              lastName: true,
-              email: true,
-              role: true
-            }
-          }
+          priority: ((priority || 'MEDIUM').toUpperCase()) as any,
+          submittedBy: user.id,
+          updatedAt: new Date()
         }
       })
 
       // Send email notification to admins (fire and forget)
+      const submitterUser = user
       console.log('New feedback submitted:', {
         id: feedback.id,
         type: feedback.type,
         title: feedback.title,
-        submittedBy: `${feedback.user.firstName} ${feedback.user.lastName}`,
+        submittedBy: `${submitterUser.firstName} ${submitterUser.lastName}`,
         priority: feedback.priority
       })
       
       // Send email to admins in background
-      (async () => {
+      ;(async () => {
         try {
           const { sendFeedbackNotificationEmail, isEmailConfigured } = require('../../../src/lib/email')
           
@@ -136,16 +129,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           
           // Get all admin users
           const admins = await prisma.users.findMany({
-            where: { 
-              role: 'ADMIN',
-              email: { not: null }
-            },
+            where: { role: 'ADMIN' },
             select: { email: true }
           })
           
           const baseUrl = process.env.NEXTAUTH_URL || `${req.headers['x-forwarded-proto'] || 'https'}://${req.headers.host}`
           const feedbackUrl = `${baseUrl}/admin/feedback`
-          const submitterName = `${feedback.user.firstName} ${feedback.user.lastName}`
+          const submitterName = `${submitterUser.firstName} ${submitterUser.lastName}`
           
           // Send to all admins
           for (const admin of admins) {

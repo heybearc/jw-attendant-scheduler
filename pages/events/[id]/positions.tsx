@@ -938,7 +938,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
       }
       
       // Report results
-      const messages = []
+      const messages: string[] = []
       if (shiftSuccessCount > 0) {
         messages.push(`✅ Created "${shiftName}" shift for ${shiftSuccessCount} positions`)
       }

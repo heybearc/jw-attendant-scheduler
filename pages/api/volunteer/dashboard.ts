@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../src/lib/prisma'
 import { format } from 'date-fns'
-import { handleApiError } from '../../src/lib/apiError'
+import { handleApiError } from '@/lib/apiError'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -313,7 +313,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         activeCountSessions: activeCountSessions.map(session => ({
           id: session.id,
           sessionName: session.sessionName,
-          countTime: session.countTime.toISOString(),
+          countTime: session.countTime ? session.countTime.toISOString() : null,
           status: session.status
         })),
         announcements: announcements.map(ann => ({
@@ -321,7 +321,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           title: ann.title,
           message: ann.message,
           type: ann.type,
-          createdAt: ann.createdAt.toISOString()
+          createdAt: ann.createdAt ? ann.createdAt.toISOString() : null
         })),
         documents: documents,
         oversightContacts

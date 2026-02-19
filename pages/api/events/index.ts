@@ -5,7 +5,7 @@ import { prisma } from '../../../src/lib/prisma'
 import { getUserEvents } from '../../../src/lib/eventAccess'
 import { z } from 'zod'
 import crypto from 'crypto'
-import { handleApiError } from '../../../src/lib/apiError'
+import { handleApiError } from '@/lib/apiError'
 
 // Validation schema for event creation/update
 const eventSchema = z.object({

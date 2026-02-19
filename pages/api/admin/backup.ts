@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../auth/[...nextauth]'
 import { exec } from 'child_process'
 import { promisify } from 'util'
-import { handleApiError } from '../../src/lib/apiError'
+import { handleApiError } from '@/lib/apiError'
 
 const execAsync = promisify(exec)
 

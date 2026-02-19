@@ -5,7 +5,7 @@ import { prisma } from '../../../../src/lib/prisma'
 import formidable from 'formidable'
 import fs from 'fs'
 import path from 'path'
-import { handleApiError } from '../../../src/lib/apiError'
+import { handleApiError } from '@/lib/apiError'
 
 // Disable default body parser for file uploads
 export const config = {

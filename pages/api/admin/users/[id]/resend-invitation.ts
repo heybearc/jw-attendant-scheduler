@@ -4,7 +4,7 @@ import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '../../../../../src/lib/prisma'
 import * as nodemailer from 'nodemailer'
 import crypto from 'crypto'
-import { handleApiError } from '../../../../src/lib/apiError'
+import { handleApiError } from '@/lib/apiError'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {

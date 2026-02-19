@@ -4,7 +4,7 @@ import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '../../../../../src/lib/prisma'
 import nodemailer from 'nodemailer'
 import { generateAssignmentCreatedEmail } from '../../../../../src/lib/assignmentEmails'
-import { handleApiError } from '../../../../../src/lib/apiError'
+import { handleApiError } from '@/lib/apiError'
 
 // Send email using database configuration (same pattern as availability-request)
 async function sendAssignmentEmail(to: string, subject: string, html: string) {

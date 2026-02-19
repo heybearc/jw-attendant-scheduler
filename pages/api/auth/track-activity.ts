@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from './[...nextauth]'
 import { prisma } from '../../../src/lib/prisma'
 import { v4 as uuidv4 } from 'uuid'
-import { handleApiError } from '../../src/lib/apiError'
+import { handleApiError } from '@/lib/apiError'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const session = await getServerSession(req, res, authOptions)

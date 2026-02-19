@@ -97,18 +97,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         status: 'UPCOMING',
         createdBy: user.id,
         updatedAt: new Date(),
-        // Clone oversight details (if enabled)
-        ...(cloneOversight && {
-          circuitOverseerName: originalEvent.circuitOverseerName,
-          circuitOverseerPhone: originalEvent.circuitOverseerPhone,
-          circuitOverseerEmail: originalEvent.circuitOverseerEmail,
-          assemblyOverseerName: originalEvent.assemblyOverseerName,
-          assemblyOverseerPhone: originalEvent.assemblyOverseerPhone,
-          assemblyOverseerEmail: originalEvent.assemblyOverseerEmail,
-          volunteerOverseerName: originalEvent.volunteerOverseerName,
-          volunteerOverseerPhone: originalEvent.volunteerOverseerPhone,
-          volunteerOverseerEmail: originalEvent.volunteerOverseerEmail,
-          volunteerOverseerAssistants: originalEvent.volunteerOverseerAssistants ?? undefined
+        // Clone oversight details (if enabled) - stored in settings JSON
+        ...(cloneOversight && originalEvent.settings && {
+          settings: originalEvent.settings
         }),
         // Clone settings (if enabled)
         ...(cloneSettings && {

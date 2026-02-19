@@ -4,7 +4,7 @@ import { authOptions } from '../../auth/[...nextauth]'
 import { prisma } from '../../../../src/lib/prisma'
 import crypto from 'crypto'
 import bcrypt from 'bcryptjs'
-import { handleApiError } from '../../../src/lib/apiError'
+import { handleApiError } from '@/lib/apiError'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -56,7 +56,7 @@ async function handleGetUsers(req: NextApiRequest, res: NextApiResponse) {
         skip,
         take: limitNum,
         include: {
-          attendants: {
+          volunteer: {
             select: {
               id: true,
               firstName: true,

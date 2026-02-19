@@ -5,7 +5,7 @@ import { prisma } from '../../../src/lib/prisma'
 import formidable from 'formidable'
 import fs from 'fs'
 import path from 'path'
-import { handleApiError } from '../../src/lib/apiError'
+import { handleApiError } from '@/lib/apiError'
 
 // Disable default body parser for file uploads
 export const config = {
@@ -80,10 +80,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const feedback = await prisma.feedback.create({
         data: {
           id: feedbackId,
-          type: type.toUpperCase(),
+          type: type.toUpperCase() as any,
           title: title.trim(),
           description: description.trim(),
-          priority: (priority || 'MEDIUM').toUpperCase(),
+          priority: ((priority || 'MEDIUM').toUpperCase()) as any,
           submittedBy: user.id,
           updatedAt: new Date()
         }

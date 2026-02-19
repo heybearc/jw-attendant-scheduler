@@ -4,7 +4,7 @@ import { authOptions } from '../auth/[...nextauth]'
 import { prisma } from '../../../src/lib/prisma'
 import { sendAssignmentNotification, AssignmentEmailData, AssignmentUpdateData, AssignmentCancelledData, AssignmentReminderData } from '../../../src/lib/assignmentEmails'
 import { isEmailConfigured } from '../../../src/lib/email'
-import { handleApiError } from '../../src/lib/apiError'
+import { handleApiError } from '@/lib/apiError'
 
 /**
  * Phase 4C: Assignment Notification API
@@ -176,8 +176,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           volunteerEmail: volunteer.email,
           eventName: event.name,
           eventDate,
-          eventLocation: event.location,
-          positionName: assignment.positions.positionName,
+          eventLocation: event.location ?? undefined,
+          positionName: assignment.positions.name,
           positionNumber: assignment.positions.positionNumber,
           shiftStart,
           shiftEnd,
@@ -200,8 +200,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           volunteerEmail: volunteer.email,
           eventName: event.name,
           eventDate,
-          eventLocation: event.location,
-          positionName: assignment.positions.positionName,
+          eventLocation: event.location ?? undefined,
+          positionName: assignment.positions.name,
           positionNumber: assignment.positions.positionNumber,
           shiftStart,
           shiftEnd,
@@ -220,10 +220,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           volunteerEmail: volunteer.email,
           eventName: event.name,
           eventDate,
-          positionName: assignment.positions.positionName,
+          positionName: assignment.positions.name,
           positionNumber: assignment.positions.positionNumber,
           reason: reason || undefined,
-          cancelledBy: session?.user?.name || session?.user?.email || 'System Administrator'
+          cancelledBy: (session as any)?.user?.name || (session as any)?.user?.email || 'System Administrator'
         }
         break
 
@@ -239,8 +239,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           volunteerEmail: volunteer.email,
           eventName: event.name,
           eventDate,
-          eventLocation: event.location,
-          positionName: assignment.positions.positionName,
+          eventLocation: event.location ?? undefined,
+          positionName: assignment.positions.name,
           positionNumber: assignment.positions.positionNumber,
           shiftStart,
           shiftEnd,

@@ -67,7 +67,7 @@ export default function FilterPresets({ currentFilters, onApplyPreset, eventId }
   }
 
   const getPresetDescription = (preset: FilterPreset) => {
-    const parts = []
+    const parts: string[] = []
     if (preset.filters.search) parts.push(`Search: "${preset.filters.search}"`)
     if (preset.filters.congregation) parts.push(`Congregation: "${preset.filters.congregation}"`)
     if (preset.filters.isActive !== 'true') parts.push(`Status: ${preset.filters.isActive === 'all' ? 'All' : 'Inactive'}`)

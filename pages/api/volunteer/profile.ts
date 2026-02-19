@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../src/lib/prisma'
 import bcrypt from 'bcryptjs'
-import { handleApiError } from '../../src/lib/apiError'
+import { handleApiError } from '@/lib/apiError'
 
 // Format phone number to (XXX) XXX-XXXX
 function formatPhoneNumber(phone: string): string {
@@ -37,7 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const newPin = phone ? getLastFourDigits(phone) : null
     
     // Hash the new PIN if we have one
-    let pinHash = null
+    let pinHash: string | null = null
     if (newPin) {
       pinHash = await bcrypt.hash(newPin, 10)
     }

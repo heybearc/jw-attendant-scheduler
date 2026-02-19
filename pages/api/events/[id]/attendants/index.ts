@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '../../../../../src/lib/prisma'
-import { handleApiError } from '../../../../src/lib/apiError'
+import { handleApiError } from '@/lib/apiError'
 
 // APEX GUARDIAN - NEW SYSTEM IMPORT API
 // This API imports attendants but doesn't create position assignments

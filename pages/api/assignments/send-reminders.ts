@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../src/lib/prisma'
 import { isEmailConfigured } from '../../../src/lib/email'
-import { handleApiError } from '../../src/lib/apiError'
+import { handleApiError } from '@/lib/apiError'
 
 /**
  * Phase 4C Feature #1: Automated Assignment Reminders
@@ -114,12 +114,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }
 
           // Get unique volunteers
-          const volunteerIds = [...new Set(assignments.map(a => a.attendantId))]
+          const volunteerIds = [...new Set(assignments.map(a => a.volunteerId))]
           
 
           // Send reminder to each volunteer
           for (const volunteerId of volunteerIds) {
-            const volunteerAssignments = assignments.filter(a => a.attendantId === volunteerId)
+            const volunteerAssignments = assignments.filter(a => a.volunteerId === volunteerId)
             
             try {
               const notificationResponse = await fetch(`${process.env.NEXTAUTH_URL}/api/assignments/notify`, {

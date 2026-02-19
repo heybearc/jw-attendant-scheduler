@@ -4,7 +4,7 @@ import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '../../../../../src/lib/prisma'
 import { z } from 'zod'
 import { randomUUID } from 'crypto'
-import { handleApiError } from '../../../../src/lib/apiError'
+import { handleApiError } from '@/lib/apiError'
 
 // APEX GUARDIAN: Bulk Position Creation API
 // Creates numbered positions with optional shift templates
@@ -117,7 +117,7 @@ async function handleBulkCreate(req: NextApiRequest, res: NextApiResponse, event
 
     // Create positions in transaction
     const result = await prisma.$transaction(async (tx) => {
-      const createdPositions = []
+      const createdPositions: any[] = []
       
       for (let num = validatedData.startNumber; num <= validatedData.endNumber; num++) {
         const position = await tx.positions.create({

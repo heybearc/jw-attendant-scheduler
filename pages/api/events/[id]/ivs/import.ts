@@ -5,7 +5,7 @@ import { PrismaClient } from '@prisma/client'
 import formidable, { File } from 'formidable'
 import * as XLSX from 'xlsx'
 import { v4 as uuidv4 } from 'uuid'
-import { handleApiError } from '../../../../src/lib/apiError'
+import { handleApiError } from '@/lib/apiError'
 
 const prisma = new PrismaClient()
 

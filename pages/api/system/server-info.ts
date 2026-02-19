@@ -3,7 +3,7 @@ import os from 'os';
 import { promises as fs } from 'fs';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { handleApiError } from '../../src/lib/apiError'
+import { handleApiError } from '@/lib/apiError'
 
 const execAsync = promisify(exec);
 const STATE_FILE = '/opt/theoshift/deployment-state.json';

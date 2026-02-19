@@ -4,7 +4,7 @@ import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '../../../../../src/lib/prisma'
 import { z } from 'zod'
 import { checkEventAccess, canManagePosition } from '../../../../../src/lib/eventAccess'
-import { handleApiError } from '../../../../src/lib/apiError'
+import { handleApiError } from '@/lib/apiError'
 
 // APEX GUARDIAN: Individual Position Management API
 // Handles GET, PUT, DELETE for specific positions

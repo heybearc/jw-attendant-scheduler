@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../../../../auth/[...nextauth]'
 import { PrismaClient } from '@prisma/client'
 import { z } from 'zod'
-import { handleApiError } from '../../../../../src/lib/apiError'
+import { handleApiError } from '@/lib/apiError'
 
 const prisma = new PrismaClient()
 

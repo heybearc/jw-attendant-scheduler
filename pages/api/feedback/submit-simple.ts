@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../auth/[...nextauth]'
 import { prisma } from '../../../src/lib/prisma'
-import { handleApiError } from '../../src/lib/apiError'
+import { handleApiError } from '@/lib/apiError'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   console.log('=== FEEDBACK SUBMISSION DEBUG ===')
@@ -40,11 +40,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Create feedback
       const feedback = await prisma.feedback.create({
         data: {
-          type: type.toUpperCase(),
+          id: `fb_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          type: type.toUpperCase() as any,
           title: title.trim(),
           description: description.trim(),
-          priority: (priority || 'MEDIUM').toUpperCase(),
-          submittedBy: user.id
+          priority: ((priority || 'MEDIUM').toUpperCase()) as any,
+          submittedBy: user.id,
+          updatedAt: new Date()
         }
       })
 

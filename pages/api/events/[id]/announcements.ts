@@ -4,7 +4,7 @@ import { authOptions } from '../../auth/[...nextauth]'
 import { prisma } from '../../../../src/lib/prisma'
 import { z } from 'zod'
 import crypto from 'crypto'
-import { handleApiError } from '../../../src/lib/apiError'
+import { handleApiError } from '@/lib/apiError'
 
 const createAnnouncementSchema = z.object({
   title: z.string().min(1).max(200),

@@ -111,7 +111,7 @@ export const authOptions: NextAuthOptions = {
       if (token) {
         session.user.id = token.sub!
         session.user.role = token.role as string
-        session.user.congregation = token.congregation as string
+        ;(session.user as any).congregation = token.congregation as string
       }
       return session
     },

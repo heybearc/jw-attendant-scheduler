@@ -133,8 +133,7 @@ async function handlePublishDocument(req: NextApiRequest, res: NextApiResponse, 
           
           const volunteers = await prisma.volunteers.findMany({
             where: {
-              id: { in: volunteerIds },
-              email: { not: null }
+              id: { in: volunteerIds }
             },
             select: { id: true, firstName: true, email: true }
           })

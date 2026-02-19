@@ -37,6 +37,8 @@ interface Volunteer {
   email: string
 }
 
+type Attendant = Volunteer
+
 interface Position {
   id: string
   positionName: string

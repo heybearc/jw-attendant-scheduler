@@ -488,6 +488,16 @@ This document tracks significant technical decisions made during development.
 - ⚠️ Event isolation achieved via permissions/query filters, not data structure
 - ⚠️ All volunteer queries must be scoped by eventId to prevent cross-event data leaking
 
+### D-TS-034: PM2 Process Names Must Match MCP Server Expectations
+**Date:** 2026-02-19
+**Context:** MCP `deploy_to_standby` was failing with "PM2 process or Namespace theoshift-blue not found" because both nodes were running PM2 processes named `theoshift` instead of the names the MCP server expects.
+**Decision:** PM2 process names on each node must match `pmBlue`/`pmGreen` values in the MCP server config (`server.js`). For TheoShift: BLUE node (`10.92.3.24`) = `theoshift-blue`, GREEN node (`10.92.3.22`) = `theoshift-green`. Always start PM2 with `--name` flag and run `pm2 save` after.
+**Consequences:**
+- ✅ MCP `deploy_to_standby` now works end-to-end
+- ✅ MCP `get_deployment_status` correctly reports both nodes healthy
+- ✅ `pm2 save` persists correct names across reboots
+- ⚠️ If a node is rebuilt, must start PM2 with correct `--name` flag: `pm2 start npm --name theoshift-blue -- start`
+
 ### D-TS-033: moduleConfig Must Be Fetched in Every Event Sub-Page SSR
 **Date:** 2026-02-19
 **Context:** All event sub-pages (positions, volunteers, count-times, documents, announcements, lanyards, permissions, ivs) were passing `moduleConfig: null` to `EventPageWrapper`/`TemplateProvider`, causing conditional tabs (Count Times, Lanyards, IVS) to never render regardless of event settings.

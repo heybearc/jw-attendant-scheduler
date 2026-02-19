@@ -17,6 +17,14 @@ All bug fixes complete and deployed. Both environments at `45e9fbf2`. No open fe
 
 ### Recent completions
 
+**Today (2026-02-19) - PM2 Naming Fix (D-TS-034):**
+- ✅ Root cause: Both nodes ran PM2 as `theoshift` — MCP expects `theoshift-blue` (BLUE, 10.92.3.24) and `theoshift-green` (GREEN, 10.92.3.22)
+- ✅ Renamed BLUE node: `pm2 delete theoshift && pm2 start npm --name theoshift-blue -- start && pm2 save`
+- ✅ Renamed GREEN node: `pm2 delete theoshift && pm2 start npm --name theoshift-green -- start && pm2 save`
+- ✅ Verified MCP `get_deployment_status` reports both nodes healthy
+- ✅ Verified MCP `deploy_to_standby` works end-to-end (was failing before)
+- ✅ Documented in D-TS-034
+
 **Today (2026-02-19) - FB-030 Fix:**
 - ✅ Found new feedback: "Insufficient permissions to create events" (ASSISTANT_OVERSEER role)
 - ✅ Root cause: API POST handler only allowed ADMIN/OVERSEER, but page allowed ASSISTANT_OVERSEER too
@@ -526,6 +534,11 @@ All bug fixes complete and deployed. Both environments at `45e9fbf2`. No open fe
 ## Known Issues
 **Current:**
 - None - All systems operational
+
+**Infrastructure Note:**
+- If a TheoShift node is ever rebuilt, PM2 must be started with correct `--name` flag:
+  - BLUE (10.92.3.24): `pm2 start npm --name theoshift-blue -- start && pm2 save`
+  - GREEN (10.92.3.22): `pm2 start npm --name theoshift-green -- start && pm2 save`
 
 **Resolved:**
 - ✅ FB-028: Localhost redirect bug (fixed in v4.1.1)

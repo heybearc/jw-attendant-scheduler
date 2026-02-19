@@ -123,7 +123,7 @@ test.describe('v4.14.0: Global Announcements Admin Page', () => {
     await loginAdmin(page)
     await page.goto('/admin')
     await page.waitForLoadState('networkidle')
-    const link = page.locator('a[href*="global-announcements"]')
+    const link = page.locator('a[href*="global-announcements"]').first()
     await expect(link).toBeVisible({ timeout: 10000 })
   })
 })

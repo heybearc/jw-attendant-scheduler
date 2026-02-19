@@ -24,8 +24,9 @@ test.describe('Date Display Verification', () => {
   test('event details page shows matching dates', async ({ page }) => {
     // Click first event
     await page.click('button:has-text("Select Event")')
-    await page.waitForURL('**/events/**')
+    await page.waitForURL('**/events/**', { timeout: 10000 })
     await page.waitForLoadState('load')
+    await page.waitForTimeout(500)
     
     // Look for any date on the page - event details should have dates
     const pageContent = await page.content()

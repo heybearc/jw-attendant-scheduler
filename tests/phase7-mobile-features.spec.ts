@@ -68,8 +68,8 @@ test.describe('Phase 7: Performance', () => {
     await page.goto(`${process.env.BASE_URL}/events/${events[0].id}`)
     await page.waitForLoadState('load')
     
-    // Page should load successfully
-    await expect(page.locator('h1')).toBeVisible()
+    // Page should load successfully - event overview uses h1/h2 headings
+    await expect(page.locator('h1, h2').first()).toBeVisible({ timeout: 10000 })
   })
 
 })

@@ -2,20 +2,35 @@
 
 **Last updated:** 2026-02-19  
 **Current branch:** main  
-**Working on:** Bug fixes - event tab bar, overseer dropdown, dashboard double counts
+**Working on:** Bug fix session complete — all nodes synced at latest
 
 ---
 
 ## Current Task
-**Bug Fix Session** - All fixes deployed to LIVE and STANDBY
+**Bug Fix Session Complete** - All nodes synced, all known feedback resolved
 
 ### What I'm doing right now
-All bug fixes complete and deployed. Both environments synced. Ready for testing verification.
+All bug fixes complete and deployed. Both environments at `45e9fbf2`. No open feedback items.
 
 **Open feedback items:**
-- FB-017: Positions Page - Conflict Management (MEDIUM, open)
+- None — all feedback resolved or closed
 
 ### Recent completions
+
+**Today (2026-02-19) - FB-030 Fix:**
+- ✅ Found new feedback: "Insufficient permissions to create events" (ASSISTANT_OVERSEER role)
+- ✅ Root cause: API POST handler only allowed ADMIN/OVERSEER, but page allowed ASSISTANT_OVERSEER too
+- ✅ Fixed `pages/api/events/index.ts` to include ASSISTANT_OVERSEER in allowed roles
+- ✅ Marked FB-030 as RESOLVED in DB
+- ✅ Both nodes synced to `45e9fbf2`
+
+**Today (2026-02-19) - Verification:**
+- ✅ FB-017 (Conflict Management) — VERIFIED COMPLETE. Full implementation exists:
+  - `hooks/useConflicts.ts` — client-side conflict detection with time overlap, all-day, duplicate checks
+  - `src/lib/conflictDetection.ts` — server-side conflict utilities
+  - `AssignVolunteerModal` in `positions.tsx` — inline conflict warnings, sorted volunteer list
+  - `tests/conflict-detection.spec.ts` — 3 Playwright tests
+  - DB record FB-017 is "Add comment malfunction" (different issue, already RESOLVED)
 
 **Today (2026-02-19) - Bug Fix Session:**
 - ✅ Fixed dashboard double counts (per-session `Map<sessionId, value>` instead of shared scalar state)

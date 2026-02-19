@@ -2,31 +2,42 @@
 
 ## New Discoveries to Promote
 
-### 🔧 MCP deploy_to_standby PM2 Process Name Mismatch (2026-02-18) - ✅ RESOLVED (2026-02-19)
-
-**Discovery:** The `homelab-blue-green-deployment` MCP server's `deploy_to_standby` tool for `theoshift` fails at the PM2 restart step because it expects the process to be named `theoshift-green`, but the actual PM2 process on the GREEN server (10.92.3.22) is named `theoshift`.
-
-**Error observed:**
-```
-[PM2][ERROR] Process or Namespace theoshift-green not found
-```
-
-**Why this matters:**
-The MCP tool is the intended deployment mechanism for STANDBY — it provides health checks, backup creation, and a controlled deployment pipeline. When it fails at PM2 restart, the build completes but the server is not restarted, leaving stale code running. This forces a manual SSH fallback (`pm2 restart theoshift`) which bypasses the MCP's health check and audit trail.
-
-**Root cause:**
-The MCP server configuration in the control plane hardcodes `theoshift-green` as the PM2 process name for the GREEN server, but the PM2 ecosystem on the server uses a single generic name `theoshift` regardless of which color the server is.
-
-**Fix options (for control plane):**
-1. **Preferred:** Update the MCP server config to use `theoshift` as the PM2 process name for theoshift deployments (matches actual server state)
-2. **Alternative:** Rename the PM2 process on GREEN to `theoshift-green` via `pm2 delete theoshift && pm2 start ... --name theoshift-green` and update the ecosystem config
-
-**Workaround until fixed:**
-After `deploy_to_standby` fails, SSH to GREEN and run `pm2 restart theoshift` manually to complete the deployment.
+*(No pending items — all promoted)*
 
 ---
 
 ## Promoted Items
+
+### 🔧 PM2 Process Name Drift + Prevention Layers (2026-02-19) - ✅ PROMOTED
+**Promoted to:** `_cloudy-ops/context/DECISIONS.md` as D-025  
+**Commit:** 2fbf896 (Cloudy-Work), 9aa1d206 (theoshift submodule)  
+**Date:** 2026-02-19
+
+Both TheoShift nodes had drifted to generic PM2 name `theoshift` instead of `theoshift-blue`/`theoshift-green`. Root cause: stale docs in `sync.md`, `deployment.md`, `SKILL.md` all instructed `pm2 restart theoshift`. Fix applied:
+- Renamed processes on both nodes; restored `ecosystem.config.js` on GREEN
+- Added pre-flight PM2 name verification to MCP `server.js` (fails loudly with fix instructions)
+- Fixed all stale docs to use MCP primary + correct named fallback
+- Promoted as D-025 to control plane DECISIONS.md
+
+---
+
+### 🔒 ASSISTANT_OVERSEER Role Missing from Event Creation API (2026-02-19) - ✅ PROMOTED
+**Promoted to:** App-level fix only (role-specific to TheoShift); no cross-app pattern  
+**Commit:** 45e9fbf2  
+**Date:** 2026-02-19
+
+Page `getServerSideProps` allowed `ASSISTANT_OVERSEER` to access event creation form, but API POST handler only allowed `ADMIN`/`OVERSEER`, causing 403 on submit. Fixed in `pages/api/events/index.ts`. Resolved as FB-030.
+
+---
+
+### 📋 moduleConfig Must Be Fetched in Every Event Sub-Page SSR (2026-02-19) - ✅ PROMOTED
+**Promoted to:** App-level decision D-TS-033 (TheoShift-specific pattern)  
+**Commit:** 953b1d98  
+**Date:** 2026-02-19
+
+All 8 event sub-pages were passing `moduleConfig: null`, hiding conditional tabs. Fixed by fetching `event.settings.modules` in each page's `getServerSideProps` (or from client-loaded state for CSR pages). Pattern documented in D-TS-033.
+
+---
 
 ### 🧪 Test Creation Guidelines and Authentication Patterns (2026-02-10) - ✅ PROMOTED
 **Promoted to:** `_cloudy-ops/docs/testing/test-creation-guidelines.md`  

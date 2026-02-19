@@ -52,7 +52,7 @@
 ### In Progress / Next
 - [x] **Release v4.14.0** - Released 2026-02-19, LIVE on BLUE (10.92.3.24)
 - [x] **Global Announcements Banner:** `GlobalAnnouncementBanner` wired into `AdminLayout` — fetches active announcements from `/api/global-announcements`, color-coded by type, dismiss-per-session via sessionStorage
-- [ ] **PWA Offline:** Cache volunteer data (assignments, documents) for offline use
+- [x] **PWA Offline:** SW v2.0.0 — stale-while-revalidate for volunteer APIs, cache-first for volunteer pages, background sync for check-ins
 - [ ] **Feature Planning:** In-app event-specific chat system - Needs discussion (see Ideas section)
 
 ---

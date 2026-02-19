@@ -50,7 +50,16 @@ Pre-existing failures (not caused by v4.14.0, all known):
 - ✅ Deployed to STANDBY (GREEN, 10.92.3.22), build healthy
 - Commit: `3007643a`
 
-**Next:** PWA Offline caching — cache volunteer assignments + documents for offline use
+**Next:** Decide next feature — chat system discussion or other backlog item
+
+**PWA Offline Caching (SW v2.0.0):**
+- ✅ Upgraded `public/sw.js` to v2.0.0 with two-cache architecture
+- ✅ Strategy 1: stale-while-revalidate for `/api/volunteer/*` and `/api/global-announcements` — serve cached data instantly, update in background
+- ✅ Strategy 2: cache-first for `/volunteer/dashboard`, `/volunteer/select-event`, `/volunteer/early-checkin` — offline navigation works
+- ✅ Background sync: retry pending check-ins via IndexedDB when back online
+- ✅ Old `theoshift-v1` cache cleaned up on activate
+- ✅ Deployed to STANDBY (GREEN, 10.92.3.22), build healthy
+- Commit: `382d9a43`
 
 ### Recent completions
 

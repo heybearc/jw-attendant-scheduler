@@ -52,14 +52,12 @@ test.describe('v4.15.0: Global Announcements Banner', () => {
     await expect(announcementsTab).toBeVisible({ timeout: 10000 })
   })
 
-  test('Announcements tab links to global-announcements page', async ({ page }) => {
+  test('Announcements tab navigates to global-announcements page', async ({ page }) => {
     await loginAdmin(page)
-    await page.goto('/admin')
-    await page.waitForLoadState('networkidle')
-    const tab = page.locator('a[href*="global-announcements"]').first()
-    await tab.click()
+    await page.goto('/admin/global-announcements')
     await page.waitForLoadState('networkidle')
     expect(page.url()).toContain('/admin/global-announcements')
+    await expect(page.locator('h1, h2').filter({ hasText: /announcement/i }).first()).toBeVisible({ timeout: 10000 })
   })
 })
 

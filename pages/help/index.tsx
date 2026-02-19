@@ -95,6 +95,12 @@ export default function HelpPage({ userRole }: HelpPageProps) {
       roles: ['VOLUNTEER']
     },
     {
+      id: 'global-announcements',
+      title: '📢 Global Announcements',
+      description: 'Post system-wide messages and alerts to all users',
+      roles: ['ADMIN']
+    },
+    {
       id: 'session-management',
       title: '🔐 Session Management',
       description: 'Monitor and manage active user sessions',

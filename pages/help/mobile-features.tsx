@@ -48,31 +48,38 @@ export default function MobileFeaturesHelp() {
         <ul>
           <li>See document title, description, and publication date</li>
           <li>View file size and type (PDF, images, videos)</li>
-          <li>One-tap to open and view documents</li>
+          <li>Tap any document to open it in a full-screen in-app viewer (no browser tab switching)</li>
           <li>Document count badge shows number of available documents</li>
         </ul>
 
         <hr />
 
-        <h2>🧭 Mobile Navigation (Admin)</h2>
+        <h2>🧭 Mobile Navigation</h2>
         
-        <h3>Bottom Navigation Bar</h3>
+        <h3>Volunteer Bottom Navigation Bar</h3>
         <p>
-          When using TheoShift on your phone, you'll see a navigation bar at the bottom of the screen with quick access to:
+          When you're logged in as a volunteer, a navigation bar appears at the bottom of every screen for quick access to your key pages:
         </p>
         <ul>
-          <li><strong>Dashboard:</strong> Return to event overview</li>
-          <li><strong>Volunteers:</strong> Manage volunteer assignments</li>
-          <li><strong>Positions:</strong> View and edit positions</li>
-          <li><strong>More:</strong> Access additional features</li>
+          <li><strong>Dashboard:</strong> Your assignments and event information</li>
+          <li><strong>Check-In:</strong> Early check-in for your event</li>
+          <li><strong>Events:</strong> Browse and select events</li>
         </ul>
+        <p>
+          The active page is highlighted in blue so you always know where you are. Tap any icon to switch instantly.
+        </p>
 
         <div className="bg-blue-50 border-l-4 border-blue-400 p-4 my-4">
           <p className="font-semibold text-blue-800">💡 Tip</p>
           <p className="text-blue-700 mb-0">
-            The bottom navigation stays visible as you scroll, so you can quickly jump between sections without scrolling back to the top.
+            The bottom navigation stays fixed as you scroll, so you can jump between sections without scrolling back to the top. It also respects the iPhone home indicator safe area so nothing gets cut off.
           </p>
         </div>
+
+        <h3>Admin Bottom Navigation Bar</h3>
+        <p>
+          Admins and overseers also have a bottom navigation bar when managing events on mobile, with quick access to event sections.
+        </p>
 
         <h3>Hamburger Menu</h3>
         <p>

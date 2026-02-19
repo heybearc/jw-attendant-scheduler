@@ -270,6 +270,16 @@ For issues or questions:
 
 ## 📝 Version History
 
+- **v4.14.0** (2026-02-19) - PWA Bottom Navigation & Global Announcements
+  - Volunteer bottom navigation bar on dashboard, early check-in, and select event pages
+  - Global Announcements admin page — create system-wide messages with Info/Warning/Urgent types
+  - In-app document viewer — documents open in fullscreen modal instead of new browser tab (iPhone fix)
+  - Bug fixes: event tab bar, overseer dropdown, dashboard counts, ASSISTANT_OVERSEER event creation
+
+- **v4.13.0** (2026-02-18) - Conflict Detection & Feedback Compliance
+  - Conflict detection in volunteer assignment modal with amber badge and coordinator override
+  - Feedback status API compliance — resolution comment required, email sent on status change
+
 - **v4.12.0** (2026-02-18) - Phase 4 Cleanup & Architectural Simplification
   - Removed deprecated template systems (department templates, assignment templates)
   - Removed position-level oversight page (replaced by event-level oversight)

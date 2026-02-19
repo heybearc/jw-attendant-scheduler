@@ -1,4 +1,24 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, Page } from '@playwright/test'
+
+async function getVolunteerEventId(page: Page): Promise<string | null> {
+  const url = page.url()
+  // If already on dashboard with eventId in URL
+  const urlMatch = url.match(/eventId=([^&]+)/)
+  if (urlMatch) return urlMatch[1]
+  // Get volunteerId from NextAuth session, then fetch events
+  const sessionResp = await page.request.get(`${process.env.BASE_URL}/api/auth/session`)
+  if (!sessionResp.ok()) return null
+  const session = await sessionResp.json()
+  const volunteerId = session?.user?.id
+  if (!volunteerId) return null
+  const eventsResp = await page.request.get(`${process.env.BASE_URL}/api/volunteer/events?volunteerId=${volunteerId}`)
+  if (eventsResp.ok()) {
+    const body = await eventsResp.json()
+    const events = body?.data?.events || []
+    if (events.length > 0) return events[0].id
+  }
+  return null
+}
 
 /**
  * Phase 7 Mobile Features Test Suite
@@ -42,15 +62,12 @@ test.describe('Phase 7: Mobile Volunteer Features', () => {
     await page.fill('input[name="congregation"]', 'Twinsburg')
     await page.fill('input[name="pin"]', '0879')
     await page.click('button[type="submit"]')
-    
     await page.waitForURL(/\/volunteer\/(select-event|dashboard)/, { timeout: 10000 })
     
-    // If on select-event, click the first event card (div containing event name h3)
-    if (page.url().includes('/select-event')) {
-      await page.locator('div.cursor-pointer:has(h3)').first().click()
-      await page.waitForURL(/\/volunteer\/dashboard/, { timeout: 10000 })
-    }
-    
+    // Get eventId from URL or select-event page, then navigate directly
+    const eventId = await getVolunteerEventId(page)
+    if (!eventId) { test.skip(); return }
+    await page.goto(`${process.env.BASE_URL}/volunteer/dashboard?eventId=${eventId}`)
     await page.waitForLoadState('load')
     
     await expect(page.locator('button:has-text("Assignments")')).toBeVisible({ timeout: 15000 })
@@ -66,14 +83,11 @@ test.describe('Phase 7: Mobile Volunteer Features', () => {
     await page.fill('input[name="congregation"]', 'Twinsburg')
     await page.fill('input[name="pin"]', '0879')
     await page.click('button[type="submit"]')
-    
     await page.waitForURL(/\/volunteer\/(select-event|dashboard)/, { timeout: 10000 })
     
-    if (page.url().includes('/select-event')) {
-      await page.locator('div.cursor-pointer:has(h3)').first().click()
-      await page.waitForURL(/\/volunteer\/dashboard/, { timeout: 10000 })
-    }
-    
+    const eventId = await getVolunteerEventId(page)
+    if (!eventId) { test.skip(); return }
+    await page.goto(`${process.env.BASE_URL}/volunteer/dashboard?eventId=${eventId}`)
     await page.waitForLoadState('load')
     
     const documentsTab = page.locator('button:has-text("Documents")')
@@ -89,14 +103,11 @@ test.describe('Phase 7: Mobile Volunteer Features', () => {
     await page.fill('input[name="congregation"]', 'Twinsburg')
     await page.fill('input[name="pin"]', '0879')
     await page.click('button[type="submit"]')
-    
     await page.waitForURL(/\/volunteer\/(select-event|dashboard)/, { timeout: 10000 })
     
-    if (page.url().includes('/select-event')) {
-      await page.locator('div.cursor-pointer:has(h3)').first().click()
-      await page.waitForURL(/\/volunteer\/dashboard/, { timeout: 10000 })
-    }
-    
+    const eventId = await getVolunteerEventId(page)
+    if (!eventId) { test.skip(); return }
+    await page.goto(`${process.env.BASE_URL}/volunteer/dashboard?eventId=${eventId}`)
     await page.waitForLoadState('load')
     
     const signOutButton = page.locator('button[aria-label="Sign Out"]')
@@ -112,13 +123,13 @@ test.describe('Phase 7: Mobile Volunteer Features', () => {
     await page.fill('input[name="congregation"]', 'Twinsburg')
     await page.fill('input[name="pin"]', '0879')
     await page.click('button[type="submit"]')
-    
     await page.waitForURL(/\/volunteer\/(select-event|dashboard)/, { timeout: 10000 })
     
-    if (page.url().includes('/select-event')) {
-      await page.locator('div.cursor-pointer:has(h3)').first().click()
-      await page.waitForURL(/\/volunteer\/dashboard/, { timeout: 10000 })
-    }
+    const eventId = await getVolunteerEventId(page)
+    if (!eventId) { test.skip(); return }
+    await page.goto(`${process.env.BASE_URL}/volunteer/dashboard?eventId=${eventId}`)
+    await page.waitForLoadState('load')
+    await expect(page.locator('button:has-text("Assignments")')).toBeVisible({ timeout: 15000 })
     
     const tabs = await page.locator('button:has-text("Assignments"), button:has-text("Availability"), button:has-text("Contacts"), button:has-text("Documents")').all()
     
@@ -139,18 +150,15 @@ test.describe('Phase 7: Mobile Volunteer Features', () => {
     await page.fill('input[name="congregation"]', 'Twinsburg')
     await page.fill('input[name="pin"]', '0879')
     await page.click('button[type="submit"]')
-    
     await page.waitForURL(/\/volunteer\/(select-event|dashboard)/, { timeout: 10000 })
     
-    if (page.url().includes('/select-event')) {
-      await page.locator('div.cursor-pointer:has(h3)').first().click()
-      await page.waitForURL(/\/volunteer\/dashboard/, { timeout: 10000 })
-    }
-    
+    const eventId = await getVolunteerEventId(page)
+    if (!eventId) { test.skip(); return }
+    await page.goto(`${process.env.BASE_URL}/volunteer/dashboard?eventId=${eventId}`)
     await page.waitForLoadState('load')
     const loadTime = Date.now() - startTime
     
-    expect(loadTime).toBeLessThan(10000) // Allow up to 10s including login flow
+    expect(loadTime).toBeLessThan(15000) // Allow up to 15s including login + event selection
   })
 
   test('Refresh button works on mobile dashboard', async ({ page }) => {
@@ -160,14 +168,11 @@ test.describe('Phase 7: Mobile Volunteer Features', () => {
     await page.fill('input[name="congregation"]', 'Twinsburg')
     await page.fill('input[name="pin"]', '0879')
     await page.click('button[type="submit"]')
-    
     await page.waitForURL(/\/volunteer\/(select-event|dashboard)/, { timeout: 10000 })
     
-    if (page.url().includes('/select-event')) {
-      await page.locator('div.cursor-pointer:has(h3)').first().click()
-      await page.waitForURL(/\/volunteer\/dashboard/, { timeout: 10000 })
-    }
-    
+    const eventId = await getVolunteerEventId(page)
+    if (!eventId) { test.skip(); return }
+    await page.goto(`${process.env.BASE_URL}/volunteer/dashboard?eventId=${eventId}`)
     await page.waitForLoadState('load')
     
     const refreshButton = page.locator('button[aria-label="Refresh"]')

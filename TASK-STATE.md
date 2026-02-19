@@ -2,64 +2,37 @@
 
 **Last updated:** 2026-02-19  
 **Current branch:** main  
-**Working on:** Post-release backlog — Global Announcements Banner complete, PWA Offline next
+**Working on:** Idle — v4.15.0 live, test suite clean, picking next feature
 
 ---
 
 ## Current Task
-**Post-Release Backlog** - v4.14.0 live, Global Announcements Banner wired, PWA Offline next
-
-### What I'm doing right now
-Global Announcements Banner complete and on STANDBY (GREEN). Next: PWA Offline caching.
+**Idle** — v4.15.0 live, test suite fully clean. Ready to pick next feature.
 
 **Open feedback items:**
 - None — all feedback resolved or closed
 
-### /test-release Results (2026-02-19) — v4.14.0 on STANDBY (BLUE)
+### Test Suite Status (2026-02-19) — CLEAN ✅
+**131 passed, 25 skipped (intentional), 0 failed**
 
-**v4.14.0 Custom Tests: 12 passed, 3 skipped (0 failed) ✅**
-- ✅ PWA Bottom Nav: all 4 volunteer pages load without errors
-- ✅ Global Announcements: page accessible, no JS errors, modal opens, API 200, linked from admin
-- ✅ Document Modal: loads without errors, no target=_blank links (iPhone trap fix confirmed)
-- ✅ ASSISTANT_OVERSEER API fix: /api/events returns 200
-- ⏭ 3 tab regression tests skipped (no events on BLUE — expected, BLUE is fresh STANDBY)
+All previously failing tests fixed:
+- ✅ `phase7-mobile-features.spec.ts` — restored 7 volunteer tests with real creds (Cory Allen / Twinsburg / 0879); fixed `getVolunteerEventId` helper using session API; navigate directly to dashboard with `?eventId=`
+- ✅ `ui-modernization-release.spec.ts` — replaced hardcoded stale event ID with dynamic `getValidEventId()`; `networkidle` → `load`; fixed console listener bleed
+- ✅ `phase1-3-release.spec.ts` — rewrote with dynamic event ID + `networkidle` → `load`; now tracked in repo
+- ✅ `date-display.spec.ts` — `networkidle` → `load` + navigation race fix
+- ✅ `fb-029-volunteer-popup.spec.ts` — `networkidle` → `load`, fixed `waitFor` timeout
+- ✅ `test-other-event-pages.spec.ts` — replaced hardcoded stale event ID
+- ✅ `helpers/test-config.ts` — `getValidEventId()` uses authenticated `/api/events` API
+- ✅ qa-01 `.env.test` — `BASE_URL` corrected to `https://theoshift.com`
 
-**Full Suite (existing tests): 102 passed, 19 skipped, ~20 pre-existing failures**
+Also fixed real production bug:
+- ✅ `pages/api/volunteer/login.ts` — raw query used old `attendants` table (renamed to `volunteers`)
 
-Pre-existing failures (not caused by v4.14.0, all known):
-- `phase7-mobile-features.spec.ts` (7) — volunteer PIN login can't auth on STANDBY (no event assigned to test volunteer on BLUE)
-- `ui-modernization-release.spec.ts` (6) — stale UI selectors from older test, pre-existing
-- `test-other-event-pages.spec.ts` (2) — needs event ID, pre-existing
-- `phase1-3-release.spec.ts:66` (1) — timeout on tab check, pre-existing
-- `fb-029-volunteer-popup.spec.ts` (2) — CSS selector syntax error, pre-existing
-- `custom/date-display.spec.ts` (1) — timeout, pre-existing
-- `custom/phase1-3-release.spec.ts` (1) — timeout, pre-existing
-
-**Verdict: ✅ RELEASED as v4.14.0**
-
-**Open feedback items:**
-- None — all feedback resolved or closed
-
-### Post-Release Work (2026-02-19)
-
-**Global Announcements Banner:**
-- ✅ Created `pages/api/global-announcements.ts` — public (authenticated) endpoint, returns only active announcements within date range
-- ✅ Created `components/GlobalAnnouncementBanner.tsx` — fetches active announcements, renders color-coded banners (INFO/WARNING/URGENT), dismiss-per-session via sessionStorage
-- ✅ `AdminLayout.tsx` already had import/usage wired — confirmed working
-- ✅ Announcements tab added to admin nav tabs
-- ✅ Deployed to STANDBY (GREEN, 10.92.3.22), build healthy
-- Commit: `3007643a`
-
-**Next:** Decide next feature — chat system discussion or other backlog item
-
-**PWA Offline Caching (SW v2.0.0):**
-- ✅ Upgraded `public/sw.js` to v2.0.0 with two-cache architecture
-- ✅ Strategy 1: stale-while-revalidate for `/api/volunteer/*` and `/api/global-announcements` — serve cached data instantly, update in background
-- ✅ Strategy 2: cache-first for `/volunteer/dashboard`, `/volunteer/select-event`, `/volunteer/early-checkin` — offline navigation works
-- ✅ Background sync: retry pending check-ins via IndexedDB when back online
-- ✅ Old `theoshift-v1` cache cleaned up on activate
-- ✅ Deployed to STANDBY (GREEN, 10.92.3.22), build healthy
-- Commit: `382d9a43`
+### v4.15.0 Release (2026-02-19)
+- ✅ Global Announcements Banner (`GlobalAnnouncementBanner`, `/api/global-announcements`)
+- ✅ PWA SW v2.0.0 (stale-while-revalidate, cache-first, background sync)
+- ✅ Released to LIVE (GREEN, theoshift.com)
+- ✅ Synced STANDBY (BLUE)
 
 ### Recent completions
 

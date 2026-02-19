@@ -1,12 +1,26 @@
 # Implementation Plan - TheoShift
 
-**Last Updated:** 2026-02-18  
-**Current Version:** v4.14.0  
+**Last Updated:** 2026-02-19  
+**Current Version:** v4.15.0  
 **Current Phase:** Feature Development
 
 ---
 
-## 🎯 Recent Completions (Feb 18, 2026)
+## 🎯 Recent Completions (Feb 19, 2026)
+
+### ✅ v4.15.0 Released - Global Announcements Banner + PWA Offline Caching
+**Completed:** Global Announcements Banner wired into AdminLayout, PWA Service Worker v2.0.0 with offline caching, full test suite cleanup (131 passed, 25 skipped, 0 failed).
+
+**Version:** v4.15.0  
+**Released:** 2026-02-19  
+**Status:** Live on theoshift.com (GREEN)
+
+**Changes:**
+- Global Announcements Banner: `GlobalAnnouncementBanner` component, `/api/global-announcements` public endpoint, color-coded by type, dismiss-per-session
+- PWA SW v2.0.0: stale-while-revalidate for volunteer APIs, cache-first for volunteer pages, background sync for check-ins
+- Bug fix: volunteer login raw query used old `attendants` table name (renamed to `volunteers`) — was causing login failures
+- Test suite: all previously failing/skipped tests fixed (131 passed, 25 intentional skips, 0 failed)
+- qa-01 `.env.test` BASE_URL corrected to `https://theoshift.com` (was `green.theoshift.com`, broke NextAuth redirects)
 
 ### ✅ v4.13.0 Released - FB-017 Positions Page Conflict Management + D-024 Compliance
 **Completed:** Conflict detection on positions page, email improvements, feedback API D-024 compliance.
@@ -37,9 +51,12 @@
 
 ## 🎯 Active Work (This Week)
 
-**Current Focus:** Feature Development — v4.14.0 PWA + Global Announcements
+**Current Focus:** Feature Development — v4.15.0 shipped, picking next backlog item
 
-### Recently Completed (2026-02-18) — v4.14.0 on STANDBY
+### Recently Completed (2026-02-19) — v4.15.0 LIVE
+- [x] **v4.15.0** - Global Announcements Banner, PWA SW v2.0.0, volunteer login bug fix, full test suite cleanup — released to LIVE
+
+### Previously Completed (2026-02-18) — v4.14.0
 - [x] **v4.13.0** - FB-017 conflict detection, email fixes, D-024 feedback compliance — released to LIVE
 - [x] **All Technical Debt** - All 9 debt items resolved (see section below)
 - [x] **All Feedback Items** - 0 open feedback items in production system
@@ -50,10 +67,7 @@
 - [x] **Policy:** All new features must be optimized for mobile/PWA including offline capability
 
 ### In Progress / Next
-- [x] **Release v4.14.0** - Released 2026-02-19, LIVE on BLUE (10.92.3.24)
-- [x] **Global Announcements Banner:** `GlobalAnnouncementBanner` wired into `AdminLayout` — fetches active announcements from `/api/global-announcements`, color-coded by type, dismiss-per-session via sessionStorage
-- [x] **PWA Offline:** SW v2.0.0 — stale-while-revalidate for volunteer APIs, cache-first for volunteer pages, background sync for check-ins
-- [ ] **Feature Planning:** In-app event-specific chat system - Needs discussion (see Ideas section)
+- [ ] **Feature Planning:** Pick next backlog item — IVS Volunteer Approval module, in-app chat, or mobile nav expansion (see Backlog + Ideas sections)
 
 ---
 

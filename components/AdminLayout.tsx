@@ -4,6 +4,7 @@ import { useRouter } from 'next/router'
 import { signOut, useSession } from 'next-auth/react'
 import Link from 'next/link'
 import ReleaseBanner from './ReleaseBanner'
+import GlobalAnnouncementBanner from './GlobalAnnouncementBanner'
 import ServerIndicator from './ServerIndicator'
 import BottomNav from './BottomNav'
 
@@ -40,6 +41,7 @@ export default function AdminLayout({ children, title, breadcrumbs = [], userLas
     { label: 'Dashboard', href: '/admin', icon: '🏠' },
     { label: 'Users', href: '/admin/users', icon: '👥' },
     { label: 'Locations', href: '/admin/locations', icon: '📍' },
+    { label: 'Announcements', href: '/admin/global-announcements', icon: '📢' },
     { label: 'Feedback', href: '/admin/feedback', icon: '💬' },
     { label: 'Health', href: '/admin/health', icon: '💚' },
     { label: 'API Status', href: '/admin/api-status', icon: '📊' },
@@ -77,6 +79,9 @@ export default function AdminLayout({ children, title, breadcrumbs = [], userLas
         userLastSeenVersion={userLastSeenVersion}
         releaseSummary={releaseSummary}
       />
+
+      {/* Global Announcement Banner */}
+      <GlobalAnnouncementBanner />
       
       {/* Top Navigation Bar */}
       <nav className="bg-white shadow-sm border-b border-gray-200">

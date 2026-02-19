@@ -7,6 +7,8 @@ interface VolunteerBadgesProps {
   availabilityStatus?: 'AVAILABLE' | 'NOT_AVAILABLE' | 'PARTIAL' | 'PENDING' | null
   availabilityNotes?: string | null
   formsOfService: any
+  isOverseer?: boolean
+  isKeyman?: boolean
   onAvailabilityClick?: () => void
 }
 
@@ -17,6 +19,8 @@ export function VolunteerBadges({
   availabilityStatus,
   availabilityNotes,
   formsOfService,
+  isOverseer,
+  isKeyman,
   onAvailabilityClick
 }: VolunteerBadgesProps) {
   
@@ -149,6 +153,16 @@ export function VolunteerBadges({
       {getStatusBadge()}
       {getVerificationBadge()}
       {getAvailabilityBadge()}
+      {isOverseer && (
+        <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800">
+          👑 Overseer
+        </span>
+      )}
+      {isKeyman && (
+        <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+          🔑 Keyman
+        </span>
+      )}
       {getFormsOfServiceBadges()}
     </div>
   )

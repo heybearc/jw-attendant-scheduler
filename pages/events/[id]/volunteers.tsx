@@ -303,12 +303,12 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
       (filters.isActive === 'false' && !attendant.isActive)
     
     const matchesOverseer = filters.overseerId === '' ||
-      attendant.overseerId === filters.overseerId ||
-      (filters.overseerId === 'none' && !attendant.overseerId)
+      (filters.overseerId === 'none' && !attendant.isOverseer) ||
+      (filters.overseerId !== '' && filters.overseerId !== 'none' && attendant.id === filters.overseerId)
     
     const matchesKeyman = filters.keymanId === '' ||
-      attendant.keymanId === filters.keymanId ||
-      (filters.keymanId === 'none' && !attendant.keymanId)
+      (filters.keymanId === 'none' && !attendant.isKeyman) ||
+      (filters.keymanId !== '' && filters.keymanId !== 'none' && attendant.id === filters.keymanId)
     
     const matchesFormsOfService = filters.formsOfService.length === 0 ||
       (Array.isArray(attendant.formsOfService) && 
@@ -1059,11 +1059,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                 >
                   <option value="">All Overseers</option>
                   <option value="none">No Overseer</option>
-                  {attendants.filter(att => 
-                    att.isActive && 
-                    Array.isArray(att.formsOfService) && 
-                    att.formsOfService.some(form => form.toLowerCase().includes('overseer'))
-                  ).map(overseer => (
+                  {attendants.filter(att => att.isActive && att.isOverseer).map(overseer => (
                     <option key={overseer.id} value={overseer.id}>
                       {overseer.firstName} {overseer.lastName}
                     </option>
@@ -1077,11 +1073,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                 >
                   <option value="">All Keymen</option>
                   <option value="none">No Keyman</option>
-                  {attendants.filter(att => 
-                    att.isActive && 
-                    Array.isArray(att.formsOfService) && 
-                    att.formsOfService.some(form => form.toLowerCase().includes('keyman'))
-                  ).map(keyman => (
+                  {attendants.filter(att => att.isActive && att.isKeyman).map(keyman => (
                     <option key={keyman.id} value={keyman.id}>
                       {keyman.firstName} {keyman.lastName}
                     </option>
@@ -1444,6 +1436,8 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                                 availabilityStatus={attendant.availability?.status as any}
                                 availabilityNotes={attendant.availability?.notes}
                                 formsOfService={attendant.formsOfService}
+                                isOverseer={attendant.isOverseer}
+                                isKeyman={attendant.isKeyman}
                                 onAvailabilityClick={() => handleAvailabilityClick(attendant.id)}
                               />
                             </div>
@@ -1476,11 +1470,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                             className="text-xs border border-gray-300 rounded px-1 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
                           >
                             <option value="">No Overseer</option>
-                            {attendants.filter(att => 
-                              att.isActive && 
-                              Array.isArray(att.formsOfService) && 
-                              att.formsOfService.some(form => form.toLowerCase().includes('overseer'))
-                            ).map(overseer => (
+                            {attendants.filter(att => att.isActive && att.isOverseer).map(overseer => (
                               <option key={overseer.id} value={overseer.id}>
                                 {overseer.firstName} {overseer.lastName}
                               </option>
@@ -1511,11 +1501,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                             className="text-xs border border-gray-300 rounded px-1 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
                           >
                             <option value="">No Keyman</option>
-                            {attendants.filter(att => 
-              att.isActive && 
-                              Array.isArray(att.formsOfService) && 
-                              att.formsOfService.some(form => form.toLowerCase().includes('keyman'))
-                            ).map(keyman => (
+                            {attendants.filter(att => att.isActive && att.isKeyman).map(keyman => (
                               <option key={keyman.id} value={keyman.id}>
                                 {keyman.firstName} {keyman.lastName}
                               </option>

@@ -488,6 +488,15 @@ This document tracks significant technical decisions made during development.
 - ⚠️ Event isolation achieved via permissions/query filters, not data structure
 - ⚠️ All volunteer queries must be scoped by eventId to prevent cross-event data leaking
 
+### D-TS-033: moduleConfig Must Be Fetched in Every Event Sub-Page SSR
+**Date:** 2026-02-19
+**Context:** All event sub-pages (positions, volunteers, count-times, documents, announcements, lanyards, permissions, ivs) were passing `moduleConfig: null` to `EventPageWrapper`/`TemplateProvider`, causing conditional tabs (Count Times, Lanyards, IVS) to never render regardless of event settings.
+**Decision:** Each page's `getServerSideProps` must fetch `event.settings` and build a `moduleConfig` object from `settings.modules`. For client-side-only pages (permissions), derive `moduleConfig` from the client-loaded event state. Pattern established in `index.tsx` is the canonical reference.
+**Consequences:**
+- ✅ All 8 event sub-pages now show correct tab bar based on event module config
+- ✅ Consistent pattern across all pages
+- ⚠️ New event sub-pages must follow this pattern or tabs will be missing
+
 ---
 
 ## Shared Decisions

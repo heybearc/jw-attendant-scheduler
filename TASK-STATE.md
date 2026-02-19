@@ -1,24 +1,30 @@
 # TheoShift Task State
 
-**Last updated:** 2026-02-18  
+**Last updated:** 2026-02-19  
 **Current branch:** main  
-**Working on:** Planning next feature work (v4.13.0)
+**Working on:** Bug fixes - event tab bar, overseer dropdown, dashboard double counts
 
 ---
 
 ## Current Task
-**Planning v4.13.0** - Reviewing open feedback and implementation plan backlog
+**Bug Fix Session** - All fixes deployed to LIVE and STANDBY
 
 ### What I'm doing right now
-All systems operational. v4.12.1 fully released to LIVE (BLUE). Both environments synced.
+All bug fixes complete and deployed. Both environments synced. Ready for testing verification.
 
-**Open feedback items (all others resolved/closed):**
+**Open feedback items:**
 - FB-017: Positions Page - Conflict Management (MEDIUM, open)
-- FB-027: Event selection page organization - ✅ RESOLVED (search already implemented)
-- FB-016 follow-up: Volunteer Details popup - ✅ RESOLVED (VolunteerDetailsPopup component live)
-- FB-026: Feedback notifications banner - ✅ CLOSED (will not implement)
 
 ### Recent completions
+
+**Today (2026-02-19) - Bug Fix Session:**
+- ✅ Fixed dashboard double counts (per-session `Map<sessionId, value>` instead of shared scalar state)
+- ✅ Fixed OverseerModal empty dropdown (use `isOverseer`/`isKeyman` boolean flags, not `formsOfService` text match)
+- ✅ Fixed `isOverseer`/`isKeyman` not included in `attendantsData` map in `positions.tsx` `getServerSideProps`
+- ✅ Fixed missing tabs on ALL 8 event sub-pages (`moduleConfig: null` → fetch from `event.settings.modules`)
+  - positions, volunteers, count-times, documents, announcements, lanyards, permissions, ivs
+- ✅ Documented pattern in D-TS-033
+- ✅ Deployed to both LIVE (10.92.3.22) and STANDBY (10.92.3.24)
 
 **Today (2026-02-18) - v4.12.1 Complete Template + Database Cleanup:**
 - ✅ Deleted 7 orphaned API files (department-templates x2, assignment-templates x3, event departments x2)

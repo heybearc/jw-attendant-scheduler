@@ -67,9 +67,9 @@ async function handlePublishDocument(req: NextApiRequest, res: NextApiResponse, 
       // Create document_publications records for all volunteers
       for (const volunteer of eventVolunteers) {
         await prisma.$executeRaw`
-          INSERT INTO document_publications (id, "documentId", "attendantId", "publishedAt")
+          INSERT INTO document_publications (id, "documentId", "volunteerId", "publishedAt")
           VALUES (${randomUUID()}, ${documentId}, ${volunteer.volunteerId}, NOW())
-          ON CONFLICT ("documentId", "attendantId") DO NOTHING
+          ON CONFLICT ("documentId", "volunteerId") DO NOTHING
         `
       }
       
@@ -94,9 +94,9 @@ async function handlePublishDocument(req: NextApiRequest, res: NextApiResponse, 
       // Create document_publications records for selected volunteers
       for (const volunteer of eventVolunteers) {
         await prisma.$executeRaw`
-          INSERT INTO document_publications (id, "documentId", "attendantId", "publishedAt")
+          INSERT INTO document_publications (id, "documentId", "volunteerId", "publishedAt")
           VALUES (${randomUUID()}, ${documentId}, ${volunteer.volunteerId}, NOW())
-          ON CONFLICT ("documentId", "attendantId") DO NOTHING
+          ON CONFLICT ("documentId", "volunteerId") DO NOTHING
         `
       }
       

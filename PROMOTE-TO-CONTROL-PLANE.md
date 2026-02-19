@@ -2,7 +2,7 @@
 
 ## New Discoveries to Promote
 
-### 🔧 MCP deploy_to_standby PM2 Process Name Mismatch (2026-02-18) - ⏳ PENDING
+### 🔧 MCP deploy_to_standby PM2 Process Name Mismatch (2026-02-18) - ✅ RESOLVED (2026-02-19)
 
 **Discovery:** The `homelab-blue-green-deployment` MCP server's `deploy_to_standby` tool for `theoshift` fails at the PM2 restart step because it expects the process to be named `theoshift-green`, but the actual PM2 process on the GREEN server (10.92.3.22) is named `theoshift`.
 

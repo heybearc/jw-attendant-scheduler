@@ -2,15 +2,15 @@
 
 **Last updated:** 2026-02-19  
 **Current branch:** main  
-**Working on:** v4.14.0 pre-release — tests passed on STANDBY, ready for /bump
+**Working on:** Post-release backlog — Global Announcements Banner complete, PWA Offline next
 
 ---
 
 ## Current Task
-**v4.14.0 Pre-Release** - Tests passed on STANDBY (BLUE), ready for /bump → /release
+**Post-Release Backlog** - v4.14.0 live, Global Announcements Banner wired, PWA Offline next
 
 ### What I'm doing right now
-Test-release complete. v4.14.0 on STANDBY (BLUE, 10.92.3.24). All v4.14.0 custom tests pass. Ready for /bump.
+Global Announcements Banner complete and on STANDBY (GREEN). Next: PWA Offline caching.
 
 **Open feedback items:**
 - None — all feedback resolved or closed
@@ -35,10 +35,22 @@ Pre-existing failures (not caused by v4.14.0, all known):
 - `custom/date-display.spec.ts` (1) — timeout, pre-existing
 - `custom/phase1-3-release.spec.ts` (1) — timeout, pre-existing
 
-**Verdict: ✅ READY FOR /bump → /release**
+**Verdict: ✅ RELEASED as v4.14.0**
 
 **Open feedback items:**
 - None — all feedback resolved or closed
+
+### Post-Release Work (2026-02-19)
+
+**Global Announcements Banner:**
+- ✅ Created `pages/api/global-announcements.ts` — public (authenticated) endpoint, returns only active announcements within date range
+- ✅ Created `components/GlobalAnnouncementBanner.tsx` — fetches active announcements, renders color-coded banners (INFO/WARNING/URGENT), dismiss-per-session via sessionStorage
+- ✅ `AdminLayout.tsx` already had import/usage wired — confirmed working
+- ✅ Announcements tab added to admin nav tabs
+- ✅ Deployed to STANDBY (GREEN, 10.92.3.22), build healthy
+- Commit: `3007643a`
+
+**Next:** PWA Offline caching — cache volunteer assignments + documents for offline use
 
 ### Recent completions
 

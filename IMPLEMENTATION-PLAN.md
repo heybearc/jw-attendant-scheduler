@@ -1,7 +1,7 @@
 # Implementation Plan - TheoShift
 
 **Last Updated:** 2026-02-18  
-**Current Version:** v4.13.0  
+**Current Version:** v4.14.0  
 **Current Phase:** Feature Development
 
 ---
@@ -50,9 +50,9 @@
 - [x] **Policy:** All new features must be optimized for mobile/PWA including offline capability
 
 ### In Progress / Next
-- [ ] **Release v4.14.0** - Test on standby, bump version, switch traffic
+- [x] **Release v4.14.0** - Released 2026-02-19, LIVE on BLUE (10.92.3.24)
+- [x] **Global Announcements Banner:** `GlobalAnnouncementBanner` wired into `AdminLayout` — fetches active announcements from `/api/global-announcements`, color-coded by type, dismiss-per-session via sessionStorage
 - [ ] **PWA Offline:** Cache volunteer data (assignments, documents) for offline use
-- [ ] **Global Announcements Banner:** Wire `GlobalAnnouncementBanner` component into app layout so banners actually display to users
 - [ ] **Feature Planning:** In-app event-specific chat system - Needs discussion (see Ideas section)
 
 ---

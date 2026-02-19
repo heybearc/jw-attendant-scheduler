@@ -507,6 +507,33 @@ This document tracks significant technical decisions made during development.
 - ✅ Consistent pattern across all pages
 - ⚠️ New event sub-pages must follow this pattern or tabs will be missing
 
+### D-TS-034: Matrix/Dendrite as Shared Chat Platform
+**Date:** 2026-02-19
+**Context:** Need real-time two-way in-app chat for TheoShift (event-scoped), LDC Tools, QuantShift, and future apps. Evaluated Rocket.Chat (BSL license, EmbeddedChat v0.2.3 stale), Mattermost (iframe embed only), Synapse (Python, 400-800MB RAM, overkill for closed rooms), and Dendrite.
+**Decision:** Dendrite (Go, single binary) on a dedicated Proxmox LXC at `matrix.theoshift.com`. PostgreSQL on existing `10.92.3.21` (PG 17.6). Federation disabled — all rooms are private/closed. Users auto-provisioned via NextAuth SSO, no separate Matrix login. Event rooms: `#event-{eventId}:matrix.theoshift.com`. Push via Sygnal (Web Push now, APNs/FCM when Apple Developer account ready).
+**Consequences:**
+- Single homeserver serves all apps — TheoShift, LDC Tools, QuantShift share infrastructure, isolated by room membership
+- Phase 1 blocked on user providing LXC IP/CT ID
+- Phase 5 (APNs) blocked on Apple Developer account
+- Full 6-phase plan documented in IMPLEMENTATION-PLAN.md
+
+### D-TS-035: Admin Mobile Optimization — overflow:visible Bug Fix
+**Date:** 2026-02-19
+**Context:** `users/index.tsx` had `overflow-x-auto` overridden by `style={{ overflow: 'visible' }}` (a dropdown z-index workaround), breaking horizontal scroll on mobile. `audit-logs` and `attendant-pins` tables had no `overflow-x-auto` wrapper at all. `attendant-pins` raw query also used old `attendants` table name (same bug class as volunteer login fix in v4.15.0).
+**Decision:** Fix all three files — remove `overflow: visible` override, add `overflow-x-auto` wrappers, fix `attendants` → `volunteers` in raw query, make users search bar stack vertically on mobile (`flex-col sm:flex-row`).
+**Consequences:**
+- Admin tables now horizontally scrollable on mobile
+- Third instance of `attendants` table name bug found and fixed (previous: volunteer login API, attendant-pins PIN check)
+- Dropdown z-index on users page now relies on Tailwind stacking context rather than overflow override
+
+### D-TS-036: IVS and Backlog Items Confirmed Complete
+**Date:** 2026-02-19
+**Context:** IVS Volunteer Approval & Early Check-In module, IVS Early Check-In volunteer dashboard tab, Global Announcements admin page, mobile bottom nav expansion, and admin mobile optimization were all listed as open backlog items but were already fully implemented.
+**Decision:** Marked all as complete in IMPLEMENTATION-PLAN.md. High-priority backlog is now fully cleared.
+**Consequences:**
+- No open high or medium priority backlog items remain
+- Next major work item is Matrix/Dendrite chat platform (Phase 1 pending LXC IP)
+
 ---
 
 ## Shared Decisions

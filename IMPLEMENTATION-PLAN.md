@@ -60,7 +60,7 @@
 - [x] **v4.13.0** - FB-017 conflict detection, email fixes, D-024 feedback compliance — released to LIVE
 - [x] **All Technical Debt** - All 9 debt items resolved (see section below)
 - [x] **All Feedback Items** - 0 open feedback items in production system
-- [x] **IVS Early Check-In** - Confirmed fully implemented (admin IVS tab + volunteer dashboard tab + APIs)
+- [x] **IVS Early Check-In** - Fully implemented (admin IVS tab + volunteer dashboard tab + APIs, released v4.4.0)
 - [x] **PWA: iPhone document trap fix** - Replaced `target=_blank` with in-app fullscreen modal viewer (back button, PDF iframe, image viewer, download)
 - [x] **PWA: Bottom navigation** - `PWABottomNav` component added to Dashboard, Early Check-In, Select Event pages with iOS safe-area-inset support
 - [x] **Global Announcements Admin Page** - `/admin/global-announcements` with full CRUD, type/date/active controls; DB migration applied; ADMIN-only API
@@ -187,33 +187,13 @@
 ## 📋 Backlog (Prioritized)
 
 ### High Priority
-- [ ] **IVS Volunteer Approval & Early Check-In Module** (effort: XL, NEW 2026-02-06) - Configurable volunteer module extensions for IVS department approval workflow and early check-in management. Event-specific (approvals per event/year). **Prerequisites:** Define department spreadsheet import/export format before implementation.
-  - **Phase 1: Database Schema** (effort: M)
-    - Extend `event_volunteers` table with optional approval workflow fields (approvalStatus, submittedByDepartment, approvalRequestedAt, approvalNotes, approvedAt, approvedBy, deniedReason, importBatchId)
-    - Add early check-in fields (earlyCheckinEligible, checkedInAt, checkedInBy, checkinNotes)
-    - Extend `moduleConfig` in department_templates/events to enable/disable volunteer extensions
-  - **Phase 2: Volunteers Page Extensions** (effort: L)
-    - Conditional column display based on moduleConfig (approval status, department, check-in fields)
-    - Conditional filters (approval status, department filter, check-in eligible)
-    - Conditional bulk actions (Request Approval, Mark Approved/Denied, Export to Department Format)
-    - Import department spreadsheets with batch tracking
-    - Export back to department format with approval results
-  - **Phase 3: Early Check-In Tab** (effort: M)
-    - New event tab (conditionally shown when earlyCheckin module enabled)
-    - Check-in interface for volunteers with earlyCheckinEligible flag
-    - Real-time check-in status tracking
-    - Export to Excel/PDF
-    - Email check-in reports
-  - **Phase 4: Admin Configuration** (effort: S)
-    - Department template configuration UI for enabling/disabling modules
-    - Custom status list configuration
-    - Department list management for filtering
-  - **Use Case:** IVS department manages volunteer approval workflow across multiple departments (import spreadsheets, track approval status, coordinate with service committees, export results). Separate from IVS department's own 20-volunteer scheduling needs (uses standard event workflow).
+- [x] **IVS Volunteer Approval & Early Check-In Module** (COMPLETE) — IVS approvals, spreadsheet import/export, bulk operations, mobile check-in interface, early check-in tab on volunteer dashboard. Released in v4.4.0.
+- [x] **IVS Early Check-In access model** — Early Check-In tab exists on volunteer dashboard (COMPLETE)
 - [x] **Admin portal redesign with tabs layout** (effort: XL, COMPLETED 2026-02-10) - Redesigned admin console with tab-based navigation instead of sidebar menu. Implemented mobile hamburger menu for PWA-friendly admin access. Improved organization of admin functions into logical groups (Event Management, Admin Functions, Help). **Deployed as v4.3.0.**
 - [x] Email content refinement for assignment notifications (effort: M, COMPLETE v4.13.0) - Shift name, All Day display, overseer terminology
 
 ### Medium Priority
-- [ ] **Global announcements admin page** (effort: L, NEW 2026-02-06) - Create admin portal page to manage system-wide announcements that appear on all pages (like rebranding banner). Should support: title, message, type (INFO/WARNING/URGENT), start/end dates, active/inactive toggle, dismissal settings. Currently only have event-specific announcements and code-based static banners.
+- [x] **Global announcements admin page** (COMPLETE v4.14.0) - `/admin/global-announcements` with full CRUD, type/date/active controls, banner component wired into AdminLayout, public API endpoint.
 - [ ] Mobile bottom navigation expansion (effort: M) - Ensure bottom nav appears consistently on all authenticated pages
 - [ ] Admin pages mobile optimization (effort: L) - Make admin tables, forms, and UI touch-friendly for mobile
 
@@ -221,31 +201,7 @@
 
 ## 💭 Ideas & Feature Concepts (Needs Discussion)
 
-### 1. IVS Early Check-In Access Model
-**Status:** Needs pushback/discussion  
-**Submitted:** 2026-02-11
-
-**Current Situation:**
-- IVS Approval - Early Check-In feature exists
-- Mobile check-in and regular check-in features available
-- Currently requires team members to have application login
-
-**Question:**
-- Should volunteers need full application login for early check-in?
-- OR should we add an "Early Check-In" tab to volunteer dashboard (when in IVS event)?
-
-**Considerations:**
-- **Option A (Current):** Team members have full login access
-  - Pros: Full access to all features, easier permission management
-  - Cons: More accounts to manage, potential security concerns
-  
-- **Option B (Volunteer Dashboard):** Add check-in tab for IVS volunteers
-  - Pros: Volunteers already have login, event-specific access, better UX
-  - Cons: Need to build volunteer dashboard tab, permission complexity
-
-**Decision Needed:** Which approach aligns better with security model and user experience?
-
-### 2. Event-Specific In-App Chat System
+### 1. Event-Specific In-App Chat System
 **Status:** Needs pushback/discussion  
 **Submitted:** 2026-02-11
 

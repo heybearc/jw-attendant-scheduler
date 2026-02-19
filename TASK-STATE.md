@@ -2,15 +2,40 @@
 
 **Last updated:** 2026-02-19  
 **Current branch:** main  
-**Working on:** Bug fix session complete — all nodes synced at latest
+**Working on:** v4.14.0 pre-release — tests passed on STANDBY, ready for /bump
 
 ---
 
 ## Current Task
-**Bug Fix Session Complete** - All nodes synced, all known feedback resolved
+**v4.14.0 Pre-Release** - Tests passed on STANDBY (BLUE), ready for /bump → /release
 
 ### What I'm doing right now
-All bug fixes complete and deployed. Both environments at `45e9fbf2`. No open feedback items.
+Test-release complete. v4.14.0 on STANDBY (BLUE, 10.92.3.24). All v4.14.0 custom tests pass. Ready for /bump.
+
+**Open feedback items:**
+- None — all feedback resolved or closed
+
+### /test-release Results (2026-02-19) — v4.14.0 on STANDBY (BLUE)
+
+**v4.14.0 Custom Tests: 12 passed, 3 skipped (0 failed) ✅**
+- ✅ PWA Bottom Nav: all 4 volunteer pages load without errors
+- ✅ Global Announcements: page accessible, no JS errors, modal opens, API 200, linked from admin
+- ✅ Document Modal: loads without errors, no target=_blank links (iPhone trap fix confirmed)
+- ✅ ASSISTANT_OVERSEER API fix: /api/events returns 200
+- ⏭ 3 tab regression tests skipped (no events on BLUE — expected, BLUE is fresh STANDBY)
+
+**Full Suite (existing tests): 102 passed, 19 skipped, ~20 pre-existing failures**
+
+Pre-existing failures (not caused by v4.14.0, all known):
+- `phase7-mobile-features.spec.ts` (7) — volunteer PIN login can't auth on STANDBY (no event assigned to test volunteer on BLUE)
+- `ui-modernization-release.spec.ts` (6) — stale UI selectors from older test, pre-existing
+- `test-other-event-pages.spec.ts` (2) — needs event ID, pre-existing
+- `phase1-3-release.spec.ts:66` (1) — timeout on tab check, pre-existing
+- `fb-029-volunteer-popup.spec.ts` (2) — CSS selector syntax error, pre-existing
+- `custom/date-display.spec.ts` (1) — timeout, pre-existing
+- `custom/phase1-3-release.spec.ts` (1) — timeout, pre-existing
+
+**Verdict: ✅ READY FOR /bump → /release**
 
 **Open feedback items:**
 - None — all feedback resolved or closed

@@ -2,7 +2,7 @@
 
 **Last Updated:** 2026-02-19  
 **Current Version:** v4.15.0  
-**Current Phase:** Feature Development
+**Current Phase:** Feature Development + Platform Infrastructure
 
 ---
 
@@ -67,7 +67,9 @@
 - [x] **Policy:** All new features must be optimized for mobile/PWA including offline capability
 
 ### In Progress / Next
-- [ ] **Feature Planning:** Pick next backlog item — IVS Volunteer Approval module, in-app chat, or mobile nav expansion (see Backlog + Ideas sections)
+- [ ] **Matrix/Dendrite Chat Platform** — Infrastructure + TheoShift integration (see full plan below)
+- [x] **Mobile bottom nav expansion** — Already complete on all volunteer pages (COMPLETE)
+- [x] **Admin pages mobile optimization** — overflow-x-auto fixes, search bar stacking, attendant-pins table bug fix (COMPLETE 2026-02-19)
 
 ---
 
@@ -184,7 +186,135 @@
 
 ---
 
-## 📋 Backlog (Prioritized)
+## �️ Matrix/Dendrite Chat Platform (Major Initiative)
+
+**Status:** Planned — awaiting LXC IP assignment to begin Phase 1  
+**Decision Date:** 2026-02-19  
+**Scope:** Shared infrastructure serving TheoShift, LDC Tools, QuantShift, and future apps  
+**Effort:** XL (2-3 weeks total across all phases)
+
+### Why Matrix/Dendrite
+
+- **Open protocol** (Apache 2.0) — no vendor lock-in, industry standard used by Mozilla, German government, French military
+- **Single homeserver, multiple apps** — TheoShift, LDC Tools, QuantShift all share one Dendrite instance; rooms are app-scoped, users never cross app boundaries
+- **Dendrite over Synapse** — Go binary (vs Python), single process, 80-150MB RAM at idle vs 400-800MB, same feature set for closed private rooms, no federation needed
+- **Real-time two-way chat** — WebSocket-based, WhatsApp/Slack-style UX, typing indicators, read receipts, message history, reactions — all standard Matrix features
+- **PWA push notifications** — Web Push works on iOS 16.4+ Safari and all Android browsers; APNs/FCM via Sygnal push gateway when Apple Developer account is ready
+- **Event-scoped rooms** — each event = a Matrix room (`#event-{eventId}:matrix.theoshift.com`); volunteers only see rooms for their assigned event; admins see all rooms for their events
+
+### Environment
+
+| Component | Value |
+|---|---|
+| Homeserver subdomain | `matrix.theoshift.com` |
+| Dendrite LXC | New CT on Proxmox — IP TBD by user |
+| LXC spec | Debian 12, 2 vCPU, 2GB RAM |
+| PostgreSQL | Existing server at `10.92.3.21` (PG 17.6) — new `dendrite` database |
+| HAProxy | Existing — add Dendrite as upstream backend |
+| Push gateway | Sygnal — co-located on Dendrite LXC |
+
+### Phase 1 — Infrastructure (LXC + Dendrite + PostgreSQL)
+
+**Prerequisite:** User provides LXC IP and CT ID
+
+- [ ] Create Proxmox LXC (Debian 12, 2 vCPU, 2GB RAM, 20GB disk)
+- [ ] Install Dendrite binary (Go, single binary via GitHub releases)
+- [ ] Create `dendrite` database on `10.92.3.21` with dedicated user
+- [ ] Configure `dendrite.yaml` — server name `matrix.theoshift.com`, PostgreSQL connection, media store path
+- [ ] Generate Matrix signing key (`dendrite generate-keys`)
+- [ ] Configure TLS — Let's Encrypt cert on the LXC via certbot + nginx reverse proxy on LXC
+- [ ] Add `matrix.theoshift.com` DNS A record → LXC IP
+- [ ] Add Matrix well-known delegation on `theoshift.com` (`/.well-known/matrix/server`, `/.well-known/matrix/client`)
+- [ ] Start Dendrite via systemd service
+- [ ] Verify homeserver health: `https://matrix.theoshift.com/_matrix/client/versions`
+- [ ] Add Dendrite LXC as upstream in HAProxy health checks
+
+**Deliverable:** Functional Matrix homeserver at `matrix.theoshift.com`
+
+### Phase 2 — TheoShift Integration
+
+- [ ] Add `matrix-js-sdk` to TheoShift (`npm install matrix-js-sdk`)
+- [ ] Create Matrix provisioning service (`src/lib/matrix.ts`) — auto-create Matrix user on NextAuth login, no separate Matrix login needed
+  - Username pattern: `@{userId}:matrix.theoshift.com`
+  - Display name: `{firstName} {lastName}`
+  - Access token stored in NextAuth session (server-side only)
+- [ ] Create event room provisioning — when an event is created, auto-create Matrix room `#event-{eventId}:matrix.theoshift.com`
+- [ ] Room membership sync — when volunteer is assigned to event, invite their Matrix user to the room; when removed, kick from room
+- [ ] **Volunteer dashboard** — add "Messages" tab to `MobileVolunteerDashboard` (5th tab)
+  - Shows only rooms for volunteer's assigned event
+  - Real-time message display via matrix-js-sdk sync
+  - Send message input at bottom (WhatsApp-style)
+  - Unread badge on tab
+- [ ] **Admin event pages** — add chat drawer/panel to event layout
+  - Floating chat button (bottom-right) with unread badge
+  - Slide-in panel showing event room
+  - All users with event access (ADMIN, OVERSEER, ASSISTANT_OVERSEER, KEYMAN) can send
+- [ ] **API route** `POST /api/matrix/provision` — called by NextAuth `signIn` callback to ensure Matrix user exists
+- [ ] **API route** `GET /api/matrix/token` — returns Matrix access token for client-side SDK init (server-side session only, never exposed in page source)
+- [ ] Add Matrix env vars to `.env`: `MATRIX_HOMESERVER_URL`, `MATRIX_ADMIN_TOKEN`, `MATRIX_SERVER_NAME`
+
+**Deliverable:** Full two-way real-time chat in TheoShift for volunteers and admins, event-scoped
+
+### Phase 3 — LDC Tools Integration
+
+- [ ] Same homeserver (`matrix.theoshift.com`) — no new infrastructure
+- [ ] Add `matrix-js-sdk` to LDC Tools Next.js app
+- [ ] Implement same provisioning pattern (`src/lib/matrix.ts`) with LDC Tools NextAuth
+- [ ] Room namespace: `#ldctools-{contextId}:matrix.theoshift.com` (context = project, job, or whatever LDC Tools scopes by)
+- [ ] UI integration TBD based on LDC Tools page structure
+
+**Deliverable:** LDC Tools users on same homeserver, isolated rooms
+
+### Phase 4 — QuantShift + Future Apps
+
+- [ ] Same pattern — provision Matrix users on signup, create rooms per context
+- [ ] Public users get Matrix accounts automatically — they never see or interact with Matrix directly
+- [ ] Room namespace: `#quantshift-{contextId}:matrix.theoshift.com`
+- [ ] Scale note: Dendrite handles thousands of concurrent users in monolith mode — no architecture change needed at QuantShift scale
+
+### Phase 5 — Push Notifications
+
+**Prerequisite:** Apple Developer account for APNs
+
+- [ ] Install Sygnal (Matrix push gateway) on Dendrite LXC — Python service, lightweight
+- [ ] Configure Web Push (VAPID keys) — works immediately on iOS 16.4+ PWA and all Android
+- [ ] Configure FCM (Firebase Cloud Messaging) — free Firebase project, Android + Chrome push
+- [ ] Configure APNs — Apple Developer account cert, iOS Safari push
+- [ ] Register push rules in Dendrite — notify on new message in joined rooms
+- [ ] TheoShift PWA: register push subscription on volunteer dashboard load
+- [ ] Test: message sent by admin → volunteer receives push notification even with app backgrounded
+
+**Deliverable:** Full push notification pipeline — in-app + background push on iOS and Android
+
+### Phase 6 — HA / Resilience (Future)
+
+- [ ] Dendrite worker mode — split sync, federation, media into separate processes (only needed at high load)
+- [ ] Media store on NFS mount — shared between potential future Dendrite replicas
+- [ ] HAProxy active/passive for Dendrite LXC — failover to second LXC if primary goes down
+- [ ] PostgreSQL replication already handled by existing PG infrastructure
+
+### Key Decisions Made
+
+| Decision | Choice | Reason |
+|---|---|---|
+| Engine | Dendrite (Go) | Single binary, low memory, LXC-friendly, PG 17 native |
+| vs Synapse | Rejected | Python complexity, 4-5x memory, overkill for closed rooms |
+| vs Rocket.Chat | Rejected | BSL license, EmbeddedChat is immature (v0.2.3, 1yr stale) |
+| vs Mattermost | Rejected | iframe embed only, no real React SDK |
+| Federation | Disabled | All apps are closed — no need to talk to external Matrix servers |
+| Subdomain | `matrix.theoshift.com` | Clean, standard, DNS-resolvable |
+| Auth | SSO via NextAuth | Users never see a Matrix login — provisioned automatically |
+| Rooms | Event-scoped | `#event-{eventId}:matrix.theoshift.com` — enforced by membership |
+
+### Pending From User
+
+- [ ] **LXC IP and CT ID** — needed to start Phase 1
+- [ ] **Apple Developer account** — needed for Phase 5 APNs push (iOS native push)
+- [ ] **LDC Tools context model** — what does a "conversation scope" map to in LDC Tools? (project? job? team?)
+
+---
+
+## �📋 Backlog (Prioritized)
 
 ### High Priority
 - [x] **IVS Volunteer Approval & Early Check-In Module** (COMPLETE) — IVS approvals, spreadsheet import/export, bulk operations, mobile check-in interface, early check-in tab on volunteer dashboard. Released in v4.4.0.
@@ -194,70 +324,12 @@
 
 ### Medium Priority
 - [x] **Global announcements admin page** (COMPLETE v4.14.0) - `/admin/global-announcements` with full CRUD, type/date/active controls, banner component wired into AdminLayout, public API endpoint.
-- [ ] Mobile bottom navigation expansion (effort: M) - Ensure bottom nav appears consistently on all authenticated pages
-- [ ] Admin pages mobile optimization (effort: L) - Make admin tables, forms, and UI touch-friendly for mobile
+- [x] **Mobile bottom navigation expansion** (COMPLETE 2026-02-19) - PWABottomNav confirmed on all 3 volunteer pages (dashboard via MobileVolunteerDashboard, early-checkin, select-event).
+- [x] **Admin pages mobile optimization** (COMPLETE 2026-02-19) - overflow-x-auto on all admin tables, mobile-stacking search bar on users page, fixed attendant-pins raw query using old `attendants` table name.
 
 ---
 
-## 💭 Ideas & Feature Concepts (Needs Discussion)
-
-### 1. Event-Specific In-App Chat System
-**Status:** Needs pushback/discussion  
-**Submitted:** 2026-02-11
-
-**Use Case:**
-- Attendant overseer needs to message team members during event
-- Example: "Child is missing" - need to alert single person or broadcast to all
-- Must be event-specific (not global chat)
-
-**Requirements:**
-- Event-scoped messaging (only for specific event)
-- One-to-one messaging (overseer → volunteer)
-- Broadcast messaging (overseer → all team members)
-- Real-time delivery
-- Mobile-friendly
-- Role-based access (overseers can send, volunteers can receive)
-
-**Technical Considerations:**
-- **Real-time:** WebSockets vs Server-Sent Events vs Polling
-- **Storage:** Database table for messages (event_messages?)
-- **Notifications:** Push notifications? Email fallback?
-- **UI:** Chat panel? Modal? Dedicated tab?
-- **Permissions:** Who can send? Who can receive? Can volunteers reply?
-
-**Architecture Options:**
-
-**Option A: Simple Broadcast System**
-- Overseer sends message to all team members
-- One-way communication (no replies)
-- Email + in-app notification
-- Simpler to implement
-
-**Option B: Full Chat System**
-- Two-way messaging
-- Real-time WebSocket connection
-- Chat history
-- Read receipts
-- More complex but more flexible
-
-**Option C: Hybrid Approach**
-- Broadcast for urgent alerts (one-way)
-- Direct messaging for coordination (two-way)
-- Email fallback for offline users
-
-**Effort Estimates:**
-- Option A: Medium (3-5 days)
-- Option B: Extra Large (2-3 weeks)
-- Option C: Large (1-2 weeks)
-
-**Questions to Answer:**
-1. Is this for real-time coordination during live events?
-2. Do volunteers need to reply or just receive?
-3. Should messages persist after event ends?
-4. What about offline users (email fallback)?
-5. Mobile app integration needed?
-
-**Decision Needed:** Scope and architecture approach before implementation
+## 💭 Ideas & Feature Concepts
 
 ### Low Priority
 - [ ] Enhanced error messages (effort: S) - Improve error message clarity across application

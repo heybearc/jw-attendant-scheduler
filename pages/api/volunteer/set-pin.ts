@@ -85,7 +85,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Update volunteer with PIN
     await prisma.$executeRaw`
-      UPDATE attendants 
+      UPDATE volunteers 
       SET "pinHash" = ${pinHash}, "updatedAt" = NOW() 
       WHERE id = ${volunteerId}
     `

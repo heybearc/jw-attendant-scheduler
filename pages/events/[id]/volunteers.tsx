@@ -400,11 +400,11 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
     }
 
     try {
-      const response = await fetch('/api/attendant/set-pin', {
+      const response = await fetch('/api/volunteer/set-pin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          attendantId: attendant.id,
+          volunteerId: attendant.id,
           eventId: eventId,
           pin,
           autoGenerate: false

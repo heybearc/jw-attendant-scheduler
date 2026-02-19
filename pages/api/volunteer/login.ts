@@ -79,7 +79,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     
     // Verify PIN using raw query (Prisma client doesn't include pinHash field due to server issue)
     const pinResult = await prisma.$queryRaw<Array<{ pinHash: string | null }>>`
-      SELECT "pinHash" FROM attendants WHERE id = ${volunteer.id}
+      SELECT "pinHash" FROM volunteers WHERE id = ${volunteer.id}
     `
     
     const pinHash = pinResult[0]?.pinHash

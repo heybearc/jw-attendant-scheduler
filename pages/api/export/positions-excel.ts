@@ -102,7 +102,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           ) || []
           
           const attendantNames = assignments.length > 0
-            ? assignments.map((a: any) => `${a.attendant.firstName} ${a.attendant.lastName}`).join('; ')
+            ? assignments.map((a: any) => `${(a.volunteer || a.attendant)?.firstName} ${(a.volunteer || a.attendant)?.lastName}`).join('; ')
             : 'No attendants assigned'
           
           let shiftTime = ''

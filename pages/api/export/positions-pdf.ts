@@ -186,7 +186,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             doc.text('Attendants:', 60, shiftY + 38, { continued: true })
             doc.font('Helvetica').fillColor('#374151')
             const attendantNames = assignments.map((a: any) => 
-              `${a.attendant.firstName} ${a.attendant.lastName}`
+              `${(a.volunteer || a.attendant)?.firstName} ${(a.volunteer || a.attendant)?.lastName}`
             ).join(', ')
             doc.text(` ${attendantNames}`, { continued: false, width: 420 })
           } else {

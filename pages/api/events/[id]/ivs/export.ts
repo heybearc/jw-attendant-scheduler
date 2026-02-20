@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../../../auth/[...nextauth]'
 import { PrismaClient } from '@prisma/client'
-import * as XLSX from 'xlsx'
+import ExcelJS from 'exceljs'
 import { handleApiError } from '@/lib/apiError'
 
 const prisma = new PrismaClient()
@@ -80,23 +80,21 @@ export default async function handler(
     }))
 
     // Generate Excel file
-    const worksheet = XLSX.utils.json_to_sheet(exportData)
-    const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Volunteers')
-
-    // Set column widths
-    worksheet['!cols'] = [
-      { wch: 25 }, // NAME
-      { wch: 20 }, // CONGREGATION
-      { wch: 15 }, // APPROVAL STATUS
-      { wch: 15 }, // APPROVAL DATE
-      { wch: 20 }, // DEPARTMENT
-      { wch: 8 },  // ROUND
-      { wch: 30 }, // NOTES
+    const workbook = new ExcelJS.Workbook()
+    const worksheet = workbook.addWorksheet('Volunteers')
+    worksheet.columns = [
+      { header: 'NAME', key: 'NAME', width: 25 },
+      { header: 'CONGREGATION', key: 'CONGREGATION', width: 20 },
+      { header: 'APPROVAL STATUS', key: 'APPROVAL STATUS', width: 15 },
+      { header: 'APPROVAL DATE', key: 'APPROVAL DATE', width: 15 },
+      { header: 'DEPARTMENT', key: 'DEPARTMENT', width: 20 },
+      { header: 'ROUND', key: 'ROUND', width: 8 },
+      { header: 'NOTES', key: 'NOTES', width: 30 },
     ]
+    exportData.forEach(row => worksheet.addRow(row))
 
     // Generate file buffer
-    const buffer = XLSX.write(workbook, { type: 'buffer', bookType: format as any })
+    const buffer = Buffer.from(await workbook.xlsx.writeBuffer())
 
     // Generate filename
     const dept = departmentName || 'All-Departments'

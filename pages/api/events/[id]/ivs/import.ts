@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../../../auth/[...nextauth]'
 import { PrismaClient } from '@prisma/client'
 import formidable, { File } from 'formidable'
-import * as XLSX from 'xlsx'
+import ExcelJS from 'exceljs'
 import { v4 as uuidv4 } from 'uuid'
 import { handleApiError } from '@/lib/apiError'
 
@@ -217,42 +217,36 @@ export default async function handler(
 }
 
 async function parseVolunteerFile(file: File): Promise<ImportedVolunteer[]> {
-  const workbook = XLSX.readFile(file.filepath)
-  const sheetName = workbook.SheetNames[0]
-  const worksheet = workbook.Sheets[sheetName]
-  const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as string[][]
+  const workbook = new ExcelJS.Workbook()
+  await workbook.xlsx.readFile(file.filepath)
+  const worksheet = workbook.worksheets[0]
 
-  if (data.length === 0) {
+  if (!worksheet || worksheet.rowCount === 0) {
     throw new Error('File is empty')
   }
 
   // Validate header row
-  const headerRow = data[0]
-  if (!headerRow || headerRow.length < 2) {
-    throw new Error('Invalid spreadsheet format. Expected columns: NAME, CONGREGATION')
-  }
+  const headerRow = worksheet.getRow(1).values as (string | undefined)[]
+  // ExcelJS row.values is 1-indexed (index 0 is undefined)
+  const nameHeader = headerRow[1]?.toString().trim().toUpperCase()
+  const congregationHeader = headerRow[2]?.toString().trim().toUpperCase()
 
-  const nameHeader = headerRow[0]?.toString().trim().toUpperCase()
-  const congregationHeader = headerRow[1]?.toString().trim().toUpperCase()
-
-  if (nameHeader !== 'NAME' || congregationHeader !== 'CONGREGATION') {
-    throw new Error(`Invalid spreadsheet format. Expected columns: NAME, CONGREGATION. Found: ${headerRow[0]}, ${headerRow[1]}`)
+  if (!nameHeader || !congregationHeader || nameHeader !== 'NAME' || congregationHeader !== 'CONGREGATION') {
+    throw new Error(`Invalid spreadsheet format. Expected columns: NAME, CONGREGATION. Found: ${headerRow[1]}, ${headerRow[2]}`)
   }
 
   const volunteers: ImportedVolunteer[] = []
 
-  // Parse data rows (skip header)
-  for (let i = 1; i < data.length; i++) {
-    const row = data[i]
-    if (!row || row.length < 2) continue
-
-    const name = row[0]?.toString().trim()
-    const congregation = row[1]?.toString().trim()
-
+  // Parse data rows (skip header row 1)
+  worksheet.eachRow((row, rowNumber) => {
+    if (rowNumber === 1) return
+    const values = row.values as (string | undefined)[]
+    const name = values[1]?.toString().trim()
+    const congregation = values[2]?.toString().trim()
     if (name && congregation) {
       volunteers.push({ name, congregation })
     }
-  }
+  })
 
   return volunteers
 }

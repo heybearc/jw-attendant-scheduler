@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../../auth/[...nextauth]'
 import { PrismaClient } from '@prisma/client'
-import * as XLSX from 'xlsx'
+import ExcelJS from 'exceljs'
 
 const prisma = new PrismaClient()
 
@@ -108,11 +108,13 @@ export default async function handler(
       'CHECKED IN BY': '',
     })
 
-    const worksheet = XLSX.utils.json_to_sheet(data, { skipHeader: false })
-    const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Early Check-In')
-
-    const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' })
+    const workbook = new ExcelJS.Workbook()
+    const worksheet = workbook.addWorksheet('Early Check-In')
+    if (data.length > 0) {
+      worksheet.columns = Object.keys(data[0]).map(key => ({ header: key, key }))
+      data.forEach(row => worksheet.addRow(row))
+    }
+    const buffer = await workbook.xlsx.writeBuffer()
 
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     res.setHeader('Content-Disposition', `attachment; filename="IVS_Early_CheckIn_Report.xlsx"`)

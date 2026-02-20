@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
-import * as XLSX from 'xlsx'
+import ExcelJS from 'exceljs'
 
 interface OversightAssignment {
   assignmentId: string
@@ -192,11 +192,12 @@ export function exportOversightToPDF(data: OversightData) {
   doc.save(fileName)
 }
 
-export function exportOversightToExcel(data: OversightData) {
-  const workbook = XLSX.utils.book_new()
-  
+export async function exportOversightToExcel(data: OversightData) {
+  const workbook = new ExcelJS.Workbook()
+
   // Statistics Sheet
-  const statsData = [
+  const statsSheet = workbook.addWorksheet('Statistics')
+  statsSheet.addRows([
     ['Event Oversight Report'],
     ['Event Name:', data.event.name],
     ['Generated:', new Date().toLocaleString()],
@@ -209,97 +210,57 @@ export function exportOversightToExcel(data: OversightData) {
     ['Coverage Percentage', `${data.statistics.coveragePercentage}%`],
     ['Overseers', data.statistics.overseerCount],
     ['Assistant Overseers', data.statistics.assistantOverseerCount],
-    ['Keymen', data.statistics.keymanCount]
-  ]
-  
-  const statsSheet = XLSX.utils.aoa_to_sheet(statsData)
-  XLSX.utils.book_append_sheet(workbook, statsSheet, 'Statistics')
-  
+    ['Keymen', data.statistics.keymanCount],
+  ])
+
+  const assignmentColumns = ['Name', 'Email', 'Position #', 'Position Name', 'Department', 'Status', 'Notes']
+
   // Overseers Sheet
   if (data.overseers.length > 0) {
-    const overseerData = [
-      ['Name', 'Email', 'Position #', 'Position Name', 'Department', 'Status', 'Notes']
-    ]
-    
-    data.overseers.forEach(o => {
-      overseerData.push([
-        o.user.name || 'N/A',
-        o.user.email || 'N/A',
-        o.position.number.toString(),
-        o.position.name,
-        o.position.department || 'N/A',
-        o.status,
-        o.notes || ''
-      ])
-    })
-    
-    const overseerSheet = XLSX.utils.aoa_to_sheet(overseerData)
-    XLSX.utils.book_append_sheet(workbook, overseerSheet, 'Overseers')
+    const sheet = workbook.addWorksheet('Overseers')
+    sheet.addRow(assignmentColumns)
+    data.overseers.forEach(o => sheet.addRow([
+      o.user.name || 'N/A', o.user.email || 'N/A', o.position.number.toString(),
+      o.position.name, o.position.department || 'N/A', o.status, o.notes || ''
+    ]))
   }
-  
+
   // Assistant Overseers Sheet
   if (data.assistantOverseers.length > 0) {
-    const assistantData = [
-      ['Name', 'Email', 'Position #', 'Position Name', 'Department', 'Status', 'Notes']
-    ]
-    
-    data.assistantOverseers.forEach(a => {
-      assistantData.push([
-        a.user.name || 'N/A',
-        a.user.email || 'N/A',
-        a.position.number.toString(),
-        a.position.name,
-        a.position.department || 'N/A',
-        a.status,
-        a.notes || ''
-      ])
-    })
-    
-    const assistantSheet = XLSX.utils.aoa_to_sheet(assistantData)
-    XLSX.utils.book_append_sheet(workbook, assistantSheet, 'Assistant Overseers')
+    const sheet = workbook.addWorksheet('Assistant Overseers')
+    sheet.addRow(assignmentColumns)
+    data.assistantOverseers.forEach(a => sheet.addRow([
+      a.user.name || 'N/A', a.user.email || 'N/A', a.position.number.toString(),
+      a.position.name, a.position.department || 'N/A', a.status, a.notes || ''
+    ]))
   }
-  
+
   // Keymen Sheet
   if (data.keymen.length > 0) {
-    const keymenData = [
-      ['Name', 'Email', 'Position #', 'Position Name', 'Department', 'Status', 'Notes']
-    ]
-    
-    data.keymen.forEach(k => {
-      keymenData.push([
-        k.user.name || 'N/A',
-        k.user.email || 'N/A',
-        k.position.number.toString(),
-        k.position.name,
-        k.position.department || 'N/A',
-        k.status,
-        k.notes || ''
-      ])
-    })
-    
-    const keymenSheet = XLSX.utils.aoa_to_sheet(keymenData)
-    XLSX.utils.book_append_sheet(workbook, keymenSheet, 'Keymen')
+    const sheet = workbook.addWorksheet('Keymen')
+    sheet.addRow(assignmentColumns)
+    data.keymen.forEach(k => sheet.addRow([
+      k.user.name || 'N/A', k.user.email || 'N/A', k.position.number.toString(),
+      k.position.name, k.position.department || 'N/A', k.status, k.notes || ''
+    ]))
   }
-  
+
   // Coverage Gaps Sheet
   if (data.coverageGaps.length > 0) {
-    const gapData = [
-      ['Position #', 'Position Name', 'Department']
-    ]
-    
-    data.coverageGaps.forEach(g => {
-      gapData.push([
-        g.number.toString(),
-        g.name,
-        g.department || 'N/A'
-      ])
-    })
-    
-    const gapSheet = XLSX.utils.aoa_to_sheet(gapData)
-    XLSX.utils.book_append_sheet(workbook, gapSheet, 'Coverage Gaps')
+    const sheet = workbook.addWorksheet('Coverage Gaps')
+    sheet.addRow(['Position #', 'Position Name', 'Department'])
+    data.coverageGaps.forEach(g => sheet.addRow([g.number.toString(), g.name, g.department || 'N/A']))
   }
-  
-  // Save the Excel file
-  const fileName = `oversight-report-${data.event.name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.xlsx`
-  XLSX.writeFile(workbook, fileName)
+
+  // Trigger browser download
+  const buffer = await workbook.xlsx.writeBuffer()
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `oversight-report-${data.event.name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.xlsx`
+  document.body.appendChild(a)
+  a.click()
+  URL.revokeObjectURL(url)
+  document.body.removeChild(a)
 }

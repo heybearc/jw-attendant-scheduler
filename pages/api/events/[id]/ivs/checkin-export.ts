@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../../auth/[...nextauth]'
 import { PrismaClient } from '@prisma/client'
-import * as XLSX from 'xlsx'
+import ExcelJS from 'exceljs'
 
 const prisma = new PrismaClient()
 
@@ -100,24 +100,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const fullData = [...summaryData, ...data]
 
     // Create workbook and worksheet
-    const worksheet = XLSX.utils.json_to_sheet(fullData, {
-      header: ['Name', 'Congregation', 'Check-In Status', 'Check-In Time', 'Checked In By'],
-    })
-
-    // Set column widths
-    worksheet['!cols'] = [
-      { wch: 25 }, // Name
-      { wch: 30 }, // Congregation
-      { wch: 15 }, // Check-In Status
-      { wch: 20 }, // Check-In Time
-      { wch: 20 }, // Checked In By
+    const workbook = new ExcelJS.Workbook()
+    const worksheet = workbook.addWorksheet('Early Check-In')
+    worksheet.columns = [
+      { header: 'Name', key: 'Name', width: 25 },
+      { header: 'Congregation', key: 'Congregation', width: 30 },
+      { header: 'Check-In Status', key: 'Check-In Status', width: 15 },
+      { header: 'Check-In Time', key: 'Check-In Time', width: 20 },
+      { header: 'Checked In By', key: 'Checked In By', width: 20 },
     ]
-
-    const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Early Check-In')
+    fullData.forEach(row => worksheet.addRow(row))
 
     // Generate Excel file
-    const excelBuffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' })
+    const excelBuffer = Buffer.from(await workbook.xlsx.writeBuffer())
 
     // Set headers for file download
     const fileName = `IVS_Early_CheckIn_Report_${event.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`

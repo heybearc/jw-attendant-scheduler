@@ -56,10 +56,10 @@ async function handleBulkUpdate(req: NextApiRequest, res: NextApiResponse, event
   try {
     // Update event_attendants associations using raw SQL
     const updateResult = await prisma.$executeRaw`
-      UPDATE event_attendants
+      UPDATE event_volunteers
       SET "isActive" = ${isActive}, "updatedAt" = NOW()
       WHERE "eventId" = ${eventId}
-      AND "attendantId" = ANY(${attendantIds}::text[])
+      AND "volunteerId" = ANY(${attendantIds}::text[])
     `
 
     return res.status(200).json({
@@ -109,9 +109,9 @@ async function handleBulkDelete(req: NextApiRequest, res: NextApiResponse, event
 
     // Delete event_attendants associations using raw SQL
     const deleteResult = await prisma.$executeRaw`
-      DELETE FROM event_attendants
+      DELETE FROM event_volunteers
       WHERE "eventId" = ${eventId}
-      AND "attendantId" = ANY(${attendantIds}::text[])
+      AND "volunteerId" = ANY(${attendantIds}::text[])
     `
 
     return res.status(200).json({

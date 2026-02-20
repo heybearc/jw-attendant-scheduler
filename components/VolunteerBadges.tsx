@@ -119,9 +119,16 @@ export function VolunteerBadges({
   }
 
   const getFormsOfServiceBadges = () => {
-    const services = Array.isArray(formsOfService) 
+    const allServices = Array.isArray(formsOfService) 
       ? formsOfService 
       : (formsOfService || '').toString().split(', ').filter((s: string) => s.trim())
+    
+    // Filter out Overseer/Keyman if their dedicated badges are already shown
+    const services = allServices.filter((s: string) => {
+      if (isOverseer && s.toLowerCase() === 'overseer') return false
+      if (isKeyman && s.toLowerCase() === 'keyman') return false
+      return true
+    })
 
     if (services.length === 0) return null
 

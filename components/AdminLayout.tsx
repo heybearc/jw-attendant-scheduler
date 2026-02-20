@@ -365,7 +365,7 @@ export default function AdminLayout({ children, title, breadcrumbs = [], userLas
           <div className="flex items-center justify-center gap-3 flex-wrap">
             <span>TheoShift v{packageJson.version}</span>
             <span>•</span>
-            <span>© 2025</span>
+            <span>© 2026</span>
             <span>•</span>
             <Link href="/release-notes" className="text-blue-600 hover:text-blue-800">
               Release Notes

@@ -711,8 +711,8 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
   // Download CSV template
   const downloadTemplate = () => {
     const csvContent = `firstName,lastName,email,phone,congregation,formsOfService,notes,isActive
-John,Doe,john.doe@example.com,555-1234,Central Congregation,"Elder, Overseer",,true
-Jane,Smith,jane.smith@example.com,555-5678,North Congregation,"Ministerial Servant, Keyman",,true
+John,Doe,john.doe@example.com,555-1234,Central Congregation,"Elder",,true
+Jane,Smith,jane.smith@example.com,555-5678,North Congregation,"Ministerial Servant",,true
 Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
 
     const blob = new Blob([csvContent], { type: 'text/csv' })
@@ -1242,9 +1242,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                 <option value="Ministerial Servant">Ministerial Servant</option>
                 <option value="Exemplary">Exemplary</option>
                 <option value="Regular Pioneer">Regular Pioneer</option>
-                <option value="Overseer">Overseer</option>
-                <option value="Keyman">Keyman</option>
-                <option value="Other">Other</option>
+                <option value="Other Dept.">Other Dept.</option>
               </select>
               <p className="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple</p>
             </div>

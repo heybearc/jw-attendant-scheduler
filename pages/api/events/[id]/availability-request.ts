@@ -63,15 +63,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
     } else {
       // All active attendants for this event
-      const eventAttendants = await prisma.event_attendants.findMany({
+      const eventVolunteers = await prisma.event_volunteers.findMany({
         where: {
           eventId,
-          attendant: {
+          volunteer: {
             isActive: true
           }
         },
         include: {
-          attendant: {
+          volunteer: {
             select: {
               id: true,
               email: true,
@@ -81,7 +81,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }
         }
       })
-      attendants = eventAttendants.map(ea => ea.attendant).filter(Boolean)
+      attendants = eventVolunteers.map(ev => ev.volunteer).filter(Boolean)
     }
 
     if (attendants.length === 0) {
@@ -124,9 +124,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         // Check if availability request already exists
         const existing = await prisma.volunteer_availability.findUnique({
           where: {
-            eventId_attendantId: {
+            eventId_volunteerId: {
               eventId,
-              attendantId: attendant.id
+              volunteerId: attendant.id
             }
           }
         })
@@ -146,7 +146,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             data: {
               id: randomBytes(16).toString('hex'),
               eventId,
-              attendantId: attendant.id,
+              volunteerId: attendant.id,
               status: 'PENDING',
               requestedAt: new Date()
             }

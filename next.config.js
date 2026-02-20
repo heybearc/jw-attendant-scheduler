@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
   // Suppress hydration warnings for known timezone differences
   // Server runs in UTC, clients in various timezones
   compiler: {
@@ -15,9 +14,7 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  experimental: {
-    serverComponentsExternalPackages: ['@prisma/client'],
-  },
+  serverExternalPackages: ['@prisma/client'],
   env: {
     DATABASE_URL: process.env.DATABASE_URL,
     NEXTAUTH_URL: process.env.NEXTAUTH_URL,

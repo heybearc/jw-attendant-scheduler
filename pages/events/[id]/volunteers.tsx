@@ -293,7 +293,9 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
       (attendant.phone && attendant.phone.toLowerCase().includes(searchLower)) ||
       (attendant.congregation && attendant.congregation.toLowerCase().includes(searchLower)) ||
       (Array.isArray(attendant.formsOfService) && 
-        attendant.formsOfService.some(form => form.toLowerCase().includes(searchLower)))
+        attendant.formsOfService.some(form => form.toLowerCase().includes(searchLower))) ||
+      (attendant.isOverseer && 'overseer'.includes(searchLower)) ||
+      (attendant.isKeyman && 'keyman'.includes(searchLower))
     
     const matchesCongregation = filters.congregation === '' ||
       (attendant.congregation && attendant.congregation.toLowerCase().includes(filters.congregation.toLowerCase()))

@@ -6,6 +6,33 @@
 
 ---
 
+### 🔒 xlsx → ExcelJS Migration Pattern (2026-02-21) - ✅ PROMOTED
+**Promoted to:** `_cloudy-ops/context/DECISIONS.md` as D-027  
+**Commit:** 1fb2f23 (Cloudy-Work)  
+**Date:** 2026-02-21
+
+Replace `xlsx` (abandoned, unfixable CVEs) with `exceljs`. Migration pattern documented for server-side export, client-side download, and file import. Key gotcha: `row.values` is 1-indexed in ExcelJS.
+
+---
+
+### ⬆️ Next.js Major Version Upgrade Pattern (2026-02-21) - ✅ PROMOTED
+**Promoted to:** `_cloudy-ops/context/DECISIONS.md` as D-028  
+**Commit:** 1fb2f23 (Cloudy-Work)  
+**Date:** 2026-02-21
+
+Target current stable major's latest patch (not `latest` npm tag). Pages Router async params changes do NOT apply. React upgrade optional. Config renames: `swcMinify` removed, `serverComponentsExternalPackages` → `serverExternalPackages`.
+
+---
+
+### 📋 Dependency Baseline Updated (2026-02-21) - ✅ PROMOTED
+**Promoted to:** `_cloudy-ops/policy/dependency-stability.md`  
+**Commit:** 1fb2f23 (Cloudy-Work)  
+**Date:** 2026-02-21
+
+Next.js: 14.2.14 → 15.5.12, TailwindCSS: 3.4.1 → 3.4.17, ExcelJS 4.4.0 added (xlsx removed).
+
+---
+
 ## Promoted Items
 
 ### 🔧 PM2 Process Name Drift + Prevention Layers (2026-02-19) - ✅ PROMOTED

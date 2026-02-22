@@ -1,12 +1,27 @@
 # Implementation Plan - TheoShift
 
-**Last Updated:** 2026-02-19  
-**Current Version:** v4.15.0  
+**Last Updated:** 2026-02-21  
+**Current Version:** v4.15.5  
 **Current Phase:** Feature Development + Platform Infrastructure
 
 ---
 
-## 🎯 Recent Completions (Feb 19, 2026)
+## 🎯 Recent Completions (Feb 21, 2026)
+
+### ✅ v4.15.2–v4.15.5 Released - Security & Dependency Upgrade Sprint
+**Completed:** Full security hardening sprint — dependency patches, xlsx→exceljs migration, Next.js major upgrade, OS patches on both nodes.
+
+**Version:** v4.15.5  
+**Released:** 2026-02-21  
+**Status:** Live on theoshift.com (BLUE)
+
+**Changes:**
+- v4.15.2: Volunteer role fixes (availability emails, bulk actions, search, PDF/Excel exports, DB cleanup)
+- v4.15.3: next-auth 4.24.7→4.24.13, nodemailer 6.x→7.x, @modelcontextprotocol/sdk→1.26.0, npm audit fix, OS patches (glibc, gnupg, apparmor, bind9) on both nodes
+- v4.15.4: Replaced `xlsx` (abandoned/CVEs) with `exceljs` across 5 files; npm audit 69→41 vulns
+- v4.15.5: Next.js 14.2.33→15.5.12 (removed swcMinify, serverComponentsExternalPackages→serverExternalPackages); npm audit 0 actionable vulns
+- Control plane baseline updated: Next.js→15.5.12, TailwindCSS→3.4.17, ExcelJS 4.4.0 added
+- React 19 + next-auth v5 evaluated and deferred (no security driver, next-auth v4 compat risk)
 
 ### ✅ v4.15.0 Released - Global Announcements Banner + PWA Offline Caching
 **Completed:** Global Announcements Banner wired into AdminLayout, PWA Service Worker v2.0.0 with offline caching, full test suite cleanup (131 passed, 25 skipped, 0 failed).
@@ -51,7 +66,13 @@
 
 ## 🎯 Active Work (This Week)
 
-**Current Focus:** Feature Development — v4.15.0 shipped, picking next backlog item
+**Current Focus:** Feature Development — v4.15.5 shipped, picking next backlog item
+
+### Recently Completed (2026-02-21) — v4.15.5 LIVE
+- [x] **v4.15.5** - Next.js 14→15.5.12 upgrade, 0 actionable npm audit vulns — released to LIVE
+- [x] **v4.15.4** - xlsx→exceljs migration (5 files), npm audit 69→41 vulns — released to LIVE
+- [x] **v4.15.3** - Security dep patches + OS patches on both nodes — released to LIVE
+- [x] **v4.15.2** - Volunteer role fixes, availability emails, bulk actions, export fixes — released to LIVE
 
 ### Recently Completed (2026-02-19) — v4.15.0 LIVE
 - [x] **v4.15.0** - Global Announcements Banner, PWA SW v2.0.0, volunteer login bug fix, full test suite cleanup — released to LIVE
@@ -314,7 +335,7 @@
 
 ---
 
-## �📋 Backlog (Prioritized)
+## �� Backlog (Prioritized)
 
 ### High Priority
 - [x] **IVS Volunteer Approval & Early Check-In Module** (COMPLETE) — IVS approvals, spreadsheet import/export, bulk operations, mobile check-in interface, early check-in tab on volunteer dashboard. Released in v4.4.0.

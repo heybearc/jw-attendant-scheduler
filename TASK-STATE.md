@@ -1,13 +1,13 @@
 # TheoShift Task State
 
-**Last updated:** 2026-02-19  
+**Last updated:** 2026-02-21  
 **Current branch:** main  
-**Working on:** Idle — v4.15.0 live, test suite clean, picking next feature
+**Working on:** Idle — v4.15.5 live, all security patches applied, stack fully current
 
 ---
 
 ## Current Task
-**Idle** — v4.15.0 live, test suite fully clean. Ready to pick next feature.
+**Idle** — v4.15.5 live, full dependency/security upgrade sprint complete. Ready to pick next feature.
 
 **Open feedback items:**
 - None — all feedback resolved or closed
@@ -35,6 +35,16 @@ Also fixed real production bug:
 - ✅ Synced STANDBY (BLUE)
 
 ### Recent completions
+
+**Today (2026-02-21) - Security & Dependency Upgrade Sprint:**
+- ✅ v4.15.2 — Volunteer role fixes (availability emails, bulk actions, search, PDF/Excel exports, DB cleanup)
+- ✅ v4.15.3 — Security patches: next-auth 4.24.7→4.24.13, nodemailer 6.x→7.x, @modelcontextprotocol/sdk→1.26.0, npm audit fix (cascade vulns), OS patches on both nodes (glibc, gnupg, apparmor, bind9)
+- ✅ v4.15.4 — Replaced `xlsx` package (abandoned/CVEs) with `exceljs` across 5 files; npm audit 69→41 vulns
+- ✅ v4.15.5 — Upgraded Next.js 14.2.33→15.5.12 (2 config fixes: removed swcMinify, renamed serverComponentsExternalPackages→serverExternalPackages); npm audit 41→0 actionable vulns
+- ✅ Control plane baseline updated: Next.js 14.2.14→15.5.12, TailwindCSS 3.4.1→3.4.17, ExcelJS 4.4.0 added, xlsx removed
+- ✅ React 19 + next-auth v5 evaluated — deferred (no security driver, next-auth v4 compat risk)
+- ✅ All 12 Playwright tests passing on STANDBY before each release
+- ✅ Both nodes fully synced at v4.15.5 (LIVE: BLUE 10.92.3.24, STANDBY: GREEN 10.92.3.22)
 
 **Today (2026-02-19) - PM2 Naming Fix (D-TS-034):**
 - ✅ Root cause: Both nodes ran PM2 as `theoshift` — MCP expects `theoshift-blue` (BLUE, 10.92.3.24) and `theoshift-green` (GREEN, 10.92.3.22)

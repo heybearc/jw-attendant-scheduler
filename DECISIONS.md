@@ -534,6 +534,40 @@ This document tracks significant technical decisions made during development.
 - No open high or medium priority backlog items remain
 - Next major work item is Matrix/Dendrite chat platform (Phase 1 pending LXC IP)
 
+### D-TS-037: Replace xlsx with ExcelJS — Security-Driven Migration
+**Date:** 2026-02-21
+**Context:** `xlsx` package (SheetJS community edition) has multiple unfixable CVEs (ReDoS, prototype pollution, XML entity expansion) and is effectively abandoned with no upstream fixes available. It was used in 5 files across the codebase. `exceljs` was already a declared dependency.
+**Decision:** Remove `xlsx` entirely, migrate all 5 usages to `exceljs`. For server-side exports (API routes), use `workbook.xlsx.writeBuffer()` → `Buffer.from()`. For client-side export (`exportUtils.ts`), use `writeBuffer()` → Blob → `URL.createObjectURL()` download trigger. For import (`ivs/import.ts`), use `workbook.xlsx.readFile()` with 1-indexed `row.values`.
+**Files migrated:**
+- `pages/api/volunteer/early-checkin/export.ts`
+- `pages/api/events/[id]/ivs/export.ts`
+- `pages/api/events/[id]/ivs/checkin-export.ts`
+- `pages/api/events/[id]/ivs/import.ts`
+- `src/lib/exportUtils.ts` (function signature changed to `async`)
+**Consequences:**
+- ✅ xlsx CVEs fully eliminated
+- ✅ npm audit: 69 → 41 vulns (remaining are next.js range advisory)
+- ✅ ExcelJS 4.4.0 added to control plane baseline
+- ⚠️ `exportOversightToExcel` is now async — callers must await it
+- ⚠️ ExcelJS `row.values` is 1-indexed (index 0 is undefined) — important for import parsing
+
+### D-TS-038: Upgrade Next.js 14 → 15.5.12 (Skip 16.x)
+**Date:** 2026-02-21
+**Context:** Next.js 14.2.33 had an outstanding security advisory covering versions 10.0.0–15.5.9. Next.js 16.x is `latest` but too new for our stability policy (< 30 days community adoption at time of decision). Next.js 15.5.12 is the current stable, security-patched, long-running 15.x line. TheoShift uses Pages Router exclusively — async params/searchParams breaking changes only affect App Router.
+**Decision:** Upgrade to Next.js 15.5.12. Skip 16.x until it meets stability policy criteria. Keep React 18.3.1 (Next.js 15 supports `^18.2.0`). Defer React 19 + next-auth v5 migration to a future planned project.
+**Config changes required:**
+- `swcMinify: true` → removed (now default in Next.js 15)
+- `experimental.serverComponentsExternalPackages` → `serverExternalPackages` (top-level)
+**No code changes required** — Pages Router API is unchanged in Next.js 15.
+**Consequences:**
+- ✅ npm audit: 0 actionable vulnerabilities remaining
+- ✅ Next.js security advisory resolved (we're now above the affected range)
+- ✅ Build verified clean with zero errors
+- ✅ 12/12 Playwright tests passing on STANDBY before release
+- ✅ Control plane baseline updated: Next.js 14.2.14 → 15.5.12
+- 📋 Future: React 19 + next-auth v5 migration when next-auth v5 is more battle-tested
+- 📋 Future: Next.js 16.x when it meets 30-day stability policy criteria
+
 ---
 
 ## Shared Decisions

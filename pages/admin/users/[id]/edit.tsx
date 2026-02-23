@@ -440,7 +440,7 @@ export default function EditUserPage() {
                         if (!confirm('Send password reset email to this user?')) return
                         try {
                           const res = await fetch(`/api/admin/users/${id}`, {
-                            method: 'PATCH',
+                            method: 'PUT',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ 
                               newPassword: Math.random().toString(36).slice(-12),

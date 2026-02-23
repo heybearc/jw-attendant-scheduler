@@ -82,6 +82,11 @@ async function getEmailConfig(): Promise<EmailConfig | null> {
     return null;
   }
 
+  // Port 587 = STARTTLS (secure must be false), port 465 = SSL (secure must be true)
+  // Override stored value to prevent misconfiguration causing SSL handshake errors
+  if (smtpPort === 587) smtpSecure = false;
+  if (smtpPort === 465) smtpSecure = true;
+
   return {
     host: smtpHost,
     port: smtpPort,

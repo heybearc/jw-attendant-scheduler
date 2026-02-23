@@ -179,7 +179,9 @@ If issues arise, rollback to previous version:
 cd /opt/theoshift
 git checkout <previous-commit>
 npm run build
-pm2 restart theoshift
+# BLUE node (10.92.3.24): pm2 restart theoshift-blue
+# GREEN node (10.92.3.22): pm2 restart theoshift-green
+pm2 restart theoshift-blue  # or theoshift-green depending on node
 ```
 
 ---

@@ -68,9 +68,11 @@ git pull origin feature/[feature-name]
 npm install
 npm run build
 
-# 5. Restart application
-pm2 restart theoshift
-pm2 logs theoshift --lines 50
+# 5. Restart application (use correct name for the node)
+# BLUE node (10.92.3.24): pm2 restart theoshift-blue
+# GREEN node (10.92.3.22): pm2 restart theoshift-green
+pm2 restart theoshift-blue  # or theoshift-green depending on node
+pm2 logs theoshift-blue --lines 50  # or theoshift-green
 ```
 
 ### 3. Testing in Staging

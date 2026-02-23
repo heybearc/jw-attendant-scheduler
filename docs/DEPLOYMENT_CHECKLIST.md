@@ -96,12 +96,14 @@ npm install
 # Build application
 npm run build
 
-# Restart application
-pm2 restart theoshift
+# Restart application (use correct name for the node)
+# BLUE node (10.92.3.24): pm2 restart theoshift-blue
+# GREEN node (10.92.3.22): pm2 restart theoshift-green
+pm2 restart theoshift-blue  # or theoshift-green depending on node
 
 # Verify deployment
 pm2 status
-pm2 logs theoshift --lines 50
+pm2 logs theoshift-blue --lines 50  # or theoshift-green
 ```
 
 **Verification:**
@@ -179,9 +181,11 @@ git tag | grep backup-pre-phase7
 # Checkout the backup tag
 git checkout <backup-tag>
 
-# Rebuild and restart
+# Rebuild and restart (use correct name for the node)
+# BLUE node (10.92.3.24): pm2 restart theoshift-blue
+# GREEN node (10.92.3.22): pm2 restart theoshift-green
 npm run build
-pm2 restart theoshift
+pm2 restart theoshift-blue  # or theoshift-green depending on node
 ```
 
 **Verification After Rollback:**

@@ -1,13 +1,13 @@
 # TheoShift Task State
 
-**Last updated:** 2026-02-21  
+**Last updated:** 2026-02-23  
 **Current branch:** main  
-**Working on:** Idle — v4.15.5 live, all security patches applied, stack fully current
+**Working on:** Idle — v4.15.5 live, infrastructure verified and doc drift corrected
 
 ---
 
 ## Current Task
-**Idle** — v4.15.5 live, full dependency/security upgrade sprint complete. Ready to pick next feature.
+**Idle** — v4.15.5 live, infrastructure verified clean. Ready to pick next feature.
 
 **Open feedback items:**
 - None — all feedback resolved or closed
@@ -35,6 +35,14 @@ Also fixed real production bug:
 - ✅ Synced STANDBY (BLUE)
 
 ### Recent completions
+
+**Today (2026-02-23) - Infrastructure Verification & Doc Drift Cleanup:**
+- ✅ Verified BLUE (10.92.3.24) — `theoshift-blue` online, HTTP 200
+- ✅ Fixed GREEN (10.92.3.22) — stale `next-server` (PID 363) was holding port 3001, causing 8189 crash-loop restarts. Killed orphan, PM2 restarted cleanly, HTTP 200
+- ✅ Confirmed MCP config correct: BLUE=CT134=10.92.3.24, GREEN=CT132=10.92.3.22 — matches HAProxy and node hostnames
+- ✅ Fixed 4 legacy deployment docs with inverted BLUE/GREEN IPs (jw-attendant era drift)
+- ✅ Fixed 3 legacy docs with stale `pm2 restart theoshift` (now node-specific names)
+- ✅ Both nodes healthy, HAProxy routing to BLUE (LIVE), MCP status confirmed ✅
 
 **Today (2026-02-21) - Security & Dependency Upgrade Sprint:**
 - ✅ v4.15.2 — Volunteer role fixes (availability emails, bulk actions, search, PDF/Excel exports, DB cleanup)
@@ -564,10 +572,12 @@ Also fixed real production bug:
 **Current:**
 - None - All systems operational
 
-**Infrastructure Note:**
+**Infrastructure Notes:**
 - If a TheoShift node is ever rebuilt, PM2 must be started with correct `--name` flag:
   - BLUE (10.92.3.24): `pm2 start npm --name theoshift-blue -- start && pm2 save`
   - GREEN (10.92.3.22): `pm2 start npm --name theoshift-green -- start && pm2 save`
+- **Orphan process pattern (2026-02-23):** GREEN node had a stale `next-server` process holding port 3001 outside of PM2 control, causing PM2 to crash-loop (8189 restarts). If a node shows PM2 online but HTTP:000, check for orphan processes: `ss -tlnp sport = :3001` then `kill -9 <pid>` and `pm2 restart theoshift-green`.
+- **Node IP authoritative source:** Always verify via HAProxy — `ssh root@10.92.3.26 "grep 'server.*3001' /etc/haproxy/haproxy.cfg"`. BLUE=CT134=10.92.3.24, GREEN=CT132=10.92.3.22.
 
 **Resolved:**
 - ✅ FB-028: Localhost redirect bug (fixed in v4.1.1)

@@ -72,8 +72,8 @@ The MCP server dynamically identifies which server is LIVE and which is STANDBY,
 ┌─────────────────────────────────────────────────────────────┐
 │ INITIAL STATE                                               │
 ├─────────────────────────────────────────────────────────────┤
-│ LIVE:    v2.4.0 (Green - 10.92.3.24)  ← Users here         │
-│ STANDBY: v2.4.0 (Blue - 10.92.3.22)   ← Ready for deploy   │
+│ LIVE:    v2.4.0 (Blue - 10.92.3.24)   ← Users here         │
+│ STANDBY: v2.4.0 (Green - 10.92.3.22)  ← Ready for deploy   │
 └─────────────────────────────────────────────────────────────┘
 
                            ↓
@@ -83,15 +83,15 @@ The MCP server dynamically identifies which server is LIVE and which is STANDBY,
 ┌─────────────────────────────────────────────────────────────┐
 │ AFTER BUMP                                                  │
 ├─────────────────────────────────────────────────────────────┤
-│ LIVE:    v2.4.0 (Green - 10.92.3.24)  ← Users still here   │
-│ STANDBY: v2.4.1 (Blue - 10.92.3.22)   ← New version!       │
+│ LIVE:    v2.4.0 (Blue - 10.92.3.24)   ← Users still here   │
+│ STANDBY: v2.4.1 (Green - 10.92.3.22)  ← New version!       │
 │                                                             │
 │ Actions performed:                                          │
 │ ✅ Version bumped to 2.4.1                                 │
 │ ✅ Release notes created                                   │
 │ ✅ Announcement banner added                               │
 │ ✅ Help pages updated                                      │
-│ ✅ Deployed to STANDBY (Blue)                              │
+│ ✅ Deployed to STANDBY (Green)                             │
 │                                                             │
 │ 🧪 TEST URL: http://10.92.3.22:3001                        │
 └─────────────────────────────────────────────────────────────┘
@@ -105,13 +105,13 @@ The MCP server dynamically identifies which server is LIVE and which is STANDBY,
 ┌─────────────────────────────────────────────────────────────┐
 │ AFTER RELEASE                                               │
 ├─────────────────────────────────────────────────────────────┤
-│ LIVE:    v2.4.1 (Blue - 10.92.3.22)   ← Users now here! 🎉 │
-│ STANDBY: v2.4.0 (Green - 10.92.3.24)  ← Old version        │
+│ LIVE:    v2.4.1 (Green - 10.92.3.22)  ← Users now here! 🎉 │
+│ STANDBY: v2.4.0 (Blue - 10.92.3.24)   ← Old version        │
 │                                                             │
 │ Actions performed:                                          │
-│ ✅ HAProxy traffic switched to Blue                        │
-│ ✅ Blue is now LIVE                                        │
-│ ✅ Green is now STANDBY                                    │
+│ ✅ HAProxy traffic switched to Green                       │
+│ ✅ Green is now LIVE                                       │
+│ ✅ Blue is now STANDBY                                     │
 │ ✅ State tracking updated                                  │
 └─────────────────────────────────────────────────────────────┘
 
@@ -122,11 +122,11 @@ The MCP server dynamically identifies which server is LIVE and which is STANDBY,
 ┌─────────────────────────────────────────────────────────────┐
 │ AFTER SYNC                                                  │
 ├─────────────────────────────────────────────────────────────┤
-│ LIVE:    v2.4.1 (Blue - 10.92.3.22)   ← Users here         │
-│ STANDBY: v2.4.1 (Green - 10.92.3.24)  ← Now synced!        │
+│ LIVE:    v2.4.1 (Green - 10.92.3.22)  ← Users here         │
+│ STANDBY: v2.4.1 (Blue - 10.92.3.24)   ← Now synced!        │
 │                                                             │
 │ Actions performed:                                          │
-│ ✅ Deployed v2.4.1 to Green (STANDBY)                      │
+│ ✅ Deployed v2.4.1 to Blue (STANDBY)                       │
 │ ✅ Both environments now identical                         │
 │ ✅ Ready for next development cycle                        │
 └─────────────────────────────────────────────────────────────┘
@@ -224,11 +224,11 @@ The MCP server dynamically identifies which server is LIVE and which is STANDBY,
 ## 🚀 App-Specific Details
 
 ### Theocratic Shift Scheduler (theoshift)
-- **Branch:** production-gold-standard
-- **Blue:** 10.92.3.22 (Container 132)
-- **Green:** 10.92.3.24 (Container 134)
-- **State File:** /var/lib/haproxy/jw-deployment-state.json
-- **PM2 Processes:** theoshift-blue, theoshift-green
+- **Branch:** main
+- **Blue:** 10.92.3.24 (Container 134) — hostname: theoshift-blue
+- **Green:** 10.92.3.22 (Container 132) — hostname: theoshift-green
+- **State File:** /var/lib/haproxy/theoshift-deployment-state.json
+- **PM2 Processes:** theoshift-blue (CT134), theoshift-green (CT132)
 
 ### LDC Construction Tools (ldc-tools)
 - **Branch:** main

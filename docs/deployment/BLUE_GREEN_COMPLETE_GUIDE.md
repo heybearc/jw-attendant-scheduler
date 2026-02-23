@@ -36,7 +36,7 @@ This guide covers the complete blue-green deployment system for Theocratic Shift
          │                 │
     ┌────▼────┐       ┌────▼────┐
     │  BLUE   │       │  GREEN  │
-    │ 10.92.3.22│     │10.92.3.24│
+    │ 10.92.3.24│     │10.92.3.22│
     │ (Prod)  │       │(Standby)│
     └────┬────┘       └────┬────┘
          │                 │
@@ -53,8 +53,8 @@ This guide covers the complete blue-green deployment system for Theocratic Shift
 
 | Server | IP | Container | Role | Port |
 |--------|------------|-----------|------|------|
-| BLUE | 10.92.3.22 | 132 | Production/Standby | 3001 |
-| GREEN | 10.92.3.24 | 134 | Standby/Production | 3001 |
+| BLUE | 10.92.3.24 | 134 | Production/Standby | 3001 |
+| GREEN | 10.92.3.22 | 132 | Standby/Production | 3001 |
 | HAProxy | 10.92.3.26 | 136 | Load Balancer | 80/443 |
 | PostgreSQL | 10.92.3.21 | 131 | Database | 5432 |
 

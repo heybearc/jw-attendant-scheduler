@@ -22,15 +22,17 @@
 ## 📊 Current Configuration
 
 **Servers:**
-- **BLUE** = Container 132 (10.92.3.22)
-- **GREEN** = Container 134 (10.92.3.24)
+- **BLUE** = Container 134 (10.92.3.24) — hostname: theoshift-blue
+- **GREEN** = Container 132 (10.92.3.22) — hostname: theoshift-green
 
-**Current Status:**
-- **LIVE:** BLUE (10.92.3.22) - Users accessing this
-- **STANDBY:** GREEN (10.92.3.24) - Ready for deployment
+**Current Status (as of 2026-02-23):**
+- **LIVE:** BLUE (10.92.3.24) — HAProxy routes theoshift → theoshift_blue
+- **STANDBY:** GREEN (10.92.3.22) — Ready for deployment
+
+**⚠️ NOTE:** LIVE/STANDBY roles swap on every release. Always verify via HAProxy — this doc shows a snapshot only.
 
 **State Tracking:**
-- File: `/var/lib/haproxy/jw-deployment-state.json`
+- File: `/var/lib/haproxy/theoshift-deployment-state.json`
 - Contains: `{prod:blue, live:blue, standby:green, lastSwitch, switchCount}`
 - MCP reads this to know which is which
 

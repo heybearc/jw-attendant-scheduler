@@ -178,7 +178,7 @@ All phases of the blue-green deployment system have been successfully implemente
          │                 │
     ┌────▼────┐       ┌────▼────┐
     │  BLUE   │       │  GREEN  │
-    │ 10.92.3.22│     │10.92.3.24│
+    │ 10.92.3.24│     │10.92.3.22│
     │ (Prod)  │       │(Standby)│
     │ PM2     │       │  PM2    │
     │ Next.js │       │ Next.js │
@@ -198,8 +198,8 @@ All phases of the blue-green deployment system have been successfully implemente
 
 | Component | IP | Container | Purpose | Technology |
 |-----------|------------|-----------|---------|------------|
-| BLUE | 10.92.3.22 | 132 | Production/Standby | Next.js 15, PM2 |
-| GREEN | 10.92.3.24 | 134 | Standby/Production | Next.js 15, PM2 |
+| BLUE | 10.92.3.24 | 134 | Production/Standby | Next.js 15, PM2 |
+| GREEN | 10.92.3.22 | 132 | Standby/Production | Next.js 15, PM2 |
 | HAProxy | 10.92.3.26 | 136 | Load Balancer | HAProxy 2.x |
 | PostgreSQL | 10.92.3.21 | 131 | Database | PostgreSQL 15 |
 | Proxmox | 10.92.0.5 | Host | Hypervisor | Proxmox VE |

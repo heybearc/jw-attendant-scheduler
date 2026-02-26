@@ -1,8 +1,22 @@
 # Implementation Plan - TheoShift
 
-**Last Updated:** 2026-02-21  
+**Last Updated:** 2026-02-25  
 **Current Version:** v4.15.5  
 **Current Phase:** Feature Development + Platform Infrastructure
+
+---
+
+## 🎯 Recent Completions (Feb 25, 2026)
+
+### ✅ Hotfixes — Password Reset Email (2026-02-25)
+**Completed:** Two bugs found and fixed in the admin password reset flow.
+
+**Changes:**
+- `pages/admin/users/[id]/edit.tsx`: "Send Password Reset Email" button was sending `PATCH` — API only handles `GET/PUT/DELETE`. Fixed to `PUT`.
+- `src/lib/email.ts`: `smtpSecure: true` stored in DB with port 587 caused SSL handshake failure (`wrong version number`). Fixed DB config on both nodes + added port-aware guard (port 587 → `secure=false`, port 465 → `secure=true`).
+- Password reset email confirmed working end-to-end.
+
+**Commits:** `f9549fc8`, `2e5c6ad0`
 
 ---
 

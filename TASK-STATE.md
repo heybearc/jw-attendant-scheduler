@@ -1,13 +1,13 @@
 # TheoShift Task State
 
-**Last updated:** 2026-02-23  
+**Last updated:** 2026-02-25  
 **Current branch:** main  
-**Working on:** Idle — v4.15.5 live, infrastructure verified and doc drift corrected
+**Working on:** Idle — v4.15.5 live, two hotfixes applied (password reset 405, SMTP SSL)
 
 ---
 
 ## Current Task
-**Idle** — v4.15.5 live, infrastructure verified clean. Ready to pick next feature.
+**Idle** — v4.15.5 live + two hotfixes shipped. Ready to pick next feature from backlog.
 
 **Open feedback items:**
 - None — all feedback resolved or closed
@@ -35,6 +35,12 @@ Also fixed real production bug:
 - ✅ Synced STANDBY (BLUE)
 
 ### Recent completions
+
+**Today (2026-02-25) - Hotfixes:**
+- ✅ Fixed 405 on password reset email — `PATCH` → `PUT` in `pages/admin/users/[id]/edit.tsx` (button was sending wrong HTTP method)
+- ✅ Fixed SMTP SSL error — `smtpSecure: true` + port 587 caused `wrong version number`. Fixed DB config on both nodes + added port-aware guard in `src/lib/email.ts` (port 587 forces `secure=false`, port 465 forces `secure=true`)
+- ✅ Both fixes deployed to GREEN (LIVE), BLUE synced
+- ✅ Password reset email confirmed working end-to-end
 
 **Today (2026-02-23) - Infrastructure Verification & Doc Drift Cleanup:**
 - ✅ Verified BLUE (10.92.3.24) — `theoshift-blue` online, HTTP 200
@@ -563,8 +569,9 @@ Also fixed real production bug:
 - Repository significantly cleaner and organized
 
 ### Next steps
-- Review implementation plan backlog and pick next feature
+- Pick next feature from backlog
 - Top candidates: FB-017 (conflict management), global announcements admin page, mobile nav expansion
+- Also worth addressing: `next-env.d.ts` regenerated on build on both nodes — add to `.gitignore` on each node to prevent stash-dance on every deploy
 
 ---
 
@@ -607,6 +614,6 @@ Also fixed real production bug:
 ---
 
 ## Exact Next Command
-**Next session:** Run `/start-day` to load context, then pick next feature from backlog.
+**Next session:** Run `/start-day` to load context, then pick next feature from backlog (FB-017 conflict management is top candidate).
 
 **Known lint issue (pre-existing, non-blocking):** `positions.tsx` line 677 - `Argument of type 'string' is not assignable to parameter of type 'never'`

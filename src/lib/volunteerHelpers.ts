@@ -7,10 +7,8 @@
  * preventing duplicate creation and enforcing search-first logic.
  */
 
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@/lib/prisma'
 import { randomUUID } from 'crypto'
-
-const prisma = new PrismaClient()
 
 interface FindOrCreateVolunteerParams {
   firstName: string

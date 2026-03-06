@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { prisma } from '@/lib/prisma';
 
 interface EmailConfig {
   host: string;
@@ -38,14 +39,9 @@ async function getEmailConfig(): Promise<EmailConfig | null> {
   // If not in env, try database
   if (!smtpUser || !smtpPassword) {
     try {
-      const { PrismaClient } = require('@prisma/client');
-      const prisma = new PrismaClient();
-      
       const configRecord = await prisma.system_settings.findFirst({
         where: { key: 'email_config' }
       });
-      
-      await prisma.$disconnect();
       
       if (configRecord && configRecord.value) {
         const emailConfig = JSON.parse(configRecord.value as string);
@@ -520,14 +516,9 @@ export async function isEmailConfigured(): Promise<boolean> {
   
   // Check database configuration
   try {
-    const { PrismaClient } = require('@prisma/client');
-    const prisma = new PrismaClient();
-    
     const configRecord = await prisma.system_settings.findFirst({
       where: { key: 'email_config' }
     });
-    
-    await prisma.$disconnect();
     
     if (configRecord && configRecord.value) {
       const emailConfig = JSON.parse(configRecord.value as string);

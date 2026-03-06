@@ -1,17 +1,6 @@
 import { AuthOptions, getServerSession } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
-import { PrismaClient } from '@prisma/client'
-
-// Proper Prisma singleton pattern
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined
-}
-
-const prisma = globalForPrisma.prisma ?? new PrismaClient({
-  log: ['error', 'warn'],
-})
-
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+import { prisma } from '@/lib/prisma'
 
 export const authOptions: AuthOptions = {
   // Remove custom pages to use default NextAuth server-side pages

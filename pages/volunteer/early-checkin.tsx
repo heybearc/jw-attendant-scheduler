@@ -2,11 +2,9 @@ import { GetServerSideProps } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../api/auth/[...nextauth]'
 import { useRouter } from 'next/router'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@/lib/prisma'
 import EarlyCheckinPanel from '../../components/EarlyCheckinPanel'
 import PWABottomNav from '../../components/PWABottomNav'
-
-const prisma = new PrismaClient()
 
 interface EarlyCheckinPageProps {
   event: any
@@ -117,7 +115,5 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         permanent: false,
       },
     }
-  } finally {
-    await prisma.$disconnect()
   }
 }

@@ -1,13 +1,11 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../../../auth/[...nextauth]'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@/lib/prisma'
 import formidable, { File } from 'formidable'
 import ExcelJS from 'exceljs'
 import { v4 as uuidv4 } from 'uuid'
 import { handleApiError } from '@/lib/apiError'
-
-const prisma = new PrismaClient()
 
 export const config = {
   api: {
@@ -211,8 +209,6 @@ export default async function handler(
       success: false,
       message: error.message || 'Internal server error',
     })
-  } finally {
-    await prisma.$disconnect()
   }
 }
 

@@ -1,11 +1,9 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../../../auth/[...nextauth]'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@/lib/prisma'
 import ExcelJS from 'exceljs'
 import { handleApiError } from '@/lib/apiError'
-
-const prisma = new PrismaClient()
 
 export default async function handler(
   req: NextApiRequest,
@@ -114,8 +112,6 @@ export default async function handler(
       success: false,
       message: error.message || 'Internal server error',
     })
-  } finally {
-    await prisma.$disconnect()
   }
 }
 

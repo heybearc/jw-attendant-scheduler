@@ -173,6 +173,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const logMsg = `[${new Date().toISOString()}] ${req.method} ${req.url} - Query: ${JSON.stringify(req.query)}\n`
   fs.appendFileSync('/tmp/nextauth-debug.log', logMsg)
   
+  if (req.method === 'POST' && req.url?.includes('callback/credentials')) {
+    console.log('[NEXTAUTH] POST callback/credentials - Body keys:', Object.keys(req.body || {}))
+    console.log('[NEXTAUTH] POST callback/credentials - Has csrfToken:', !!req.body?.csrfToken)
+    console.log('[NEXTAUTH] POST callback/credentials - Has email:', !!req.body?.email)
+    console.log('[NEXTAUTH] POST callback/credentials - Has password:', !!req.body?.password)
+    fs.appendFileSync('/tmp/nextauth-debug.log', `[BODY] ${JSON.stringify(req.body)}\n`)
+  }
+  
   try {
     return await NextAuth(req, res, authOptions)
   } catch (error) {

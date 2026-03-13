@@ -164,6 +164,11 @@ export const authOptions: NextAuthOptions = {
 import { NextApiRequest, NextApiResponse } from 'next'
 import fs from 'fs'
 
+console.log('[NEXTAUTH CONFIG] NEXTAUTH_URL:', process.env.NEXTAUTH_URL)
+console.log('[NEXTAUTH CONFIG] NEXTAUTH_SECRET exists:', !!process.env.NEXTAUTH_SECRET)
+console.log('[NEXTAUTH CONFIG] NEXTAUTH_URL_INTERNAL:', process.env.NEXTAUTH_URL_INTERNAL)
+console.log('[NEXTAUTH CONFIG] NODE_ENV:', process.env.NODE_ENV)
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const logMsg = `[${new Date().toISOString()}] ${req.method} ${req.url} - Query: ${JSON.stringify(req.query)}\n`
   fs.appendFileSync('/tmp/nextauth-debug.log', logMsg)

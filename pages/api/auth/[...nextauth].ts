@@ -166,5 +166,12 @@ import fs from 'fs'
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const logMsg = `[${new Date().toISOString()}] ${req.method} ${req.url} - Query: ${JSON.stringify(req.query)}\n`
   fs.appendFileSync('/tmp/nextauth-debug.log', logMsg)
-  return await NextAuth(req, res, authOptions)
+  
+  try {
+    return await NextAuth(req, res, authOptions)
+  } catch (error) {
+    console.error('[NEXTAUTH ERROR]', error)
+    fs.appendFileSync('/tmp/nextauth-debug.log', `[ERROR] ${error}\n`)
+    throw error
+  }
 }

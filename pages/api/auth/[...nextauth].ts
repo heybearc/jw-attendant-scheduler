@@ -15,10 +15,7 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' }
       },
       async authorize(credentials) {
-        console.log('[AUTH] Admin login attempt started', { email: credentials?.email })
-        
         if (!credentials?.email || !credentials?.password) {
-          console.log('[AUTH] Missing credentials')
           return null
         }
 
@@ -26,25 +23,16 @@ export const authOptions: NextAuthOptions = {
           where: { email: credentials.email }
         })
 
-        if (!user) {
-          console.log('[AUTH] User not found:', credentials.email)
+        if (!user || !user.passwordHash) {
           return null
         }
 
-        if (!user.passwordHash) {
-          console.log('[AUTH] User has no password hash:', credentials.email)
-          return null
-        }
-
-        console.log('[AUTH] Comparing password for:', credentials.email)
         const isValidPassword = await bcrypt.compare(credentials.password, user.passwordHash)
 
         if (!isValidPassword) {
-          console.log('[AUTH] Invalid password for:', credentials.email)
           return null
         }
 
-        console.log('[AUTH] Login successful:', credentials.email)
         return {
           id: user.id,
           email: user.email,
@@ -147,34 +135,6 @@ export const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   secret: process.env.NEXTAUTH_SECRET,
-  debug: true,
 }
 
-import { NextApiRequest, NextApiResponse } from 'next'
-import fs from 'fs'
-
-console.log('[NEXTAUTH CONFIG] NEXTAUTH_URL:', process.env.NEXTAUTH_URL)
-console.log('[NEXTAUTH CONFIG] NEXTAUTH_SECRET exists:', !!process.env.NEXTAUTH_SECRET)
-console.log('[NEXTAUTH CONFIG] NEXTAUTH_URL_INTERNAL:', process.env.NEXTAUTH_URL_INTERNAL)
-console.log('[NEXTAUTH CONFIG] NODE_ENV:', process.env.NODE_ENV)
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const logMsg = `[${new Date().toISOString()}] ${req.method} ${req.url} - Query: ${JSON.stringify(req.query)}\n`
-  fs.appendFileSync('/tmp/nextauth-debug.log', logMsg)
-  
-  if (req.method === 'POST' && req.url?.includes('callback/credentials')) {
-    console.log('[NEXTAUTH] POST callback/credentials - Body keys:', Object.keys(req.body || {}))
-    console.log('[NEXTAUTH] POST callback/credentials - Has csrfToken:', !!req.body?.csrfToken)
-    console.log('[NEXTAUTH] POST callback/credentials - Has email:', !!req.body?.email)
-    console.log('[NEXTAUTH] POST callback/credentials - Has password:', !!req.body?.password)
-    fs.appendFileSync('/tmp/nextauth-debug.log', `[BODY] ${JSON.stringify(req.body)}\n`)
-  }
-  
-  try {
-    return await NextAuth(req, res, authOptions)
-  } catch (error) {
-    console.error('[NEXTAUTH ERROR]', error)
-    fs.appendFileSync('/tmp/nextauth-debug.log', `[ERROR] ${error}\n`)
-    throw error
-  }
-}
+export default NextAuth(authOptions)

@@ -1,6 +1,6 @@
 # Implementation Plan - TheoShift
 
-**Last Updated:** 2026-02-25  
+**Last Updated:** 2026-03-18  
 **Current Version:** v4.15.5  
 **Current Phase:** Feature Development + Platform Infrastructure
 
@@ -399,13 +399,18 @@
 
 ## 💡 User Feedback & Feature Requests
 
-**Total: 30 items from production feedback system**
+**Total: 35 items from production feedback system**
 
-### 🔴 Open - High/Urgent Priority (0 items)
-- None currently
+### 🔴 Open - High/Urgent Priority (1 item)
+- [ ] **Early Check-In Tab Visibility Bug** (BUG, HIGH, NEW) - Early Check-In tab showing on dashboard of any volunteer, should only show if they are a volunteer in an event with that module enabled. *Submitted: 2026-03-17, ID: feedback_1773707346629_q0nyl3u7g*
 
-### 🟡 Open - Medium Priority (0 items)
-- None currently
+### 🟡 Open - Medium Priority (3 items)
+- [ ] **Auto Assign Button Missing** (BUG, MEDIUM, NEW) - Find and fix the Auto Assign button as it is missing from positions page. *Submitted: 2026-03-17, ID: feedback_1773706410567_grkoqu908*
+- [ ] **Multiple Volunteers Per Shift** (ENHANCEMENT, MEDIUM, NEW) - Allow multiple volunteers for each shift. Right now each shift only allows for 1 volunteer per shift. *Submitted: 2026-03-17, ID: feedback_1773706385782_w0hjbufe7*
+- [ ] **Database Shutdown Error** (BUG, MEDIUM, NEW) - HTTP 500 error in event setup: "Error querying the database: FATAL: the database system is shutting down". Needs investigation. *Submitted: 2026-02-21, ID: feedback_1771635363540_a3zzoedov*
+
+### 🟢 Open - Low Priority (1 item)
+- [ ] **Edit Assignment Time** (FEATURE, LOW, NEW) - Editing within the assignment box. After assignment has been made, the ability to edit (e.g., changing the time of the assignment). This would eliminate the need to delete and make again. *Submitted: 2026-03-13, ID: feedback_1773427442140_ohdcpyk88*
 
 ### ✅ Resolved/Closed (30 items)
 - [x] **FB-017:** Positions Page - Conflict Management (FEATURE, HIGH, RESOLVED 2026-02-18) - Conflict detection in AssignVolunteerModal with amber badge, details, coordinator override. *Resolved: 2026-02-18*
@@ -437,11 +442,11 @@
 - [x] **FB-022:** Test final (BUG, MEDIUM, RESOLVED) - Testing. *Submitted: 2025-10-19*
 
 ### 📊 Summary Statistics
-- **Total Feedback Items:** 30
-- **Open:** 0 (0%)
-- **Resolved/Closed:** 30 (100%)
-- **By Type:** 15 Bugs, 10 Enhancements, 5 Features, 1 Feature (FB-017)
-- **By Priority:** 0 Urgent, 0 High, 30 Medium
+- **Total Feedback Items:** 35
+- **Open:** 5 (14%)
+- **Resolved/Closed:** 30 (86%)
+- **Open By Type:** 3 Bugs, 1 Enhancement, 1 Feature
+- **Open By Priority:** 1 High, 3 Medium, 1 Low
 
 ---
 

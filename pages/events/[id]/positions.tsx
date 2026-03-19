@@ -1921,6 +1921,17 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                                         </div>
                                       )
                                     })}
+                                    {/* Add another volunteer button */}
+                                    <button
+                                      onClick={() => {
+                                        setSelectedPosition(position)
+                                        setSelectedShift(shift)
+                                        setShowAssignAttendantModal(true)
+                                      }}
+                                      className="w-full text-xs text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 border border-blue-200 border-dashed rounded px-2 py-1 transition-colors"
+                                    >
+                                      + Assign Another Volunteer
+                                    </button>
                                   </div>
                                 ) : (
                                   <button

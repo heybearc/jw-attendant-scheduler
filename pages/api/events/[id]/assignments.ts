@@ -180,22 +180,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           })
         }
         
-        // For regular volunteers, limit to 1 per shift
-        if (validatedData.role === 'VOLUNTEER') {
-          const existingVolunteers = await prisma.position_assignments.count({
-            where: { 
-              shiftId: validatedData.shiftId,
-              role: 'VOLUNTEER'
-            }
-          })
-          
-          if (existingVolunteers >= 1) {
-            return res.status(409).json({
-              error: 'Shift already has maximum volunteers assigned',
-              conflictType: 'SHIFT_FULL',
-              message: 'Each shift can only have one volunteer assigned'
-            })
+        // Multiple volunteers per shift are now allowed
+        // Only check for duplicate assignments (same volunteer on same shift)
+        const duplicateAssignment = await prisma.position_assignments.findFirst({
+          where: {
+            shiftId: validatedData.shiftId,
+            volunteerId: validatedData.volunteerId,
+            role: validatedData.role
           }
+        })
+        
+        if (duplicateAssignment) {
+          return res.status(409).json({
+            error: 'This volunteer is already assigned to this shift',
+            conflictType: 'DUPLICATE_SHIFT_ASSIGNMENT',
+            message: 'Cannot assign the same volunteer to the same shift twice'
+          })
         }
         
         

@@ -226,15 +226,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Check if volunteer is an IVS team member
-    // IVS team members are volunteers assigned to positions in dept-info-volunteer events
-    const isIVSEvent = event.eventType === 'REGIONAL_CONVENTION'
+    // IVS team members are volunteers with IVS approval status AND the IVS module must be enabled for the event
+    const ivsModuleEnabled = (event.settings as any)?.modules?.ivsModule ?? false
     
-    const ivsTeamMember = isIVSEvent ? await prisma.position_assignments.findFirst({
+    const ivsTeamMember = ivsModuleEnabled ? await prisma.event_volunteers.findFirst({
       where: {
-        volunteerId: volunteerId as string,
-        positions: {
-          eventId: eventId as string
-        }
+        eventId: eventId as string,
+        userId: volunteerId as string,
+        ivsSubmittedBy: 'IVS',
+        ivsApprovalStatus: 'Approved',
       }
     }) : null
 

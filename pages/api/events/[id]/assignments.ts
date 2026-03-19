@@ -164,20 +164,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }
         }
         
-        // Check if shift already has someone in this specific role
-        const existingRoleAssignment = await prisma.position_assignments.findFirst({
-          where: { 
-            shiftId: validatedData.shiftId,
-            role: validatedData.role
-          }
-        })
-        
-        if (existingRoleAssignment) {
-          return res.status(409).json({
-            error: `Shift already has a ${validatedData.role.toLowerCase()} assigned`,
-            conflictType: 'ROLE_OCCUPIED',
-            message: `Each shift can only have one ${validatedData.role.toLowerCase()}`
+        // Check if shift already has someone in this specific role (only for OVERSEER/KEYMAN)
+        // Multiple volunteers are allowed per shift
+        if (validatedData.role === 'OVERSEER' || validatedData.role === 'KEYMAN') {
+          const existingRoleAssignment = await prisma.position_assignments.findFirst({
+            where: { 
+              shiftId: validatedData.shiftId,
+              role: validatedData.role
+            }
           })
+          
+          if (existingRoleAssignment) {
+            return res.status(409).json({
+              error: `Shift already has a ${validatedData.role.toLowerCase()} assigned`,
+              conflictType: 'ROLE_OCCUPIED',
+              message: `Each shift can only have one ${validatedData.role.toLowerCase()}`
+            })
+          }
         }
         
         // Multiple volunteers per shift are now allowed

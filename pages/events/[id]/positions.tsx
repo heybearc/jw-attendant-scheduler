@@ -238,8 +238,6 @@ function AssignVolunteerModal({
             setInlineError(errorData.message || 'All-day shift conflict.')
           } else if (errorData.conflictType === 'DUPLICATE_SHIFT_ASSIGNMENT') {
             setInlineError('This volunteer is already assigned to this shift.')
-          } else if (errorData.conflictType === 'SHIFT_FULL') {
-            setInlineError('This shift already has a volunteer assigned.')
           } else if (errorData.conflictType === 'ROLE_OCCUPIED') {
             setInlineError(errorData.message || 'This role is already filled for this shift.')
           } else {

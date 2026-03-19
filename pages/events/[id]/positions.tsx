@@ -1246,12 +1246,13 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                   </>
                 )}
                 
-                {/* Auto-Assign - Only show when needed */}
-                {canManageContent && getUnassignedCount() > 0 && (
+                {/* Auto-Assign - Always visible for admins */}
+                {canManageContent && (
                   <button
                     onClick={handleAutoAssignOversightAware}
-                    disabled={isSubmitting}
-                    className="inline-flex items-center px-3 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 text-white text-sm font-medium rounded-md transition-colors"
+                    disabled={isSubmitting || getUnassignedCount() === 0}
+                    className="inline-flex items-center px-3 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white text-sm font-medium rounded-md transition-colors"
+                    title={getUnassignedCount() === 0 ? "No unassigned volunteers available" : `Auto-assign ${getUnassignedCount()} unassigned volunteers`}
                   >
                     {isSubmitting ? (
                       <>

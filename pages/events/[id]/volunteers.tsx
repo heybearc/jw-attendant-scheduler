@@ -827,6 +827,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   volunteerId: attendant.id,
+                  eventId: eventId,
                   pin,
                   autoGenerate: false
                 })

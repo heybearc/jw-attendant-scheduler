@@ -270,6 +270,11 @@ For issues or questions:
 
 ## 📝 Version History
 
+- **v4.15.7** (2026-03-20) - Volunteer Login & Bulk PIN Fixes
+  - Fixed volunteer login redirect loop issue
+  - Fixed bulk PIN setting for multiple volunteers
+  - Fixed event QR code to point to volunteer login page
+
 - **v4.15.6** (2026-03-20) - Multiple Volunteers Per Shift & Feedback Fixes
   - Multiple volunteers can now be assigned to the same shift
   - Early Check-In tab visibility fixed (only shows when IVS module enabled)

@@ -1,19 +1,22 @@
 # TheoShift Task State
 
-**Last updated:** 2026-03-13  
+**Last updated:** 2026-03-20  
 **Current branch:** main  
-**Working on:** Volunteer login fix complete — auth working on both nodes
+**Working on:** v4.15.6 deployed to production — Multiple volunteers per shift feature complete
 
 ---
 
 ## Current Task
-**Volunteer Login Fix** — RESOLVED
+**Feedback Fixes Release** — COMPLETE
 
 ### What was done
-Debugged "invalid credentials" error on volunteer login. Root cause was wrong password for test account (changed without knowledge) + stale `NEXT_PUBLIC_APP_URL` pointing to old domain.
+Implemented and deployed 4 feedback items from production feedback system. All fixes tested on STANDBY, released to LIVE via blue-green deployment.
 
-**Open feedback items:**
-- None — all feedback resolved or closed
+**Completed feedback items:**
+- ✅ FB-023: Early Check-In tab visibility (IVS module check)
+- ✅ Auto Assign button always visible
+- ✅ Multiple volunteers per shift feature
+- ✅ Database shutdown error documented (infrastructure issue)
 
 ### Test Suite Status (2026-02-19) — CLEAN ✅
 **131 passed, 25 skipped (intentional), 0 failed**
@@ -39,7 +42,21 @@ Also fixed real production bug:
 
 ### Recent completions
 
-**Today (2026-03-13) - Volunteer Login Fix:**
+**Today (2026-03-20) - v4.15.6 Release (Multiple Volunteers Per Shift):**
+- ✅ Fixed Early Check-In tab visibility (only shows when IVS module enabled in event settings)
+- ✅ Fixed Auto Assign button (always visible with helpful tooltips)
+- ✅ Implemented multiple volunteers per shift feature
+  - Removed server-side SHIFT_FULL validation for VOLUNTEER role
+  - Removed client-side SHIFT_FULL error handler
+  - Only OVERSEER and KEYMAN roles restricted to one per shift
+  - Added "+ Assign Another Volunteer" button to UI
+- ✅ Deployed to STANDBY (BLUE) and tested (130/165 tests passing)
+- ✅ Version bumped to v4.15.6 with user-friendly release notes
+- ✅ Released to LIVE via traffic switch (BLUE now LIVE at 10.92.3.24)
+- ✅ Synced STANDBY (GREEN) to v4.15.6
+- ✅ Both environments running v4.15.6 and healthy
+
+**Earlier (2026-03-13) - Volunteer Login Fix:**
 - ✅ Debugged "invalid credentials" error on both GREEN (LIVE) and BLUE (STANDBY)
 - ✅ Root cause 1: Test account password was changed without knowledge
 - ✅ Root cause 2: `NEXT_PUBLIC_APP_URL` still pointed to old `attendant.cloudigan.net` domain
@@ -584,12 +601,16 @@ Also fixed real production bug:
 - Repository significantly cleaner and organized
 
 ### Next steps
-1. Clean up debug code from today's session (remove test endpoints, debug logging)
-2. Revert debug commits and keep only the NEXT_PUBLIC_APP_URL fix
-3. Commit cleanup changes
-4. Pick next feature from backlog
-   - Top candidates: FB-017 (conflict management), global announcements admin page, mobile nav expansion
-5. Also worth addressing: `next-env.d.ts` regenerated on build on both nodes — add to `.gitignore` on each node to prevent stash-dance on every deploy
+1. Review remaining feedback items in IMPLEMENTATION-PLAN.md
+2. Pick next priority feature from backlog:
+   - Edit Assignment Time feature (LOW priority - deferred from today)
+   - Other feedback items or feature requests
+3. Continue with normal development workflow:
+   - Implement on STANDBY
+   - Test with /test-release
+   - Version bump with /bump
+   - Release with /release
+   - Sync with /sync
 
 ---
 
@@ -632,11 +653,13 @@ Also fixed real production bug:
 ---
 
 ## Exact Next Command
-**Next session:** Run `/start-day` to load context, then clean up debug code from today's auth debugging session:
-1. Remove test endpoints: `pages/api/test-db-auth.ts`, `pages/api/test-auth-flow.ts`
-2. Remove debug logging from `pages/api/auth/[...nextauth].ts`
-3. Revert debug commits and keep only the NEXT_PUBLIC_APP_URL fix
-4. Commit cleanup changes
-5. Pick next feature from backlog (FB-017 conflict management is top candidate)
+**Next session:** Run `/start-day` to load context, then review IMPLEMENTATION-PLAN.md for next priority feature.
+
+**Current state:**
+- v4.15.6 deployed to LIVE (BLUE at 10.92.3.24)
+- STANDBY (GREEN at 10.92.3.22) synced to v4.15.6
+- Both environments healthy
+- All feedback fixes from today deployed and working
+- Ready for next development cycle
 
 **Known lint issue (pre-existing, non-blocking):** `positions.tsx` line 677 - `Argument of type 'string' is not assignable to parameter of type 'never'`

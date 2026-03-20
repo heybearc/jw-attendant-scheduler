@@ -270,6 +270,12 @@ For issues or questions:
 
 ## 📝 Version History
 
+- **v4.15.6** (2026-03-20) - Multiple Volunteers Per Shift & Feedback Fixes
+  - Multiple volunteers can now be assigned to the same shift
+  - Early Check-In tab visibility fixed (only shows when IVS module enabled)
+  - Auto-Assign button always visible with helpful tooltips
+  - Improved position assignment workflow
+
 - **v4.14.0** (2026-02-19) - PWA Bottom Navigation & Global Announcements
   - Volunteer bottom navigation bar on dashboard, early check-in, and select event pages
   - Global Announcements admin page — create system-wide messages with Info/Warning/Urgent types

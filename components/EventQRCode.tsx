@@ -10,14 +10,8 @@ interface EventQRCodeProps {
 export default function EventQRCode({ eventId, eventName, size = 200 }: EventQRCodeProps) {
   const [showModal, setShowModal] = useState(false)
 
-  // Generate QR code data with event access URL
-  const qrData = JSON.stringify({
-    type: 'event_access',
-    eventId,
-    eventName,
-    url: `${typeof window !== 'undefined' ? window.location.origin : ''}/events/${eventId}`,
-    timestamp: new Date().toISOString()
-  })
+  // Generate QR code data with volunteer login URL
+  const qrData = `${typeof window !== 'undefined' ? window.location.origin : ''}/volunteer/login`
 
   const handleDownload = () => {
     const svg = document.getElementById('event-qr-code')

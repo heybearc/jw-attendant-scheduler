@@ -90,7 +90,8 @@ export const authOptions: NextAuthOptions = {
           id: volunteer.id,
           email: volunteer.email,
           name: `${volunteer.firstName} ${volunteer.lastName}`,
-          role: 'VOLUNTEER'
+          role: 'VOLUNTEER',
+          congregation: volunteer.congregation
         }
       }
     })

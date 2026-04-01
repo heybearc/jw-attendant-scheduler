@@ -185,8 +185,9 @@ async function getHAProxyBackend(app) {
     if (app === 'bni-chapter-toolkit') aclName = 'bnitoolkit';
     
     // Look for the main routing rule (use_backend X if is_appname)
-    // Match pattern: use_backend [backend_name] if is_[acl_name]
-    const { stdout } = await execAsync(`ssh prox "pct exec ${HAPROXY_CONTAINER} -- grep 'use_backend ${appConfig.haproxyBackend}.*if is_${aclName}' /etc/haproxy/haproxy.cfg | grep -v '_blue\\|_green' | head -1"`);
+    // We want lines like: use_backend leadiq_blue if is_leadiq
+    // But NOT lines like: use_backend leadiq_blue if is_leadiq_blue
+    const { stdout } = await execAsync(`ssh prox "pct exec ${HAPROXY_CONTAINER} -- grep 'use_backend ${appConfig.haproxyBackend}' /etc/haproxy/haproxy.cfg | grep 'if is_${aclName}$'"`);
     
     // Check which backend is being used (the backend name comes right after use_backend)
     const match = stdout.match(/use_backend\s+(\S+)/);

@@ -59,6 +59,66 @@ const APPS = {
     pmGreen: 'ldc-staging',
     healthEndpoint: '/api/auth/providers',
   },
+  'leadiq': {
+    name: 'LeadIQ',
+    blueIp: '10.92.3.183',
+    greenIp: '10.92.3.187',
+    blueContainer: 185,
+    greenContainer: 187,
+    haproxyBackend: 'leadiq',
+    sshBlue: 'root@10.92.3.183',
+    sshGreen: 'root@10.92.3.187',
+    path: '/opt/leadiq',
+    branch: 'main',
+    pmBlue: 'leadiq',
+    pmGreen: 'leadiq',
+    healthEndpoint: '/',
+  },
+  'quantshift': {
+    name: 'QuantShift',
+    blueIp: '10.92.3.189',
+    greenIp: '10.92.3.191',
+    blueContainer: 189,
+    greenContainer: 191,
+    haproxyBackend: 'quantshift',
+    sshBlue: 'root@10.92.3.189',
+    sshGreen: 'root@10.92.3.191',
+    path: '/opt/quantshift',
+    branch: 'main',
+    pmBlue: 'quantshift',
+    pmGreen: 'quantshift',
+    healthEndpoint: '/',
+  },
+  'cloudigan-api': {
+    name: 'Cloudigan API',
+    blueIp: '10.92.3.193',
+    greenIp: '10.92.3.195',
+    blueContainer: 193,
+    greenContainer: 195,
+    haproxyBackend: 'cloudigan_api',
+    sshBlue: 'root@10.92.3.193',
+    sshGreen: 'root@10.92.3.195',
+    path: '/opt/cloudigan-api',
+    branch: 'main',
+    pmBlue: 'cloudigan-api',
+    pmGreen: 'cloudigan-api',
+    healthEndpoint: '/health',
+  },
+  'bni-chapter-toolkit': {
+    name: 'BNI Chapter Toolkit',
+    blueIp: '10.92.3.197',
+    greenIp: '10.92.3.197',  // Sandbox - single container
+    blueContainer: 197,
+    greenContainer: 197,
+    haproxyBackend: 'bni-toolkit',
+    sshBlue: 'root@10.92.3.197',
+    sshGreen: 'root@10.92.3.197',
+    path: '/opt/bni-chapter-toolkit',
+    branch: 'main',
+    pmBlue: 'bni-toolkit',
+    pmGreen: 'bni-toolkit',
+    healthEndpoint: '/',
+  },
 };
 
 const HAPROXY_IP = '10.92.3.26';
@@ -118,8 +178,16 @@ async function checkHealth(ip, app) {
 async function getHAProxyBackend(app) {
   try {
     const appConfig = APPS[app];
+    // Determine the ACL name to search for
+    // Most apps use their backend name as ACL, but some differ
+    let aclName = appConfig.haproxyBackend;
+    if (app === 'ldc-tools') aclName = 'ldc';
+    if (app === 'bni-chapter-toolkit') aclName = 'bnitoolkit';
+    
     // Look for the main routing rule (use_backend X if is_appname)
-    const { stdout } = await execAsync(`ssh prox "pct exec ${HAPROXY_CONTAINER} -- grep 'use_backend ${appConfig.haproxyBackend}.*if is_${appConfig.haproxyBackend === 'jw_attendant' ? 'jw_attendant' : 'ldc'}$' /etc/haproxy/haproxy.cfg | head -1"`);
+    // Match pattern: use_backend [backend_name] if is_[acl_name]
+    const { stdout } = await execAsync(`ssh prox "pct exec ${HAPROXY_CONTAINER} -- grep 'use_backend ${appConfig.haproxyBackend}.*if is_${aclName}' /etc/haproxy/haproxy.cfg | grep -v '_blue\\|_green' | head -1"`);
+    
     // Check which backend is being used (the backend name comes right after use_backend)
     const match = stdout.match(/use_backend\s+(\S+)/);
     if (match) {
@@ -144,8 +212,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         properties: {
           app: {
             type: 'string',
-            description: 'Application to check (theoshift or ldc-tools)',
-            enum: ['theoshift', 'ldc-tools'],
+            description: 'Application to check (theoshift, ldc-tools, leadiq, quantshift, cloudigan-api, or bni-chapter-toolkit)',
+            enum: ['theoshift', 'ldc-tools', 'leadiq', 'quantshift', 'cloudigan-api', 'bni-chapter-toolkit'],
             default: 'theoshift',
           },
         },
@@ -153,14 +221,14 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: 'deploy_to_standby',
-      description: 'Deploy code to STANDBY server with automated health checks',
+      description: 'Deploy code to STANDBY server with automated health checks. For sandbox apps (bni-chapter-toolkit), deploys to sandbox container.',
       inputSchema: {
         type: 'object',
         properties: {
           app: {
             type: 'string',
-            description: 'Application to deploy (theoshift or ldc-tools)',
-            enum: ['theoshift', 'ldc-tools'],
+            description: 'Application to deploy (theoshift, ldc-tools, leadiq, quantshift, cloudigan-api, or bni-chapter-toolkit)',
+            enum: ['theoshift', 'ldc-tools', 'leadiq', 'quantshift', 'cloudigan-api', 'bni-chapter-toolkit'],
             default: 'theoshift',
           },
           pullGithub: {
@@ -183,14 +251,14 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: 'switch_traffic',
-      description: 'Switch traffic from LIVE to STANDBY (requires approval)',
+      description: 'Switch traffic from LIVE to STANDBY (requires approval). NOTE: Not applicable for sandbox apps (bni-chapter-toolkit).',
       inputSchema: {
         type: 'object',
         properties: {
           app: {
             type: 'string',
-            description: 'Application to switch (theoshift or ldc-tools)',
-            enum: ['theoshift', 'ldc-tools'],
+            description: 'Application to switch (theoshift, ldc-tools, leadiq, quantshift, or cloudigan-api). Sandbox apps not supported.',
+            enum: ['theoshift', 'ldc-tools', 'leadiq', 'quantshift', 'cloudigan-api'],
             default: 'theoshift',
           },
           requireApproval: {

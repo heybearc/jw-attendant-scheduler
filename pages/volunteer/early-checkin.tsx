@@ -77,6 +77,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         name: true,
         startDate: true,
         endDate: true,
+        settings: true,
       },
     })
 
@@ -89,17 +90,19 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       }
     }
 
-    // Check if user is an IVS volunteer for this event
-    const ivsVolunteer = await prisma.event_volunteers.findFirst({
+    // Check if IVS module is enabled for this event
+    const ivsModuleEnabled = (event.settings as any)?.modules?.ivsModule ?? false
+
+    // Check if user is registered as a volunteer for this event
+    const eventVolunteer = await prisma.event_volunteers.findFirst({
       where: {
         eventId: eventId,
         userId: session.user.id,
-        ivsSubmittedBy: 'IVS',
-        ivsApprovalStatus: 'Approved',
       },
     })
 
-    const hasAccess = !!ivsVolunteer
+    // User has access if IVS module is enabled AND they're registered for the event
+    const hasAccess = ivsModuleEnabled && !!eventVolunteer
 
     return {
       props: {

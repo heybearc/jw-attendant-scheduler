@@ -270,6 +270,10 @@ For issues or questions:
 
 ## 📝 Version History
 
+- **v4.15.8** (2026-04-11) - Early Check-In Tab Fix
+  - Fixed Early Check-In tab visibility for all volunteers when IVS module enabled
+  - Removed overly restrictive IVS approval workflow checks
+
 - **v4.15.7** (2026-03-20) - Volunteer Login & Bulk PIN Fixes
   - Fixed volunteer login redirect loop issue
   - Fixed bulk PIN setting for multiple volunteers

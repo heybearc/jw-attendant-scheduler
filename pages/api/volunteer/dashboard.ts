@@ -61,7 +61,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         eventType: true,
         startDate: true,
         endDate: true,
-        status: true
+        status: true,
+        settings: true
       }
     })
 
@@ -225,18 +226,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
     }
 
-    // Check if volunteer is an IVS team member
-    // IVS team members are volunteers with IVS approval status AND the IVS module must be enabled for the event
+    // Check if Early Check-In tab should be shown
+    // Show if IVS module is enabled for the event (volunteer is already confirmed to be registered for this event)
     const ivsModuleEnabled = (event.settings as any)?.modules?.ivsModule ?? false
     
-    const ivsTeamMember = ivsModuleEnabled ? await prisma.event_volunteers.findFirst({
-      where: {
-        eventId: eventId as string,
-        userId: volunteerId as string,
-        ivsSubmittedBy: 'IVS',
-        ivsApprovalStatus: 'Approved',
-      }
-    }) : null
+    // If IVS module is enabled, the volunteer has access to Early Check-In
+    // (they're already registered for the event via event_volunteers)
+    const ivsTeamMember = ivsModuleEnabled ? eventVolunteer : null
 
     // Get active count sessions for this event
     const activeCountSessions = await prisma.count_sessions.findMany({

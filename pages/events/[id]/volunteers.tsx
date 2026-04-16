@@ -740,10 +740,10 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
   }
 
   const handleSelectAll = () => {
-    if (selectedAttendants.size === attendants.length) {
+    if (selectedAttendants.size === filteredAttendants.length) {
       setSelectedAttendants(new Set())
     } else {
-      setSelectedAttendants(new Set(attendants.map(a => a.associationId)))
+      setSelectedAttendants(new Set(filteredAttendants.map(a => a.associationId)))
     }
   }
 
@@ -1350,7 +1350,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                       <th className="w-12 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         <input
                           type="checkbox"
-                          checked={selectedAttendants.size === attendants.length && attendants.length > 0}
+                          checked={selectedAttendants.size === filteredAttendants.length && filteredAttendants.length > 0}
                           onChange={handleSelectAll}
                           className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                         />

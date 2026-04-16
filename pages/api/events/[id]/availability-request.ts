@@ -48,19 +48,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Get attendants to request from (attendants are event-specific volunteers)
     let attendants
     if (volunteerIds && Array.isArray(volunteerIds) && volunteerIds.length > 0) {
-      // Specific attendants
-      attendants = await prisma.volunteers.findMany({
+      // Specific attendants - MUST be associated with this event
+      const eventVolunteers = await prisma.event_volunteers.findMany({
         where: {
-          id: { in: volunteerIds },
-          isActive: true
+          eventId,
+          volunteerId: { in: volunteerIds },
+          volunteer: {
+            isActive: true
+          }
         },
-        select: {
-          id: true,
-          email: true,
-          firstName: true,
-          lastName: true
+        include: {
+          volunteer: {
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true
+            }
+          }
         }
       })
+      attendants = eventVolunteers.map(ev => ev.volunteer).filter(Boolean)
     } else {
       // All active attendants for this event
       const eventVolunteers = await prisma.event_volunteers.findMany({

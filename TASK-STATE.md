@@ -1,16 +1,16 @@
 # TheoShift Task State
 
-**Last updated:** 2026-03-20  
+**Last updated:** 2026-04-16  
 **Current branch:** main  
-**Working on:** v4.15.6 deployed to production — Multiple volunteers per shift feature complete
+**Working on:** Early Check-In & Availability Request Fixes — DEPLOYED TO LIVE
 
 ---
 
 ## Current Task
-**Feedback Fixes Release** — COMPLETE
+**Bug Fixes - Early Check-In & Availability Requests** — COMPLETE
 
 ### What was done
-Implemented and deployed 4 feedback items from production feedback system. All fixes tested on STANDBY, released to LIVE via blue-green deployment.
+Fixed critical bugs in Early Check-In tab visibility and availability request system. All fixes deployed to production without testing (user requested bypass).
 
 **Completed feedback items:**
 - ✅ FB-023: Early Check-In tab visibility (IVS module check)
@@ -42,7 +42,26 @@ Also fixed real production bug:
 
 ### Recent completions
 
-**Today (2026-03-20) - v4.15.6 Release (Multiple Volunteers Per Shift):**
+**Today (2026-04-16) - Early Check-In & Availability Request Fixes:**
+- ✅ Fixed Early Check-In tab visibility on volunteer dashboard (v4.15.8)
+  - Removed overly restrictive IVS approval workflow checks
+  - Tab now shows for all volunteers when IVS module is enabled
+- ✅ Fixed Early Check-In mobile page access (separate `/volunteer/early-checkin` route)
+  - Applied same IVS module check as dashboard
+  - Mobile "Check-In" button now works correctly
+- ✅ Fixed availability request scoping bug
+  - Requests were being sent to ALL 173 volunteers instead of selected subset
+  - API now queries `event_volunteers` table with `eventId` filter
+  - Only sends to volunteers actually registered for the specific event
+- ✅ Fixed "Select All" checkbox bug
+  - Was selecting all 173 volunteers instead of filtered/visible volunteers
+  - Now uses `filteredAttendants` array instead of unfiltered `attendants`
+  - Respects active/inactive filters correctly
+- ✅ Deployed all fixes to LIVE (GREEN - 10.92.3.22) without testing
+- ✅ Synced STANDBY (BLUE - 10.92.3.24) with latest code
+- ✅ Both environments healthy and in sync
+
+**Earlier (2026-03-20) - v4.15.6 Release (Multiple Volunteers Per Shift):**
 - ✅ Fixed Early Check-In tab visibility (only shows when IVS module enabled in event settings)
 - ✅ Fixed Auto Assign button (always visible with helpful tooltips)
 - ✅ Implemented multiple volunteers per shift feature
@@ -601,16 +620,13 @@ Also fixed real production bug:
 - Repository significantly cleaner and organized
 
 ### Next steps
-1. Review remaining feedback items in IMPLEMENTATION-PLAN.md
-2. Pick next priority feature from backlog:
-   - Edit Assignment Time feature (LOW priority - deferred from today)
-   - Other feedback items or feature requests
-3. Continue with normal development workflow:
-   - Implement on STANDBY
-   - Test with /test-release
-   - Version bump with /bump
-   - Release with /release
-   - Sync with /sync
+1. Monitor production for any issues with today's fixes:
+   - Early Check-In tab visibility
+   - Availability request scoping
+   - Select All filtering
+2. Consider version bump for today's fixes (currently uncommitted)
+3. Review remaining feedback items in IMPLEMENTATION-PLAN.md
+4. Pick next priority feature from backlog
 
 ---
 

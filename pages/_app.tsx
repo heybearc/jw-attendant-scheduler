@@ -10,16 +10,15 @@ function AppContent({ Component, pageProps }: { Component: any; pageProps: any }
   // Track user activity for session management
   useActivityTracking()
   
-  // Register service worker for PWA
+  // Unregister service worker temporarily (interfering with magic link auth)
   useEffect(() => {
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker
-        .register('/sw.js')
-        .then((registration) => {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        registrations.forEach((registration) => {
+          registration.unregister()
+          console.log('Service Worker unregistered')
         })
-        .catch((error) => {
-          console.error('Service Worker registration failed:', error)
-        })
+      })
     }
   }, [])
   

@@ -5,7 +5,6 @@ import { GetServerSideProps } from 'next'
 import Link from 'next/link'
 
 type UserRole = 'oversight' | 'volunteer'
-type VolunteerMethod = 'email' | 'pin'
 
 export default function SignIn() {
   const router = useRouter()
@@ -34,9 +33,6 @@ export default function SignIn() {
   // Role selection
   const [role, setRole] = useState<UserRole>('oversight')
   
-  // Volunteer method selection
-  const [volunteerMethod, setVolunteerMethod] = useState<VolunteerMethod>('email')
-  
   // Form states
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -48,14 +44,6 @@ export default function SignIn() {
   
   // Volunteer email form
   const [volunteerEmail, setVolunteerEmail] = useState('')
-  
-  // Volunteer PIN form
-  const [pinForm, setPinForm] = useState({
-    firstName: '',
-    lastName: '',
-    congregation: '',
-    pin: ''
-  })
 
   // Load saved role preference and handle URL params
   useEffect(() => {
@@ -129,35 +117,6 @@ export default function SignIn() {
       } else {
         setEmailSent(true)
         setLoading(false)
-      }
-    } catch (error) {
-      setError('An error occurred. Please try again.')
-      setLoading(false)
-    }
-  }
-
-  const handleVolunteerPinSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
-
-    try {
-      const callbackUrl = (router.query.callbackUrl as string) || '/volunteer/select-event'
-      
-      const result = await signIn('volunteer-pin', {
-        firstName: pinForm.firstName,
-        lastName: pinForm.lastName,
-        congregation: pinForm.congregation,
-        pin: pinForm.pin,
-        callbackUrl,
-        redirect: false
-      })
-
-      if (result?.error) {
-        setError('Invalid credentials. Please check your information.')
-        setLoading(false)
-      } else if (result?.ok) {
-        router.push(callbackUrl)
       }
     } catch (error) {
       setError('An error occurred. Please try again.')
@@ -380,34 +339,6 @@ export default function SignIn() {
           {/* Volunteer Login Form */}
           {role === 'volunteer' && (
             <>
-              {/* Volunteer Method Toggle */}
-              <div className="flex rounded-lg bg-gray-100 p-1 mb-4">
-                <button
-                  type="button"
-                  onClick={() => setVolunteerMethod('email')}
-                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                    volunteerMethod === 'email'
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  📧 Email Link
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setVolunteerMethod('pin')}
-                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                    volunteerMethod === 'pin'
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  🔢 PIN Login
-                </button>
-              </div>
-
-              {/* Email Link Form */}
-              {volunteerMethod === 'email' && (
                 <form onSubmit={handleVolunteerEmailSubmit} className="space-y-4">
                   <div>
                     <label htmlFor="volunteer-email" className="block text-sm font-semibold text-gray-700 mb-2">
@@ -458,95 +389,33 @@ export default function SignIn() {
                     {loading ? 'Sending...' : 'Send Sign-In Link'}
                   </button>
                 </form>
-              )}
 
-              {/* PIN Login Form */}
-              {volunteerMethod === 'pin' && (
-                <form onSubmit={handleVolunteerPinSubmit} className="space-y-4">
-                  <div className="space-y-3">
-                    <div>
-                      <label htmlFor="firstName" className="block text-sm font-semibold text-gray-700 mb-2">
-                        First Name
-                      </label>
-                      <input
-                        id="firstName"
-                        type="text"
-                        required
-                        value={pinForm.firstName}
-                        onChange={(e) => setPinForm({...pinForm, firstName: e.target.value})}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors duration-200 bg-gray-50 focus:bg-white text-base"
-                        placeholder="First Name"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="lastName" className="block text-sm font-semibold text-gray-700 mb-2">
-                        Last Name
-                      </label>
-                      <input
-                        id="lastName"
-                        type="text"
-                        required
-                        value={pinForm.lastName}
-                        onChange={(e) => setPinForm({...pinForm, lastName: e.target.value})}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors duration-200 bg-gray-50 focus:bg-white text-base"
-                        placeholder="Last Name"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="congregation" className="block text-sm font-semibold text-gray-700 mb-2">
-                        Congregation
-                      </label>
-                      <input
-                        id="congregation"
-                        type="text"
-                        required
-                        value={pinForm.congregation}
-                        onChange={(e) => setPinForm({...pinForm, congregation: e.target.value})}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors duration-200 bg-gray-50 focus:bg-white text-base"
-                        placeholder="Congregation"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="pin" className="block text-sm font-semibold text-gray-700 mb-2">
-                        PIN
-                      </label>
-                      <input
-                        id="pin"
-                        type="password"
-                        required
-                        value={pinForm.pin}
-                        onChange={(e) => setPinForm({...pinForm, pin: e.target.value})}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors duration-200 bg-gray-50 focus:bg-white text-base"
-                        placeholder="PIN"
-                      />
-                    </div>
+              {/* Support Contact */}
+              <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
                   </div>
-
-                  {error && (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                      <div className="flex items-center">
-                        <svg className="h-5 w-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <p className="text-red-700 text-sm font-medium">{error}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-base font-semibold text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-                  >
-                    {loading ? 'Signing in...' : 'Sign In'}
-                  </button>
-                </form>
-              )}
-
-              <div className="mt-4 text-center text-sm text-gray-500">
-                <p>
-                  Don't have an account? Contact your event coordinator.
-                </p>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-1">
+                      Need Help?
+                    </h3>
+                    <p className="text-sm text-gray-700 mb-2">
+                      If you need to update your email address or have any questions, please contact us:
+                    </p>
+                    <a
+                      href="mailto:theoshift.team@gmail.com"
+                      className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                      theoshift.team@gmail.com
+                    </a>
+                  </div>
+                </div>
               </div>
             </>
           )}

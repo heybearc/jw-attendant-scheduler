@@ -1,30 +1,36 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { getToken } from 'next-auth/jwt'
 
-// WMACS AUTH MIDDLEWARE - Compatible with auth-stub
-// This middleware allows all admin routes since we're using development auth stub
-export function middleware(request: NextRequest) {
-  // For development with auth-stub: allow all admin routes
-  // In production: this would check real authentication
-  
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   
-  // Allow all admin routes during development
-  if (pathname.startsWith('/admin')) {
-    return NextResponse.next()
-  }
+  // Check if this is a volunteer route
+  const isVolunteerRoute = pathname.startsWith('/volunteer/') && 
+                          !pathname.startsWith('/volunteer/login')
   
-  // Allow all other protected routes during development
-  if (pathname.startsWith('/dashboard') || 
-      pathname.startsWith('/attendants') || 
-      pathname.startsWith('/events') || 
-      pathname.startsWith('/counts')) {
-    return NextResponse.next()
+  if (isVolunteerRoute) {
+    // Check if user has a valid session
+    const token = await getToken({ 
+      req: request,
+      secret: process.env.NEXTAUTH_SECRET 
+    })
+    
+    // If no token or not a volunteer, redirect to volunteer login
+    if (!token || token.role !== 'VOLUNTEER') {
+      const url = request.nextUrl.clone()
+      url.pathname = '/volunteer/login'
+      // Preserve the original URL as a callback
+      url.searchParams.set('callbackUrl', pathname)
+      return NextResponse.redirect(url)
+    }
   }
   
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: []
+  matcher: [
+    '/volunteer/:path*',
+  ]
 };

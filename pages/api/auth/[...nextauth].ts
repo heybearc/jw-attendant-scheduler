@@ -127,6 +127,10 @@ export const authOptions: NextAuthOptions = {
       // Fallback to base URL
       return baseUrl
     },
+    async signIn({ user }) {
+      // Allow all sign-ins (both admin and volunteer)
+      return true
+    },
   },
   pages: {
     signIn: '/auth/signin',  // Admin login page

@@ -13,11 +13,7 @@ async function getEventId(page: any): Promise<string> {
 
 test.describe('UI Modernization Release - Volunteers & Positions Pages', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(process.env.BASE_URL || 'http://localhost:3001')
-    await page.type('#email', process.env.TEST_USER_EMAIL || '')
-    await page.type('#password', process.env.TEST_USER_PASSWORD || '')
-    await page.click('button[type="submit"]')
-    await page.waitForURL('**/events/**', { timeout: 10000 })
+    await loginAsAdmin(page)
   })
 
   test.describe('Volunteers Page Modernization', () => {

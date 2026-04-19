@@ -3,11 +3,7 @@ import { test, expect } from '@playwright/test'
 
 test.describe('Event Permissions UX', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(process.env.BASE_URL || 'http://localhost:3001')
-    await page.type('#email', process.env.TEST_USER_EMAIL || '')
-    await page.type('#password', process.env.TEST_USER_PASSWORD || '')
-    await page.click('button[type="submit"]')
-    await page.waitForURL('**/events/select')
+    await loginAsAdmin(page)
     
     // Navigate to first event
     await page.click('button:has-text("Select Event")')

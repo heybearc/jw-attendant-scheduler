@@ -1,8 +1,8 @@
 // TheoShift Service Worker
-// Version 2.0.0
+// Version 2.0.1
 
-const STATIC_CACHE = 'theoshift-static-v2';
-const DATA_CACHE = 'theoshift-data-v2';
+const STATIC_CACHE = 'theoshift-static-v2.0.1';
+const DATA_CACHE = 'theoshift-data-v2.0.1';
 const OFFLINE_URL = '/offline.html';
 
 // Static assets to precache on install
@@ -44,7 +44,7 @@ function isVolunteerPage(url) {
 
 // Install event - precache static assets and volunteer pages
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing v2.0.0...');
+  console.log('[SW] Installing v2.0.1...');
   event.waitUntil(
     caches.open(STATIC_CACHE)
       .then((cache) => {
@@ -62,7 +62,7 @@ self.addEventListener('install', (event) => {
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating v2.0.0...');
+  console.log('[SW] Activating v2.0.1...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -83,6 +83,11 @@ self.addEventListener('fetch', (event) => {
   if (!event.request.url.startsWith('http')) return;
 
   const url = event.request.url;
+  
+  // Exclude auth routes from service worker (allow redirects for magic links)
+  if (url.includes('/api/auth/') || url.includes('/auth/')) {
+    return; // Let browser handle auth routes natively
+  }
 
   // Strategy 1: Stale-while-revalidate for volunteer API routes
   // Serve cached data immediately, update cache in background

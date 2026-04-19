@@ -21,14 +21,55 @@ export default function VolunteerPortalHelp({ userRole }: VolunteerPortalHelpPro
 
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Accessing the Portal</h2>
           <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">Login Methods</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">🔐 Login Methods (NEW in v4.16.0)</h3>
             <p className="text-gray-700 mb-3">
-              You can access the volunteer portal in two ways:
+              You can access the volunteer portal using any of these methods:
             </p>
-            <ul className="list-disc list-inside text-gray-700 space-y-2">
-              <li><strong>Email Login:</strong> Use your email address and password at <code>/auth/signin</code></li>
-              <li><strong>PIN Login:</strong> Use your 4-digit PIN at <code>/volunteer/login</code> for quick access</li>
-            </ul>
+            
+            <div className="space-y-4">
+              <div className="border-l-4 border-green-500 pl-4">
+                <h4 className="font-semibold text-gray-900 mb-2">📧 Email Link (Recommended - NEW!)</h4>
+                <p className="text-gray-700 mb-2">
+                  The easiest and most secure way to sign in. No password to remember!
+                </p>
+                <ol className="list-decimal list-inside text-gray-700 space-y-1 ml-4">
+                  <li>Go to the login page and select <strong>"Volunteer"</strong></li>
+                  <li>Choose <strong>"Email Link"</strong> method</li>
+                  <li>Enter your email address</li>
+                  <li>Click <strong>"Send Sign-In Link"</strong></li>
+                  <li>Check your email and click the secure link</li>
+                  <li>You'll be automatically signed in!</li>
+                </ol>
+                <p className="text-sm text-gray-600 mt-2">
+                  💡 The link expires in 24 hours and can only be used once for security.
+                </p>
+              </div>
+
+              <div className="border-l-4 border-blue-500 pl-4">
+                <h4 className="font-semibold text-gray-900 mb-2">🔢 PIN Login</h4>
+                <p className="text-gray-700 mb-2">
+                  Quick access using your 4-digit PIN (last 4 digits of your phone number).
+                </p>
+                <ol className="list-decimal list-inside text-gray-700 space-y-1 ml-4">
+                  <li>Go to the login page and select <strong>"Volunteer"</strong></li>
+                  <li>Choose <strong>"PIN Login"</strong> method</li>
+                  <li>Enter your first name, last name, and congregation</li>
+                  <li>Enter your 4-digit PIN</li>
+                  <li>Click <strong>"Sign In"</strong></li>
+                </ol>
+              </div>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+              <h4 className="font-semibold text-blue-900 mb-2">❓ Which method should I use?</h4>
+              <ul className="text-blue-800 space-y-1 text-sm">
+                <li>✅ <strong>Email Link:</strong> More secure, no password to remember, works from any device</li>
+                <li>✅ <strong>PIN Login:</strong> Faster if you remember your PIN, works offline</li>
+              </ul>
+              <p className="text-blue-800 text-sm mt-2">
+                💡 <strong>Tip:</strong> Try the Email Link method first - it's easier and more secure!
+              </p>
+            </div>
           </div>
 
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Dashboard Overview</h2>

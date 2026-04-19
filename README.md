@@ -270,6 +270,13 @@ For issues or questions:
 
 ## 📝 Version History
 
+- **v4.16.0** (2026-04-19) - Magic Link Authentication & Unified Login
+  - NEW: Magic link (passwordless) authentication for volunteers
+  - NEW: Unified login page with Oversight/Volunteer role toggle
+  - NEW: Email link login method - no password needed!
+  - Improved: Backward compatible PIN login still available
+  - Updated: Volunteer portal help documentation
+
 - **v4.15.8** (2026-04-11) - Early Check-In Tab Fix
   - Fixed Early Check-In tab visibility for all volunteers when IVS module enabled
   - Removed overly restrictive IVS approval workflow checks

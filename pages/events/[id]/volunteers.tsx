@@ -377,53 +377,6 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
     setShowAddModal(true)
   }
 
-  // Set PIN Handler
-  const handleSetPIN = async (attendant: Attendant) => {
-    let pin = ''
-    
-    // Auto-generate from phone if available
-    if (attendant.phone) {
-      const digits = attendant.phone.replace(/\D/g, '')
-      if (digits.length >= 4) {
-        pin = digits.slice(-4)
-        if (!confirm(`Auto-generate PIN "${pin}" from phone number for ${attendant.firstName} ${attendant.lastName}?`)) {
-          return
-        }
-      }
-    }
-    
-    // Manual entry if no phone or user declined auto-generate
-    if (!pin) {
-      pin = prompt(`Enter 4-digit PIN for ${attendant.firstName} ${attendant.lastName}:`) || ''
-      if (!pin || !/^\d{4}$/.test(pin)) {
-        if (pin) alert('PIN must be exactly 4 digits')
-        return
-      }
-    }
-
-    try {
-      const response = await fetch('/api/volunteer/set-pin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          volunteerId: attendant.id,
-          eventId: eventId,
-          pin,
-          autoGenerate: false
-        })
-      })
-
-      const result = await response.json()
-      if (result.success) {
-        alert(`PIN set successfully for ${attendant.firstName} ${attendant.lastName}: ${result.pin}\n\nPlease communicate this PIN to the attendant securely.`)
-      } else {
-        alert(`Failed to set PIN: ${result.error}`)
-      }
-    } catch (error) {
-      alert('Failed to set PIN. Please try again.')
-    }
-  }
-
   // Force Profile Verification Handler
   const handleForceVerification = async (attendant: Attendant) => {
     if (!confirm(`Force profile verification for ${attendant.firstName} ${attendant.lastName}?\n\nThis will require them to verify their contact information on next login.`)) {
@@ -924,6 +877,36 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
       terminology={terminology}
     >
       <div className="max-w-7xl mx-auto">
+        {/* Volunteer Login Information Banner */}
+        <div className="mb-6 bg-gradient-to-r from-blue-50 to-purple-50 border-l-4 border-blue-500 rounded-lg p-4 shadow-sm">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div className="ml-3 flex-1">
+              <h3 className="text-sm font-semibold text-gray-900 mb-1">
+                📧 Volunteer Login Now Uses Magic Links
+              </h3>
+              <p className="text-sm text-gray-700 mb-2">
+                Volunteers now receive a secure email link to sign in. No PIN required!
+              </p>
+              <a
+                href="/help/volunteer-portal"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
+              >
+                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Learn More
+              </a>
+            </div>
+          </div>
+        </div>
+
         {/* Compact Header with Inline Stats */}
         <div className="mb-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
@@ -1550,15 +1533,6 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                               <div className="py-1">
                                 <button
                                   onClick={() => {
-                                    handleSetPIN(attendant)
-                                    closeDropdown(attendant.id)
-                                  }}
-                                  className="block w-full text-left px-3 py-1 text-xs text-blue-600 hover:bg-blue-50"
-                                >
-                                  Set PIN
-                                </button>
-                                <button
-                                  onClick={() => {
                                     handleForceVerification(attendant)
                                     closeDropdown(attendant.id)
                                   }}
@@ -2043,24 +2017,6 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                         </select>
                       </div>
                     </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      PIN Management
-                    </label>
-                    <select
-                      value={bulkEditData.pinAction}
-                      onChange={(e) => setBulkEditData({ ...bulkEditData, pinAction: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">No PIN Changes</option>
-                      <option value="auto-generate">Auto-Generate PINs (from phone)</option>
-                      <option value="reset">Reset All PINs</option>
-                    </select>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Auto-generate uses last 4 digits of phone number. Reset generates new PINs for all selected attendants.
-                    </p>
                   </div>
 
                   <div>

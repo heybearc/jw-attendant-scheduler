@@ -43,21 +43,26 @@ export default function VolunteerLogin() {
       const callbackUrl = (router.query.callbackUrl as string) || '/volunteer/select-event'
       console.log('🔵 Callback URL:', callbackUrl)
       
-      // Use NextAuth's built-in redirect
+      // Use redirect: false to handle the redirect manually
       const result = await signIn('volunteer-pin', {
         firstName: formData.firstName,
         lastName: formData.lastName,
         congregation: formData.congregation,
         pin: formData.pin,
         callbackUrl,
-        redirect: true
+        redirect: false  // Handle redirect manually to avoid NextAuth's default behavior
       })
 
-      // If we get here, there was an error (redirect: true navigates away on success)
+      console.log('🔵 SignIn result:', result)
       
       if (result?.error) {
+        console.error('❌ SignIn error:', result.error)
         setError('Invalid credentials. Please check your information.')
         setLoading(false)
+      } else if (result?.ok) {
+        // Success! Manually redirect to callbackUrl
+        console.log('✅ SignIn successful, redirecting to:', callbackUrl)
+        router.push(callbackUrl)
       }
     } catch (error) {
       console.error('❌ Exception during login:', error)

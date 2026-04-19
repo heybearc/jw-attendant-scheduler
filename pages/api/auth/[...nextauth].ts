@@ -7,7 +7,42 @@ import bcrypt from 'bcryptjs'
 import nodemailer from 'nodemailer'
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
+  // Note: Cannot use adapter with CredentialsProvider
+  // We handle all database operations manually in callbacks
+  adapter: {
+    // Minimal adapter implementation for EmailProvider only
+    async createVerificationToken(verificationToken) {
+      const token = await prisma.verificationToken.create({
+        data: verificationToken
+      })
+      return token
+    },
+    async useVerificationToken({ identifier, token }) {
+      try {
+        const verificationToken = await prisma.verificationToken.delete({
+          where: {
+            identifier_token: {
+              identifier,
+              token
+            }
+          }
+        })
+        return verificationToken
+      } catch (error) {
+        return null
+      }
+    },
+    // Required stub methods (not used with CredentialsProvider)
+    async getUserByEmail(email) { return null },
+    async getUser(id) { return null },
+    async getUserByAccount(providerAccountId) { return null },
+    async updateUser(user) { return null as any },
+    async linkAccount(account) { return null as any },
+    async createSession(session) { return null as any },
+    async getSessionAndUser(sessionToken) { return null },
+    async updateSession(session) { return null as any },
+    async deleteSession(sessionToken) { return null as any },
+  },
   providers: [
     // Admin/Overseer login with email/password
     CredentialsProvider({

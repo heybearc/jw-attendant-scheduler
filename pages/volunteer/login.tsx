@@ -43,8 +43,13 @@ export default function VolunteerLogin() {
       const callbackUrl = (router.query.callbackUrl as string) || '/volunteer/select-event'
       console.log('🔵 Callback URL:', callbackUrl)
       
+      // Add timeout to prevent infinite spinning
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Login timeout')), 30000)
+      )
+      
       // Use redirect: false to handle the redirect manually
-      const result = await signIn('volunteer-pin', {
+      const resultPromise = signIn('volunteer-pin', {
         firstName: formData.firstName,
         lastName: formData.lastName,
         congregation: formData.congregation,
@@ -52,6 +57,8 @@ export default function VolunteerLogin() {
         callbackUrl,
         redirect: false  // Handle redirect manually to avoid NextAuth's default behavior
       })
+
+      const result = await Promise.race([resultPromise, timeoutPromise]) as any
 
       console.log('🔵 SignIn result:', result)
       
@@ -63,10 +70,18 @@ export default function VolunteerLogin() {
         // Success! Manually redirect to callbackUrl
         console.log('✅ SignIn successful, redirecting to:', callbackUrl)
         router.push(callbackUrl)
+      } else {
+        console.error('❌ Unexpected result:', result)
+        setError('Unexpected response. Please try again.')
+        setLoading(false)
       }
     } catch (error) {
       console.error('❌ Exception during login:', error)
-      setError('An error occurred. Please try again.')
+      if (error instanceof Error && error.message === 'Login timeout') {
+        setError('Login is taking too long. Please check your connection and try again.')
+      } else {
+        setError('An error occurred. Please try again.')
+      }
       setLoading(false)
     }
   }

@@ -52,10 +52,15 @@ export const authOptions: NextAuthOptions = {
         pin: { label: 'PIN', type: 'password' }
       },
       async authorize(credentials) {
+        console.log('🔐 Volunteer PIN authorize called')
+        
         if (!credentials?.firstName || !credentials?.lastName || !credentials?.congregation || !credentials?.pin) {
+          console.log('❌ Missing credentials')
           return null
         }
 
+        console.log('🔐 Looking up volunteer:', credentials.firstName, credentials.lastName, credentials.congregation)
+        
         // Find volunteer by name and congregation
         const volunteer = await prisma.volunteers.findFirst({
           where: {
@@ -66,9 +71,11 @@ export const authOptions: NextAuthOptions = {
         })
 
         if (!volunteer) {
+          console.log('❌ Volunteer not found')
           return null
         }
 
+        console.log('✅ Volunteer found:', volunteer.id)
 
         // Verify PIN using raw query
         const pinResult = await prisma.$queryRaw<Array<{ pinHash: string | null }>>`
@@ -77,14 +84,19 @@ export const authOptions: NextAuthOptions = {
         
         const pinHash = pinResult[0]?.pinHash
         if (!pinHash) {
+          console.log('❌ No PIN hash found')
           return null
         }
         
+        console.log('🔐 Verifying PIN...')
         const isValidPin = await bcrypt.compare(credentials.pin, pinHash)
         if (!isValidPin) {
+          console.log('❌ Invalid PIN')
           return null
         }
 
+        console.log('✅ PIN valid, returning user')
+        
         // Return volunteer as user
         return {
           id: volunteer.id,

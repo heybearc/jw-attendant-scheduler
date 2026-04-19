@@ -326,8 +326,7 @@ export const authOptions: NextAuthOptions = {
     },
   },
   pages: {
-    // Don't set signIn page - let server-side redirects handle it
-    // This allows NextAuth CSRF to work while preventing automatic redirects
+    signIn: '/auth/signin', // Use our custom unified login page
     error: '/auth/error',
   },
   session: {

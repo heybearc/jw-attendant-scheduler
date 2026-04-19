@@ -147,15 +147,33 @@ export default function VolunteerDashboard() {
   }, [])
 
   useEffect(() => {
-    if (status === 'loading') return
+    if (status === 'loading') {
+      console.log('⏳ Waiting for session to load...')
+      return
+    }
     
-    if (status === 'unauthenticated' || !session || session.user.role !== 'VOLUNTEER') {
+    if (status === 'unauthenticated' || !session) {
+      console.log('❌ Not authenticated, redirecting to login')
       router.push('/volunteer/login')
       return
     }
     
+    if (session.user.role !== 'VOLUNTEER') {
+      console.log('❌ Not a volunteer, redirecting to login')
+      router.push('/volunteer/login')
+      return
+    }
+    
+    if (!session.user.id) {
+      console.error('❌ Session exists but no user ID - possible session corruption')
+      setError('Session error. Please log in again.')
+      setLoading(false)
+      return
+    }
+    
+    console.log('✅ Session ready, loading dashboard for volunteer:', session.user.id)
     loadDashboard()
-  }, [status, session])
+  }, [status, session, router])
 
   const fetchAvailabilityRequests = async (eventId: string) => {
     try {
@@ -201,30 +219,41 @@ export default function VolunteerDashboard() {
   const loadDashboard = async () => {
     try {
       if (!session?.user?.id) {
-        console.error('No session user ID')
-        setError('Session error')
+        console.error('❌ loadDashboard called without session.user.id')
+        setError('Session not ready. Please wait...')
         setLoading(false)
         return
       }
       
+      console.log('📊 Loading dashboard for volunteer:', session.user.id)
       
       // Get selected event from query param or localStorage fallback
       const eventId = router.query.eventId as string || localStorage.getItem('selectedEventId')
       
       if (!eventId) {
+        console.log('📊 No eventId found, redirecting to select-event')
         // Need to select an event first
         router.push('/volunteer/select-event')
         return
       }
       
+      console.log('📊 Using eventId:', eventId)
       setSelectedEventId(eventId)
 
       // Fetch dashboard data
+      console.log('📊 Fetching dashboard data from API...')
       const response = await fetch(`/api/volunteer/dashboard?volunteerId=${session.user.id}&eventId=${eventId}`)
+      
+      if (!response.ok) {
+        console.error('❌ API response not OK:', response.status, response.statusText)
+        throw new Error(`API error: ${response.status}`)
+      }
+      
       const result = await response.json()
+      console.log('📊 API response:', result)
 
       if (result.success) {
-        console.log('Setting dashboard data...')
+        console.log('✅ Dashboard data loaded successfully')
         setDashboardData(result.data)
         setVolunteer(result.data.volunteer)
         

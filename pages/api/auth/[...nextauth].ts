@@ -129,7 +129,8 @@ export const authOptions: NextAuthOptions = {
     },
   },
   pages: {
-    signIn: '/auth/signin',
+    signIn: '/auth/signin',  // Admin login page
+    // Note: Volunteers use /volunteer/login (separate flow, no NextAuth page override needed)
   },
   session: {
     strategy: 'jwt',

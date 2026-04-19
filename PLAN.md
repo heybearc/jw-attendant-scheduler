@@ -67,7 +67,16 @@
 ## Known Issues
 
 ### Current
-- None - All systems operational
+- **Volunteer Login Redirect Loop** — Volunteers redirected to main login page after successful authentication
+  - Possible causes: Stale session tokens, NextAuth callback URL issues, session persistence
+  - Impact: Frustrating user experience, volunteers cannot access dashboard
+  - Status: Investigating on STANDBY
+  
+- **Volunteer Dashboard Empty Data** — Dashboard shows no data until page refresh
+  - Symptoms: Blank dashboard after login, data appears after manual refresh
+  - Possible causes: Race condition in data loading, session not ready, API timing issue
+  - Impact: Poor UX, requires manual refresh to see assignments
+  - Status: Investigating on STANDBY
 
 ### Technical Debt
 - **UI Terminology (TD-001):** ~50+ "attendant" references in UI (help pages, labels, buttons)

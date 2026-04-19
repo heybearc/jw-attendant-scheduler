@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
-import { useSession } from 'next-auth/react'
+import { useSession, signOut } from 'next-auth/react'
 import { GetServerSideProps } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../api/auth/[...nextauth]'
@@ -192,12 +192,17 @@ export default function VolunteerSelectEvent() {
 
           {/* Footer */}
           <div className="mt-8 text-center">
-            <Link
-              href="/volunteer/login"
-              className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+            <button
+              onClick={() => {
+                signOut({ callbackUrl: '/auth/signin?role=volunteer' })
+              }}
+              className="text-sm text-red-600 hover:text-red-800 font-medium inline-flex items-center gap-2"
             >
-              ← Back to Login
-            </Link>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              Sign Out
+            </button>
           </div>
 
           {/* Info Panel */}

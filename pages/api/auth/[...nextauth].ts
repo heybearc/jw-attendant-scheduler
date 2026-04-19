@@ -33,9 +33,28 @@ export const authOptions: NextAuthOptions = {
       }
     },
     // Required stub methods (not used with CredentialsProvider)
-    async getUserByEmail(email) { return null },
+    async getUserByEmail(email) {
+      // For EmailProvider, look up volunteer by email
+      const volunteer = await prisma.volunteers.findUnique({
+        where: { email }
+      })
+      if (!volunteer) return null
+      
+      return {
+        id: volunteer.id,
+        email: volunteer.email,
+        name: `${volunteer.firstName} ${volunteer.lastName}`,
+        emailVerified: null,
+        role: 'VOLUNTEER'
+      } as any
+    },
     async getUser(id) { return null },
     async getUserByAccount(providerAccountId) { return null },
+    async createUser(user) {
+      // For EmailProvider - user should already exist as volunteer
+      // This is called after email verification, just return the user
+      return user as any
+    },
     async updateUser(user) { return null as any },
     async linkAccount(account) { return null as any },
     async createSession(session) { return null as any },

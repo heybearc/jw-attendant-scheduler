@@ -9,8 +9,21 @@ export async function login(page: Page, email?: string, password?: string) {
   const testPassword = password || process.env.TEST_USER_PASSWORD || 'AdminPass123!';
   
   await page.goto('/auth/signin');
-  await page.fill('#email', testEmail);
-  await page.fill('#password', testPassword);
+  await page.waitForLoadState('networkidle');
+  
+  // Click Oversight role button (new signin page has role selector)
+  const oversightButton = page.locator('button:has-text("Oversight")');
+  if (await oversightButton.isVisible({ timeout: 2000 })) {
+    await oversightButton.click();
+    await page.waitForTimeout(500);
+  }
+  
+  // Wait for email field to be visible
+  await page.waitForSelector('input[id="oversight-email"]', { state: 'visible', timeout: 5000 });
+  
+  // Fill credentials
+  await page.fill('input[id="oversight-email"]', testEmail);
+  await page.fill('input[id="oversight-password"]', testPassword);
   await page.click('button[type="submit"]');
   await page.waitForURL(/\/(dashboard|events)/, { timeout: 10000 });
 }

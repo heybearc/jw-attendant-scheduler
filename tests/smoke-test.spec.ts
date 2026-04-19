@@ -21,12 +21,19 @@ test.describe('TheoShift - Quick Smoke Tests', () => {
     await page.goto('/auth/signin');
     await page.waitForLoadState('networkidle');
     
+    // Click Oversight role button
+    const oversightButton = page.locator('button:has-text("Oversight")');
+    if (await oversightButton.isVisible({ timeout: 2000 })) {
+      await oversightButton.click();
+      await page.waitForTimeout(500);
+    }
+    
     // Wait for form to be ready
-    await page.waitForSelector('input[id="email"]', { state: 'visible' });
+    await page.waitForSelector('input[id="oversight-email"]', { state: 'visible' });
     
     // Fill credentials
-    await page.fill('input[id="email"]', TEST_USER.email);
-    await page.fill('input[id="password"]', TEST_USER.password);
+    await page.fill('input[id="oversight-email"]', TEST_USER.email);
+    await page.fill('input[id="oversight-password"]', TEST_USER.password);
     
     // Submit and wait for navigation
     await Promise.all([
@@ -49,9 +56,14 @@ test.describe('TheoShift - Quick Smoke Tests', () => {
   test('Events page loads without errors', async ({ page }) => {
     await page.goto('/auth/signin');
     await page.waitForLoadState('networkidle');
-    await page.waitForSelector('input[id="email"]', { state: 'visible' });
-    await page.fill('input[id="email"]', TEST_USER.email);
-    await page.fill('input[id="password"]', TEST_USER.password);
+    const oversightButton = page.locator('button:has-text("Oversight")');
+    if (await oversightButton.isVisible({ timeout: 2000 })) {
+      await oversightButton.click();
+      await page.waitForTimeout(500);
+    }
+    await page.waitForSelector('input[id="oversight-email"]', { state: 'visible' });
+    await page.fill('input[id="oversight-email"]', TEST_USER.email);
+    await page.fill('input[id="oversight-password"]', TEST_USER.password);
     await Promise.all([
       page.waitForNavigation({ timeout: 15000 }),
       page.click('button[type="submit"]')
@@ -69,9 +81,14 @@ test.describe('TheoShift - Quick Smoke Tests', () => {
   test('Navigation works correctly', async ({ page }) => {
     await page.goto('/auth/signin');
     await page.waitForLoadState('networkidle');
-    await page.waitForSelector('input[id="email"]', { state: 'visible' });
-    await page.fill('input[id="email"]', TEST_USER.email);
-    await page.fill('input[id="password"]', TEST_USER.password);
+    const oversightButton = page.locator('button:has-text("Oversight")');
+    if (await oversightButton.isVisible({ timeout: 2000 })) {
+      await oversightButton.click();
+      await page.waitForTimeout(500);
+    }
+    await page.waitForSelector('input[id="oversight-email"]', { state: 'visible' });
+    await page.fill('input[id="oversight-email"]', TEST_USER.email);
+    await page.fill('input[id="oversight-password"]', TEST_USER.password);
     await Promise.all([
       page.waitForNavigation({ timeout: 15000 }),
       page.click('button[type="submit"]')

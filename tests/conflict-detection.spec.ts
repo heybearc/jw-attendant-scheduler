@@ -7,11 +7,20 @@ const TEST_USER = {
 
 async function login(page: any) {
   await page.goto('/auth/signin')
-  await page.waitForSelector('input[id="email"]', { state: 'visible' })
-  await page.fill('input[id="email"]', TEST_USER.email)
-  await page.fill('input[id="password"]', TEST_USER.password)
+  await page.waitForLoadState('networkidle')
+  
+  // Click Oversight role button
+  const oversightButton = page.locator('button:has-text("Oversight")')
+  if (await oversightButton.isVisible({ timeout: 2000 })) {
+    await oversightButton.click()
+    await page.waitForTimeout(500)
+  }
+  
+  await page.waitForSelector('input[id="oversight-email"]', { state: 'visible' })
+  await page.fill('input[id="oversight-email"]', TEST_USER.email)
+  await page.fill('input[id="oversight-password"]', TEST_USER.password)
   await Promise.all([
-    page.waitForNavigation({ timeout: 15000 }),
+    page.waitForNavigation({ waitUntil: 'networkidle' }),
     page.click('button[type="submit"]')
   ])
   await page.waitForTimeout(1000)

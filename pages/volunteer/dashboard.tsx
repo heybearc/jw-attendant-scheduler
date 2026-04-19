@@ -110,9 +110,19 @@ interface DashboardData {
   isIVSTeamMember?: boolean
 }
 
-export default function VolunteerDashboard() {
+interface VolunteerDashboardProps {
+  initialEventId?: string
+}
+
+export default function VolunteerDashboard({ initialEventId }: VolunteerDashboardProps) {
   const router = useRouter()
-  const { data: session, status } = useSession()
+  const { data: session, status } = useSession({
+    required: true,
+    onUnauthenticated() {
+      // Redirect to volunteer login, not admin login
+      router.push('/volunteer/login')
+    },
+  })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
@@ -147,33 +157,17 @@ export default function VolunteerDashboard() {
   }, [])
 
   useEffect(() => {
+    // Session is guaranteed to exist due to server-side check and useSession({ required: true })
     if (status === 'loading') {
       console.log('⏳ Waiting for session to load...')
       return
     }
     
-    if (status === 'unauthenticated' || !session) {
-      console.log('❌ Not authenticated, redirecting to login')
-      router.push('/volunteer/login')
-      return
+    if (session) {
+      console.log('✅ Session ready, loading dashboard for volunteer:', session.user.id)
+      loadDashboard()
     }
-    
-    if (session.user.role !== 'VOLUNTEER') {
-      console.log('❌ Not a volunteer, redirecting to login')
-      router.push('/volunteer/login')
-      return
-    }
-    
-    if (!session.user.id) {
-      console.error('❌ Session exists but no user ID - possible session corruption')
-      setError('Session error. Please log in again.')
-      setLoading(false)
-      return
-    }
-    
-    console.log('✅ Session ready, loading dashboard for volunteer:', session.user.id)
-    loadDashboard()
-  }, [status, session, router])
+  }, [status, session])
 
   const fetchAvailabilityRequests = async (eventId: string) => {
     try {
@@ -1242,8 +1236,25 @@ export default function VolunteerDashboard() {
   )
 }
 
-export async function getServerSideProps() {
+export async function getServerSideProps(context: any) {
+  const { getServerSession } = await import('next-auth')
+  const { authOptions } = await import('../api/auth/[...nextauth]')
+  
+  const session = await getServerSession(context.req, context.res, authOptions)
+  
+  // If no session or not a volunteer, redirect to volunteer login
+  if (!session || session.user.role !== 'VOLUNTEER') {
+    return {
+      redirect: {
+        destination: '/volunteer/login',
+        permanent: false,
+      },
+    }
+  }
+  
   return {
-    props: {}
+    props: {
+      initialEventId: context.query.eventId || null
+    }
   }
 }

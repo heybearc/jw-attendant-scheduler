@@ -67,16 +67,17 @@
 ## Known Issues
 
 ### Current
-- **Volunteer Login Redirect Loop** — Volunteers redirected to main login page after successful authentication
-  - Possible causes: Stale session tokens, NextAuth callback URL issues, session persistence
-  - Impact: Frustrating user experience, volunteers cannot access dashboard
-  - Status: Investigating on STANDBY
-  
-- **Volunteer Dashboard Empty Data** — Dashboard shows no data until page refresh
-  - Symptoms: Blank dashboard after login, data appears after manual refresh
-  - Possible causes: Race condition in data loading, session not ready, API timing issue
-  - Impact: Poor UX, requires manual refresh to see assignments
-  - Status: Investigating on STANDBY
+- **Volunteer Login via Node IP** — Cannot test volunteer login on STANDBY via node IP (http://10.92.3.24:3001)
+  - Root cause: NEXTAUTH_URL=https://theoshift.com forces Secure cookies (HTTPS only)
+  - Browser rejects secure cookies over HTTP connection to node IP
+  - Solution: Must test via domain (https://theoshift.com) after traffic switch
+  - Fixes implemented:
+    - ✅ Removed global NextAuth signIn page (prevents redirect to /auth/signin)
+    - ✅ Added server-side auth to volunteer dashboard (getServerSideProps)
+    - ✅ Manual redirect handling in volunteer login (redirect: false)
+    - ✅ CSRF token explicit fetching
+    - ✅ Comprehensive logging for debugging
+  - Status: Ready to test on LIVE or via domain after traffic switch
 
 ### Technical Debt
 - **UI Terminology (TD-001):** ~50+ "attendant" references in UI (help pages, labels, buttons)

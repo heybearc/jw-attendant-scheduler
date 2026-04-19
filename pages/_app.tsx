@@ -10,33 +10,15 @@ function AppContent({ Component, pageProps }: { Component: any; pageProps: any }
   // Track user activity for session management
   useActivityTracking()
   
-  // Register service worker for mobile/PWA users only
+  // Unregister service worker completely (debugging mobile issues)
   useEffect(() => {
     if ('serviceWorker' in navigator) {
-      // Detect if user is on mobile or in standalone mode (PWA)
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
-                          (window.navigator as any).standalone === true
-      
-      // Only register for mobile devices or when running as PWA
-      if (isMobile || isStandalone) {
-        navigator.serviceWorker
-          .register('/sw.js')
-          .then((registration) => {
-            console.log('[PWA] Service Worker registered for mobile/PWA')
-          })
-          .catch((error) => {
-            console.error('[PWA] Service Worker registration failed:', error)
-          })
-      } else {
-        // Unregister service worker on desktop browsers
-        navigator.serviceWorker.getRegistrations().then((registrations) => {
-          registrations.forEach((registration) => {
-            registration.unregister()
-            console.log('[PWA] Service Worker unregistered (desktop browser)')
-          })
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        registrations.forEach((registration) => {
+          registration.unregister()
+          console.log('[PWA] Service Worker unregistered')
         })
-      }
+      })
     }
   }, [])
   

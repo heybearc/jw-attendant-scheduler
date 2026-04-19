@@ -92,16 +92,19 @@ export default function SignIn() {
     setError('')
 
     try {
-      const callbackUrl = (router.query.callbackUrl as string) || '/volunteer/select-event'
-      
-      const result = await signIn('email', {
-        email: volunteerEmail,
-        callbackUrl,
-        redirect: false
+      // Call our custom magic link API
+      const response = await fetch('/api/auth/magic-link/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email: volunteerEmail })
       })
 
-      if (result?.error) {
-        setError('Email not registered. Please contact your coordinator.')
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.error || 'Failed to send magic link')
         setLoading(false)
       } else {
         setEmailSent(true)

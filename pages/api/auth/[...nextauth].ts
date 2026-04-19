@@ -132,10 +132,8 @@ export const authOptions: NextAuthOptions = {
       return true
     },
   },
-  pages: {
-    signIn: '/auth/signin',  // Admin login page
-    // Note: Volunteers use /volunteer/login (separate flow, no NextAuth page override needed)
-  },
+  // Don't set a global signIn page - let each page handle redirects via getServerSideProps
+  // Admin pages redirect to /auth/signin, volunteer pages redirect to /volunteer/login
   session: {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 days

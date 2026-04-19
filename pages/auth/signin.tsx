@@ -9,7 +9,27 @@ type VolunteerMethod = 'email' | 'pin'
 
 export default function SignIn() {
   const router = useRouter()
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
+  
+  // Auto-redirect authenticated users to their dashboard
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user) {
+      const callbackUrl = router.query.callbackUrl as string
+      
+      // If they have a callback URL, use it
+      if (callbackUrl) {
+        router.push(callbackUrl)
+        return
+      }
+      
+      // Otherwise, redirect based on role
+      if (session.user.role === 'VOLUNTEER') {
+        router.push('/volunteer/select-event')
+      } else {
+        router.push('/events/select')
+      }
+    }
+  }, [status, session, router])
   
   // Role selection
   const [role, setRole] = useState<UserRole>('oversight')
@@ -143,6 +163,18 @@ export default function SignIn() {
       setError('An error occurred. Please try again.')
       setLoading(false)
     }
+  }
+
+  // Show loading while checking authentication
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700">
+        <div className="text-white text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p className="text-lg">Loading...</p>
+        </div>
+      </div>
+    )
   }
 
   // Email sent confirmation screen

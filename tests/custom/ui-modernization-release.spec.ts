@@ -1,3 +1,4 @@
+import { loginAsAdmin } from '../login-helper'
 import { test, expect } from '@playwright/test'
 import { getValidEventId } from '../helpers/test-config'
 

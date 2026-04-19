@@ -1,3 +1,4 @@
+import { loginAsAdmin } from '../login-helper'
 import { test, expect } from '@playwright/test'
 
 /**
@@ -8,13 +9,7 @@ import { test, expect } from '@playwright/test'
 test.describe('FB-029: Volunteer Details Popup', () => {
   test.beforeEach(async ({ page }) => {
     // Login as admin
-    await page.goto(process.env.BASE_URL + '/auth/signin')
-    await page.type('#email', process.env.TEST_USER_EMAIL!)
-    await page.type('#password', process.env.TEST_USER_PASSWORD!)
-    await page.click('button[type="submit"]')
-    
-    // Navigate to event selection
-    await page.waitForURL('**/events/select', { timeout: 10000 })
+    await loginAsAdmin(page)
     
     // Click first event to enter event detail
     const firstEvent = page.locator('.bg-white.rounded-lg.shadow-lg').first()

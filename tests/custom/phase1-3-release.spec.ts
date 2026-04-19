@@ -1,3 +1,4 @@
+import { loginAsAdmin } from '../login-helper'
 /**
  * Phase 1-3 Release Tests
  * Tests for Event-Centric Configuration and Enhanced Cloning
@@ -11,11 +12,7 @@ const BASE_URL = getBaseUrl()
 test.describe('Phase 1-3: Event-Centric Configuration Release', () => {
   test.beforeEach(async ({ page }) => {
     // Login
-    await page.goto(`${BASE_URL}/auth/signin`)
-    await page.type('#email', 'admin@theoshift.local')
-    await page.type('#password', 'AdminPass123!')
-    await page.click('button[type="submit"]')
-    await page.waitForURL(/\/events|\/admin/, { timeout: 10000 })
+    await loginAsAdmin(page)
   })
 
   test('Event detail page loads without gray screen', async ({ page }) => {

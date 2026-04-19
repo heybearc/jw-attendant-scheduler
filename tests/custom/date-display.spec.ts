@@ -1,12 +1,9 @@
 import { test, expect } from '@playwright/test'
+import { loginAsAdmin } from '../login-helper'
 
 test.describe('Date Display Verification', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(process.env.BASE_URL || 'http://localhost:3001')
-    await page.type('#email', process.env.TEST_USER_EMAIL || '')
-    await page.type('#password', process.env.TEST_USER_PASSWORD || '')
-    await page.click('button[type="submit"]')
-    await page.waitForURL('**/events/select')
+    await loginAsAdmin(page)
   })
 
   test('event selection page shows correct dates', async ({ page }) => {

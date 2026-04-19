@@ -1,12 +1,9 @@
 import { test, expect } from '@playwright/test'
+import { loginAsAdmin } from '../login-helper'
 
 test.describe('Event Creation', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(process.env.BASE_URL + '/auth/signin')
-    await page.type('#email', process.env.TEST_USER_EMAIL || '')
-    await page.type('#password', process.env.TEST_USER_PASSWORD || '')
-    await page.click('button[type="submit"]')
-    await page.waitForURL('**/events/select')
+    await loginAsAdmin(page)
   })
 
   test('can create new event without errors', async ({ page }) => {

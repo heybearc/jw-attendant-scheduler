@@ -1,3 +1,4 @@
+import { loginAsAdmin } from '../login-helper'
 import { test, expect } from '@playwright/test'
 
 test.describe('Event Permissions UX', () => {

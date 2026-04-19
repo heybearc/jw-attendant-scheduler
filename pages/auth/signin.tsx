@@ -326,12 +326,15 @@ export default function SignIn() {
               </button>
 
               <div className="text-center">
-                <Link
-                  href="/request-access"
-                  className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
-                >
-                  Need access? Request an invitation
-                </Link>
+                <p className="text-sm text-gray-600">
+                  Need access?{' '}
+                  <a
+                    href="mailto:theoshift.team@gmail.com"
+                    className="text-blue-600 hover:text-blue-800 transition-colors font-medium"
+                  >
+                    Contact TheoShift Support
+                  </a>
+                </p>
               </div>
             </form>
           )}

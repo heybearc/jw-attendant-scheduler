@@ -36,13 +36,13 @@ export const authOptions: NextAuthOptions = {
     async getUserByEmail(email) {
       console.log('🔍 getUserByEmail called for:', email)
       
-      // First, look in users table (NextAuth standard)
+      // Look in users table (for admins/overseers with user accounts)
       const user = await prisma.users.findUnique({
         where: { email }
       })
       
       if (user) {
-        console.log('✅ getUserByEmail: found user in users table', user.firstName, user.lastName)
+        console.log('✅ getUserByEmail: found user', user.firstName, user.lastName)
         return {
           id: user.id,
           email: user.email,
@@ -52,71 +52,33 @@ export const authOptions: NextAuthOptions = {
         } as any
       }
       
-      // If not in users table, check if volunteer exists
+      // For volunteers without user accounts, return a temporary user object
+      // The signIn callback will validate they're a real volunteer
       const volunteer = await prisma.volunteers.findUnique({
         where: { email }
       })
       
-      if (!volunteer) {
-        console.log('❌ getUserByEmail: no user or volunteer found for', email)
-        return null
+      if (volunteer) {
+        console.log('✅ getUserByEmail: found volunteer (no user account)', volunteer.firstName, volunteer.lastName)
+        return {
+          id: volunteer.id,
+          email: volunteer.email,
+          name: `${volunteer.firstName} ${volunteer.lastName}`,
+          emailVerified: new Date(),
+          role: 'VOLUNTEER'
+        } as any
       }
       
-      // Volunteer exists but no user - will be created in createUser
-      console.log('✅ getUserByEmail: found volunteer (no user yet)', volunteer.firstName, volunteer.lastName)
-      return null // Return null so NextAuth calls createUser
+      console.log('❌ getUserByEmail: not found', email)
+      return null
     },
     async getUser(id) { return null },
     async getUserByAccount(providerAccountId) { return null },
     async createUser(user) {
-      console.log('🔨 createUser called with:', JSON.stringify(user))
-      
-      if (!user || !user.email) {
-        console.log('❌ createUser: no user or email provided')
-        return null as any
-      }
-      
-      // Look up volunteer by email
-      const volunteer = await prisma.volunteers.findUnique({
-        where: { email: user.email }
-      })
-      
-      if (!volunteer) {
-        console.log('❌ createUser: volunteer not found for', user.email)
-        return null as any
-      }
-      
-      // Create user record in users table and link to volunteer
-      const now = new Date()
-      const newUser = await prisma.users.create({
-        data: {
-          id: volunteer.id, // Use volunteer ID as user ID for consistency
-          email: volunteer.email,
-          firstName: volunteer.firstName,
-          lastName: volunteer.lastName,
-          name: `${volunteer.firstName} ${volunteer.lastName}`,
-          congregation: volunteer.congregation,
-          role: 'VOLUNTEER',
-          emailVerified: now,
-          isActive: true,
-          updatedAt: now
-        }
-      })
-      
-      // Link volunteer to user
-      await prisma.volunteers.update({
-        where: { id: volunteer.id },
-        data: { userId: newUser.id }
-      })
-      
-      console.log('✅ createUser: created user and linked to volunteer', newUser.id)
-      return {
-        id: newUser.id,
-        email: newUser.email,
-        name: newUser.name,
-        emailVerified: newUser.emailVerified,
-        role: newUser.role
-      } as any
+      console.log('🔨 createUser called - just returning user object (no DB record created)')
+      // Don't create user records for volunteers - just return the user object
+      // The signIn callback will handle validation
+      return user as any
     },
     async updateUser(user) { return null as any },
     async linkAccount(account) { return null as any },

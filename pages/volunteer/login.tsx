@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
 import Link from 'next/link'
-import { signIn } from 'next-auth/react'
+import { signIn, getCsrfToken } from 'next-auth/react'
 
 interface VolunteerLoginForm {
   firstName: string
@@ -15,12 +15,21 @@ export default function VolunteerLogin() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [csrfToken, setCsrfToken] = useState<string | null>(null)
   const [formData, setFormData] = useState<VolunteerLoginForm>({
     firstName: '',
     lastName: '',
     congregation: '',
     pin: ''
   })
+
+  // Fetch CSRF token on mount
+  useEffect(() => {
+    getCsrfToken().then(token => {
+      console.log('🔐 CSRF token fetched:', token ? 'present' : 'missing')
+      setCsrfToken(token || null)
+    })
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

@@ -144,8 +144,11 @@ export const authOptions: NextAuthOptions = {
       return true
     },
   },
-  // Don't set a global signIn page - let each page handle redirects via getServerSideProps
-  // Admin pages redirect to /auth/signin, volunteer pages redirect to /volunteer/login
+  pages: {
+    // Don't set signIn page - let server-side redirects handle it
+    // This allows NextAuth CSRF to work while preventing automatic redirects
+    error: '/auth/error',
+  },
   session: {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 days

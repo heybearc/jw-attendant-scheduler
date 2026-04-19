@@ -1,5 +1,49 @@
 # TheoShift Backlog & Known Issues
 
+## Database Cleanup - Remove PIN Column
+
+**Status:** Scheduled Cleanup  
+**Priority:** Low  
+**Created:** 2026-04-19  
+**Scheduled For:** 2026-05-19 (30 days after magic link release)
+
+### Background
+PIN login was removed in v4.17.0 and replaced with magic link authentication. The `pin` column in the `volunteers` table still exists but is no longer used.
+
+### Why We're Keeping It (For Now)
+1. **Safety net** - Magic link just released, gives us rollback capability
+2. **Migration period** - Allows time to verify magic link works for all volunteers
+3. **No harm** - Data is not exposed, not a security risk
+4. **Historical reference** - May be useful for troubleshooting
+
+### When to Remove
+**After 30-60 days** of successful magic link usage (around May 19-June 19, 2026):
+- ✅ Confirm no volunteers are having login issues
+- ✅ Verify magic link works for all edge cases
+- ✅ No rollback needed
+
+### Cleanup Tasks
+1. Create Prisma migration to drop `pin` column from `volunteers` table
+2. Remove any PIN-related database constraints
+3. Clean up any PIN-related indexes
+4. Update any remaining database documentation
+
+### Migration Command (When Ready)
+```prisma
+// prisma/migrations/YYYYMMDDHHMMSS_remove_pin_column/migration.sql
+ALTER TABLE "volunteers" DROP COLUMN IF EXISTS "pin";
+```
+
+### Acceptance Criteria
+- [ ] 30+ days since magic link release
+- [ ] No reported login issues from volunteers
+- [ ] Magic link authentication confirmed working
+- [ ] Migration created and tested
+- [ ] Column dropped from database
+- [ ] Database size reduced (minimal impact)
+
+---
+
 ## PWA Service Worker Issue
 
 **Status:** Known Issue / Backlog  

@@ -1,8 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../../src/lib/prisma'
-import { getServerSession } from 'next-auth/next'
-import { authOptions } from '../[...nextauth]'
-import { getToken } from 'next-auth/jwt'
+import { encode } from 'next-auth/jwt'
 
 export default async function handler(
   req: NextApiRequest,
@@ -28,29 +26,26 @@ export default async function handler(
       return res.redirect('/auth/signin?error=VolunteerNotFound')
     }
 
-    // Create a signed JWT token manually
-    const jwt = require('jsonwebtoken')
     const secret = process.env.NEXTAUTH_SECRET
     
     if (!secret) {
       throw new Error('NEXTAUTH_SECRET not configured')
     }
 
-    // Create session token
-    const token = jwt.sign(
-      {
+    // Create session token using NextAuth's encode function
+    const token = await encode({
+      token: {
         sub: volunteer.id,
         email: volunteer.email,
         name: `${volunteer.firstName} ${volunteer.lastName}`,
         role: 'VOLUNTEER',
-        congregation: volunteer.congregation,
-        iat: Math.floor(Date.now() / 1000),
-        exp: Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60) // 30 days
-      },
-      secret
-    )
+        congregation: volunteer.congregation
+      } as any,
+      secret,
+      maxAge: 30 * 24 * 60 * 60 // 30 days
+    })
 
-    // Set the session cookie
+    // Set the session cookie with NextAuth's expected format
     const cookieName = process.env.NODE_ENV === 'production' 
       ? '__Secure-next-auth.session-token'
       : 'next-auth.session-token'

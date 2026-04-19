@@ -628,7 +628,7 @@ Also fixed real production bug:
 - Repository significantly cleaner and organized
 
 ### Next steps
-1. Review remaining feedback items in IMPLEMENTATION-PLAN.md
+1. Review remaining feedback items in PLAN.md
 2. Pick next priority feature from backlog
 3. Consider version bump to v4.15.9 for the 4 bug fixes (optional - fixes are stable)
 4. Continue normal development workflow
@@ -674,7 +674,7 @@ Also fixed real production bug:
 ---
 
 ## Exact Next Command
-**Next session:** Run `/start-day` to load context, then review IMPLEMENTATION-PLAN.md for next priority feature.
+**Next session:** Run `/start-day` to load context, then review PLAN.md for next priority feature.
 
 **Current state:**
 - 4 bug fixes deployed to LIVE (GREEN at 10.92.3.22)

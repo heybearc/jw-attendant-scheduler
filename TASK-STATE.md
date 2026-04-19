@@ -2,15 +2,15 @@
 
 **Last updated:** 2026-04-19  
 **Current branch:** main  
-**Working on:** Volunteer Login & Dashboard Fixes — READY FOR TESTING
+**Working on:** Magic Link Authentication — RELEASED TO PRODUCTION ✅
 
 ---
 
 ## Current Task
-**Volunteer Login & Dashboard Fixes** — READY FOR TESTING
+**Magic Link Authentication** — RELEASED TO PRODUCTION ✅
 
 ### What I'm doing right now
-Completed investigation and fixes for volunteer login issues. All fixes deployed to STANDBY. Discovered testing limitation (HTTPS required) and identified need to rethink authentication architecture.
+Successfully released v4.17.0 with magic link authentication for volunteers. PIN login completely removed from UI. Both environments synced and healthy.
 
 **Root causes identified:**
 1. **Login redirect to admin page** - Global NextAuth signIn page applied to all users
@@ -39,7 +39,22 @@ Completed investigation and fixes for volunteer login issues. All fixes deployed
 
 ### Recent completions
 
-**Today (2026-04-19) - Volunteer Login & Dashboard Investigation:**
+**Today (2026-04-19) - Magic Link Authentication Release (v4.17.0):**
+- ✅ Implemented magic link authentication for volunteers (passwordless login)
+- ✅ Removed PIN login UI completely from all pages
+- ✅ Updated volunteer management pages (removed PIN features, added info banner)
+- ✅ Updated help documentation (volunteer-portal.tsx)
+- ✅ Added support contact information throughout app
+- ✅ Improved UX (auto-redirect, sign-out buttons)
+- ✅ Fixed all E2E tests for new signin flow (10 test files updated)
+- ✅ Created universal login helper for tests (login-helper.ts)
+- ✅ Version bumped to v4.17.0 with comprehensive release notes
+- ✅ Released to LIVE via traffic switch (BLUE now LIVE at 10.92.3.24)
+- ✅ Synced STANDBY (GREEN) to v4.17.0
+- ✅ Both environments healthy and running v4.17.0
+- ✅ Added PIN cleanup task to backlog (scheduled for May 19, 2026)
+
+**Earlier Today (2026-04-19) - Volunteer Login & Dashboard Investigation:**
 - ✅ Investigated volunteer login redirect issue (redirecting to admin page)
 - ✅ Investigated dashboard empty data issue (no data until refresh)
 - ✅ Identified root causes for both problems
@@ -674,27 +689,28 @@ Also fixed real production bug:
 - Repository significantly cleaner and organized
 
 ### Next steps
-1. **DECISION REQUIRED:** Choose volunteer authentication approach
-   - **Option A (Recommended):** Implement magic link authentication
-   - **Option B:** Keep PIN authentication, test fixes on LIVE
-2. If magic link chosen: Implement EmailProvider in NextAuth
-3. If keeping PIN: Test volunteer login fixes via domain after traffic switch
-4. Monitor production for any issues with current fixes
-5. Address dashboard data loading issue (if still present after auth fixes)
+1. Monitor production for volunteer login issues (magic link authentication)
+2. Collect user feedback on new passwordless login experience
+3. Review backlog for next priority feature
+4. Consider PWA service worker re-enablement (see BACKLOG.md)
+5. Schedule PIN column cleanup for May 19, 2026 (30 days after release)
 
 ## Exact Next Command
-**Tomorrow morning:** Review authentication approach recommendation in VOLUNTEER-LOGIN-FIXES.md and decide between magic link (implement) or keep PIN (test on LIVE).
+**Tomorrow morning:** Run `/start-day` to load context, then monitor production for any volunteer login issues. Review BACKLOG.md for next priority feature.
 
 ---
 
 ## Known Issues
 **Current:**
-- **Volunteer Login Testing Limitation** - Cannot test via node IP (http://10.92.3.24:3001)
-  - Root cause: NEXTAUTH_URL=https://theoshift.com forces Secure cookies (HTTPS only)
-  - Browser rejects secure cookies over HTTP connection to node IP
-  - Solution: Must test via domain (https://theoshift.com) after traffic switch
-  - Status: All fixes deployed to STANDBY, ready for testing via domain
-  - **This is correct security behavior, not a bug**
+- **PWA Service Worker Disabled** - See BACKLOG.md for details
+  - Interferes with magic link authentication on mobile
+  - Temporarily disabled for all users
+  - Investigation needed for conditional re-enablement
+  
+- **PIN Column in Database** - Scheduled for cleanup May 19, 2026
+  - PIN data still exists but not used (no UI access)
+  - Keeping as safety net during magic link migration period
+  - See BACKLOG.md for cleanup tasks
 
 **Infrastructure Notes:**
 - If a TheoShift node is ever rebuilt, PM2 must be started with correct `--name` flag:
@@ -731,14 +747,24 @@ Also fixed real production bug:
 ---
 
 ## Exact Next Command
-**Next session:** Run `/start-day` to load context, then review PLAN.md for next priority feature.
+**Next session:** Run `/start-day` to load context, then monitor production for volunteer login issues.
 
 **Current state:**
-- 4 bug fixes deployed to LIVE (GREEN at 10.92.3.22)
-- STANDBY (BLUE at 10.92.3.24) synced
-- Both environments healthy
-- 2-day monitoring period complete - no issues
-- All fixes confirmed stable in production
-- Ready for next development cycle
+- v4.17.0 deployed to LIVE (BLUE at 10.92.3.24)
+- STANDBY (GREEN at 10.92.3.22) synced to v4.17.0
+- Both environments healthy and running same version
+- Magic link authentication live in production
+- PIN login removed from UI
+- Help documentation updated
+- Ready for user feedback and monitoring
 
-**Known lint issue (pre-existing, non-blocking):** `positions.tsx` line 677 - `Argument of type 'string' is not assignable to parameter of type 'never'`
+**Recent commits (today):**
+- `559878de` - docs: Add PIN column cleanup to backlog
+- `959137a2` - Release v4.17.0 - Magic Link Authentication
+- `f6b81f48` - fix: Complete login helper migration for remaining test files
+- `2340e451` - fix: Create universal login helper for all E2E tests
+- `8b0258a0` - fix: Update E2E tests for new signin page with role selector
+- `3a2e0b24` - feat: Remove PIN login features from volunteer management
+- `95ba4dc7` - fix: Replace 'Request Access' placeholder link with support contact
+- `8fafdb50` - fix: Change support email link text to 'TheoShift Support'
+- `f765349e` - feat: Remove PIN login, keep magic link only

@@ -34,12 +34,18 @@ export const authOptions: NextAuthOptions = {
     },
     // Required stub methods (not used with CredentialsProvider)
     async getUserByEmail(email) {
+      console.log('🔍 getUserByEmail called for:', email)
       // For EmailProvider, look up volunteer by email
       const volunteer = await prisma.volunteers.findUnique({
         where: { email }
       })
-      if (!volunteer) return null
       
+      if (!volunteer) {
+        console.log('❌ getUserByEmail: volunteer not found for', email)
+        return null
+      }
+      
+      console.log('✅ getUserByEmail: found volunteer', volunteer.firstName, volunteer.lastName)
       return {
         id: volunteer.id,
         email: volunteer.email,

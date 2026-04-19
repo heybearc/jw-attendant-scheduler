@@ -57,9 +57,32 @@ export const authOptions: NextAuthOptions = {
     async getUser(id) { return null },
     async getUserByAccount(providerAccountId) { return null },
     async createUser(user) {
+      console.log('🔨 createUser called with:', JSON.stringify(user))
       // For EmailProvider - user should already exist as volunteer
-      // This is called after email verification, just return the user
-      return user as any
+      // If user is null, try to find by email
+      if (!user || !user.email) {
+        console.log('❌ createUser: no user or email provided')
+        return null as any
+      }
+      
+      // Look up volunteer by email
+      const volunteer = await prisma.volunteers.findUnique({
+        where: { email: user.email }
+      })
+      
+      if (!volunteer) {
+        console.log('❌ createUser: volunteer not found for', user.email)
+        return null as any
+      }
+      
+      console.log('✅ createUser: found volunteer', volunteer.firstName, volunteer.lastName)
+      return {
+        id: volunteer.id,
+        email: volunteer.email,
+        name: `${volunteer.firstName} ${volunteer.lastName}`,
+        emailVerified: new Date(),
+        role: 'VOLUNTEER'
+      } as any
     },
     async updateUser(user) { return null as any },
     async linkAccount(account) { return null as any },

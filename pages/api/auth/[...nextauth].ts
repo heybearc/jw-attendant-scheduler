@@ -112,6 +112,14 @@ export const authOptions: NextAuthOptions = {
     }),
     // Volunteer: Magic Link (NEW)
     EmailProvider({
+      server: {
+        host: 'smtp.gmail.com',
+        port: 587,
+        auth: {
+          user: 'placeholder@gmail.com',
+          pass: 'placeholder'
+        }
+      },
       from: process.env.EMAIL_FROM || 'TheoShift <noreply@theoshift.com>',
       async sendVerificationRequest({ identifier, url, provider }) {
         console.log('📧 Magic link requested for:', identifier)

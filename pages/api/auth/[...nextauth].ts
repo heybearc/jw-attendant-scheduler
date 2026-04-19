@@ -75,10 +75,29 @@ export const authOptions: NextAuthOptions = {
     async getUser(id) { return null },
     async getUserByAccount(providerAccountId) { return null },
     async createUser(user) {
-      console.log('🔨 createUser called - just returning user object (no DB record created)')
-      // Don't create user records for volunteers - just return the user object
-      // The signIn callback will handle validation
-      return user as any
+      // NextAuth calls this when getUserByEmail returns null
+      // We need to look up the volunteer and return a proper user object
+      if (!user || !user.email) {
+        return null as any
+      }
+      
+      // Look up volunteer by email
+      const volunteer = await prisma.volunteers.findUnique({
+        where: { email: user.email }
+      })
+      
+      if (!volunteer) {
+        return null as any
+      }
+      
+      // Return user object with all required fields
+      return {
+        id: volunteer.id,
+        email: volunteer.email,
+        name: `${volunteer.firstName} ${volunteer.lastName}`,
+        emailVerified: new Date(),
+        role: 'VOLUNTEER'
+      } as any
     },
     async updateUser(user) { return null as any },
     async linkAccount(account) { return null as any },

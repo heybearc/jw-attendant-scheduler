@@ -1,22 +1,68 @@
 # TheoShift Task State
 
-**Last updated:** 2026-04-18  
+**Last updated:** 2026-04-19  
 **Current branch:** main  
-**Working on:** Monitoring production after bug fixes — ALL STABLE
+**Working on:** Volunteer Login & Dashboard Fixes — READY FOR TESTING
 
 ---
 
 ## Current Task
-**Production Monitoring** — COMPLETE
+**Volunteer Login & Dashboard Fixes** — READY FOR TESTING
 
-### What was done
-Monitored production for 2 days after deploying 4 critical bug fixes. No issues reported. All fixes working as expected in production.
+### What I'm doing right now
+Completed investigation and fixes for volunteer login issues. All fixes deployed to STANDBY. Discovered testing limitation (HTTPS required) and identified need to rethink authentication architecture.
 
-**Completed feedback items:**
-- ✅ FB-023: Early Check-In tab visibility (IVS module check)
-- ✅ Auto Assign button always visible
-- ✅ Multiple volunteers per shift feature
-- ✅ Database shutdown error documented (infrastructure issue)
+**Root causes identified:**
+1. **Login redirect to admin page** - Global NextAuth signIn page applied to all users
+2. **Dashboard empty data** - Client-side only auth created race conditions
+3. **CSRF validation** - Token not being explicitly fetched
+4. **Architecture complexity** - Dual auth (admin credentials + volunteer PIN) creates conflicts
+
+**All fixes implemented:**
+- ✅ Removed global NextAuth signIn page (prevents redirect to /auth/signin)
+- ✅ Added server-side auth to volunteer dashboard (getServerSideProps)
+- ✅ Manual redirect handling in volunteer login (redirect: false)
+- ✅ CSRF token explicit fetching
+- ✅ Added middleware for volunteer route protection
+- ✅ Comprehensive logging for debugging
+
+**Testing limitation discovered:**
+- Cannot test via node IP (http://10.92.3.24:3001) due to HTTPS/Secure cookie requirement
+- This is correct security behavior for production
+- Must test via domain (https://theoshift.com) after traffic switch
+
+**Architecture recommendation:**
+- Magic link authentication for volunteers (industry standard)
+- Eliminates password management burden
+- Simplifies authentication flow
+- Better security and UX
+
+### Recent completions
+
+**Today (2026-04-19) - Volunteer Login & Dashboard Investigation:**
+- ✅ Investigated volunteer login redirect issue (redirecting to admin page)
+- ✅ Investigated dashboard empty data issue (no data until refresh)
+- ✅ Identified root causes for both problems
+- ✅ Implemented 6 comprehensive fixes:
+  1. Removed global NextAuth signIn page configuration
+  2. Added server-side authentication to volunteer dashboard
+  3. Manual redirect handling in volunteer login
+  4. CSRF token explicit fetching
+  5. Added middleware for volunteer route protection
+  6. Comprehensive logging throughout auth flow
+- ✅ Created detailed documentation (VOLUNTEER-LOGIN-FIXES.md)
+- ✅ Updated PLAN.md with current status
+- ✅ Deployed all fixes to STANDBY (6 commits)
+- ✅ Analyzed authentication architecture
+- ✅ Recommended magic link authentication for volunteers
+- ✅ All fixes ready for testing via domain after traffic switch
+
+**Earlier (2026-04-18) - Production Monitoring:**
+- ✅ Monitored production for 2 days after deploying 4 critical bug fixes
+- ✅ No issues reported with Early Check-In tab visibility
+- ✅ No issues reported with availability request scoping
+- ✅ No issues reported with Select All filtering
+- ✅ All fixes confirmed stable in production
 
 ### Test Suite Status (2026-02-19) — CLEAN ✅
 **131 passed, 25 skipped (intentional), 0 failed**
@@ -628,16 +674,27 @@ Also fixed real production bug:
 - Repository significantly cleaner and organized
 
 ### Next steps
-1. Review remaining feedback items in PLAN.md
-2. Pick next priority feature from backlog
-3. Consider version bump to v4.15.9 for the 4 bug fixes (optional - fixes are stable)
-4. Continue normal development workflow
+1. **DECISION REQUIRED:** Choose volunteer authentication approach
+   - **Option A (Recommended):** Implement magic link authentication
+   - **Option B:** Keep PIN authentication, test fixes on LIVE
+2. If magic link chosen: Implement EmailProvider in NextAuth
+3. If keeping PIN: Test volunteer login fixes via domain after traffic switch
+4. Monitor production for any issues with current fixes
+5. Address dashboard data loading issue (if still present after auth fixes)
+
+## Exact Next Command
+**Tomorrow morning:** Review authentication approach recommendation in VOLUNTEER-LOGIN-FIXES.md and decide between magic link (implement) or keep PIN (test on LIVE).
 
 ---
 
 ## Known Issues
 **Current:**
-- None - All systems operational
+- **Volunteer Login Testing Limitation** - Cannot test via node IP (http://10.92.3.24:3001)
+  - Root cause: NEXTAUTH_URL=https://theoshift.com forces Secure cookies (HTTPS only)
+  - Browser rejects secure cookies over HTTP connection to node IP
+  - Solution: Must test via domain (https://theoshift.com) after traffic switch
+  - Status: All fixes deployed to STANDBY, ready for testing via domain
+  - **This is correct security behavior, not a bug**
 
 **Infrastructure Notes:**
 - If a TheoShift node is ever rebuilt, PM2 must be started with correct `--name` flag:

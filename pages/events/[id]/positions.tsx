@@ -126,6 +126,8 @@ interface Volunteer {
   isActive: boolean
   overseerId?: string | null
   keymanId?: string | null
+  isOverseer?: boolean
+  isKeyman?: boolean
   overseer?: {
     id: string
     firstName: string
@@ -2460,11 +2462,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                           >
                             <option value="">No Overseer</option>
-                            {attendants.filter(att => 
-                              att.isActive && 
-                              Array.isArray(att.formsOfService) && 
-                              att.formsOfService.some(form => form.toLowerCase().includes('overseer'))
-                            ).map(overseer => (
+                            {attendants.filter(att => att.isActive && att.isOverseer).map(overseer => (
                               <option key={overseer.id} value={overseer.id}>
                                 {overseer.firstName} {overseer.lastName}
                               </option>
@@ -2478,11 +2476,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                           >
                             <option value="">No Keyman</option>
-                            {attendants.filter(att => 
-                              att.isActive && 
-                              Array.isArray(att.formsOfService) && 
-                              att.formsOfService.some(form => form.toLowerCase().includes('keyman'))
-                            ).map(keyman => (
+                            {attendants.filter(att => att.isActive && att.isKeyman).map(keyman => (
                               <option key={keyman.id} value={keyman.id}>
                                 {keyman.firstName} {keyman.lastName}
                               </option>
@@ -2520,7 +2514,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                         >
                           <option value="">No change</option>
-                          {attendants?.filter(att => att.isActive && Array.isArray(att.formsOfService) && att.formsOfService.some(form => form.toLowerCase() === 'overseer')).map(attendant => (
+                          {attendants?.filter(att => att.isActive && att.isOverseer).map(attendant => (
                             <option key={attendant.id} value={attendant.id}>
                               {attendant.firstName} {attendant.lastName}
                             </option>
@@ -2537,7 +2531,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                         >
                           <option value="">No change</option>
-                          {attendants?.filter(att => att.isActive && Array.isArray(att.formsOfService) && att.formsOfService.some(form => form.toLowerCase() === 'keyman')).map(attendant => (
+                          {attendants?.filter(att => att.isActive && att.isKeyman).map(attendant => (
                             <option key={attendant.id} value={attendant.id}>
                               {attendant.firstName} {attendant.lastName}
                             </option>

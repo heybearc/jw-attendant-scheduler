@@ -305,12 +305,12 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
       (filters.isActive === 'false' && !attendant.isActive)
     
     const matchesOverseer = filters.overseerId === '' ||
-      (filters.overseerId === 'none' && !attendant.isOverseer) ||
-      (filters.overseerId !== '' && filters.overseerId !== 'none' && attendant.id === filters.overseerId)
+      (filters.overseerId === 'none' && !attendant.overseerId) ||
+      (filters.overseerId !== '' && filters.overseerId !== 'none' && attendant.overseerId === filters.overseerId)
     
     const matchesKeyman = filters.keymanId === '' ||
-      (filters.keymanId === 'none' && !attendant.isKeyman) ||
-      (filters.keymanId !== '' && filters.keymanId !== 'none' && attendant.id === filters.keymanId)
+      (filters.keymanId === 'none' && !attendant.keymanId) ||
+      (filters.keymanId !== '' && filters.keymanId !== 'none' && attendant.keymanId === filters.keymanId)
     
     const matchesFormsOfService = filters.formsOfService.length === 0 ||
       (Array.isArray(attendant.formsOfService) && 

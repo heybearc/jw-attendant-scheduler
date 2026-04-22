@@ -1,45 +1,27 @@
 # TheoShift Task State
 
-**Last updated:** 2026-04-19  
+**Last updated:** 2026-04-22  
 **Current branch:** main  
-**Working on:** Magic Link Authentication — RELEASED TO PRODUCTION ✅
+**Working on:** Bug Fixes — Filter & Bulk Edit — RELEASED TO PRODUCTION ✅
 
 ---
 
 ## Current Task
-**Magic Link Authentication** — RELEASED TO PRODUCTION ✅
+**Bug Fixes - Filter & Bulk Edit** — RELEASED TO PRODUCTION ✅
 
 ### What I'm doing right now
-Successfully released v4.17.0 with magic link authentication for volunteers. PIN login completely removed from UI. Both environments synced and healthy.
-
-**Root causes identified:**
-1. **Login redirect to admin page** - Global NextAuth signIn page applied to all users
-2. **Dashboard empty data** - Client-side only auth created race conditions
-3. **CSRF validation** - Token not being explicitly fetched
-4. **Architecture complexity** - Dual auth (admin credentials + volunteer PIN) creates conflicts
-
-**All fixes implemented:**
-- ✅ Removed global NextAuth signIn page (prevents redirect to /auth/signin)
-- ✅ Added server-side auth to volunteer dashboard (getServerSideProps)
-- ✅ Manual redirect handling in volunteer login (redirect: false)
-- ✅ CSRF token explicit fetching
-- ✅ Added middleware for volunteer route protection
-- ✅ Comprehensive logging for debugging
-
-**Testing limitation discovered:**
-- Cannot test via node IP (http://10.92.3.24:3001) due to HTTPS/Secure cookie requirement
-- This is correct security behavior for production
-- Must test via domain (https://theoshift.com) after traffic switch
-
-**Architecture recommendation:**
-- Magic link authentication for volunteers (industry standard)
-- Eliminates password management burden
-- Simplifies authentication flow
-- Better security and UX
+Two bug fixes shipped and released to production. Both environments synced and healthy. No open bugs.
 
 ### Recent completions
 
-**Today (2026-04-19) - Magic Link Authentication Release (v4.17.0):**
+**Today (2026-04-22) - Bug Fixes Released:**
+- ✅ Fixed overseer/keyman filter on volunteers page (was showing the overseer themselves, now shows volunteers assigned to them)
+- ✅ Fixed "No Overseer"/"No Keyman" filter option (was checking wrong field)
+- ✅ Fixed bulk edit positions modal — overseer/keyman dropdowns showed no names (was filtering by formsOfService string instead of isOverseer/isKeyman flags)
+- ✅ Added isOverseer/isKeyman to Volunteer interface in positions.tsx
+- ✅ Released and synced both environments — BLUE=LIVE, GREEN=STANDBY
+
+**2026-04-19 - Magic Link Authentication Release (v4.17.0):**
 - ✅ Implemented magic link authentication for volunteers (passwordless login)
 - ✅ Removed PIN login UI completely from all pages
 - ✅ Updated volunteer management pages (removed PIN features, added info banner)
@@ -689,14 +671,14 @@ Also fixed real production bug:
 - Repository significantly cleaner and organized
 
 ### Next steps
-1. Monitor production for volunteer login issues (magic link authentication)
-2. Collect user feedback on new passwordless login experience
-3. Review backlog for next priority feature
-4. Consider PWA service worker re-enablement (see BACKLOG.md)
-5. Schedule PIN column cleanup for May 19, 2026 (30 days after release)
+1. Monitor production for any user-reported issues
+2. Collect user feedback on magic link login experience
+3. Review BACKLOG.md for next priority feature
+4. Consider PWA service worker re-enablement
+5. PIN column cleanup scheduled for May 19, 2026 (see BACKLOG.md)
 
 ## Exact Next Command
-**Tomorrow morning:** Run `/start-day` to load context, then monitor production for any volunteer login issues. Review BACKLOG.md for next priority feature.
+**Tomorrow morning:** Run `/start-day` to load context. No open bugs — review BACKLOG.md for next priority feature to work on.
 
 ---
 
@@ -747,24 +729,16 @@ Also fixed real production bug:
 ---
 
 ## Exact Next Command
-**Next session:** Run `/start-day` to load context, then monitor production for volunteer login issues.
+**Next session:** Run `/start-day` to load context. No open bugs — pick next feature from BACKLOG.md.
 
 **Current state:**
-- v4.17.0 deployed to LIVE (BLUE at 10.92.3.24)
-- STANDBY (GREEN at 10.92.3.22) synced to v4.17.0
-- Both environments healthy and running same version
-- Magic link authentication live in production
-- PIN login removed from UI
-- Help documentation updated
-- Ready for user feedback and monitoring
+- BLUE=LIVE (10.92.3.24), GREEN=STANDBY (10.92.3.22)
+- Both environments healthy and synced
+- Magic link authentication live in production (v4.17.0)
+- All recent bug fixes deployed
 
-**Recent commits (today):**
-- `559878de` - docs: Add PIN column cleanup to backlog
+**Recent commits:**
+- `cfe27259` - fix: Bulk edit overseer/keyman dropdowns show names in positions page
+- `ad583856` - fix: Overseer and keyman filters now show assigned volunteers
+- `f7eacb2c` - docs: End of day update - v4.17.0 magic link release complete
 - `959137a2` - Release v4.17.0 - Magic Link Authentication
-- `f6b81f48` - fix: Complete login helper migration for remaining test files
-- `2340e451` - fix: Create universal login helper for all E2E tests
-- `8b0258a0` - fix: Update E2E tests for new signin page with role selector
-- `3a2e0b24` - feat: Remove PIN login features from volunteer management
-- `95ba4dc7` - fix: Replace 'Request Access' placeholder link with support contact
-- `8fafdb50` - fix: Change support email link text to 'TheoShift Support'
-- `f765349e` - feat: Remove PIN login, keep magic link only

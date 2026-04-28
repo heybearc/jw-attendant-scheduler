@@ -270,6 +270,11 @@ For issues or questions:
 
 ## 📝 Version History
 
+- **v4.17.1** (2026-04-28) - Volunteers Oversight Removal Fixes
+  - Fixed removing overseer/keyman assignments on the volunteers page when existing dependent assignments were present
+  - Fixed oversight updates for inactive volunteers so cleanup actions can still be completed
+  - Improved volunteers-page error alerts to show actionable backend error messages
+
 - **v4.16.0** (2026-04-19) - Magic Link Authentication & Unified Login
   - NEW: Magic link (passwordless) authentication for volunteers
   - NEW: Unified login page with Oversight/Volunteer role toggle

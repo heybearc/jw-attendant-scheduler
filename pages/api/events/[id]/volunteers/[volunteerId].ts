@@ -204,6 +204,72 @@ async function handleUpdateVolunteer(req: NextApiRequest, res: NextApiResponse, 
       })
 
       console.log(`[ROLE-UPDATE] updateMany result: count=${updated.count}`)
+
+      // If a volunteer is no longer an overseer/keyman for this event, clear dependent assignments.
+      // This prevents stale references that block role removal in the volunteers UI.
+      if (isOverseer === false) {
+        await prisma.event_volunteers.updateMany({
+          where: {
+            eventId: eventId,
+            overseerId: volunteerId
+          },
+          data: {
+            overseerId: null
+          }
+        })
+
+        await prisma.position_assignments.updateMany({
+          where: {
+            position: { eventId: eventId },
+            overseerId: volunteerId
+          },
+          data: {
+            overseerId: null
+          }
+        })
+
+        await prisma.position_oversight_assignments.updateMany({
+          where: {
+            eventId: eventId,
+            overseerId: volunteerId
+          },
+          data: {
+            overseerId: null
+          }
+        })
+      }
+
+      if (isKeyman === false) {
+        await prisma.event_volunteers.updateMany({
+          where: {
+            eventId: eventId,
+            keymanId: volunteerId
+          },
+          data: {
+            keymanId: null
+          }
+        })
+
+        await prisma.position_assignments.updateMany({
+          where: {
+            position: { eventId: eventId },
+            keymanId: volunteerId
+          },
+          data: {
+            keymanId: null
+          }
+        })
+
+        await prisma.position_oversight_assignments.updateMany({
+          where: {
+            eventId: eventId,
+            keymanId: volunteerId
+          },
+          data: {
+            keymanId: null
+          }
+        })
+      }
     } else {
       console.log(`[ROLE-UPDATE] Skipped — isOverseer and isKeyman both undefined in request body`)
     }
@@ -255,6 +321,67 @@ async function handleDeleteVolunteer(req: NextApiRequest, res: NextApiResponse, 
       where: {
         volunteerId,
         positionId: { in: positionIds }
+      }
+    })
+
+    // Clear event-scoped oversight references where this volunteer is assigned as overseer/keyman.
+    await prisma.event_volunteers.updateMany({
+      where: {
+        eventId,
+        overseerId: volunteerId
+      },
+      data: {
+        overseerId: null
+      }
+    })
+
+    await prisma.event_volunteers.updateMany({
+      where: {
+        eventId,
+        keymanId: volunteerId
+      },
+      data: {
+        keymanId: null
+      }
+    })
+
+    await prisma.position_assignments.updateMany({
+      where: {
+        positionId: { in: positionIds },
+        overseerId: volunteerId
+      },
+      data: {
+        overseerId: null
+      }
+    })
+
+    await prisma.position_assignments.updateMany({
+      where: {
+        positionId: { in: positionIds },
+        keymanId: volunteerId
+      },
+      data: {
+        keymanId: null
+      }
+    })
+
+    await prisma.position_oversight_assignments.updateMany({
+      where: {
+        eventId,
+        overseerId: volunteerId
+      },
+      data: {
+        overseerId: null
+      }
+    })
+
+    await prisma.position_oversight_assignments.updateMany({
+      where: {
+        eventId,
+        keymanId: volunteerId
+      },
+      data: {
+        keymanId: null
       }
     })
 

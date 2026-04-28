@@ -32,16 +32,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // APEX GUARDIAN: Event Volunteers page shows ALL volunteers
       // We need to create event-volunteer associations to store oversight assignments
 
-      // Verify the volunteer exists and is active
+      // Verify the volunteer exists.
+      // Do not restrict by isActive: users may need to clear oversight on inactive volunteers.
       const volunteer = await prisma.volunteers.findFirst({
         where: {
-          id: volunteerId,
-          isActive: true
+          id: volunteerId
         }
       })
 
       if (!volunteer) {
-        return res.status(404).json({ error: 'Volunteer not found or inactive' })
+        return res.status(404).json({ error: 'Volunteer not found' })
       }
 
       // Find or create an event-volunteer association

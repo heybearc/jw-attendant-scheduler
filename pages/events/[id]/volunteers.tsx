@@ -1444,7 +1444,8 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                                 if (response.ok) {
                                   preserveStateAndReload()
                                 } else {
-                                  alert('Failed to update overseer')
+                                  const error = await response.json().catch(() => null)
+                                  alert(error?.error || 'Failed to update overseer')
                                 }
                               } catch (error) {
                                 console.error('Error updating overseer:', error)
@@ -1475,7 +1476,8 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                                 if (response.ok) {
                                   preserveStateAndReload()
                                 } else {
-                                  alert('Failed to update keyman')
+                                  const error = await response.json().catch(() => null)
+                                  alert(error?.error || 'Failed to update keyman')
                                 }
                               } catch (error) {
                                 console.error('Error updating keyman:', error)

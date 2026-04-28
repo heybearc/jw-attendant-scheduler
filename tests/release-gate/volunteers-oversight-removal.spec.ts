@@ -5,19 +5,25 @@ test.describe('Release Gate - Volunteers Oversight', () => {
   test('can assign and clear keyman on volunteers page', async ({ page }) => {
     await loginAsAdmin(page)
 
-    await page.goto('/events')
-    await page.waitForLoadState('networkidle')
+    const eventsResponse = await page.request.get('/api/events')
+    expect(eventsResponse.ok()).toBeTruthy()
+    const eventsBody = await eventsResponse.json()
+    const events = eventsBody?.data?.events || eventsBody?.events || eventsBody
+    expect(Array.isArray(events)).toBeTruthy()
 
-    const eventLink = page
-      .locator('a[href^="/events/"]')
-      .filter({ hasNotText: 'Create Event' })
-      .first()
-
-    await expect(eventLink).toBeVisible({ timeout: 10000 })
-    const href = await eventLink.getAttribute('href')
-    expect(href).toBeTruthy()
-
-    const eventId = href!.split('/')[2]
+    let eventId: string | null = null
+    for (const event of events as any[]) {
+      const id = event?.id
+      if (!id) continue
+      const volunteersResponse = await page.request.get(`/api/events/${id}/volunteers`)
+      if (!volunteersResponse.ok()) continue
+      const volunteersBody = await volunteersResponse.json()
+      const volunteers = volunteersBody?.volunteers || []
+      if (Array.isArray(volunteers) && volunteers.length > 0) {
+        eventId = id
+        break
+      }
+    }
     expect(eventId).toBeTruthy()
 
     await page.goto(`/events/${eventId}/volunteers`)

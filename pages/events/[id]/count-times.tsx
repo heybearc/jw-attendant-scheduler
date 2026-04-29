@@ -120,6 +120,7 @@ export default function CountTimesPage({ eventId, event, countSessions, canManag
   const [selectedBulkPositions, setSelectedBulkPositions] = useState<Set<string>>(new Set())
   const [savingAssignments, setSavingAssignments] = useState(false)
   const [groupDrafts, setGroupDrafts] = useState<CountGroupDraft[]>([])
+  const [groupSaveMessage, setGroupSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   // APEX GUARDIAN: Client-side fetching removed - data now provided via SSR
 
@@ -180,6 +181,7 @@ export default function CountTimesPage({ eventId, event, countSessions, canManag
 
   const openAssignmentManager = async (sessionId: string) => {
     setError('')
+    setGroupSaveMessage(null)
     setAssignmentSessionId(sessionId)
     setSelectedBulkPositions(new Set())
     setSelectedBulkVolunteerId('')
@@ -266,7 +268,7 @@ export default function CountTimesPage({ eventId, event, countSessions, canManag
     setAssignmentPositions((prev) => prev.map((position) => ({ ...position, assignees: [] })))
   }
 
-  if (loading || error || !event) {
+  if (loading || !event) {
     return null
   }
 
@@ -333,6 +335,11 @@ export default function CountTimesPage({ eventId, event, countSessions, canManag
         ) : (
           /* Count Sessions List */
           <div className="space-y-6">
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded p-3 text-sm text-red-700">
+                {error}
+              </div>
+            )}
             {countSessions.map((session) => (
               <div key={session.id} className="bg-white shadow rounded-lg overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-200">
@@ -413,6 +420,11 @@ export default function CountTimesPage({ eventId, event, countSessions, canManag
                 
                 {assignmentSessionId === session.id && (
                   <div className="px-6 py-4 border-b border-gray-200 bg-indigo-50 space-y-4">
+                    {groupSaveMessage && (
+                      <div className={`rounded p-2 text-sm ${groupSaveMessage.type === 'success' ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-red-50 border border-red-200 text-red-700'}`}>
+                        {groupSaveMessage.text}
+                      </div>
+                    )}
                     <div className="flex flex-wrap gap-2 items-center">
                       <button onClick={applySuggestions} className="px-3 py-1 bg-blue-600 text-white rounded text-sm">Apply Suggestions</button>
                       <button onClick={clearAssignments} className="px-3 py-1 bg-gray-500 text-white rounded text-sm">Clear Assignments</button>
@@ -451,6 +463,12 @@ export default function CountTimesPage({ eventId, event, countSessions, canManag
                       </button>
                     </div>
 
+                    {groupDrafts.length > 0 && (
+                      <div className="bg-amber-50 border border-amber-200 rounded p-3 text-sm text-amber-800">
+                        Groups are active. Station cards below now show group membership so you can verify coverage. Grouping is the source of truth for entry.
+                      </div>
+                    )}
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {assignmentPositions.map((position) => (
                         <div key={position.id} className="bg-white border border-gray-200 rounded p-3">
@@ -469,6 +487,15 @@ export default function CountTimesPage({ eventId, event, countSessions, canManag
                             />
                             #{position.positionNumber} {position.name}
                           </label>
+                          {(() => {
+                            const owner = groupDrafts.find((group) => group.positionIds.includes(position.id))
+                            if (!owner) return null
+                            return (
+                              <div className="mb-2 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-2 py-1">
+                                Grouped in: <span className="font-semibold">{owner.name}</span>
+                              </div>
+                            )
+                          })()}
                           {position.suggestedVolunteerId && (
                             <div className="mb-2 text-xs text-indigo-700 bg-indigo-50 border border-indigo-100 rounded px-2 py-1">
                               Suggested from shift/count-time match: {volunteers.find((v) => v.id === position.suggestedVolunteerId)?.name || position.suggestedVolunteerId}
@@ -580,9 +607,11 @@ export default function CountTimesPage({ eventId, event, countSessions, canManag
                             const data = await response.json()
                             if (!response.ok || !data.success) {
                               setError(data.error || 'Failed to save groups')
+                                setGroupSaveMessage({ type: 'error', text: data.error || 'Failed to save groups' })
                               return
                             }
                             setError('')
+                              setGroupSaveMessage({ type: 'success', text: 'Count groups saved successfully.' })
                           }}
                           className="px-3 py-2 bg-emerald-600 text-white rounded text-sm"
                         >

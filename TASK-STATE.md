@@ -1,18 +1,23 @@
 # TheoShift Task State
 
-**Last updated:** 2026-04-29 (mid-day)  
+**Last updated:** 2026-04-29 (end-day)  
 **Current branch:** main  
-**Working on:** v4.17.1 release complete — volunteers oversight fix + lean release-gate tests ✅
+**Working on:** v4.18.0 on `main` — release pipeline docs aligned with MC (D-042); no open blockers for next session ✅
 
 ---
 
 ## Current Task
-**v4.17.1 Patch Release** — RELEASED TO PRODUCTION ✅
+**Pick next backlog item** — READY
 
 ### What I'm doing right now
-Patch release completed, traffic switched, and standby synced. Environments are healthy and aligned.
+Day closed out. Context updated (TASK-STATE, PLAN). Repo clean and synced with Cloudy-Work `33120c4` (bump/release workflow + D-042).
 
 ### Recent completions
+
+**Today (2026-04-29) — Evening: governance + correctness**
+- ✅ Fixed `getLatestRelease` ordering: semver sort for `release-notes/v*.md` filenames (`7b9bd479`) — avoids `v4.9.0` beating `v4.18.0`
+- ✅ Cloudy-Work MC: `/bump` → mandatory `deploy_to_standby` after push; `/release` = HAProxy only; updated Cursor + Windsurf commands + theoshift release doc
+- ✅ D-042 in control plane (deploy/commit guardrail); TheoShift submodule **`d3f80eae`**
 
 **Today (2026-04-29) - v4.17.1 Release + Release Workflow Cleanup:**
 - ✅ Fixed volunteers oversight removal flow for dependent assignment cases
@@ -680,14 +685,13 @@ Also fixed real production bug:
 - Repository significantly cleaner and organized
 
 ### Next steps
-1. Monitor production for any user-reported issues
-2. Collect user feedback on magic link login experience
-3. Review BACKLOG.md for next priority feature
-4. Consider PWA service worker re-enablement
-5. PIN column cleanup scheduled for May 19, 2026 (see BACKLOG.md)
+1. **Next session:** Run `/start-day`, then choose next item from `PLAN.md` Prioritized Backlog (or user-directed work).
+2. **Every `/bump`:** Run MCP `deploy_to_standby` after push so STANDBY’s build includes the new version before `/release` (HAProxy does not pull or build).
+3. Monitor production; collect magic-link feedback when convenient.
+4. PIN column cleanup — May 19, 2026 (`BACKLOG.md`).
 
 ## Exact Next Command
-**Tomorrow morning:** Run `/start-day` to load context. No open bugs — review BACKLOG.md for next priority feature to work on.
+`/start-day`
 
 ---
 
@@ -704,6 +708,7 @@ Also fixed real production bug:
   - See BACKLOG.md for cleanup tasks
 
 **Infrastructure Notes:**
+- **`/release` does not deploy:** Traffic switch only. New LIVE must already have been built on STANDBY after `/bump` (`deploy_to_standby`). See MC workflows + D-042.
 - If a TheoShift node is ever rebuilt, PM2 must be started with correct `--name` flag:
   - BLUE (10.92.3.24): `pm2 start npm --name theoshift-blue -- start && pm2 save`
   - GREEN (10.92.3.22): `pm2 start npm --name theoshift-green -- start && pm2 save`
@@ -737,17 +742,9 @@ Also fixed real production bug:
 
 ---
 
-## Exact Next Command
-**Next session:** Run `/start-day` to load context. No open bugs — pick next feature from BACKLOG.md.
+## Session snapshot (do not duplicate — see top of file)
 
-**Current state:**
-- BLUE=LIVE (10.92.3.24), GREEN=STANDBY (10.92.3.22)
-- Both environments healthy and synced
-- Magic link authentication live in production (v4.17.0)
-- All recent bug fixes deployed
-
-**Recent commits:**
-- `cfe27259` - fix: Bulk edit overseer/keyman dropdowns show names in positions page
-- `ad583856` - fix: Overseer and keyman filters now show assigned volunteers
-- `f7eacb2c` - docs: End of day update - v4.17.0 magic link release complete
-- `959137a2` - Release v4.17.0 - Magic Link Authentication
+**Recent commits (main):**
+- `d3f80eae` — chore(submodule): sync Cloudy-Work — bump/release workflow + D-042
+- `7b9bd479` — fix: semver sort for latest release notes
+- `48e89057` — release: prepare v4.18.0 grouped count workflow

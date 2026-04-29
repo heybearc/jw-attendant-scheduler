@@ -20,23 +20,24 @@ function toMinutes(clock: string | null | undefined): number {
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { id: eventId, sessionId } = req.query
-  if (!eventId || typeof eventId !== 'string' || !sessionId || typeof sessionId !== 'string') {
-    return res.status(400).json({ error: 'Event ID and Session ID are required' })
-  }
+  try {
+    const { id: eventId, sessionId } = req.query
+    if (!eventId || typeof eventId !== 'string' || !sessionId || typeof sessionId !== 'string') {
+      return res.status(400).json({ error: 'Event ID and Session ID are required' })
+    }
 
-  const sessionUser = await getSessionUser(req, res)
-  if (!sessionUser) return res.status(401).json({ error: 'Unauthorized' })
+    const sessionUser = await getSessionUser(req, res)
+    if (!sessionUser) return res.status(401).json({ error: 'Unauthorized' })
 
-  const countSession = await prisma.count_sessions.findUnique({
-    where: { id: sessionId },
-    select: { id: true, eventId: true, countTime: true }
-  })
-  if (!countSession || countSession.eventId !== eventId) {
-    return res.status(404).json({ error: 'Count session not found' })
-  }
+    const countSession = await prisma.count_sessions.findUnique({
+      where: { id: sessionId },
+      select: { id: true, eventId: true, countTime: true }
+    })
+    if (!countSession || countSession.eventId !== eventId) {
+      return res.status(404).json({ error: 'Count session not found' })
+    }
 
-  if (req.method === 'GET') {
+    if (req.method === 'GET') {
     const [groups, positions, assignments] = await Promise.all([
       prisma.count_session_groups.findMany({
         where: { countSessionId: sessionId },
@@ -100,82 +101,103 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
   }
 
-  if (req.method === 'PUT') {
-    if (blockSimulatedMutation(req, res)) return
-    if (!isPrivilegedCounterRole(sessionUser.role)) {
-      return res.status(403).json({ error: 'Only ADMIN/OVERSEER/KEYMAN can manage groups' })
-    }
+    if (req.method === 'PUT') {
+      if (blockSimulatedMutation(req, res)) return
+      if (!isPrivilegedCounterRole(sessionUser.role)) {
+        return res.status(403).json({ error: 'Only ADMIN/OVERSEER/KEYMAN can manage groups' })
+      }
 
-    const parsed = putGroupsSchema.safeParse(req.body)
-    if (!parsed.success) {
-      return res.status(400).json({ error: 'Invalid payload', details: parsed.error.errors })
-    }
+      const parsed = putGroupsSchema.safeParse(req.body)
+      if (!parsed.success) {
+        return res.status(400).json({ error: 'Invalid payload', details: parsed.error.errors })
+      }
 
-    const flatPositionIds = parsed.data.groups.flatMap((group) => group.positionIds)
-    const duplicates = flatPositionIds.filter((positionId, index) => flatPositionIds.indexOf(positionId) !== index)
-    if (duplicates.length > 0) {
-      return res.status(400).json({ error: 'Stations cannot overlap between groups', duplicatePositionIds: [...new Set(duplicates)] })
-    }
+      const flatPositionIds = parsed.data.groups.flatMap((group) => group.positionIds)
+      const duplicates = flatPositionIds.filter((positionId, index) => flatPositionIds.indexOf(positionId) !== index)
+      if (duplicates.length > 0) {
+        return res.status(400).json({ error: 'Stations cannot overlap between groups', duplicatePositionIds: [...new Set(duplicates)] })
+      }
 
-    await prisma.$transaction(async (tx) => {
-      const existing = await tx.count_session_groups.findMany({
-        where: { countSessionId: sessionId },
-        select: { id: true }
-      })
-      const existingIds = new Set(existing.map((group) => group.id))
+      await prisma.$transaction(async (tx) => {
+        const existing = await tx.count_session_groups.findMany({
+          where: { countSessionId: sessionId },
+          select: { id: true }
+        })
+        const existingIds = new Set(existing.map((group) => group.id))
 
-      const keepIds = new Set<string>()
-      for (const groupInput of parsed.data.groups) {
-        if (groupInput.id && existingIds.has(groupInput.id)) {
-          keepIds.add(groupInput.id)
-          await tx.count_session_groups.update({
-            where: { id: groupInput.id },
-            data: {
+        const normalizedInputs: Array<{ id: string; name: string; primaryVolunteerId: string | null; secondaryVolunteerId: string | null; positionIds: string[] }> = []
+        const keepIds = new Set<string>()
+
+        for (const groupInput of parsed.data.groups) {
+          if (groupInput.id && existingIds.has(groupInput.id)) {
+            keepIds.add(groupInput.id)
+            await tx.count_session_groups.update({
+              where: { id: groupInput.id },
+              data: {
+                name: groupInput.name,
+                primaryVolunteerId: groupInput.primaryVolunteerId || null,
+                secondaryVolunteerId: groupInput.secondaryVolunteerId || null,
+                updatedAt: new Date()
+              }
+            })
+            normalizedInputs.push({
+              id: groupInput.id,
               name: groupInput.name,
               primaryVolunteerId: groupInput.primaryVolunteerId || null,
               secondaryVolunteerId: groupInput.secondaryVolunteerId || null,
-              updatedAt: new Date()
-            }
-          })
-          await tx.count_session_group_positions.deleteMany({ where: { groupId: groupInput.id } })
-          await tx.count_session_group_positions.createMany({
-            data: groupInput.positionIds.map((positionId) => ({
-              countSessionId: sessionId,
-              groupId: groupInput.id!,
-              positionId
-            }))
-          })
-        } else {
-          const created = await tx.count_session_groups.create({
-            data: {
-              countSessionId: sessionId,
+              positionIds: groupInput.positionIds
+            })
+          } else {
+            const created = await tx.count_session_groups.create({
+              data: {
+                countSessionId: sessionId,
+                name: groupInput.name,
+                primaryVolunteerId: groupInput.primaryVolunteerId || null,
+                secondaryVolunteerId: groupInput.secondaryVolunteerId || null,
+                createdBy: sessionUser.id
+              },
+              select: { id: true }
+            })
+            keepIds.add(created.id)
+            normalizedInputs.push({
+              id: created.id,
               name: groupInput.name,
               primaryVolunteerId: groupInput.primaryVolunteerId || null,
               secondaryVolunteerId: groupInput.secondaryVolunteerId || null,
-              createdBy: sessionUser.id
-            },
-            select: { id: true }
-          })
-          keepIds.add(created.id)
-          await tx.count_session_group_positions.createMany({
-            data: groupInput.positionIds.map((positionId) => ({
-              countSessionId: sessionId,
-              groupId: created.id,
-              positionId
-            }))
-          })
+              positionIds: groupInput.positionIds
+            })
+          }
         }
-      }
 
-      const deleteIds = [...existingIds].filter((id) => !keepIds.has(id))
-      if (deleteIds.length > 0) {
-        await tx.count_session_groups.deleteMany({ where: { id: { in: deleteIds } } })
-      }
-    })
+        const deleteIds = [...existingIds].filter((id) => !keepIds.has(id))
+        if (deleteIds.length > 0) {
+          await tx.count_session_groups.deleteMany({ where: { id: { in: deleteIds } } })
+        }
 
-    return res.status(200).json({ success: true, message: 'Count groups updated successfully' })
+        // Two-phase remap avoids uniqueness collisions while moving stations across groups.
+        await tx.count_session_group_positions.deleteMany({ where: { countSessionId: sessionId } })
+        const allMappings = normalizedInputs.flatMap((group) =>
+          group.positionIds.map((positionId) => ({
+            countSessionId: sessionId,
+            groupId: group.id,
+            positionId
+          }))
+        )
+        if (allMappings.length > 0) {
+          await tx.count_session_group_positions.createMany({ data: allMappings })
+        }
+      })
+
+      return res.status(200).json({ success: true, message: 'Count groups updated successfully' })
+    }
+
+    res.setHeader('Allow', ['GET', 'PUT'])
+    return res.status(405).json({ error: 'Method not allowed' })
+  } catch (error: any) {
+    console.error('Count groups API error:', error)
+    if (error?.code === 'P2002') {
+      return res.status(400).json({ error: 'Stations cannot overlap between groups' })
+    }
+    return res.status(500).json({ error: 'Internal server error' })
   }
-
-  res.setHeader('Allow', ['GET', 'PUT'])
-  return res.status(405).json({ error: 'Method not allowed' })
 }

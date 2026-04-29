@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../src/lib/prisma'
 import { handleApiError } from '@/lib/apiError'
+import { toDateOnlyStringUTC } from '../../../src/lib/calendarDate'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -45,8 +46,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       id: ev.events.id,
       name: ev.events.name,
       eventType: ev.events.eventType,
-      startDate: ev.events.startDate?.toISOString(),
-      endDate: ev.events.endDate?.toISOString(),
+      startDate: ev.events.startDate ? toDateOnlyStringUTC(ev.events.startDate) : null,
+      endDate: ev.events.endDate ? toDateOnlyStringUTC(ev.events.endDate) : null,
       status: ev.events.status
     }))
 

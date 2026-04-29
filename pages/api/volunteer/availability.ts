@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../auth/[...nextauth]'
+import { toDateOnlyStringUTC } from '../../../src/lib/calendarDate'
 import { prisma } from '../../../src/lib/prisma'
 import { getViewAsVolunteerId } from '@/lib/countAssignmentsShared'
 import { blockSimulatedMutation } from '@/lib/countAssignments'
@@ -68,8 +69,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         event: {
           id: req.event.id,
           name: req.event.name,
-          startDate: req.event.startDate.toISOString(),
-          endDate: req.event.endDate.toISOString(),
+          // Calendar dates only — match /api/volunteer/dashboard (avoid .toISOString() TZ shift on clients)
+          startDate: req.event.startDate ? toDateOnlyStringUTC(req.event.startDate) : '',
+          endDate: req.event.endDate ? toDateOnlyStringUTC(req.event.endDate) : '',
           location: req.event.location || 'Location TBD'
         }
       }))

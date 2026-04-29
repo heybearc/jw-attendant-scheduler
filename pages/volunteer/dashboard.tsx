@@ -4,6 +4,7 @@ import { useSession, signOut } from 'next-auth/react'
 import Head from 'next/head'
 import Link from 'next/link'
 import { format, parseISO } from 'date-fns'
+import { formatCalendarDateLabel } from '@/lib/calendarDate'
 import dynamic from 'next/dynamic'
 import AnnouncementBanner from '../../components/AnnouncementBanner'
 import EarlyCheckinPanel from '../../components/EarlyCheckinPanel'
@@ -543,14 +544,7 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
     }
   }
 
-  const formatDate = (dateString: string) => {
-    try {
-      // Use date-fns for consistent SSR/client formatting
-      return format(parseISO(dateString), 'MMM d, yyyy')
-    } catch {
-      return 'Invalid date'
-    }
-  }
+  const formatDate = (dateString: string) => formatCalendarDateLabel(dateString) || 'Invalid date'
 
   const formatTime = (timeString: string) => {
     // If the time string already includes AM/PM, return it as-is
@@ -932,7 +926,7 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
                                 📍 {request.event.location}
                               </p>
                               <p className="text-sm text-gray-500 mt-1">
-                                📅 {format(parseISO(request.event.startDate), 'MMM d, yyyy')} - {format(parseISO(request.event.endDate), 'MMM d, yyyy')}
+                                📅 {formatDate(request.event.startDate)} - {formatDate(request.event.endDate)}
                               </p>
                               <p className="text-xs text-gray-400 mt-2">
                                 Requested: {format(parseISO(request.requestedAt), 'MMM d, yyyy h:mm a')}
@@ -1321,7 +1315,7 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
                                 <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
                                   <span>📁 {document.fileName}</span>
                                   <span>📏 {formatFileSize(document.fileSize)}</span>
-                                  <span>📅 {formatDate(document.publishedAt)}</span>
+                                  <span>📅 {format(parseISO(document.publishedAt), 'MMM d, yyyy h:mm a')}</span>
                                 </div>
                               </div>
                             </div>

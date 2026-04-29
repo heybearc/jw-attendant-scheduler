@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { format, parseISO } from 'date-fns'
+import { formatCalendarDateLabel } from '@/lib/calendarDate'
 import Link from 'next/link'
 import PWABottomNav from './PWABottomNav'
 
@@ -128,13 +129,8 @@ export default function MobileVolunteerDashboard({
     }
   }
 
-  const formatDate = (dateString: string) => {
-    try {
-      return format(parseISO(dateString), 'MMM d, yyyy')
-    } catch {
-      return dateString
-    }
-  }
+  const formatDate = (dateString: string) =>
+    formatCalendarDateLabel(dateString) || dateString
 
   const handlePullToRefresh = async () => {
     if (!onRefresh || refreshing) return

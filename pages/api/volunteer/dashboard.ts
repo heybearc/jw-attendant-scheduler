@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../src/lib/prisma'
-import { format } from 'date-fns'
+import { toDateOnlyStringUTC } from '../../../src/lib/calendarDate'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -355,8 +355,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           id: event.id,
           name: event.name,
           eventType: event.eventType,
-          startDate: event.startDate ? format(event.startDate, 'yyyy-MM-dd') : null,
-          endDate: event.endDate ? format(event.endDate, 'yyyy-MM-dd') : null,
+          startDate: event.startDate ? toDateOnlyStringUTC(event.startDate) : null,
+          endDate: event.endDate ? toDateOnlyStringUTC(event.endDate) : null,
           status: event.status
         },
         isIVSTeamMember: !!ivsTeamMember,

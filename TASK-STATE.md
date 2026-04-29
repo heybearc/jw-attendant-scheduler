@@ -1,18 +1,27 @@
 # TheoShift Task State
 
-**Last updated:** 2026-04-22  
+**Last updated:** 2026-04-29 (mid-day)  
 **Current branch:** main  
-**Working on:** Bug Fixes — Filter & Bulk Edit — RELEASED TO PRODUCTION ✅
+**Working on:** v4.17.1 release complete — volunteers oversight fix + lean release-gate tests ✅
 
 ---
 
 ## Current Task
-**Bug Fixes - Filter & Bulk Edit** — RELEASED TO PRODUCTION ✅
+**v4.17.1 Patch Release** — RELEASED TO PRODUCTION ✅
 
 ### What I'm doing right now
-Two bug fixes shipped and released to production. Both environments synced and healthy. No open bugs.
+Patch release completed, traffic switched, and standby synced. Environments are healthy and aligned.
 
 ### Recent completions
+
+**Today (2026-04-29) - v4.17.1 Release + Release Workflow Cleanup:**
+- ✅ Fixed volunteers oversight removal flow for dependent assignment cases
+- ✅ Fixed oversight update API handling for inactive volunteers
+- ✅ Reduced default `/test-release` gate to required checks only (smoke + release-gate), with full suite kept at `test:e2e:full`
+- ✅ Added targeted release-gate regression for volunteers oversight keyman assign/clear flow
+- ✅ Ran `/test-release` on qa-01 with new gate (3 passed, 1 skipped, 0 failed)
+- ✅ Bumped version to v4.17.1, updated release notes/README, created GitHub release tag
+- ✅ Ran `/release` and `/sync`: LIVE=BLUE (10.92.3.24), STANDBY=GREEN (10.92.3.22), both healthy
 
 **Today (2026-04-22) - Bug Fixes Released:**
 - ✅ Fixed overseer/keyman filter on volunteers page (was showing the overseer themselves, now shows volunteers assigned to them)

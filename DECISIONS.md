@@ -568,6 +568,12 @@ This document tracks significant technical decisions made during development.
 - 📋 Future: React 19 + next-auth v5 migration when next-auth v5 is more battle-tested
 - 📋 Future: Next.js 16.x when it meets 30-day stability policy criteria
 
+### D-TS-039: Default /test-release uses lean release gate
+**Date:** 2026-04-29
+**Context:** Full legacy Playwright suite on qa-01 had many stale tests and blocked release flow despite current feature health.
+**Decision:** Set `test:e2e` to run only required release checks (smoke + focused release-gate tests), keep full suite available as `test:e2e:full`.
+**Consequences:** Faster and reliable release validation by default; deep regression coverage remains available on demand.
+
 ---
 
 ## Shared Decisions

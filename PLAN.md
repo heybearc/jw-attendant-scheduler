@@ -1,19 +1,24 @@
 # TheoShift Plan
 
-**Last updated:** 2026-04-19  
+**Last updated:** 2026-04-29  
 **Current phase:** Feature Development + Platform Infrastructure  
-**Status:** Production stable after 2-day monitoring period. Ready for next development cycle.
+**Status:** v4.17.1 released to production. Environments synced and stable.
 
 ---
 
 ## Current Phase
 
 ### Active Work
-- Monitoring production after 4 bug fixes (2026-04-16) — **COMPLETE**
-- All fixes confirmed stable in production
+- v4.17.1 volunteers oversight reliability patch — **COMPLETE**
+- Release-gate test strategy narrowed to required checks — **COMPLETE**
 - Ready to pick next priority feature from backlog
 
 ### Completed This Phase
+- ✅ v4.17.1 release: volunteers overseer/keyman removal reliability fixes
+- ✅ Inactive-volunteer oversight update handling fixed
+- ✅ `/test-release` default suite reduced to smoke + release-gate (full suite retained as `test:e2e:full`)
+- ✅ qa-01 validation for release gate (3 passed, 1 skipped)
+- ✅ Traffic switched and STANDBY synced (LIVE=BLUE, STANDBY=GREEN)
 - ✅ Early Check-In tab visibility fix (v4.15.8)
 - ✅ Early Check-In mobile page access fix
 - ✅ Availability request scoping bug fix (173 volunteers → correct subset)

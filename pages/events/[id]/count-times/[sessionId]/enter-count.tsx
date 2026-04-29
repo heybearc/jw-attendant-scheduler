@@ -83,10 +83,11 @@ export default function EnterCountPage() {
         })
       }
       
-      if (positionsData.success && positionsData.data?.positions) {
+      const rawPositions = positionsData?.data?.positions ?? positionsData?.positions ?? []
+      if (positionsData.success && Array.isArray(rawPositions)) {
         // ADMIN, OVERSEER, KEYMAN can see all positions
         // ATTENDANT can only see positions they're assigned to
-        const allPositions = positionsData.data.positions.map((pos: any) => {
+        const allPositions = rawPositions.map((pos: any) => {
           const existingCount = countsByPosition.get(pos.id)
           return {
             ...pos,
@@ -102,7 +103,7 @@ export default function EnterCountPage() {
           // Filter positions that the current attendant is assigned to
           const userPositions = allPositions.filter((pos: any) => 
             pos.assignments?.some((assignment: any) => 
-              assignment.attendantId === session?.user?.id
+              assignment.volunteerId === session?.user?.id || assignment.attendantId === session?.user?.id
             )
           )
           setPositions(userPositions)

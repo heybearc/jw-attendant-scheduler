@@ -22,17 +22,31 @@ export default async function handler(
     const { id: eventId } = req.query
     const { departmentName, requestRound, format = 'xlsx' } = req.body
 
-    // Verify user has admin access to this event
-    const eventPermission = await prisma.event_permissions.findFirst({
+    const user = await prisma.users.findUnique({
+      where: { email: session.user.email! },
+      select: { id: true, role: true },
+    })
+
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'User not found' })
+    }
+
+    const globalExportRoles = ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER'] as const
+    const hasGlobalRole = (globalExportRoles as readonly string[]).includes(user.role)
+
+    const eventScopedPermission = await prisma.event_permissions.findFirst({
       where: {
         eventId: eventId as string,
-        userId: session.user.id,
-        role: 'ADMIN' as any,
+        userId: user.id,
+        role: { in: ['ADMIN', 'COORDINATOR'] },
       },
     })
 
-    if (!eventPermission) {
-      return res.status(403).json({ success: false, message: 'Forbidden - Admin access required' })
+    if (!hasGlobalRole && !eventScopedPermission) {
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden — export requires admin/overseer role or event admin/coordinator access',
+      })
     }
 
     // Build query filters

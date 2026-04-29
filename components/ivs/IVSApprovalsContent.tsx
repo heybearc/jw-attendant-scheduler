@@ -107,15 +107,18 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
     }
   }
 
-  const handleExport = async (filters: any) => {
+  const handleExport = async (departmentName?: string, requestRound?: number) => {
     try {
-      const params = new URLSearchParams({
-        ...filters,
-        eventId,
+      const response = await fetch(`/api/events/${eventId}/ivs/export`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          departmentName: departmentName || undefined,
+          requestRound: requestRound != null ? String(requestRound) : undefined,
+          format: 'xlsx',
+        }),
       })
-      
-      const response = await fetch(`/api/events/${eventId}/ivs/export?${params}`)
-      
+
       if (response.ok) {
         const blob = await response.blob()
         const url = window.URL.createObjectURL(blob)
@@ -128,7 +131,14 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
         document.body.removeChild(a)
         setShowExportModal(false)
       } else {
-        alert('Export failed')
+        let msg = 'Export failed'
+        try {
+          const err = await response.json()
+          if (err?.message) msg = err.message
+        } catch {
+          /* ignore */
+        }
+        alert(msg)
       }
     } catch (error) {
       console.error('Error exporting:', error)

@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../src/lib/prisma'
 import { format } from 'date-fns'
-import { handleApiError } from '@/lib/apiError'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -234,8 +233,45 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // (they're already registered for the event via event_volunteers)
     const ivsTeamMember = ivsModuleEnabled ? eventVolunteer : null
 
-    // Get active count sessions for this event where this volunteer is explicitly assigned.
-    const activeCountSessions = await prisma.count_sessions.findMany({
+    // Count groups where this volunteer is primary or secondary counter (one combined entry per group).
+    const volunteerGroups = await prisma.count_session_groups.findMany({
+      where: {
+        countSession: {
+          eventId: eventId as string,
+          status: 'ACTIVE'
+        },
+        OR: [
+          { primaryVolunteerId: volunteerId as string },
+          { secondaryVolunteerId: volunteerId as string }
+        ]
+      },
+      include: {
+        primaryVolunteer: { select: { firstName: true, lastName: true } },
+        secondaryVolunteer: { select: { firstName: true, lastName: true } },
+        entry: true,
+        positions: {
+          include: {
+            position: {
+              select: { id: true, name: true, positionNumber: true }
+            }
+          }
+        },
+        countSession: {
+          select: { id: true, sessionName: true, countTime: true, status: true }
+        }
+      },
+      orderBy: { countSession: { countTime: 'asc' } }
+    })
+
+    const groupPositionKeys = new Set<string>()
+    for (const g of volunteerGroups) {
+      for (const row of g.positions) {
+        groupPositionKeys.add(`${g.countSessionId}:${row.positionId}`)
+      }
+    }
+
+    // Get active count sessions for this event where this volunteer is explicitly assigned to a station.
+    const activeCountSessionsRaw = await prisma.count_sessions.findMany({
       where: {
         eventId: eventId as string,
         status: 'ACTIVE',
@@ -259,6 +295,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         countTime: 'asc'
       }
     })
+
+    // Drop station-level tasks for positions that are already covered by a count group for this volunteer.
+    const activeCountSessions = activeCountSessionsRaw
+      .map((session) => {
+        const positionIds = session.assignees
+          .map((a) => a.positionId)
+          .filter((pid) => !groupPositionKeys.has(`${session.id}:${pid}`))
+        return { ...session, positionIds }
+      })
+      .filter((session) => session.positionIds.length > 0)
 
     // Get active announcements for this event
     const now = new Date()
@@ -315,12 +361,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
         isIVSTeamMember: !!ivsTeamMember,
         assignments,
+        activeCountGroups: volunteerGroups.map((g) => ({
+          sessionId: g.countSessionId,
+          sessionName: g.countSession.sessionName,
+          countTime: g.countSession.countTime ? g.countSession.countTime.toISOString() : null,
+          groupId: g.id,
+          groupName: g.name,
+          primaryVolunteerId: g.primaryVolunteerId,
+          secondaryVolunteerId: g.secondaryVolunteerId,
+          primaryName: g.primaryVolunteer
+            ? `${g.primaryVolunteer.firstName} ${g.primaryVolunteer.lastName}`.trim()
+            : null,
+          secondaryName: g.secondaryVolunteer
+            ? `${g.secondaryVolunteer.firstName} ${g.secondaryVolunteer.lastName}`.trim()
+            : null,
+          stations: g.positions.map((row) => ({
+            id: row.position.id,
+            name: row.position.name,
+            positionNumber: row.position.positionNumber
+          })),
+          existingCount: g.entry?.attendeeCount ?? null,
+          existingNotes: g.entry?.notes ?? null
+        })),
         activeCountSessions: activeCountSessions.map(session => ({
           id: session.id,
           sessionName: session.sessionName,
           countTime: session.countTime ? session.countTime.toISOString() : null,
           status: session.status,
-          positionIds: session.assignees.map((a) => a.positionId)
+          positionIds: session.positionIds
         })),
         announcements: announcements.map(ann => ({
           id: ann.id,

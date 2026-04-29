@@ -87,6 +87,21 @@ interface CountSession {
   positionIds?: string[]
 }
 
+interface ActiveCountGroup {
+  sessionId: string
+  sessionName: string
+  countTime: string | null
+  groupId: string
+  groupName: string
+  primaryVolunteerId?: string | null
+  secondaryVolunteerId?: string | null
+  primaryName?: string | null
+  secondaryName?: string | null
+  stations: Array<{ id: string; name: string; positionNumber?: number | null }>
+  existingCount?: number | null
+  existingNotes?: string | null
+}
+
 interface AvailabilityRequest {
   id: string
   eventId: string
@@ -109,6 +124,7 @@ interface DashboardData {
   documents: Document[]
   oversightContacts: OversightContact[]
   activeCountSessions?: CountSession[]
+  activeCountGroups?: ActiveCountGroup[]
   isIVSTeamMember?: boolean
 }
 
@@ -263,6 +279,40 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
         console.log('✅ Dashboard data loaded successfully')
         setDashboardData(result.data)
         setVolunteer(result.data.volunteer)
+
+        const groups = result.data.activeCountGroups ?? []
+        if (groups.length > 0) {
+          setSubmittedCounts((prev) => {
+            const next = new Map(prev)
+            for (const g of groups) {
+              if (g.existingCount != null) {
+                next.set(`g:${g.groupId}`, {
+                  count: g.existingCount,
+                  notes: g.existingNotes || undefined
+                })
+              }
+            }
+            return next
+          })
+          setCountValues((prev) => {
+            const next = new Map(prev)
+            for (const g of groups) {
+              if (g.existingCount != null) {
+                next.set(`g:${g.groupId}`, String(g.existingCount))
+              }
+            }
+            return next
+          })
+          setCountNotes((prev) => {
+            const next = new Map(prev)
+            for (const g of groups) {
+              if (g.existingNotes) {
+                next.set(`g:${g.groupId}`, g.existingNotes)
+              }
+            }
+            return next
+          })
+        }
         
         // Fetch availability requests for this event
         await fetchAvailabilityRequests(eventId)
@@ -418,7 +468,7 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
       
       const response = await fetch(`/api/events/${selectedEventId}/count-sessions/${sessionId}/counts`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getViewAsHeaders() },
         body: JSON.stringify({
           positionId: targetPositionId,
           attendeeCount: parseInt(countValue),
@@ -440,6 +490,53 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
       }
     } catch (error) {
       console.error('Count submission error:', error)
+      alert('An error occurred while submitting the count')
+    } finally {
+      setSubmittingCount(false)
+    }
+  }
+
+  const handleSubmitGroupCount = async (task: ActiveCountGroup) => {
+    const key = `g:${task.groupId}`
+    const countValue = countValues.get(key) || ''
+    if (!countValue || !selectedEventId) {
+      return
+    }
+
+    setSubmittingCount(true)
+    setCountSuccess('')
+
+    try {
+      const notes = countNotes.get(key) || ''
+      const response = await fetch(
+        `/api/events/${selectedEventId}/count-sessions/${task.sessionId}/counts`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...getViewAsHeaders() },
+          body: JSON.stringify({
+            groupId: task.groupId,
+            attendeeCount: parseInt(countValue, 10),
+            notes: notes.trim() || undefined
+          })
+        }
+      )
+
+      const result = await response.json()
+
+      if (result.success) {
+        setCountSuccess('Count submitted successfully!')
+        setSubmittedCounts((prev) =>
+          new Map(prev).set(key, {
+            count: parseInt(countValue, 10),
+            notes: notes.trim() || undefined
+          })
+        )
+        setTimeout(() => setCountSuccess(''), 3000)
+      } else {
+        alert(result.error || 'Failed to submit count')
+      }
+    } catch (error) {
+      console.error('Group count submission error:', error)
       alert('An error occurred while submitting the count')
     } finally {
       setSubmittingCount(false)
@@ -545,6 +642,7 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
           assignments={dashboardData.assignments}
           oversightContacts={dashboardData.oversightContacts}
           activeCountSessions={dashboardData.activeCountSessions}
+          activeCountGroups={dashboardData.activeCountGroups}
           documents={dashboardData.documents}
           availabilityRequests={availabilityRequests}
           onAvailabilityResponse={handleAvailabilityResponse}
@@ -924,15 +1022,18 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
                 </div>
               )}
 
-              {/* Count Entry Widget */}
-              {dashboardData.activeCountSessions && dashboardData.activeCountSessions.length > 0 && (
+              {/* Count Entry: grouped sections + per-station sessions */}
+              {((dashboardData.activeCountGroups?.length ?? 0) > 0 ||
+                (dashboardData.activeCountSessions?.length ?? 0) > 0) && (
                 <div className="bg-gradient-to-br from-green-50 to-blue-50 border-2 border-green-200 shadow-lg rounded-lg">
                   <div className="px-6 py-4 border-b border-green-200 bg-white bg-opacity-60">
                     <h2 className="text-lg font-medium text-gray-900 flex items-center">
                       <span className="text-xl mr-2">📊</span>
-                      Submit Attendance Count
+                      Submit attendance count
                     </h2>
-                    <p className="text-sm text-gray-600 mt-1">Visible only for sessions/stations explicitly assigned to you.</p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Count tasks assigned to you for this event (group sections or individual stations).
+                    </p>
                   </div>
                   <div className="p-6">
                     {countSuccess && (
@@ -940,23 +1041,156 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
                         ✓ {countSuccess}
                       </div>
                     )}
-                    
-                    <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
-                      <div className="flex">
-                        <div className="flex-shrink-0">
-                          <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                          </svg>
-                        </div>
-                        <div className="ml-3">
-                          <p className="text-sm text-yellow-700">
-                            <strong>Note:</strong> Only submit a count if requested by your overseer or keyman. You may enter a combined count for multiple stations in your area using the notes field.
-                          </p>
+
+                    {(dashboardData.activeCountGroups?.length ?? 0) > 0 && (
+                      <div className="bg-teal-50 border border-teal-200 rounded-lg p-4 mb-4">
+                        <p className="text-sm text-teal-900">
+                          <strong>Grouped counts:</strong> enter <span className="font-semibold">one total</span> for the
+                          section — it applies to every station listed under that group name.
+                        </p>
+                      </div>
+                    )}
+
+                    {(dashboardData.activeCountSessions?.length ?? 0) > 0 && (
+                      <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+                        <div className="flex">
+                          <div className="flex-shrink-0">
+                            <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                          <div className="ml-3">
+                            <p className="text-sm text-yellow-700">
+                              <strong>Station counts:</strong> only submit if requested by your overseer or keyman. If you
+                              do not see a grouped section above, use notes when one number covers multiple stations.
+                            </p>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    )}
 
-                    {dashboardData.activeCountSessions.map((session) => {
+                    {(dashboardData.activeCountGroups ?? []).map((task) => {
+                      const gKey = `g:${task.groupId}`
+                      const hasSubmitted = submittedCounts.has(gKey)
+                      const isEditing = editingSession === gKey
+                      const submittedData = submittedCounts.get(gKey)
+                      return (
+                        <div key={task.groupId} className="bg-white rounded-lg p-4 shadow-sm mb-4 border-2 border-teal-100">
+                          <div className="mb-3">
+                            <p className="text-xs font-medium text-teal-700 uppercase tracking-wide">
+                              {task.sessionName}
+                              {task.countTime && (
+                                <span className="text-gray-600 font-normal normal-case">
+                                  {' '}
+                                  · {new Date(task.countTime).toLocaleString()}
+                                </span>
+                              )}
+                            </p>
+                            <h3 className="text-lg font-semibold text-gray-900">{task.groupName}</h3>
+                            <p className="text-sm text-gray-600 mt-1">
+                              Stations in this section ({task.stations.length}):{' '}
+                              {task.stations.map((s) => s.name).join(', ')}
+                            </p>
+                            {(task.primaryName || task.secondaryName) && (
+                              <p className="text-xs text-gray-500 mt-2">
+                                Primary: {task.primaryName || '—'} · Secondary: {task.secondaryName || '—'}
+                              </p>
+                            )}
+                          </div>
+
+                          {hasSubmitted && !isEditing ? (
+                            <div className="space-y-3">
+                              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+                                    ✓ Submitted
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditingSession(gKey)}
+                                    className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                                  >
+                                    Edit
+                                  </button>
+                                </div>
+                                <div className="mt-2">
+                                  <p className="text-lg font-bold text-gray-900">Count: {submittedData?.count}</p>
+                                  {submittedData?.notes && (
+                                    <p className="text-sm text-gray-600 mt-1">Notes: {submittedData.notes}</p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  Total attendance for this section *
+                                </label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={countValues.get(gKey) || ''}
+                                  onChange={(e) =>
+                                    setCountValues((prev) => new Map(prev).set(gKey, e.target.value))
+                                  }
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                  placeholder="Enter total count"
+                                  disabled={submittingCount}
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  Notes (optional)
+                                </label>
+                                <textarea
+                                  value={countNotes.get(gKey) || ''}
+                                  onChange={(e) =>
+                                    setCountNotes((prev) => new Map(prev).set(gKey, e.target.value))
+                                  }
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                                  placeholder="Optional context for your team"
+                                  rows={2}
+                                  disabled={submittingCount}
+                                />
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => handleSubmitGroupCount(task)}
+                                  disabled={submittingCount || !countValues.get(gKey)}
+                                  className="flex-1 bg-teal-600 hover:bg-teal-700 text-white font-medium py-2 px-4 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                  {submittingCount ? 'Submitting...' : hasSubmitted ? 'Update count' : 'Submit count'}
+                                </button>
+                                {isEditing && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setEditingSession(null)
+                                      setCountValues((prev) =>
+                                        new Map(prev).set(
+                                          gKey,
+                                          submittedData?.count.toString() || ''
+                                        )
+                                      )
+                                      setCountNotes((prev) =>
+                                        new Map(prev).set(gKey, submittedData?.notes || '')
+                                      )
+                                    }}
+                                    className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                                  >
+                                    Cancel
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+
+                    {(dashboardData.activeCountSessions ?? []).map((session) => {
                       const hasSubmitted = submittedCounts.has(session.id)
                       const isEditing = editingSession === session.id
                       const submittedData = submittedCounts.get(session.id)

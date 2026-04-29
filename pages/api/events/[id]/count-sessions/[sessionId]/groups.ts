@@ -54,7 +54,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         orderBy: { positionNumber: 'asc' }
       }),
       prisma.position_assignments.findMany({
-        where: { position: { eventId } },
+        where: { positions: { eventId } },
         include: {
           volunteer: { select: { id: true, firstName: true, lastName: true } },
           shift: { select: { startTime: true, endTime: true, isAllDay: true } }

@@ -7,6 +7,7 @@ import { format, parseISO } from 'date-fns'
 import dynamic from 'next/dynamic'
 import AnnouncementBanner from '../../components/AnnouncementBanner'
 import EarlyCheckinPanel from '../../components/EarlyCheckinPanel'
+import { getViewAsHeaders, getViewAsVolunteerId } from '@/lib/viewAsClient'
 
 // Lazy load mobile dashboard (only loaded on mobile devices)
 const MobileVolunteerDashboard = dynamic(() => import('../../components/MobileVolunteerDashboard'), {
@@ -144,6 +145,7 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
   const [respondingToRequest, setRespondingToRequest] = useState<string | null>(null)
   const [isMobile, setIsMobile] = useState(false)
   const [activeTab, setActiveTab] = useState<'dashboard' | 'checkin'>('dashboard')
+  const simulatedVolunteerIdFromQuery = typeof router.query.viewAsVolunteerId === 'string' ? router.query.viewAsVolunteerId : null
 
   useEffect(() => {
     // Detect mobile on mount and window resize
@@ -168,7 +170,7 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
       console.log('✅ Session ready, loading dashboard for volunteer:', session.user.id)
       loadDashboard()
     }
-  }, [status, session])
+  }, [status, session, simulatedVolunteerIdFromQuery])
 
   const fetchAvailabilityRequests = async (eventId: string) => {
     try {
@@ -220,7 +222,12 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
         return
       }
       
-      console.log('📊 Loading dashboard for volunteer:', session.user.id)
+      const simulatedVolunteerId = session.user.role === 'ADMIN'
+        ? (simulatedVolunteerIdFromQuery || getViewAsVolunteerId())
+        : null
+      const effectiveVolunteerId = simulatedVolunteerId || session.user.id
+
+      console.log('📊 Loading dashboard for volunteer:', effectiveVolunteerId)
       
       // Get selected event from query param or localStorage fallback
       const eventId = router.query.eventId as string || localStorage.getItem('selectedEventId')
@@ -237,7 +244,10 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
 
       // Fetch dashboard data
       console.log('📊 Fetching dashboard data from API...')
-      const response = await fetch(`/api/volunteer/dashboard?volunteerId=${session.user.id}&eventId=${eventId}`)
+      const response = await fetch(
+        `/api/volunteer/dashboard?volunteerId=${effectiveVolunteerId}&eventId=${eventId}`,
+        { headers: { ...getViewAsHeaders() } }
+      )
       
       if (!response.ok) {
         console.error('❌ API response not OK:', response.status, response.statusText)
@@ -1245,8 +1255,14 @@ export async function getServerSideProps(context: any) {
   
   const session = await getServerSession(context.req, context.res, authOptions)
   
-  // If no session or not a volunteer, redirect to volunteer login
-  if (!session || session.user.role !== 'VOLUNTEER') {
+  const isVolunteer = session?.user?.role === 'VOLUNTEER'
+  const isAdminViewAs =
+    session?.user?.role === 'ADMIN'
+    && typeof context.query.viewAsVolunteerId === 'string'
+    && context.query.viewAsVolunteerId.length > 0
+
+  // Allow volunteers normally, and ADMIN only when previewing a selected volunteer.
+  if (!session || (!isVolunteer && !isAdminViewAs)) {
     return {
       redirect: {
         destination: '/volunteer/login',

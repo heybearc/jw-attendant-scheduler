@@ -165,6 +165,7 @@ export default function EventPageLayout({
                   if (response.ok && data.success) {
                     setViewAsVolunteerId(viewAsSelection)
                     setViewAsVolunteerIdState(viewAsSelection)
+                    router.push(`/volunteer/dashboard?eventId=${event.id}&viewAsVolunteerId=${viewAsSelection}`)
                   }
                 }}
                 className="px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm"

@@ -30,7 +30,7 @@ interface Event {
 
 export default function EnterCountPage() {
   const router = useRouter()
-  const { data: session } = useSession()
+  const { data: session, status: sessionStatus } = useSession()
   const { id: eventId, sessionId } = router.query
   const [event, setEvent] = useState<Event | null>(null)
   const [countSession, setCountSession] = useState<CountSession | null>(null)
@@ -42,11 +42,16 @@ export default function EnterCountPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
+  const userRole = session?.user?.role || ''
+  const isPrivilegedCounter = ['ADMIN', 'OVERSEER', 'KEYMAN'].includes(userRole)
+
   useEffect(() => {
+    // Wait until auth state resolves so role-based filtering is correct for admins.
+    if (sessionStatus === 'loading') return
     if (eventId && sessionId) {
       fetchData()
     }
-  }, [eventId, sessionId])
+  }, [eventId, sessionId, sessionStatus, userRole, session?.user?.id])
 
   const fetchData = async () => {
     try {
@@ -81,7 +86,6 @@ export default function EnterCountPage() {
       if (positionsData.success && positionsData.data?.positions) {
         // ADMIN, OVERSEER, KEYMAN can see all positions
         // ATTENDANT can only see positions they're assigned to
-        const userRole = session?.user?.role
         const allPositions = positionsData.data.positions.map((pos: any) => {
           const existingCount = countsByPosition.get(pos.id)
           return {
@@ -91,7 +95,7 @@ export default function EnterCountPage() {
           }
         })
         
-        if (['ADMIN', 'OVERSEER', 'KEYMAN'].includes(userRole || '')) {
+        if (isPrivilegedCounter) {
           // Show all positions for admin roles
           setPositions(allPositions)
         } else {
@@ -299,7 +303,9 @@ export default function EnterCountPage() {
             <div className="text-6xl mb-4">👤</div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">No Assigned Positions</h3>
             <p className="text-gray-600">
-              You are not assigned to any positions for this event, so you cannot enter counts.
+              {isPrivilegedCounter
+                ? 'No positions are configured for this event yet.'
+                : 'You are not assigned to any positions for this event, so you cannot enter counts.'}
             </p>
           </div>
         ) : (

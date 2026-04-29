@@ -469,9 +469,19 @@ export default function CountTimesPage({ eventId, event, countSessions, canManag
                             }}
                             className="w-full min-h-[100px] border border-gray-300 rounded text-sm"
                           >
-                            {(position.candidateVolunteers && position.candidateVolunteers.length > 0 ? position.candidateVolunteers : volunteers).map((v) => (
+                            {(() => {
+                              const baseOptions = (position.candidateVolunteers && position.candidateVolunteers.length > 0
+                                ? position.candidateVolunteers
+                                : volunteers)
+                              const assignedOnlyOptions = position.assignees
+                                .map((assignee) => volunteers.find((v) => v.id === assignee.volunteerId))
+                                .filter((v): v is VolunteerOption => !!v)
+                                .filter((v) => !baseOptions.some((base) => base.id === v.id))
+                              const mergedOptions = [...baseOptions, ...assignedOnlyOptions]
+                              return mergedOptions.map((v) => (
                               <option key={v.id} value={v.id}>{v.name}</option>
-                            ))}
+                              ))
+                            })()}
                           </select>
                           {(!position.candidateVolunteers || position.candidateVolunteers.length === 0) && (
                             <p className="mt-1 text-xs text-gray-500">No position-shift candidates found; showing all volunteers for manual override.</p>

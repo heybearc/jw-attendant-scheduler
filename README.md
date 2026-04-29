@@ -38,10 +38,11 @@ Theocratic Shift Scheduler is a comprehensive web application designed to manage
 - **Auto-Assignment Engine** - Priority-based assignment algorithm with conflict detection
 - **Drag-and-Drop** - Intuitive assignment creation
 
-### Count Times System
+### Count Times System (NEW in v4.18.0)
 - **Count Sessions** - Track count times per event
-- **Position Counts** - Individual position count tracking
+- **Count Groups** - Combine multiple stations into one section count with primary/secondary counters
 - **Live Entry** - Real-time count entry via volunteer dashboard
+- **Admin View-As Preview** - Admin can preview volunteer dashboard in read-only simulation mode
 - **Count Analytics** - Reporting and analysis
 
 ### Oversight Management
@@ -269,6 +270,11 @@ For issues or questions:
 4. Contact the project maintainer for deployment access
 
 ## 📝 Version History
+
+- **v4.18.0** (2026-04-29) - Grouped Count Entry & Admin Volunteer Preview
+  - New grouped section counts with primary/secondary counters and one shared entry per group
+  - Volunteer dashboard now shows grouped count tasks clearly, including stations covered
+  - Added ADMIN read-only Volunteer Dashboard Preview (view-as mode) with write protections and audit logging
 
 - **v4.17.1** (2026-04-28) - Volunteers Oversight Removal Fixes
   - Fixed removing overseer/keyman assignments on the volunteers page when existing dependent assignments were present

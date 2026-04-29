@@ -69,6 +69,8 @@ export default function CountTimesPage({ userRole }: CountTimesProps) {
                     <ul className="space-y-2 text-sm text-gray-600">
                       <li>• <strong>Assign Counters:</strong> Designate responsible individuals for each area</li>
                       <li>• <strong>Set Count Times:</strong> Establish when counts will be taken</li>
+                      <li>• <strong>Create Count Groups:</strong> Combine related stations (for example, Section A) into one shared count entry</li>
+                      <li>• <strong>Set Primary + Secondary:</strong> Assign both counters so either can submit the agreed number</li>
                       <li>• <strong>Prepare Materials:</strong> Ensure counting sheets and devices are ready</li>
                       <li>• <strong>Brief Team:</strong> Explain counting procedures to all involved</li>
                     </ul>
@@ -93,12 +95,25 @@ export default function CountTimesPage({ userRole }: CountTimesProps) {
                   <div className="space-y-3">
                     <p className="text-gray-600">Recording counts in the system:</p>
                     <ul className="space-y-2 text-sm text-gray-600">
+                      <li>• <strong>Group First:</strong> If a section group exists, enter one total for that group instead of separate station entries</li>
                       <li>• <strong>Timely Entry:</strong> Enter counts promptly while numbers are fresh</li>
                       <li>• <strong>Accuracy Check:</strong> Verify numbers before final submission</li>
                       <li>• <strong>Notes & Context:</strong> Add relevant notes about unusual circumstances</li>
                       <li>• <strong>Backup Records:</strong> Maintain paper backups of all counts</li>
                     </ul>
                   </div>
+                </div>
+
+                <div className="bg-teal-50 border border-teal-200 rounded-lg p-6">
+                  <h3 className="text-lg font-semibold text-teal-900 mb-3">🧪 Admin Volunteer Dashboard Preview (Read-Only)</h3>
+                  <p className="text-sm text-teal-800 mb-3">
+                    Administrators can use <strong>Start View-As</strong> from an event page to preview exactly what a volunteer sees.
+                  </p>
+                  <ul className="space-y-2 text-sm text-teal-800">
+                    <li>• Shows grouped count cards and individual count tasks exactly as assigned</li>
+                    <li>• All write actions are blocked while simulation is active</li>
+                    <li>• Use <strong>Exit Simulation</strong> to return to normal admin behavior</li>
+                  </ul>
                 </div>
               </div>
             </div>

@@ -183,6 +183,7 @@ model count_sessions {
   events          events             @relation(fields: [eventId], references: [id])
   assignees       count_session_position_assignees[]
   groups          count_session_groups[]
+  groupPositions  count_session_group_positions[]
   position_counts position_counts[]
 
   @@unique([eventId, sessionName])

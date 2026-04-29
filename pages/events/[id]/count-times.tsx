@@ -74,6 +74,12 @@ interface SessionAssignmentPosition {
   name: string
   positionNumber: number
   area?: string
+  suggestedVolunteerId?: string | null
+  candidateVolunteers?: Array<{
+    id: string
+    name: string
+    congregation?: string
+  }>
   assignees: Array<{
     volunteerId: string
     isSuggested: boolean
@@ -183,7 +189,12 @@ export default function CountTimesPage({ eventId, event, countSessions, canManag
         name: position.name,
         positionNumber: position.positionNumber,
         area: position.area || '',
-        assignees: (position.assignees || []).map((a: any) => ({
+        suggestedVolunteerId: position.suggestedVolunteerId || null,
+        candidateVolunteers: position.candidateVolunteers || [],
+        assignees: ((position.assignees && position.assignees.length > 0)
+          ? position.assignees
+          : (position.suggestedVolunteerId ? [{ volunteerId: position.suggestedVolunteerId, isSuggested: true }] : [])
+        ).map((a: any) => ({
           volunteerId: a.volunteerId,
           isSuggested: !!a.isSuggested
         }))
@@ -441,6 +452,11 @@ export default function CountTimesPage({ eventId, event, countSessions, canManag
                             />
                             #{position.positionNumber} {position.name}
                           </label>
+                          {position.suggestedVolunteerId && (
+                            <div className="mb-2 text-xs text-indigo-700 bg-indigo-50 border border-indigo-100 rounded px-2 py-1">
+                              Suggested from shift/count-time match: {volunteers.find((v) => v.id === position.suggestedVolunteerId)?.name || position.suggestedVolunteerId}
+                            </div>
+                          )}
                           <select
                             multiple
                             value={position.assignees.map((a) => a.volunteerId)}
@@ -453,10 +469,13 @@ export default function CountTimesPage({ eventId, event, countSessions, canManag
                             }}
                             className="w-full min-h-[100px] border border-gray-300 rounded text-sm"
                           >
-                            {volunteers.map((v) => (
+                            {(position.candidateVolunteers && position.candidateVolunteers.length > 0 ? position.candidateVolunteers : volunteers).map((v) => (
                               <option key={v.id} value={v.id}>{v.name}</option>
                             ))}
                           </select>
+                          {(!position.candidateVolunteers || position.candidateVolunteers.length === 0) && (
+                            <p className="mt-1 text-xs text-gray-500">No position-shift candidates found; showing all volunteers for manual override.</p>
+                          )}
                         </div>
                       ))}
                     </div>

@@ -2,7 +2,23 @@
 
 ## New Discoveries to Promote
 
-*(No pending items — all promoted)*
+### 🔁 MCP `switch_traffic` ACL Overmatch Causing Wrong Routing Detection/Switches (2026-04-29)
+**Promote to:** `_cloudy-ops/context/DECISIONS.md` (new decision) + `shared/mcp-servers/homelab-blue-green-mcp/server.js`  
+**Type:** Critical deployment safety fix (cross-app, control-plane level)
+
+**Issue observed:**
+- TheoShift release/sync reported complete, but LIVE still served old version.
+- MCP `switch_traffic`/status logic used substring ACL matching (`is_theoshift`) that also matched `is_theoshift_blue` and `is_theoshift_green`.
+- Result: HAProxy line rewrites and LIVE/STANDBY detection could target the wrong line(s).
+
+**Fix pattern:**
+- In `getHAProxyBackend`, match only the exact production ACL line (`... if is_<app>$`).
+- In `switch_traffic`, replace only the exact production routing line with anchored regex; never touch direct blue/green host routes.
+
+**Validation performed:**
+- Ran MCP `switch_traffic` via stdio client.
+- Verified HAProxy post-switch lines and LIVE/STANDBY with `verify-live-standby.sh`.
+- Confirmed LIVE now on TheoShift GREEN (`v4.17.1`) and STANDBY BLUE (`v4.17.0`) as expected.
 
 ---
 

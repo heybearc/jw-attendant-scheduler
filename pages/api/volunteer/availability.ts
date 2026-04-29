@@ -2,12 +2,31 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../auth/[...nextauth]'
 import { prisma } from '../../../src/lib/prisma'
-import { handleApiError } from '@/lib/apiError'
+import { getViewAsVolunteerId } from '@/lib/countAssignmentsShared'
+import { blockSimulatedMutation } from '@/lib/countAssignments'
+
+function resolveTargetVolunteerId(
+  session: NonNullable<Awaited<ReturnType<typeof getServerSession>>>,
+  req: NextApiRequest
+): string | null {
+  if (session.user.role === 'VOLUNTEER') {
+    return session.user.id
+  }
+  if (session.user.role === 'ADMIN') {
+    return getViewAsVolunteerId(req)
+  }
+  return null
+}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const session = await getServerSession(req, res, authOptions)
 
-  if (!session || session.user.role !== 'VOLUNTEER') {
+  if (!session?.user) {
+    return res.status(401).json({ success: false, error: 'Unauthorized' })
+  }
+
+  const volunteerId = resolveTargetVolunteerId(session, req)
+  if (!volunteerId) {
     return res.status(401).json({ success: false, error: 'Unauthorized' })
   }
 
@@ -21,7 +40,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
       const availabilityRequests = await prisma.volunteer_availability.findMany({
         where: {
-          volunteerId: session.user.id,
+          volunteerId,
           eventId: eventId
         },
         include: {
@@ -66,6 +85,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === 'POST') {
+    if (blockSimulatedMutation(req, res)) return
     try {
       const { requestId, status, notes } = req.body
 
@@ -85,7 +105,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(404).json({ success: false, error: 'Availability request not found' })
       }
 
-      if (availabilityRequest.volunteerId !== session.user.id) {
+      if (availabilityRequest.volunteerId !== volunteerId) {
         return res.status(403).json({ success: false, error: 'Not authorized to respond to this request' })
       }
 

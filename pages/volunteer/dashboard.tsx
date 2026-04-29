@@ -174,7 +174,9 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
 
   const fetchAvailabilityRequests = async (eventId: string) => {
     try {
-      const response = await fetch(`/api/volunteer/availability?eventId=${eventId}`)
+      const response = await fetch(`/api/volunteer/availability?eventId=${eventId}`, {
+        headers: { ...getViewAsHeaders() }
+      })
       const data = await response.json()
       
       if (data.success) {
@@ -191,7 +193,7 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
       
       const response = await fetch(`/api/volunteer/availability?eventId=${selectedEventId}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getViewAsHeaders() },
         body: JSON.stringify({ requestId, status, notes })
       })
 

@@ -161,6 +161,7 @@ model volunteers {
   position_assignments_overseer position_assignments[]           @relation("position_assignments_overseerIdTovolunteers")
   position_oversight_keyman     position_oversight_assignments[] @relation("position_oversight_assignments_keyman_idTovolunteers")
   position_oversight_overseer   position_oversight_assignments[] @relation("position_oversight_assignments_overseer_idTovolunteers")
+  count_session_position_assignees count_session_position_assignees[]
   volunteer_availability        volunteer_availability[]
 }
 
@@ -170,6 +171,7 @@ model count_sessions {
   sessionName     String
   countTime       DateTime?
   notes           String?
+  verificationMode String             @default("single")
   status          CountSessionStatus @default(ACTIVE)
   isActive        Boolean            @default(true)
   createdAt       DateTime           @default(now())
@@ -177,6 +179,7 @@ model count_sessions {
   uploadedAt      DateTime           @default(now())
   uploadedBy      String?
   events          events             @relation(fields: [eventId], references: [id])
+  assignees       count_session_position_assignees[]
   position_counts position_counts[]
 
   @@unique([eventId, sessionName])
@@ -502,6 +505,25 @@ model position_counts {
   @@unique([countSessionId, positionId])
 }
 
+model count_session_position_assignees {
+  id             String         @id @default(uuid())
+  countSessionId String
+  positionId     String
+  volunteerId    String
+  isSuggested    Boolean        @default(false)
+  createdBy      String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  countSession   count_sessions @relation(fields: [countSessionId], references: [id], onDelete: Cascade)
+  position       positions      @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  volunteer      volunteers     @relation(fields: [volunteerId], references: [id], onDelete: Cascade)
+  createdByUser  users?         @relation("count_session_position_assigneesTousers", fields: [createdBy], references: [id], onDelete: SetNull)
+
+  @@unique([countSessionId, positionId, volunteerId])
+  @@index([countSessionId, positionId])
+  @@index([volunteerId])
+}
+
 model position_oversight_assignments {
   id         String      @id @default(dbgenerated("(gen_random_uuid())::text"))
   positionId String      @map("position_id")
@@ -552,6 +574,7 @@ model positions {
   createdAt      DateTime                         @default(now())
   updatedAt      DateTime
   assignments    position_assignments[]           @relation("PositionToAssignments")
+  assignees      count_session_position_assignees[]
   counts         position_counts[]                @relation("PositionToCounts")
   oversight      position_oversight_assignments[] @relation("PositionToOversight")
   shifts         position_shifts[]                @relation("PositionToShifts")
@@ -631,10 +654,25 @@ model users {
   feedback_comments              feedback_comments[]
   oversight_assignments          oversight_assignments[]
   position_assignments           position_assignments[]
+  count_session_position_assignees count_session_position_assignees[] @relation("count_session_position_assigneesTousers")
   position_oversight_assignments position_oversight_assignments[]
   shift_templates                shift_templates[]
   locations                      locations[]
   ivs_import_batches             ivs_import_batches[]
+  admin_view_as_audit_logs       admin_view_as_audit_logs[]
+}
+
+model admin_view_as_audit_logs {
+  id                String   @id @default(uuid())
+  adminUserId       String
+  targetVolunteerId String?
+  eventId           String?
+  action            String
+  createdAt         DateTime @default(now())
+  adminUser         users    @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+
+  @@index([adminUserId, createdAt])
+  @@index([eventId, createdAt])
 }
 
 // ============================================================================

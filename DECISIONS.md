@@ -574,6 +574,15 @@ This document tracks significant technical decisions made during development.
 **Decision:** Set `test:e2e` to run only required release checks (smoke + focused release-gate tests), keep full suite available as `test:e2e:full`.
 **Consequences:** Faster and reliable release validation by default; deep regression coverage remains available on demand.
 
+### D-TS-040: Commit + Push required before any STANDBY deploy
+**Date:** 2026-04-29
+**Context:** A standby deploy succeeded operationally but did not include latest local implementation work because remote `main` had not been updated yet.
+**Decision:** Treat `commit -> push -> deploy_to_standby` as mandatory order for TheoShift deployments. Never deploy with uncommitted/unpushed code when expecting new behavior on STANDBY.
+**Consequences:**
+- Prevents false-positive "deployment complete" states with stale code.
+- Standard checklist before deploy: clean/intentional `git status`, commit, push, verify remote sync, then deploy.
+- When running from Cursor, use MCP tool calls for deploy actions; shell aliases may be unavailable by terminal session.
+
 ---
 
 ## Shared Decisions

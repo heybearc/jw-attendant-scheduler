@@ -1,13 +1,12 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '../../../../../auth/[...nextauth]'
 import { prisma } from '../../../../../../../src/lib/prisma'
 import { handleApiError } from '@/lib/apiError'
+import { blockSimulatedMutation, getSessionUser, isPrivilegedCounterRole } from '@/lib/countAssignments'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const session = await getServerSession(req, res, authOptions)
-    if (!session) {
+    const sessionUser = await getSessionUser(req, res)
+    if (!sessionUser) {
       return res.status(401).json({ error: 'Unauthorized' })
     }
 
@@ -18,6 +17,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     switch (req.method) {
       case 'DELETE':
+        if (blockSimulatedMutation(req, res)) return
+        if (!isPrivilegedCounterRole(sessionUser.role)) {
+          return res.status(403).json({ error: 'Only ADMIN/OVERSEER/KEYMAN may delete counts' })
+        }
         // Delete the position count for this session
         await prisma.position_counts.deleteMany({
           where: {

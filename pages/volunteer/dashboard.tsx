@@ -83,6 +83,7 @@ interface CountSession {
   sessionName: string
   countTime: string
   status: string
+  positionIds?: string[]
 }
 
 interface AvailabilityRequest {
@@ -391,7 +392,9 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
 
   const handleSubmitCount = async (sessionId: string) => {
     const countValue = countValues.get(sessionId) || ''
-    if (!countValue || !dashboardData?.assignments[0]) {
+    const sessionMeta = dashboardData?.activeCountSessions?.find((s) => s.id === sessionId)
+    const targetPositionId = sessionMeta?.positionIds?.[0] || dashboardData?.assignments?.[0]?.positionId
+    if (!countValue || !targetPositionId) {
       return
     }
 
@@ -399,14 +402,13 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
     setCountSuccess('')
 
     try {
-      const firstAssignment = dashboardData.assignments[0]
       const notes = countNotes.get(sessionId) || ''
       
       const response = await fetch(`/api/events/${selectedEventId}/count-sessions/${sessionId}/counts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          positionId: firstAssignment.positionId,
+          positionId: targetPositionId,
           attendeeCount: parseInt(countValue),
           notes: notes || undefined
         })
@@ -911,16 +913,14 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
               )}
 
               {/* Count Entry Widget */}
-              {dashboardData.activeCountSessions && dashboardData.activeCountSessions.length > 0 && dashboardData.assignments && dashboardData.assignments.length > 0 && (
+              {dashboardData.activeCountSessions && dashboardData.activeCountSessions.length > 0 && (
                 <div className="bg-gradient-to-br from-green-50 to-blue-50 border-2 border-green-200 shadow-lg rounded-lg">
                   <div className="px-6 py-4 border-b border-green-200 bg-white bg-opacity-60">
                     <h2 className="text-lg font-medium text-gray-900 flex items-center">
                       <span className="text-xl mr-2">📊</span>
                       Submit Attendance Count
                     </h2>
-                    <p className="text-sm text-gray-600 mt-1">
-                      For your station: <span className="font-semibold">{dashboardData.assignments[0].positionName}</span>
-                    </p>
+                    <p className="text-sm text-gray-600 mt-1">Visible only for sessions/stations explicitly assigned to you.</p>
                   </div>
                   <div className="p-6">
                     {countSuccess && (

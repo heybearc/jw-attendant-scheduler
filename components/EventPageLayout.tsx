@@ -1,10 +1,12 @@
-import { ReactNode, useState } from 'react'
+import { ReactNode, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import EventLayout from './EventLayout'
 import { useModuleConfig } from '../contexts/TemplateContext'
 import { VolunteerText } from './DynamicText'
 import dynamic from 'next/dynamic'
+import { useSession } from 'next-auth/react'
+import { getViewAsVolunteerId, setViewAsVolunteerId } from '@/lib/viewAsClient'
 
 const EventQRCode = dynamic(() => import('./EventQRCode'), { ssr: false })
 
@@ -38,6 +40,10 @@ export default function EventPageLayout({
   const moduleConfig = useModuleConfig()
   const router = useRouter()
   const [showMoreMenu, setShowMoreMenu] = useState(false)
+  const { data: session } = useSession()
+  const [viewAsVolunteerId, setViewAsVolunteerIdState] = useState<string | null>(null)
+  const [viewAsSelection, setViewAsSelection] = useState('')
+  const [eventVolunteers, setEventVolunteers] = useState<Array<{ id: string; name: string }>>([])
 
   const isCountTimesEnabled = moduleConfig?.countTimes === true
   const isLanyardsEnabled = moduleConfig?.lanyards === true
@@ -59,6 +65,22 @@ export default function EventPageLayout({
     return statusColors[status as keyof typeof statusColors] || 'bg-gray-100 text-gray-800'
   }
 
+  useEffect(() => {
+    setViewAsVolunteerIdState(getViewAsVolunteerId())
+  }, [])
+
+  useEffect(() => {
+    if (session?.user?.role !== 'ADMIN') return
+    fetch(`/api/events/${event.id}/volunteers`)
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          setEventVolunteers((data.volunteers || []).map((v: any) => ({ id: v.id, name: v.name })))
+        }
+      })
+      .catch(() => undefined)
+  }, [event.id, session?.user?.role])
+
   return (
     <EventLayout
       title={event.name}
@@ -70,6 +92,23 @@ export default function EventPageLayout({
       }}
     >
       <div className="space-y-6">
+        {viewAsVolunteerId && (
+          <div className="bg-amber-100 border border-amber-300 rounded-lg p-3 flex items-center justify-between">
+            <p className="text-sm text-amber-900 font-medium">
+              View-as-volunteer simulation is active (read-only mode). All write actions are blocked.
+            </p>
+            <button
+              onClick={async () => {
+                await fetch(`/api/admin/view-as?eventId=${event.id}`, { method: 'DELETE' })
+                setViewAsVolunteerId(null)
+                setViewAsVolunteerIdState(null)
+              }}
+              className="px-3 py-1 bg-amber-700 text-white rounded text-sm"
+            >
+              Exit Simulation
+            </button>
+          </div>
+        )}
 
         {/* Action Toolbar */}
         <div className="flex flex-wrap items-center gap-2">
@@ -100,6 +139,39 @@ export default function EventPageLayout({
             >
               ⚙️ Settings
             </Link>
+          )}
+
+          {session?.user?.role === 'ADMIN' && (
+            <div className="flex items-center gap-2">
+              <select
+                value={viewAsSelection}
+                onChange={(e) => setViewAsSelection(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              >
+                <option value="">View as volunteer...</option>
+                {eventVolunteers.map((volunteer) => (
+                  <option key={volunteer.id} value={volunteer.id}>{volunteer.name}</option>
+                ))}
+              </select>
+              <button
+                onClick={async () => {
+                  if (!viewAsSelection) return
+                  const response = await fetch('/api/admin/view-as', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ volunteerId: viewAsSelection, eventId: event.id })
+                  })
+                  const data = await response.json()
+                  if (response.ok && data.success) {
+                    setViewAsVolunteerId(viewAsSelection)
+                    setViewAsVolunteerIdState(viewAsSelection)
+                  }
+                }}
+                className="px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm"
+              >
+                Start View-As
+              </button>
+            </div>
           )}
 
           {/* More Actions Dropdown - Only show if there are actions available */}

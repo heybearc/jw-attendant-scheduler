@@ -7,6 +7,7 @@ import EditCountSessionModal from '../../../components/EditCountSessionModal'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
+import { getViewAsHeaders } from '@/lib/viewAsClient'
 
 // Client-side only date formatter to avoid hydration errors
 function ClientDate({ isoString }: { isoString: string }) {
@@ -63,6 +64,22 @@ interface CountStats {
   completed: number
 }
 
+interface VolunteerOption {
+  id: string
+  name: string
+}
+
+interface SessionAssignmentPosition {
+  id: string
+  name: string
+  positionNumber: number
+  area?: string
+  assignees: Array<{
+    volunteerId: string
+    isSuggested: boolean
+  }>
+}
+
 interface CountTimesPageProps {
   eventId: string
   event: Event
@@ -82,6 +99,12 @@ export default function CountTimesPage({ eventId, event, countSessions, canManag
   const [error, setError] = useState('')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [editingSession, setEditingSession] = useState<CountSession | null>(null)
+  const [assignmentSessionId, setAssignmentSessionId] = useState<string | null>(null)
+  const [assignmentPositions, setAssignmentPositions] = useState<SessionAssignmentPosition[]>([])
+  const [volunteers, setVolunteers] = useState<VolunteerOption[]>([])
+  const [selectedBulkVolunteerId, setSelectedBulkVolunteerId] = useState('')
+  const [selectedBulkPositions, setSelectedBulkPositions] = useState<Set<string>>(new Set())
+  const [savingAssignments, setSavingAssignments] = useState(false)
 
   // APEX GUARDIAN: Client-side fetching removed - data now provided via SSR
 
@@ -89,7 +112,7 @@ export default function CountTimesPage({ eventId, event, countSessions, canManag
     try {
       const response = await fetch(`/api/events/${eventId}/count-sessions/${sessionId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getViewAsHeaders() },
         body: JSON.stringify({ isActive: !currentActive })
       })
       
@@ -110,7 +133,8 @@ export default function CountTimesPage({ eventId, event, countSessions, canManag
 
     try {
       const response = await fetch(`/api/events/${eventId}/count-sessions/${sessionId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: { ...getViewAsHeaders() }
       })
       
       if (!response.ok) {
@@ -127,7 +151,7 @@ export default function CountTimesPage({ eventId, event, countSessions, canManag
   const createCountSession = async (data: { sessionName: string; countTime: string; notes?: string }) => {
     const response = await fetch(`/api/events/${eventId}/count-sessions`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...getViewAsHeaders() },
       body: JSON.stringify(data)
     })
     
@@ -137,6 +161,81 @@ export default function CountTimesPage({ eventId, event, countSessions, canManag
     }
     
     router.reload() // Refresh page to show updated data
+  }
+
+  const openAssignmentManager = async (sessionId: string) => {
+    setError('')
+    setAssignmentSessionId(sessionId)
+    setSelectedBulkPositions(new Set())
+    setSelectedBulkVolunteerId('')
+    try {
+      const [assigneesRes, volunteersRes] = await Promise.all([
+        fetch(`/api/events/${eventId}/count-sessions/${sessionId}/assignees`, { headers: { ...getViewAsHeaders() } }),
+        fetch(`/api/events/${eventId}/volunteers`, { headers: { ...getViewAsHeaders() } })
+      ])
+
+      const [assigneesData, volunteersData] = await Promise.all([assigneesRes.json(), volunteersRes.json()])
+      if (!assigneesData.success) throw new Error(assigneesData.error || 'Failed loading assignments')
+      if (!volunteersData.success) throw new Error(volunteersData.error || 'Failed loading volunteers')
+
+      setAssignmentPositions((assigneesData.data?.positions || []).map((position: any) => ({
+        id: position.id,
+        name: position.name,
+        positionNumber: position.positionNumber,
+        area: position.area || '',
+        assignees: (position.assignees || []).map((a: any) => ({
+          volunteerId: a.volunteerId,
+          isSuggested: !!a.isSuggested
+        }))
+      })))
+      setVolunteers((volunteersData.volunteers || []).map((v: any) => ({ id: v.id, name: v.name })))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to open assignment manager')
+    }
+  }
+
+  const saveAssignments = async () => {
+    if (!assignmentSessionId) return
+    setSavingAssignments(true)
+    try {
+      const payload = {
+        assignees: assignmentPositions.map((position) => ({
+          positionId: position.id,
+          volunteerIds: position.assignees.map((a) => a.volunteerId)
+        }))
+      }
+      const response = await fetch(`/api/events/${eventId}/count-sessions/${assignmentSessionId}/assignees`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', ...getViewAsHeaders() },
+        body: JSON.stringify(payload)
+      })
+      const data = await response.json()
+      if (!response.ok || !data.success) throw new Error(data.error || 'Failed to save assignments')
+      setError('')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save assignments')
+    } finally {
+      setSavingAssignments(false)
+    }
+  }
+
+  const applySuggestions = async () => {
+    if (!assignmentSessionId) return
+    try {
+      const response = await fetch(`/api/events/${eventId}/count-sessions/${assignmentSessionId}/assignees/suggestions`, {
+        method: 'POST',
+        headers: { ...getViewAsHeaders() }
+      })
+      const data = await response.json()
+      if (!response.ok || !data.success) throw new Error(data.error || 'Failed to apply suggestions')
+      await openAssignmentManager(assignmentSessionId)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to apply suggestions')
+    }
+  }
+
+  const clearAssignments = () => {
+    setAssignmentPositions((prev) => prev.map((position) => ({ ...position, assignees: [] })))
   }
 
   if (loading || error || !event) {
@@ -250,6 +349,12 @@ export default function CountTimesPage({ eventId, event, countSessions, canManag
                             📝 Enter Counts
                           </Link>
                           <button
+                            onClick={() => openAssignmentManager(session.id)}
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm transition-colors"
+                          >
+                            👥 Assign Counters
+                          </button>
+                          <button
                             onClick={() => deleteCountSession(session.id, session.sessionName)}
                             className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm transition-colors"
                             title="Delete count session"
@@ -278,6 +383,86 @@ export default function CountTimesPage({ eventId, event, countSessions, canManag
                   )}
                 </div>
                 
+                {assignmentSessionId === session.id && (
+                  <div className="px-6 py-4 border-b border-gray-200 bg-indigo-50 space-y-4">
+                    <div className="flex flex-wrap gap-2 items-center">
+                      <button onClick={applySuggestions} className="px-3 py-1 bg-blue-600 text-white rounded text-sm">Apply Suggestions</button>
+                      <button onClick={clearAssignments} className="px-3 py-1 bg-gray-500 text-white rounded text-sm">Clear Assignments</button>
+                      <button onClick={saveAssignments} disabled={savingAssignments} className="px-3 py-1 bg-green-600 text-white rounded text-sm disabled:opacity-60">
+                        {savingAssignments ? 'Saving...' : 'Save Assignments'}
+                      </button>
+                      <button onClick={() => setAssignmentSessionId(null)} className="px-3 py-1 bg-white border border-gray-300 rounded text-sm">Close</button>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 bg-white p-3 rounded border border-indigo-100">
+                      <select
+                        value={selectedBulkVolunteerId}
+                        onChange={(e) => setSelectedBulkVolunteerId(e.target.value)}
+                        className="px-3 py-2 border border-gray-300 rounded text-sm"
+                      >
+                        <option value="">Select volunteer</option>
+                        {volunteers.map((v) => (
+                          <option key={v.id} value={v.id}>{v.name}</option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => {
+                          if (!selectedBulkVolunteerId || selectedBulkPositions.size === 0) return
+                          setAssignmentPositions((prev) => prev.map((position) => {
+                            if (!selectedBulkPositions.has(position.id)) return position
+                            const already = position.assignees.some((a) => a.volunteerId === selectedBulkVolunteerId)
+                            return already ? position : {
+                              ...position,
+                              assignees: [...position.assignees, { volunteerId: selectedBulkVolunteerId, isSuggested: false }]
+                            }
+                          }))
+                        }}
+                        className="px-3 py-2 bg-indigo-600 text-white rounded text-sm"
+                      >
+                        Assign Volunteer To Selected Stations
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {assignmentPositions.map((position) => (
+                        <div key={position.id} className="bg-white border border-gray-200 rounded p-3">
+                          <label className="flex items-center gap-2 mb-2 text-sm">
+                            <input
+                              type="checkbox"
+                              checked={selectedBulkPositions.has(position.id)}
+                              onChange={(e) => {
+                                setSelectedBulkPositions((prev) => {
+                                  const next = new Set(prev)
+                                  if (e.target.checked) next.add(position.id)
+                                  else next.delete(position.id)
+                                  return next
+                                })
+                              }}
+                            />
+                            #{position.positionNumber} {position.name}
+                          </label>
+                          <select
+                            multiple
+                            value={position.assignees.map((a) => a.volunteerId)}
+                            onChange={(e) => {
+                              const selected = Array.from(e.target.selectedOptions).map((option) => option.value)
+                              setAssignmentPositions((prev) => prev.map((current) => current.id === position.id
+                                ? { ...current, assignees: selected.map((id) => ({ volunteerId: id, isSuggested: false })) }
+                                : current
+                              ))
+                            }}
+                            className="w-full min-h-[100px] border border-gray-300 rounded text-sm"
+                          >
+                            {volunteers.map((v) => (
+                              <option key={v.id} value={v.id}>{v.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {session.position_counts.length > 0 && (
                   <div className="px-6 py-4">
                     <h4 className="text-sm font-medium text-gray-900 mb-3">Position Counts</h4>

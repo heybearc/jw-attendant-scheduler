@@ -5,6 +5,7 @@ import EventLayout from '../../../../../components/EventLayout'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { useSession } from 'next-auth/react'
+import { getViewAsHeaders } from '@/lib/viewAsClient'
 
 interface Position {
   id: string
@@ -58,18 +59,21 @@ export default function EnterCountPage() {
       setLoading(true)
       
       // Fetch event, count session, positions, and existing counts
-      const [eventRes, sessionRes, positionsRes, countsRes] = await Promise.all([
-        fetch(`/api/events/${eventId}`),
-        fetch(`/api/events/${eventId}/count-sessions/${sessionId}`),
-        fetch(`/api/events/${eventId}/positions?includeAssignments=true&limit=1000`),
-        fetch(`/api/events/${eventId}/count-sessions/${sessionId}/counts`)
+      const viewAsHeaders = getViewAsHeaders()
+      const [eventRes, sessionRes, positionsRes, countsRes, assigneesRes] = await Promise.all([
+        fetch(`/api/events/${eventId}`, { headers: viewAsHeaders }),
+        fetch(`/api/events/${eventId}/count-sessions/${sessionId}`, { headers: viewAsHeaders }),
+        fetch(`/api/events/${eventId}/positions?includeAssignments=true&limit=1000`, { headers: viewAsHeaders }),
+        fetch(`/api/events/${eventId}/count-sessions/${sessionId}/counts`, { headers: viewAsHeaders }),
+        fetch(`/api/events/${eventId}/count-sessions/${sessionId}/assignees`, { headers: viewAsHeaders })
       ])
       
-      const [eventData, sessionData, positionsData, countsData] = await Promise.all([
+      const [eventData, sessionData, positionsData, countsData, assigneesData] = await Promise.all([
         eventRes.json(),
         sessionRes.json(),
         positionsRes.json(),
-        countsRes.json()
+        countsRes.json(),
+        assigneesRes.json()
       ])
       
       if (eventData.success) setEvent(eventData.data)
@@ -100,13 +104,20 @@ export default function EnterCountPage() {
           // Show all positions for admin roles
           setPositions(allPositions)
         } else {
-          // Filter positions that the current attendant is assigned to
-          const userPositions = allPositions.filter((pos: any) => 
-            pos.assignments?.some((assignment: any) => 
-              assignment.volunteerId === session?.user?.id || assignment.attendantId === session?.user?.id
-            )
+          const assignedIds = new Set(
+            ((assigneesData?.data?.positions || []) as any[]).map((position) => position.id)
           )
-          setPositions(userPositions)
+          // Filter positions that the current volunteer is explicitly assigned to for this count session.
+          const userPositions = allPositions.filter((pos: any) => assignedIds.has(pos.id))
+          // Optional transition fallback to legacy position assignments if no explicit assignees exist.
+          const fallbackPositions = userPositions.length > 0 || process.env.NEXT_PUBLIC_COUNT_ASSIGNMENTS_FALLBACK !== 'true'
+            ? userPositions
+            : allPositions.filter((pos: any) =>
+                pos.assignments?.some((assignment: any) =>
+                  assignment.volunteerId === session?.user?.id || assignment.attendantId === session?.user?.id
+                )
+              )
+          setPositions(fallbackPositions)
         }
       }
       
@@ -140,7 +151,7 @@ export default function EnterCountPage() {
       
       const response = await fetch(`/api/events/${eventId}/count-sessions/${sessionId}/counts`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getViewAsHeaders() },
         body: JSON.stringify({
           positionId: position.id,
           attendeeCount: count,
@@ -195,7 +206,8 @@ export default function EnterCountPage() {
       setError('')
       
       const response = await fetch(`/api/events/${eventId}/count-sessions/${sessionId}/counts/${position.id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: { ...getViewAsHeaders() }
       })
       
       const data = await response.json()
@@ -447,27 +459,27 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     }
   }
 
-  // CRITICAL: Block attendants from accessing admin pages
-  if (session.user?.role === 'VOLUNTEER') {
-    return {
-      redirect: {
-        destination: '/volunteer/dashboard',
-        permanent: false,
-      },
-    }
-  }
-
-  // Check event-specific permissions - entering counts requires at least OVERSEER
+  // Check event-specific permissions - privileged users require management access.
   const { id } = context.params!
   const { canManageAttendants } = await import('../../../../../src/lib/eventAccess')
   const userId = session.user?.id || ''
-  const canManageContent = await canManageAttendants(userId, id as string)
-  
-  if (!canManageContent) {
+  if (session.user?.role !== 'VOLUNTEER') {
+    const canManageContent = await canManageAttendants(userId, id as string)
+    if (!canManageContent) {
+      return {
+        redirect: {
+          destination: `/events/${id}/count-times`,
+          permanent: false,
+        },
+      }
+    }
+  }
+
+  if (!session.user?.id) {
     // User doesn't have permission to enter counts for this event
     return {
       redirect: {
-        destination: `/events/${id}/count-times`,
+        destination: '/auth/signin',
         permanent: false,
       },
     }

@@ -4,6 +4,7 @@ import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '../../../../../src/lib/prisma'
 import { z } from 'zod'
 import { handleApiError } from '@/lib/apiError'
+import { blockSimulatedMutation } from '@/lib/countAssignments'
 
 // Validation schema for updating count session
 const updateCountSessionSchema = z.object({
@@ -42,12 +43,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       case 'GET':
         return await handleGet(req, res, eventId, sessionId)
       case 'PUT':
+        if (blockSimulatedMutation(req, res)) return
         // Only ADMIN, OVERSEER, ASSISTANT_OVERSEER, and KEYMAN can update count sessions
         if (!['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN'].includes(user.role)) {
           return res.status(403).json({ error: 'Insufficient permissions' })
         }
         return await handlePut(req, res, eventId, sessionId)
       case 'DELETE':
+        if (blockSimulatedMutation(req, res)) return
         // Only ADMIN can delete count sessions
         if (user.role !== 'ADMIN') {
           return res.status(403).json({ error: 'Insufficient permissions' })

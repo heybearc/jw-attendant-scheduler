@@ -234,17 +234,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // (they're already registered for the event via event_volunteers)
     const ivsTeamMember = ivsModuleEnabled ? eventVolunteer : null
 
-    // Get active count sessions for this event
+    // Get active count sessions for this event where this volunteer is explicitly assigned.
     const activeCountSessions = await prisma.count_sessions.findMany({
       where: {
         eventId: eventId as string,
-        status: 'ACTIVE'
+        status: 'ACTIVE',
+        assignees: {
+          some: {
+            volunteerId: volunteerId as string
+          }
+        }
       },
       select: {
         id: true,
         sessionName: true,
         countTime: true,
-        status: true
+        status: true,
+        assignees: {
+          where: { volunteerId: volunteerId as string },
+          select: { positionId: true }
+        }
       },
       orderBy: {
         countTime: 'asc'
@@ -310,7 +319,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           id: session.id,
           sessionName: session.sessionName,
           countTime: session.countTime ? session.countTime.toISOString() : null,
-          status: session.status
+          status: session.status,
+          positionIds: session.assignees.map((a) => a.positionId)
         })),
         announcements: announcements.map(ann => ({
           id: ann.id,

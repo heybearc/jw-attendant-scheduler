@@ -1,10 +1,16 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '../../../../auth/[...nextauth]'
 import { prisma } from '../../../../../../src/lib/prisma'
 import { z } from 'zod'
 import crypto from 'crypto'
 import { handleApiError } from '@/lib/apiError'
+import {
+  blockSimulatedMutation,
+  getSessionUser,
+  hasSessionPositionAssignees,
+  isPrivilegedCounterRole,
+  isVolunteerAssignedToSessionPosition,
+  resolveVolunteerIdForSessionUser
+} from '@/lib/countAssignments'
 
 // Validation schema for position count
 const positionCountSchema = z.object({
@@ -20,39 +26,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: 'Event ID and Session ID are required' })
   }
 
-  // Check authentication
-  const session = await getServerSession(req, res, authOptions)
-  if (!session || !session.user) {
+  const sessionUser = await getSessionUser(req, res)
+  if (!sessionUser) {
     return res.status(401).json({ error: 'Unauthorized' })
-  }
-
-  // Get user ID - handle both regular users and attendants
-  let userId = session.user.id
-  
-  // If no user ID in session, try to look up by email
-  if (!userId && session.user.email) {
-    const user = await prisma.users.findUnique({
-      where: { email: session.user.email },
-      select: { id: true }
-    })
-    
-    if (user) {
-      userId = user.id
-    } else {
-      // Try to find attendant by email
-      const attendant = await prisma.volunteers.findFirst({
-        where: { email: session.user.email },
-        select: { id: true }
-      })
-      
-      if (attendant) {
-        userId = attendant.id
-      }
-    }
-  }
-
-  if (!userId) {
-    return res.status(401).json({ error: 'User not found' })
   }
 
   try {
@@ -60,7 +36,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       case 'GET':
         return await handleGet(req, res, eventId, sessionId)
       case 'POST':
-        return await handlePost(req, res, eventId, sessionId, userId)
+        if (blockSimulatedMutation(req, res)) return
+        return await handlePost(req, res, eventId, sessionId, sessionUser.id, sessionUser.role)
       default:
         res.setHeader('Allow', ['GET', 'POST'])
         return res.status(405).json({ error: 'Method not allowed' })
@@ -100,7 +77,14 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse, eventId: str
   })
 }
 
-async function handlePost(req: NextApiRequest, res: NextApiResponse, eventId: string, sessionId: string, userId: string) {
+async function handlePost(
+  req: NextApiRequest,
+  res: NextApiResponse,
+  eventId: string,
+  sessionId: string,
+  userId: string,
+  role: string
+) {
   // Validate request body
   const validation = positionCountSchema.safeParse(req.body)
   if (!validation.success) {
@@ -142,6 +126,33 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse, eventId: st
 
   if (position.eventId !== eventId) {
     return res.status(400).json({ error: 'Position does not belong to this event' })
+  }
+
+  if (!isPrivilegedCounterRole(role)) {
+    const volunteerId = await resolveVolunteerIdForSessionUser(userId, role)
+    if (!volunteerId) {
+      return res.status(403).json({ error: 'No volunteer identity found for this user' })
+    }
+
+    const hasExplicitAssignees = await hasSessionPositionAssignees(sessionId, data.positionId)
+    let canEnter = false
+
+    if (hasExplicitAssignees) {
+      canEnter = await isVolunteerAssignedToSessionPosition(sessionId, data.positionId, volunteerId)
+    } else if (process.env.COUNT_ASSIGNMENTS_FALLBACK === 'true') {
+      const legacyAssignment = await prisma.position_assignments.findFirst({
+        where: {
+          positionId: data.positionId,
+          volunteerId
+        },
+        select: { id: true }
+      })
+      canEnter = !!legacyAssignment
+    }
+
+    if (!canEnter) {
+      return res.status(403).json({ error: 'You are not assigned to enter a count for this station/session' })
+    }
   }
 
   // Check if count already exists for this position in this session

@@ -5,6 +5,7 @@ import { prisma } from '../../../../src/lib/prisma'
 import { z } from 'zod'
 import crypto from 'crypto'
 import { handleApiError } from '@/lib/apiError'
+import { blockSimulatedMutation } from '@/lib/countAssignments'
 
 // Validation schema for count session creation
 const createCountSessionSchema = z.object({
@@ -41,6 +42,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       case 'GET':
         return await handleGet(req, res, eventId)
       case 'POST':
+        if (blockSimulatedMutation(req, res)) return
         // Only ADMIN, OVERSEER, ASSISTANT_OVERSEER, and KEYMAN can create count sessions
         if (!['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN'].includes(user.role)) {
           return res.status(403).json({ error: 'Insufficient permissions' })

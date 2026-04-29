@@ -14,9 +14,12 @@ import {
 
 // Validation schema for position count
 const positionCountSchema = z.object({
-  positionId: z.string().uuid('Invalid position ID'),
+  positionId: z.string().uuid('Invalid position ID').optional(),
+  groupId: z.string().uuid('Invalid group ID').optional(),
   attendeeCount: z.number().int().min(0).optional(),
   notes: z.string().optional(),
+}).refine((input) => !!input.positionId || !!input.groupId, {
+  message: 'Either positionId or groupId is required'
 })
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -95,6 +98,60 @@ async function handlePost(
   }
 
   const data = validation.data
+
+  // New grouped flow: one count entry per station group (primary/secondary can submit).
+  if (data.groupId) {
+    const group = await prisma.count_session_groups.findUnique({
+      where: { id: data.groupId },
+      include: {
+        countSession: { select: { id: true, eventId: true, status: true } },
+        positions: { select: { positionId: true } }
+      }
+    })
+
+    if (!group || group.countSessionId !== sessionId || group.countSession.eventId !== eventId) {
+      return res.status(404).json({ error: 'Count group not found for this session/event' })
+    }
+
+    if (group.countSession.status !== 'ACTIVE') {
+      return res.status(400).json({ error: 'Count session is not active' })
+    }
+
+    if (!isPrivilegedCounterRole(role)) {
+      const volunteerId = await resolveVolunteerIdForSessionUser(userId, role)
+      if (!volunteerId) {
+        return res.status(403).json({ error: 'No volunteer identity found for this user' })
+      }
+      const canEnter = volunteerId === group.primaryVolunteerId || volunteerId === group.secondaryVolunteerId
+      if (!canEnter) {
+        return res.status(403).json({ error: 'Only assigned primary/secondary counters can submit this group count' })
+      }
+    }
+
+    const entry = await prisma.count_group_entries.upsert({
+      where: { groupId: data.groupId },
+      create: {
+        groupId: data.groupId,
+        attendeeCount: data.attendeeCount ?? null,
+        notes: data.notes,
+        enteredBy: userId,
+        enteredAt: new Date()
+      },
+      update: {
+        attendeeCount: data.attendeeCount ?? null,
+        notes: data.notes,
+        enteredBy: userId,
+        enteredAt: new Date(),
+        updatedAt: new Date()
+      }
+    })
+
+    return res.status(200).json({
+      success: true,
+      data: entry,
+      message: 'Group count submitted successfully'
+    })
+  }
 
   // Verify count session exists and belongs to event
   const countSession = await prisma.count_sessions.findUnique({

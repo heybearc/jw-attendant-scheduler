@@ -86,6 +86,14 @@ interface SessionAssignmentPosition {
   }>
 }
 
+interface CountGroupDraft {
+  id?: string
+  name: string
+  primaryVolunteerId?: string
+  secondaryVolunteerId?: string
+  positionIds: string[]
+}
+
 interface CountTimesPageProps {
   eventId: string
   event: Event
@@ -111,6 +119,7 @@ export default function CountTimesPage({ eventId, event, countSessions, canManag
   const [selectedBulkVolunteerId, setSelectedBulkVolunteerId] = useState('')
   const [selectedBulkPositions, setSelectedBulkPositions] = useState<Set<string>>(new Set())
   const [savingAssignments, setSavingAssignments] = useState(false)
+  const [groupDrafts, setGroupDrafts] = useState<CountGroupDraft[]>([])
 
   // APEX GUARDIAN: Client-side fetching removed - data now provided via SSR
 
@@ -175,12 +184,13 @@ export default function CountTimesPage({ eventId, event, countSessions, canManag
     setSelectedBulkPositions(new Set())
     setSelectedBulkVolunteerId('')
     try {
-      const [assigneesRes, volunteersRes] = await Promise.all([
+      const [assigneesRes, volunteersRes, groupsRes] = await Promise.all([
         fetch(`/api/events/${eventId}/count-sessions/${sessionId}/assignees`, { headers: { ...getViewAsHeaders() } }),
-        fetch(`/api/events/${eventId}/volunteers`, { headers: { ...getViewAsHeaders() } })
+        fetch(`/api/events/${eventId}/volunteers`, { headers: { ...getViewAsHeaders() } }),
+        fetch(`/api/events/${eventId}/count-sessions/${sessionId}/groups`, { headers: { ...getViewAsHeaders() } })
       ])
 
-      const [assigneesData, volunteersData] = await Promise.all([assigneesRes.json(), volunteersRes.json()])
+      const [assigneesData, volunteersData, groupsData] = await Promise.all([assigneesRes.json(), volunteersRes.json(), groupsRes.json()])
       if (!assigneesData.success) throw new Error(assigneesData.error || 'Failed loading assignments')
       if (!volunteersData.success) throw new Error(volunteersData.error || 'Failed loading volunteers')
 
@@ -200,6 +210,13 @@ export default function CountTimesPage({ eventId, event, countSessions, canManag
         }))
       })))
       setVolunteers((volunteersData.volunteers || []).map((v: any) => ({ id: v.id, name: v.name })))
+      setGroupDrafts((groupsData?.data?.groups || []).map((group: any) => ({
+        id: group.id,
+        name: group.name,
+        primaryVolunteerId: group.primaryVolunteerId || '',
+        secondaryVolunteerId: group.secondaryVolunteerId || '',
+        positionIds: group.positionIds || []
+      })))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to open assignment manager')
     }
@@ -488,6 +505,90 @@ export default function CountTimesPage({ eventId, event, countSessions, canManag
                           )}
                         </div>
                       ))}
+                    </div>
+
+                    <div className="mt-4 bg-white border border-indigo-100 rounded p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <h5 className="text-sm font-semibold text-gray-900">Count Groups (single entry, primary + secondary)</h5>
+                        <button
+                          onClick={() => setGroupDrafts((prev) => [...prev, { name: `Group ${prev.length + 1}`, positionIds: [] }])}
+                          className="px-2 py-1 bg-indigo-600 text-white rounded text-xs"
+                        >
+                          + Add Group
+                        </button>
+                      </div>
+                      <div className="space-y-3">
+                        {groupDrafts.map((group, idx) => (
+                          <div key={group.id || `new-${idx}`} className="border border-gray-200 rounded p-3">
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mb-2">
+                              <input
+                                value={group.name}
+                                onChange={(e) => setGroupDrafts((prev) => prev.map((g, i) => i === idx ? { ...g, name: e.target.value } : g))}
+                                className="px-2 py-1 border border-gray-300 rounded text-sm"
+                                placeholder="Group name"
+                              />
+                              <select
+                                value={group.primaryVolunteerId || ''}
+                                onChange={(e) => setGroupDrafts((prev) => prev.map((g, i) => i === idx ? { ...g, primaryVolunteerId: e.target.value } : g))}
+                                className="px-2 py-1 border border-gray-300 rounded text-sm"
+                              >
+                                <option value="">Primary counter</option>
+                                {volunteers.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
+                              </select>
+                              <select
+                                value={group.secondaryVolunteerId || ''}
+                                onChange={(e) => setGroupDrafts((prev) => prev.map((g, i) => i === idx ? { ...g, secondaryVolunteerId: e.target.value } : g))}
+                                className="px-2 py-1 border border-gray-300 rounded text-sm"
+                              >
+                                <option value="">Secondary verifier</option>
+                                {volunteers.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
+                              </select>
+                              <button
+                                onClick={() => setGroupDrafts((prev) => prev.filter((_, i) => i !== idx))}
+                                className="px-2 py-1 bg-red-600 text-white rounded text-sm"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                            <select
+                              multiple
+                              value={group.positionIds}
+                              onChange={(e) => {
+                                const positionIds = Array.from(e.target.selectedOptions).map((option) => option.value)
+                                setGroupDrafts((prev) => prev.map((g, i) => i === idx ? { ...g, positionIds } : g))
+                              }}
+                              className="w-full min-h-[90px] border border-gray-300 rounded text-sm"
+                            >
+                              {assignmentPositions.map((position) => (
+                                <option key={position.id} value={position.id}>
+                                  #{position.positionNumber} {position.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-3">
+                        <button
+                          onClick={async () => {
+                            if (!assignmentSessionId) return
+                            const response = await fetch(`/api/events/${eventId}/count-sessions/${assignmentSessionId}/groups`, {
+                              method: 'PUT',
+                              headers: { 'Content-Type': 'application/json', ...getViewAsHeaders() },
+                              body: JSON.stringify({ groups: groupDrafts })
+                            })
+                            const data = await response.json()
+                            if (!response.ok || !data.success) {
+                              setError(data.error || 'Failed to save groups')
+                              return
+                            }
+                            setError('')
+                          }}
+                          className="px-3 py-2 bg-emerald-600 text-white rounded text-sm"
+                        >
+                          Save Count Groups
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}

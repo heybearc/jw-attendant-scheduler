@@ -162,6 +162,8 @@ model volunteers {
   position_oversight_keyman     position_oversight_assignments[] @relation("position_oversight_assignments_keyman_idTovolunteers")
   position_oversight_overseer   position_oversight_assignments[] @relation("position_oversight_assignments_overseer_idTovolunteers")
   count_session_position_assignees count_session_position_assignees[]
+  primary_count_session_groups    count_session_groups[]            @relation("count_session_groups_primary")
+  secondary_count_session_groups  count_session_groups[]            @relation("count_session_groups_secondary")
   volunteer_availability        volunteer_availability[]
 }
 
@@ -180,6 +182,7 @@ model count_sessions {
   uploadedBy      String?
   events          events             @relation(fields: [eventId], references: [id])
   assignees       count_session_position_assignees[]
+  groups          count_session_groups[]
   position_counts position_counts[]
 
   @@unique([eventId, sessionName])
@@ -505,6 +508,53 @@ model position_counts {
   @@unique([countSessionId, positionId])
 }
 
+model count_session_groups {
+  id                  String                        @id @default(uuid())
+  countSessionId      String
+  name                String
+  primaryVolunteerId  String?
+  secondaryVolunteerId String?
+  createdBy           String?
+  createdAt           DateTime                      @default(now())
+  updatedAt           DateTime                      @updatedAt
+  countSession        count_sessions                @relation(fields: [countSessionId], references: [id], onDelete: Cascade)
+  primaryVolunteer    volunteers?                   @relation("count_session_groups_primary", fields: [primaryVolunteerId], references: [id], onDelete: SetNull)
+  secondaryVolunteer  volunteers?                   @relation("count_session_groups_secondary", fields: [secondaryVolunteerId], references: [id], onDelete: SetNull)
+  createdByUser       users?                        @relation("count_session_groups_created_by", fields: [createdBy], references: [id], onDelete: SetNull)
+  positions           count_session_group_positions[]
+  entry               count_group_entries?
+
+  @@index([countSessionId])
+}
+
+model count_session_group_positions {
+  id             String              @id @default(uuid())
+  countSessionId String
+  groupId        String
+  positionId     String
+  createdAt      DateTime            @default(now())
+  countSession   count_sessions      @relation(fields: [countSessionId], references: [id], onDelete: Cascade)
+  group          count_session_groups @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  position       positions           @relation(fields: [positionId], references: [id], onDelete: Cascade)
+
+  @@unique([countSessionId, positionId])
+  @@unique([groupId, positionId])
+  @@index([countSessionId, groupId])
+}
+
+model count_group_entries {
+  id             String               @id @default(uuid())
+  groupId        String               @unique
+  attendeeCount  Int?
+  notes          String?
+  enteredBy      String?
+  enteredAt      DateTime             @default(now())
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  group          count_session_groups @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  enteredByUser  users?               @relation("count_group_entries_entered_by", fields: [enteredBy], references: [id], onDelete: SetNull)
+}
+
 model count_session_position_assignees {
   id             String         @id @default(uuid())
   countSessionId String
@@ -575,6 +625,7 @@ model positions {
   updatedAt      DateTime
   assignments    position_assignments[]           @relation("PositionToAssignments")
   assignees      count_session_position_assignees[]
+  countGroups    count_session_group_positions[]
   counts         position_counts[]                @relation("PositionToCounts")
   oversight      position_oversight_assignments[] @relation("PositionToOversight")
   shifts         position_shifts[]                @relation("PositionToShifts")
@@ -655,6 +706,8 @@ model users {
   oversight_assignments          oversight_assignments[]
   position_assignments           position_assignments[]
   count_session_position_assignees count_session_position_assignees[] @relation("count_session_position_assigneesTousers")
+  created_count_session_groups   count_session_groups[]                @relation("count_session_groups_created_by")
+  entered_count_group_entries    count_group_entries[]                 @relation("count_group_entries_entered_by")
   position_oversight_assignments position_oversight_assignments[]
   shift_templates                shift_templates[]
   locations                      locations[]

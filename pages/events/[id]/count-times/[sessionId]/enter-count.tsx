@@ -17,6 +17,14 @@ interface Position {
   hasSubmitted?: boolean
 }
 
+interface CountGroup {
+  id: string
+  name: string
+  positionIds: string[]
+  primaryVolunteerId?: string | null
+  secondaryVolunteerId?: string | null
+}
+
 interface CountSession {
   id: string
   sessionName: string
@@ -36,6 +44,7 @@ export default function EnterCountPage() {
   const [event, setEvent] = useState<Event | null>(null)
   const [countSession, setCountSession] = useState<CountSession | null>(null)
   const [positions, setPositions] = useState<Position[]>([])
+  const [groups, setGroups] = useState<CountGroup[]>([])
   const [positionCounts, setPositionCounts] = useState<Record<string, string>>({}) // Track count per position
   const [positionNotes, setPositionNotes] = useState<Record<string, string>>({}) // Track notes per position
   const [submittingPositions, setSubmittingPositions] = useState<Set<string>>(new Set())
@@ -60,20 +69,22 @@ export default function EnterCountPage() {
       
       // Fetch event, count session, positions, and existing counts
       const viewAsHeaders = getViewAsHeaders()
-      const [eventRes, sessionRes, positionsRes, countsRes, assigneesRes] = await Promise.all([
+      const [eventRes, sessionRes, positionsRes, countsRes, assigneesRes, groupsRes] = await Promise.all([
         fetch(`/api/events/${eventId}`, { headers: viewAsHeaders }),
         fetch(`/api/events/${eventId}/count-sessions/${sessionId}`, { headers: viewAsHeaders }),
         fetch(`/api/events/${eventId}/positions?includeAssignments=true&limit=1000`, { headers: viewAsHeaders }),
         fetch(`/api/events/${eventId}/count-sessions/${sessionId}/counts`, { headers: viewAsHeaders }),
-        fetch(`/api/events/${eventId}/count-sessions/${sessionId}/assignees`, { headers: viewAsHeaders })
+        fetch(`/api/events/${eventId}/count-sessions/${sessionId}/assignees`, { headers: viewAsHeaders }),
+        fetch(`/api/events/${eventId}/count-sessions/${sessionId}/groups`, { headers: viewAsHeaders })
       ])
       
-      const [eventData, sessionData, positionsData, countsData, assigneesData] = await Promise.all([
+      const [eventData, sessionData, positionsData, countsData, assigneesData, groupsData] = await Promise.all([
         eventRes.json(),
         sessionRes.json(),
         positionsRes.json(),
         countsRes.json(),
-        assigneesRes.json()
+        assigneesRes.json(),
+        groupsRes.json()
       ])
       
       if (eventData.success) setEvent(eventData.data)
@@ -119,6 +130,19 @@ export default function EnterCountPage() {
               )
           setPositions(fallbackPositions)
         }
+      }
+
+      if (groupsData?.success && Array.isArray(groupsData?.data?.groups)) {
+        const allGroups: CountGroup[] = groupsData.data.groups
+        if (isPrivilegedCounter) {
+          setGroups(allGroups)
+        } else {
+          setGroups(allGroups.filter((group) =>
+            group.primaryVolunteerId === session?.user?.id || group.secondaryVolunteerId === session?.user?.id
+          ))
+        }
+      } else {
+        setGroups([])
       }
       
     } catch (err) {
@@ -192,6 +216,55 @@ export default function EnterCountPage() {
         const newSet = new Set(prev)
         newSet.delete(position.id)
         return newSet
+      })
+    }
+  }
+
+  const submitGroupCount = async (group: CountGroup) => {
+    const countValue = positionCounts[group.id]
+    if (!countValue || countValue.trim() === '') {
+      setError('Please enter a count for this group')
+      return
+    }
+
+    const count = parseInt(countValue)
+    if (isNaN(count) || count < 0) {
+      setError('Please enter a valid number')
+      return
+    }
+
+    try {
+      setSubmittingPositions(prev => new Set(prev).add(group.id))
+      setError('')
+
+      const response = await fetch(`/api/events/${eventId}/count-sessions/${sessionId}/counts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getViewAsHeaders() },
+        body: JSON.stringify({
+          groupId: group.id,
+          attendeeCount: count,
+          notes: positionNotes[group.id]?.trim() || undefined
+        })
+      })
+
+      const data = await response.json()
+      if (data.success) {
+        setSuccess(`Count submitted for ${group.name}!`)
+        setTimeout(() => {
+          fetchData()
+          setSuccess('')
+        }, 1200)
+      } else {
+        setError(data.error || 'Failed to submit group count')
+      }
+    } catch (err) {
+      setError('Error submitting group count')
+      console.error('Error:', err)
+    } finally {
+      setSubmittingPositions(prev => {
+        const next = new Set(prev)
+        next.delete(group.id)
+        return next
       })
     }
   }
@@ -311,7 +384,15 @@ export default function EnterCountPage() {
           </div>
         )}
 
-        {positions.length === 0 ? (
+        {groups.length > 0 ? (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <p className="text-sm text-blue-700">
+              This session uses grouped count entry. Primary or secondary counter for the group can submit one agreed count.
+            </p>
+          </div>
+        ) : null}
+
+        {positions.length === 0 && groups.length === 0 ? (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-8 text-center">
             <div className="text-6xl mb-4">👤</div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">No Assigned Positions</h3>
@@ -320,6 +401,40 @@ export default function EnterCountPage() {
                 ? 'No positions are configured for this event yet.'
                 : 'You are not assigned to any positions for this event, so you cannot enter counts.'}
             </p>
+          </div>
+        ) : groups.length > 0 ? (
+          <div className="space-y-4">
+            {groups.map((group) => (
+              <div key={group.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                <h4 className="font-medium text-gray-900">{group.name}</h4>
+                <p className="text-xs text-gray-500 mb-2">Stations in group: {group.positionIds.length}</p>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    min="0"
+                    value={positionCounts[group.id] || ''}
+                    onChange={(e) => setPositionCounts(prev => ({ ...prev, [group.id]: e.target.value }))}
+                    className="flex-grow px-3 py-2 border border-gray-300 rounded-md"
+                    placeholder="Enter agreed count"
+                    disabled={submittingPositions.has(group.id)}
+                  />
+                  <button
+                    onClick={() => submitGroupCount(group)}
+                    disabled={submittingPositions.has(group.id) || !positionCounts[group.id]}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md disabled:opacity-50"
+                  >
+                    {submittingPositions.has(group.id) ? '...' : 'Submit'}
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  value={positionNotes[group.id] || ''}
+                  onChange={(e) => setPositionNotes(prev => ({ ...prev, [group.id]: e.target.value }))}
+                  className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md text-sm"
+                  placeholder="Notes (optional)"
+                />
+              </div>
+            ))}
           </div>
         ) : (
           <div className="space-y-4">

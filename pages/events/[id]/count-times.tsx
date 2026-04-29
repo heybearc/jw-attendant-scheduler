@@ -490,9 +490,18 @@ export default function CountTimesPage({ eventId, event, countSessions, canManag
                           {(() => {
                             const owner = groupDrafts.find((group) => group.positionIds.includes(position.id))
                             if (!owner) return null
+                            const primaryName = owner.primaryVolunteerId
+                              ? (volunteers.find((v) => v.id === owner.primaryVolunteerId)?.name || owner.primaryVolunteerId)
+                              : 'Unassigned'
+                            const secondaryName = owner.secondaryVolunteerId
+                              ? (volunteers.find((v) => v.id === owner.secondaryVolunteerId)?.name || owner.secondaryVolunteerId)
+                              : 'Unassigned'
                             return (
                               <div className="mb-2 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-2 py-1">
                                 Grouped in: <span className="font-semibold">{owner.name}</span>
+                                <div className="mt-1 text-[11px] leading-4 text-emerald-800">
+                                  Primary: <span className="font-semibold">{primaryName}</span> | Secondary: <span className="font-semibold">{secondaryName}</span>
+                                </div>
                               </div>
                             )
                           })()}
@@ -599,6 +608,27 @@ export default function CountTimesPage({ eventId, event, countSessions, canManag
                         <button
                           onClick={async () => {
                             if (!assignmentSessionId) return
+
+                            const seen = new Map<string, string>()
+                            const duplicateLabels: string[] = []
+                            for (const group of groupDrafts) {
+                              for (const positionId of group.positionIds) {
+                                if (seen.has(positionId)) {
+                                  const positionLabel = assignmentPositions.find((p) => p.id === positionId)
+                                  duplicateLabels.push(positionLabel ? `#${positionLabel.positionNumber} ${positionLabel.name}` : positionId)
+                                } else {
+                                  seen.set(positionId, group.name)
+                                }
+                              }
+                            }
+                            if (duplicateLabels.length > 0) {
+                              const unique = [...new Set(duplicateLabels)]
+                              const message = `Stations cannot be in multiple groups: ${unique.join(', ')}`
+                              setError(message)
+                              setGroupSaveMessage({ type: 'error', text: message })
+                              return
+                            }
+
                             const response = await fetch(`/api/events/${eventId}/count-sessions/${assignmentSessionId}/groups`, {
                               method: 'PUT',
                               headers: { 'Content-Type': 'application/json', ...getViewAsHeaders() },

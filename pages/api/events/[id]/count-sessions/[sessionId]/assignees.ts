@@ -11,14 +11,15 @@ const putAssigneesSchema = z.object({
 })
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { id: eventId, sessionId } = req.query
-  if (!eventId || typeof eventId !== 'string' || !sessionId || typeof sessionId !== 'string') {
-    return res.status(400).json({ error: 'Event ID and Session ID are required' })
-  }
+  try {
+    const { id: eventId, sessionId } = req.query
+    if (!eventId || typeof eventId !== 'string' || !sessionId || typeof sessionId !== 'string') {
+      return res.status(400).json({ error: 'Event ID and Session ID are required' })
+    }
 
-  const sessionUser = await getSessionUser(req, res)
-  if (!sessionUser) return res.status(401).json({ error: 'Unauthorized' })
-  if (req.method === 'GET') {
+    const sessionUser = await getSessionUser(req, res)
+    if (!sessionUser) return res.status(401).json({ error: 'Unauthorized' })
+    if (req.method === 'GET') {
     const simulatedVolunteerId = getViewAsVolunteerId(req)
     const privileged = isPrivilegedCounterRole(sessionUser.role) && !simulatedVolunteerId
     const [countSession, positions, assignees] = await Promise.all([
@@ -67,11 +68,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
   }
 
-  if (req.method === 'PUT') {
-    if (blockSimulatedMutation(req, res)) return
-    if (!isPrivilegedCounterRole(sessionUser.role)) {
-      return res.status(403).json({ error: 'Only ADMIN/OVERSEER/KEYMAN can manage assignees' })
-    }
+    if (req.method === 'PUT') {
+      if (blockSimulatedMutation(req, res)) return
+      if (!isPrivilegedCounterRole(sessionUser.role)) {
+        return res.status(403).json({ error: 'Only ADMIN/OVERSEER/KEYMAN can manage assignees' })
+      }
     const parsed = putAssigneesSchema.safeParse(req.body)
     if (!parsed.success) {
       return res.status(400).json({ error: 'Invalid payload', details: parsed.error.errors })
@@ -127,9 +128,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     })
 
-    return res.status(200).json({ success: true, message: 'Assignees updated successfully' })
-  }
+      return res.status(200).json({ success: true, message: 'Assignees updated successfully' })
+    }
 
-  res.setHeader('Allow', ['GET', 'PUT'])
-  return res.status(405).json({ error: 'Method not allowed' })
+    res.setHeader('Allow', ['GET', 'PUT'])
+    return res.status(405).json({ error: 'Method not allowed' })
+  } catch (error) {
+    console.error('Count assignees API error:', error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
 }

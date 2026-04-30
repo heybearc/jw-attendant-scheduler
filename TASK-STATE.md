@@ -1,8 +1,8 @@
 # TheoShift Task State
 
-**Last updated:** 2026-04-29 (end-day)  
+**Last updated:** 2026-04-30 (end-day)  
 **Current branch:** main  
-**Working on:** v4.18.0 on `main` — release pipeline docs aligned with MC (D-042); no open blockers for next session ✅
+**Working on:** v4.18.0 on `main` — date correctness + IVS export reliability fixes released; no open blockers for next session ✅
 
 ---
 
@@ -10,9 +10,15 @@
 **Pick next backlog item** — READY
 
 ### What I'm doing right now
-Day closed out. Context updated (TASK-STATE, PLAN). Repo clean and synced with Cloudy-Work `33120c4` (bump/release workflow + D-042).
+Day closed out. IVS/date fixes committed, pushed, released, and synced. Environments healthy (LIVE=GREEN, STANDBY=BLUE).
 
 ### Recent completions
+
+**Today (2026-04-30) — release fixes + verification**
+- ✅ Fixed volunteer dashboard event date drift (UTC calendar-date serialization for `@db.Date` in volunteer APIs + safe client formatting) (`6652e104`)
+- ✅ Fixed IVS export flow: UI now calls export endpoint with POST body; no more 405 from GET
+- ✅ Expanded IVS export permissions: ADMIN/OVERSEER/ASSISTANT_OVERSEER globally OR event ADMIN/COORDINATOR (`57e34d2f`)
+- ✅ Deployed to STANDBY, then ran `/release` and `/sync`; both nodes rebuilt and healthy
 
 **Today (2026-04-29) — Evening: governance + correctness**
 - ✅ Fixed `getLatestRelease` ordering: semver sort for `release-notes/v*.md` filenames (`7b9bd479`) — avoids `v4.9.0` beating `v4.18.0`
@@ -687,7 +693,7 @@ Also fixed real production bug:
 ### Next steps
 1. **Next session:** Run `/start-day`, then choose next item from `PLAN.md` Prioritized Backlog (or user-directed work).
 2. **Every `/bump`:** Run MCP `deploy_to_standby` after push so STANDBY’s build includes the new version before `/release` (HAProxy does not pull or build).
-3. Monitor production; collect magic-link feedback when convenient.
+3. Verify IVS export on LIVE with an OVERSEER account; if stable, close the issue.
 4. PIN column cleanup — May 19, 2026 (`BACKLOG.md`).
 
 ## Exact Next Command

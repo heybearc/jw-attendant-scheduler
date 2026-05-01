@@ -51,6 +51,8 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
   const [selectedVolunteers, setSelectedVolunteers] = useState<string[]>([])
   const [showBulkModal, setShowBulkModal] = useState(false)
   const [bulkAction, setBulkAction] = useState('')
+  const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null)
+  const [updatingEarlyEntryId, setUpdatingEarlyEntryId] = useState<string | null>(null)
 
   useEffect(() => {
     fetchVolunteers()
@@ -168,8 +170,9 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
 
   const handleToggleEarlyEntry = async (volunteerId: string, currentValue: boolean) => {
     try {
+      setUpdatingEarlyEntryId(volunteerId)
       const response = await fetch(`/api/events/${eventId}/ivs/volunteers/${volunteerId}/early-entry`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ earlyCheckinEligible: !currentValue }),
       })
@@ -183,6 +186,31 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
     } catch (error) {
       console.error('Error toggling early entry:', error)
       alert('Error updating early entry status')
+    } finally {
+      setUpdatingEarlyEntryId(null)
+    }
+  }
+
+  const handleQuickStatusUpdate = async (volunteerId: string, status: string) => {
+    try {
+      setUpdatingStatusId(volunteerId)
+      const response = await fetch(`/api/events/${eventId}/ivs/volunteers/${volunteerId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ivsApprovalStatus: status }),
+      })
+
+      if (response.ok) {
+        fetchVolunteers()
+      } else {
+        const data = await response.json()
+        alert(data.message || 'Failed to update status')
+      }
+    } catch (error) {
+      console.error('Error updating status:', error)
+      alert('Error updating status')
+    } finally {
+      setUpdatingStatusId(null)
     }
   }
 
@@ -526,20 +554,36 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
                   <td className="px-4 py-2 border">{volunteer.submittedBy}</td>
                   <td className="px-4 py-2 border">Request {volunteer.requestRound}</td>
                   <td className="px-4 py-2 border">
-                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusBadgeColor(volunteer.approvalStatus)}`}>
-                      {volunteer.approvalStatus}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={volunteer.approvalStatus}
+                        disabled={updatingStatusId === volunteer.id}
+                        onChange={(e) => handleQuickStatusUpdate(volunteer.id, e.target.value)}
+                        className={`px-2 py-1 rounded text-xs font-semibold border ${getStatusBadgeColor(volunteer.approvalStatus)}`}
+                      >
+                        <option value="Pending">Pending</option>
+                        <option value="Requested">Requested</option>
+                        <option value="Approved">Approved</option>
+                        <option value="Not Approved">Not Approved</option>
+                      </select>
+                      {updatingStatusId === volunteer.id && (
+                        <span className="text-xs text-gray-500">Saving...</span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-2 border text-center">
                     <button
                       onClick={() => handleToggleEarlyEntry(volunteer.id, volunteer.earlyCheckinEligible || false)}
+                      disabled={updatingEarlyEntryId === volunteer.id}
                       className={`px-3 py-1 rounded text-sm font-medium ${
                         volunteer.earlyCheckinEligible
                           ? 'bg-green-100 text-green-800 hover:bg-green-200'
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }`}
+                      } ${updatingEarlyEntryId === volunteer.id ? 'opacity-60 cursor-not-allowed' : ''}`}
                     >
-                      {volunteer.earlyCheckinEligible ? 'Yes' : 'No'}
+                      {updatingEarlyEntryId === volunteer.id
+                        ? 'Saving...'
+                        : (volunteer.earlyCheckinEligible ? 'Yes' : 'No')}
                     </button>
                   </td>
                   <td className="px-4 py-2 border">

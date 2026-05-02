@@ -1,8 +1,8 @@
 # TheoShift Task State
 
-**Last updated:** 2026-04-30 (end-day)  
+**Last updated:** 2026-05-01 (mid-day)  
 **Current branch:** main  
-**Working on:** v4.18.0 on `main` — date correctness + IVS export reliability fixes released; no open blockers for next session ✅
+**Working on:** v4.18.0 on `main` — IVS approvals UX + ops releases current; no blockers ✅
 
 ---
 
@@ -10,9 +10,14 @@
 **Pick next backlog item** — READY
 
 ### What I'm doing right now
-Day closed out. IVS/date fixes committed, pushed, released, and synced. Environments healthy (LIVE=GREEN, STANDBY=BLUE).
+IVS module inline status + early-entry fix shipped; traffic and sync completed. Environments aligned (LIVE=BLUE, STANDBY=GREEN).
 
 ### Recent completions
+
+**Today (2026-05-01) — IVS Approvals UX + release**
+- ✅ Inline status dropdown on IVS table (no edit modal); PATCH updates (`e2ae3bc6`)
+- ✅ Early Entry toggle uses PATCH (matches API — fixes 405 from PUT)
+- ✅ Deployed to STANDBY then `/release` + `/sync` (test/bump bypassed per explicit approval); LIVE=BLUE (`10.92.3.24`), STANDBY=GREEN (`10.92.3.22`)
 
 **Today (2026-04-30) — release fixes + verification**
 - ✅ Fixed volunteer dashboard event date drift (UTC calendar-date serialization for `@db.Date` in volunteer APIs + safe client formatting) (`6652e104`)

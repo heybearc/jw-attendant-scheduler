@@ -1,8 +1,8 @@
 # TheoShift Plan
 
-**Last updated:** 2026-04-30 (end-day)  
+**Last updated:** 2026-05-01 (mid-day)  
 **Current phase:** Feature Development + Platform Infrastructure  
-**Status:** v4.18.0 on `main`. Date/IVS export fixes released and synced (LIVE=GREEN, STANDBY=BLUE). Next: pick backlog or user-priority work.
+**Status:** v4.18.0 on `main`. IVS export + inline approvals shipped; nodes synced (LIVE=BLUE, STANDBY=GREEN). Next: backlog or user priority.
 
 ---
 
@@ -12,6 +12,7 @@
 - (none — next item from Prioritized Backlog or user direction)
 
 ### Completed This Phase
+- ✅ IVS Approvals: inline status updates in grid; Early Entry toggle aligned to PATCH API (`e2ae3bc6`)
 - ✅ v4.18.0 patch: fixed volunteer event date drift (UTC-safe `@db.Date` serialization + shared calendar-date formatter)
 - ✅ IVS approvals export fixed: frontend now uses POST with JSON body (matches API; resolves 405)
 - ✅ IVS export access expanded: ADMIN/OVERSEER/ASSISTANT_OVERSEER or event ADMIN/COORDINATOR

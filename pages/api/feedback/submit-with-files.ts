@@ -6,6 +6,7 @@ import formidable from 'formidable'
 import fs from 'fs'
 import path from 'path'
 import { handleApiError } from '@/lib/apiError'
+import { getNextFeedbackNumber, scheduleNotifyAdminsOfNewFeedback } from '@/lib/feedbackAdminNotify'
 
 // Disable default body parser for file uploads
 export const config = {
@@ -75,11 +76,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         })
       }
 
-      // Create feedback record
+      const feedbackNumber = await getNextFeedbackNumber()
       const feedbackId = `feedback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
       const feedback = await prisma.feedback.create({
         data: {
           id: feedbackId,
+          feedbackNumber,
           type: type.toUpperCase() as any,
           title: title.trim(),
           description: description.trim(),
@@ -129,12 +131,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         attachmentCount: validAttachments.length
       })
 
+      scheduleNotifyAdminsOfNewFeedback({
+        req,
+        feedback: {
+          type: feedback.type,
+          title: feedback.title,
+          description: feedback.description,
+          priority: feedback.priority
+        },
+        submitterName: `${user.firstName} ${user.lastName}`
+      })
+
       return res.json({
         success: true,
         data: {
           id: feedback.id,
+          feedbackNumber: feedback.feedbackNumber,
           attachmentCount: validAttachments.length,
-          message: 'Feedback submitted successfully'
+          message: feedback.feedbackNumber
+            ? `Feedback submitted successfully! Your feedback ID is ${feedback.feedbackNumber}`
+            : 'Feedback submitted successfully'
         }
       })
     } catch (error) {

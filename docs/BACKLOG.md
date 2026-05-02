@@ -46,65 +46,28 @@ ALTER TABLE "volunteers" DROP COLUMN IF EXISTS "pin";
 
 ## PWA Service Worker Issue
 
-**Status:** Known Issue / Backlog  
+**Status:** Mitigated — SW re-enabled in production with navigate bypass (2026-05-02)  
 **Priority:** Medium  
 **Created:** 2026-04-19
 
-### Problem
-Service worker interferes with magic link authentication on mobile devices. When service worker is registered on mobile:
-- Magic link callback completes successfully
-- Session cookie is set correctly
-- Redirect to `/volunteer/select-event` occurs
-- BUT page shows "ERR_FAILED" / "This site can't be reached"
+### Problem (historical)
+Service worker interfered with magic link authentication on mobile. After login, redirect to `/volunteer/select-event` sometimes showed "ERR_FAILED" / "This site can't be reached".
 
-### Current Workaround
-Service worker is completely disabled for all users. This means:
-- ❌ No PWA features (offline access, install to home screen)
-- ❌ No caching benefits
-- ✅ Magic link works on desktop and mobile
+### Root cause (working theory)
+`fetch` handler used **cache-first for volunteer HTML**. Document navigations could be served a stale or wrong shell after the session cookie was set, or otherwise break the post-login navigation on mobile.
 
-### Root Cause
-Unknown. Possibilities:
-1. Service worker caching strategy interfering with authenticated pages
-2. Service worker not properly handling session cookies
-3. Redirect handling issue in service worker
-4. Race condition between session creation and page load
+### Current approach
+1. **`public/sw.js` v2.0.2+** — If `event.request.mode === 'navigate'`, the handler **returns without `respondWith`** so the browser performs a normal network navigation (no SW interception for full page loads).
+2. **`pages/_app.tsx`** — Registers `/sw.js` in **production** only (development leaves SW off for easier debugging). The previous "unregister all workers on every load" workaround is removed.
 
-### Investigation Needed
-1. Add detailed logging to service worker fetch events
-2. Test with service worker only excluding `/volunteer/*` routes
-3. Check if issue is specific to Safari/iOS or all mobile browsers
-4. Verify session cookie is accessible to service worker
-5. Test if issue occurs when service worker is in "waiting" state vs "active"
+**Tradeoff:** Cold offline **page** navigations are no longer served from the HTML precache; API `stale-while-revalidate` for volunteer JSON and static precache (icons, manifest) still run. PWA install / theme / icons remain; true offline “open any volunteer page with no network” is limited until a follow-up (e.g. offline page + explicit opt-in cache for read-only views).
 
-### Desired Outcome
-- Service worker enabled for mobile users
-- Magic link authentication works
-- PWA features available (offline access, install to home screen)
-- Proper caching for better performance
-
-### Technical Notes
-- Service worker already excludes `/api/auth/*` and `/auth/*` routes
-- Issue occurs AFTER authentication, on the dashboard page
-- Desktop browsers work fine (service worker disabled)
-- Mobile detection: `/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i`
+### Validation needed
+- [ ] Magic link on iOS Safari and Android Chrome with production build
+- [ ] `/volunteer/select-event` and dashboard after login
+- [ ] Optional: add to home screen still works
 
 ### Related Files
-- `/pages/_app.tsx` - Service worker registration logic
-- `/public/sw.js` - Service worker implementation
-- `/docs/MAGIC-LINK-AUTH.md` - Magic link documentation
-
-### Testing Steps
-1. Enable service worker for mobile in `_app.tsx`
-2. Request magic link on mobile device
-3. Click magic link
-4. Observe if `/volunteer/select-event` loads or shows ERR_FAILED
-5. Check browser console for service worker logs
-6. Check Network tab for failed requests
-
-### Acceptance Criteria
-- [ ] Magic link works on mobile with service worker enabled
-- [ ] `/volunteer/select-event` page loads successfully
-- [ ] Service worker caches volunteer dashboard pages
-- [ ] Offline functionality works for volunteers
-- [ ] "Add to Home Screen" prompt appears on mobile
+- `/pages/_app.tsx` — production `register('/sw.js')`
+- `/public/sw.js` — fetch strategies; navigate bypass
+- `/docs/MAGIC-LINK-AUTH.md` — magic link documentation

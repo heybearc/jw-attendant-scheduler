@@ -12,11 +12,11 @@ TheoShift now supports passwordless authentication via magic links for volunteer
    - Volunteer goes to `/auth/signin`
    - Selects "Volunteer" role
    - Chooses "Email Link" method
-   - Enters their registered email address
+   - Enters their registered email address (matching is **case-insensitive** — any normal capitalization of the same address works)
    - Clicks "Send Sign-In Link"
 
 2. **Receive Email**
-   - System validates email is registered to a volunteer
+   - System validates the address against the registered volunteer (case-insensitive)
    - Generates secure one-time token (32 bytes, cryptographically random)
    - Sends beautiful HTML email with magic link
    - Token expires in 24 hours

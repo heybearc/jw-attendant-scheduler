@@ -34,6 +34,14 @@ UPLOAD_DIR="/opt/theoshift/public/uploads"
 - ✅ Next.js automatically loads this when `NODE_ENV=production`
 - ✅ This is the **single source of truth** for all env vars
 
+### Optional: `FEEDBACK_NOTIFY_EMAILS` (server only)
+
+Comma-separated addresses that receive the same “new feedback” email as **ADMIN** users (in addition to admins). Set on the host (e.g. `.env.green`), never commit.
+
+```bash
+FEEDBACK_NOTIFY_EMAILS="coord1@example.com,coord2@example.com"
+```
+
 ---
 
 ## PM2 Configuration (ecosystem.config.js)

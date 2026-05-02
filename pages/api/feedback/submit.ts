@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../auth/[...nextauth]'
 import { prisma } from '../../../src/lib/prisma'
 import { handleApiError } from '@/lib/apiError'
+import { getNextFeedbackNumber, scheduleNotifyAdminsOfNewFeedback } from '@/lib/feedbackAdminNotify'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const session = await getServerSession(req, res, authOptions)
@@ -67,30 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         })
       }
 
-      // Generate next feedback number (FB-XXX format)
-      const lastFeedback = await prisma.feedback.findFirst({
-        where: {
-          feedbackNumber: {
-            not: null
-          }
-        },
-        orderBy: {
-          feedbackNumber: 'desc'
-        },
-        select: {
-          feedbackNumber: true
-        }
-      })
-      
-      let nextNumber = 1
-      if (lastFeedback?.feedbackNumber) {
-        const match = lastFeedback.feedbackNumber.match(/FB-(\d+)/)
-        if (match) {
-          nextNumber = parseInt(match[1]) + 1
-        }
-      }
-      
-      const feedbackNumber = `FB-${String(nextNumber).padStart(3, '0')}`
+      const feedbackNumber = await getNextFeedbackNumber()
 
       // Create feedback record
       const feedback = await prisma.feedback.create({
@@ -106,7 +84,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       })
 
-      // Send email notification to admins (fire and forget)
       const submitterUser = user
       console.log('New feedback submitted:', {
         id: feedback.id,
@@ -115,51 +92,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         submittedBy: `${submitterUser.firstName} ${submitterUser.lastName}`,
         priority: feedback.priority
       })
-      
-      // Send email to admins in background
-      ;(async () => {
-        try {
-          const { sendFeedbackNotificationEmail, isEmailConfigured } = require('../../../src/lib/email')
-          
-          const emailConfigured = await isEmailConfigured()
-          if (!emailConfigured) {
-            console.log('Email not configured, skipping feedback notifications')
-            return
-          }
-          
-          // Get all admin users
-          const admins = await prisma.users.findMany({
-            where: { role: 'ADMIN' },
-            select: { email: true }
-          })
-          
-          const baseUrl = process.env.NEXTAUTH_URL || `${req.headers['x-forwarded-proto'] || 'https'}://${req.headers.host}`
-          const feedbackUrl = `${baseUrl}/admin/feedback`
-          const submitterName = `${submitterUser.firstName} ${submitterUser.lastName}`
-          
-          // Send to all admins
-          for (const admin of admins) {
-            if (admin.email) {
-              try {
-                await sendFeedbackNotificationEmail({
-                  adminEmail: admin.email,
-                  feedbackType: feedback.type,
-                  title: feedback.title,
-                  description: feedback.description,
-                  submittedBy: submitterName,
-                  priority: feedback.priority,
-                  feedbackUrl: feedbackUrl
-                })
-              } catch (err) {
-                console.error(`Failed to send feedback notification to ${admin.email}:`, err)
-              }
-            }
-          }
-          
-        } catch (emailError) {
-          console.error('Failed to send feedback notifications:', emailError)
-        }
-      })()
+
+      scheduleNotifyAdminsOfNewFeedback({
+        req,
+        feedback: {
+          type: feedback.type,
+          title: feedback.title,
+          description: feedback.description,
+          priority: feedback.priority
+        },
+        submitterName: `${submitterUser.firstName} ${submitterUser.lastName}`
+      })
 
       return res.json({
         success: true,

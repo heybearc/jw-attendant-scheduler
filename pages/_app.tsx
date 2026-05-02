@@ -10,16 +10,16 @@ function AppContent({ Component, pageProps }: { Component: any; pageProps: any }
   // Track user activity for session management
   useActivityTracking()
   
-  // Unregister service worker completely (debugging mobile issues)
+  // PWA: register in production only. SW v2.0.2+ does not intercept full page
+  // navigations (see public/sw.js) so magic link + Next.js auth work on mobile.
   useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then((registrations) => {
-        registrations.forEach((registration) => {
-          registration.unregister()
-          console.log('[PWA] Service Worker unregistered')
-        })
-      })
-    }
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return
+    if (process.env.NODE_ENV !== 'production') return
+
+    navigator.serviceWorker
+      .register('/sw.js')
+      .then((reg) => console.log('[PWA] Service Worker registered', reg.scope))
+      .catch((err) => console.warn('[PWA] Service Worker registration failed', err))
   }, [])
   
   return (

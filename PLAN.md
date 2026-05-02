@@ -1,8 +1,22 @@
 # TheoShift Plan
 
-**Last updated:** 2026-05-01 (mid-day)  
+**Last updated:** 2026-05-02  
 **Current phase:** Feature Development + Platform Infrastructure  
 **Status:** v4.18.0 on `main`. IVS export + inline approvals shipped; nodes synced (LIVE=BLUE, STANDBY=GREEN). Next: backlog or user priority.
+
+---
+
+## Product feedback (operating model)
+
+This follows the usual small-team pattern: **one system of record in the app**, **email when something new arrives**, **people triage into the roadmap** (not auto-generated git files).
+
+| What | Where |
+|------|--------|
+| **Source of truth** | Database `feedback` table — review as **ADMIN** at `/admin/feedback` (e.g. `https://theoshift.com/admin/feedback`). |
+| **Notifications** | On every successful submit (JSON, simple, and file-upload APIs), the app emails every **ADMIN** user, if mail is configured. Optional: set **`FEEDBACK_NOTIFY_EMAILS`** on the server (comma-separated) to also notify a distribution list (e.g. coordinators who are not ADMIN). |
+| **PLAN / TASK-STATE** | We do **not** auto-write `PLAN.md` from production (avoids merge noise and keeps secrets out of git). When you plan work, open the admin list, filter **new**, and **copy promoted items** into this file or the backlog in one line each (e.g. `FB-042 — short title`). |
+| **From this repo (no DB URL in git)** | Run `scripts/ssh-query-feedback.sh` or `scripts/ssh-query-feedback.sh new` — SSH to `green-theoshift` (override with `FEEDBACK_SSH_HOST`), load `/opt/theoshift/.env.green` on the host, query Postgres. Requires your SSH config (same as deploy docs). |
+| **Session habits** | Use your existing checkpoints (e.g. mid-day / end-day) to scan **new** feedback and move status or add backlog entries. |
 
 ---
 
@@ -46,14 +60,17 @@
   - Admin pages mobile optimization (overflow fixes, responsive tables)
   - Offline capability for critical features
   
-- **User Feedback Items** — Review production feedback system for new items
-  - Check `/admin/feedback` for NEW status items
-  - Promote actionable items to this backlog
+- **User Feedback Items** — See **Product feedback (operating model)** above; triage `/admin/feedback` and promote to this list
 
 ### Medium Priority
-- **Edit Assignment Time Feature** — Allow editing shift times after assignment
+- **Edit Assignment Time Feature** — Allow editing shift times after assignment (and **in-place edits** in the assignment flow; production feedback **FB-032** closed as non-blocker — work tracked here when prioritized)
   - Deferred from previous sprint
-  - User requested feature
+  - Not a deployment blocker; pick up when this backlog line is scheduled
+
+- **Volunteer page: filter by availability status** — On the event **Volunteers** page (`/events/[id]/volunteers`), add filters so coordinators can narrow the roster by **availability** (e.g. responded available, unavailable, pending / awaiting response, no request yet — exact states must match whatever the app already stores per volunteer×event).
+  - **Why:** Quickly find who still needs follow-up or who is available before assigning positions.
+  - **Scope:** Toolbar or filter row + client/query or API params; reuse existing availability fields — avoid duplicate truth.
+  - **Effort:** S–M (depends on current volunteers list and availability APIs).
   
 - **Enhanced Reporting** — Additional export formats and report types
   - Volunteer attendance reports
@@ -62,6 +79,39 @@
 - **Email Template Improvements** — More customization options
   - Custom branding per event
   - Template library
+
+### Feature implementation: volunteer / attendant profile enhancements (FB-036)
+
+*Promoted from production feedback **FB-036** (item closed in admin with requirements recorded here for implementation when scheduled).*
+
+**Goal**  
+Give coordinators better context when assigning and reviewing people: **age** (or age band) and an optional **photo** on the volunteer/attendant profile used across events.
+
+**User-requested value**
+
+| Need | Rationale |
+|------|-----------|
+| **Age** | Helps ensure older publishers are placed appropriately (comfort, access, dignity). |
+| **Photo** | Helps identify the correct brother when assigning or reviewing positions (especially large events). |
+
+**Proposed scope (draft)**
+
+1. **Data model** — Fields on volunteer (or event-attendant association if profile is per-event): e.g. date of birth or age range category; image asset URL or upload id; consent / visibility flags if required.
+2. **Admin / oversight** — Where trustworthy editors set or verify age and upload crop-safe photo (permissions aligned with existing volunteer management).
+3. **Volunteer-facing** — Optional self-service update where policy allows; otherwise read-only from volunteer view.
+4. **Consumption** — Display on positions/assignment UI where useful (toggle by role); avoid clutter on volunteer mobile dashboard unless needed.
+
+**Open decisions before build**
+
+- Privacy & retention (who sees photo/age, export in reports, deletion).
+- Storage (existing upload pipeline vs dedicated avatars).
+- Whether age is exact DOB, age only, or bracket (e.g. 60+).
+
+**Effort (estimate)**  
+Medium–Large (schema + migrations + admin + display surfaces + permissions).
+
+**Tracking**  
+Feedback **FB-036** closed as deferred; all scope lives in this section until an epic or ticket is opened.
 
 ### Low Priority
 - **UI Terminology Cleanup** — Replace remaining "attendant" references

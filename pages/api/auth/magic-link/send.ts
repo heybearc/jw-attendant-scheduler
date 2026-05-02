@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../../src/lib/prisma'
+import { findVolunteerByEmailCaseInsensitive } from '@/lib/volunteerEmailLookup'
 import nodemailer from 'nodemailer'
 import crypto from 'crypto'
 
@@ -11,21 +12,20 @@ export default async function handler(
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { email } = req.body
+  const { email: rawEmail } = req.body
 
-  if (!email) {
+  if (!rawEmail || typeof rawEmail !== 'string') {
     return res.status(400).json({ error: 'Email is required' })
   }
 
   try {
-    // Check if volunteer exists
-    const volunteer = await prisma.volunteers.findUnique({
-      where: { email }
-    })
+    const volunteer = await findVolunteerByEmailCaseInsensitive(rawEmail)
 
     if (!volunteer) {
       return res.status(404).json({ error: 'Email not registered. Please contact your coordinator.' })
     }
+
+    const email = volunteer.email
 
     // Generate secure token
     const token = crypto.randomBytes(32).toString('hex')

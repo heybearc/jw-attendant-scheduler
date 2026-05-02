@@ -27,8 +27,8 @@ Theocratic Shift Scheduler is a comprehensive web application designed to manage
 - **User Roles** - Admin, Overseer, Assistant Overseer, Keyman, Volunteer
 - **Invitation System** - Secure token-based user invitations
 - **User-Volunteer Linking** - Connect user accounts to volunteer profiles
-- **Volunteer Dashboard** - Assignment info, oversight contact, count times
-- **Volunteer Portal** - Self-service login and assignment viewing
+- **Volunteer Dashboard** - Assignment info, oversight contact, count times; published **documents** open in an in-app viewer on desktop and mobile (v4.19.0+)
+- **Volunteer Portal** - Self-service login and assignment viewing; **magic link** email entry is case-insensitive (v4.19.0+)
 
 ### Position & Assignment Management
 - **Unlimited Positions** - Create numbered positions per event
@@ -270,6 +270,13 @@ For issues or questions:
 4. Contact the project maintainer for deployment access
 
 ## 📝 Version History
+
+- **v4.19.0** (2026-05-02) - Volunteer UX: Magic Link, Documents, PWA & Feedback
+  - Magic link email matching is case-insensitive so sign-in works regardless of capitalization
+  - Desktop volunteer dashboard: published documents open in an in-app full-screen viewer with Back / Escape (aligned with mobile)
+  - Production PWA service worker re-enabled with safe navigation handling for reliable auth
+  - Feedback notifications on all submit paths; optional `FEEDBACK_NOTIFY_EMAILS` on server (see configuration docs)
+  - Operator script `scripts/ssh-query-feedback.sh` for feedback queries over SSH (no DB secrets in repo)
 
 - **v4.18.0** (2026-04-29) - Grouped Count Entry & Admin Volunteer Preview
   - New grouped section counts with primary/secondary counters and one shared entry per group

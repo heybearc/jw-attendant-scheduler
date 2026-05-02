@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../../src/lib/prisma'
+import { findVolunteerByEmailCaseInsensitive } from '@/lib/volunteerEmailLookup'
 import { encode } from 'next-auth/jwt'
 
 export default async function handler(
@@ -17,10 +18,12 @@ export default async function handler(
   }
 
   try {
-    // Verify volunteer exists
-    const volunteer = await prisma.volunteers.findUnique({
+    let volunteer = await prisma.volunteers.findUnique({
       where: { email }
     })
+    if (!volunteer) {
+      volunteer = await findVolunteerByEmailCaseInsensitive(email)
+    }
 
     if (!volunteer) {
       return res.redirect('/auth/signin?error=VolunteerNotFound')

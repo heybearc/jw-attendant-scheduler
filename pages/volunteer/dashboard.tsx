@@ -162,7 +162,22 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
   const [respondingToRequest, setRespondingToRequest] = useState<string | null>(null)
   const [isMobile, setIsMobile] = useState(false)
   const [activeTab, setActiveTab] = useState<'dashboard' | 'checkin'>('dashboard')
+  const [viewingDocument, setViewingDocument] = useState<Document | null>(null)
   const simulatedVolunteerIdFromQuery = typeof router.query.viewAsVolunteerId === 'string' ? router.query.viewAsVolunteerId : null
+
+  useEffect(() => {
+    if (!viewingDocument) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setViewingDocument(null)
+    }
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', onKey)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prevOverflow
+    }
+  }, [viewingDocument])
 
   useEffect(() => {
     // Detect mobile on mount and window resize
@@ -1319,14 +1334,13 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
                                 </div>
                               </div>
                             </div>
-                            <a
-                              href={document.fileUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                            <button
+                              type="button"
+                              onClick={() => setViewingDocument(document)}
                               className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-colors"
                             >
                               👁️ View
-                            </a>
+                            </button>
                           </div>
                         </div>
                       ))}
@@ -1475,6 +1489,61 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
           )}
         </div>
       </div>
+
+      {viewingDocument && (
+        <div className="fixed inset-0 z-[60] bg-black flex flex-col">
+          <div className="flex items-center justify-between bg-gray-900 text-white px-4 py-3 flex-shrink-0">
+            <button
+              type="button"
+              onClick={() => setViewingDocument(null)}
+              className="flex items-center space-x-2 text-white min-h-[44px] pr-4"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              <span className="text-sm font-medium">Back</span>
+            </button>
+            <p className="text-sm font-semibold truncate flex-1 text-center px-2">{viewingDocument.title}</p>
+            <a
+              href={viewingDocument.fileUrl}
+              download
+              className="text-blue-300 text-sm min-h-[44px] flex items-center pl-4"
+            >
+              ⬇️
+            </a>
+          </div>
+          <div className="flex-1 overflow-hidden">
+            {viewingDocument.fileType.includes('pdf') ? (
+              <iframe
+                src={viewingDocument.fileUrl}
+                className="w-full h-full border-0"
+                title={viewingDocument.title}
+              />
+            ) : viewingDocument.fileType.includes('image') ? (
+              <div className="flex items-center justify-center h-full bg-black p-4">
+                <img
+                  src={viewingDocument.fileUrl}
+                  alt={viewingDocument.title}
+                  className="max-w-full max-h-full object-contain"
+                />
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full bg-gray-900 text-white p-8 text-center">
+                <div className="text-6xl mb-4">📎</div>
+                <p className="text-lg font-medium mb-2">{viewingDocument.title}</p>
+                <p className="text-sm text-gray-400 mb-6">{viewingDocument.fileName}</p>
+                <a
+                  href={viewingDocument.fileUrl}
+                  download
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium"
+                >
+                  ⬇️ Download File
+                </a>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </>
   )
 }

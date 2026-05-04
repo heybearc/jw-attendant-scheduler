@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../../../../src/lib/prisma'
 import fs from 'fs'
-import path from 'path'
+import { getDocumentAbsolutePath } from '../../../../../../src/lib/documentFileStorage'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -42,8 +42,8 @@ async function handleDeleteDocument(req: NextApiRequest, res: NextApiResponse, e
 
     // Delete file from filesystem
     try {
-      const filePath = path.join(process.cwd(), 'public', document.fileUrl)
-      if (fs.existsSync(filePath)) {
+      const filePath = getDocumentAbsolutePath(document.fileUrl)
+      if (filePath && fs.existsSync(filePath)) {
         fs.unlinkSync(filePath)
       }
     } catch (fileError) {

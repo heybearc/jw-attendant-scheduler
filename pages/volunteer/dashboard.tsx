@@ -597,6 +597,63 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
     return '📎'
   }
 
+  const profileVerificationModal = showProfileVerification ? (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+        <div className="text-center mb-6">
+          <div className="text-4xl mb-3">✅</div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Verify Your Information</h2>
+          <p className="text-sm text-gray-600">
+            Please confirm or update your contact information. This helps us keep you informed about your assignments.
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Email Address
+            </label>
+            <input
+              type="email"
+              value={profileData.email}
+              onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="your.email@example.com"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Phone Number
+            </label>
+            <input
+              type="tel"
+              value={profileData.phone}
+              onChange={handlePhoneChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="(555) 123-4567"
+              maxLength={14}
+            />
+            <p className="text-xs text-gray-500 mt-1">Format: (XXX) XXX-XXXX</p>
+          </div>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <p className="text-xs text-blue-800">
+              <strong>Note:</strong> Your PIN will be automatically updated to the last 4 digits of your phone number.
+            </p>
+          </div>
+
+          <button
+            onClick={handleProfileVerification}
+            className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+          >
+            Confirm Information
+          </button>
+        </div>
+      </div>
+    </div>
+  ) : null
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -645,6 +702,7 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
           <title>My Dashboard - {dashboardData.event.name}</title>
           <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
         </Head>
+        {profileVerificationModal}
         <MobileVolunteerDashboard
           volunteer={dashboardData.volunteer}
           event={dashboardData.event}
@@ -669,63 +727,7 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
         <title>Volunteer Dashboard | TheoShift</title>
       </Head>
 
-      {/* Profile Verification Modal */}
-      {showProfileVerification && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <div className="text-center mb-6">
-              <div className="text-4xl mb-3">✅</div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Verify Your Information</h2>
-              <p className="text-sm text-gray-600">
-                Please confirm or update your contact information. This helps us keep you informed about your assignments.
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  value={profileData.email}
-                  onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="your.email@example.com"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Phone Number
-                </label>
-                <input
-                  type="tel"
-                  value={profileData.phone}
-                  onChange={handlePhoneChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="(555) 123-4567"
-                  maxLength={14}
-                />
-                <p className="text-xs text-gray-500 mt-1">Format: (XXX) XXX-XXXX</p>
-              </div>
-
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <p className="text-xs text-blue-800">
-                  <strong>Note:</strong> Your PIN will be automatically updated to the last 4 digits of your phone number.
-                </p>
-              </div>
-
-              <button
-                onClick={handleProfileVerification}
-                className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-              >
-                Confirm Information
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {profileVerificationModal}
 
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
@@ -1490,7 +1492,7 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
         </div>
       </div>
 
-      {viewingDocument && (
+      {viewingDocument && dashboardData && (
         <div className="fixed inset-0 z-[60] bg-black flex flex-col">
           <div className="flex items-center justify-between bg-gray-900 text-white px-4 py-3 flex-shrink-0">
             <button
@@ -1505,7 +1507,7 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
             </button>
             <p className="text-sm font-semibold truncate flex-1 text-center px-2">{viewingDocument.title}</p>
             <a
-              href={viewingDocument.fileUrl}
+              href={`/api/events/${dashboardData.event.id}/documents/${viewingDocument.id}/file`}
               download
               className="text-blue-300 text-sm min-h-[44px] flex items-center pl-4"
             >
@@ -1515,14 +1517,14 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
           <div className="flex-1 overflow-hidden">
             {viewingDocument.fileType.includes('pdf') ? (
               <iframe
-                src={viewingDocument.fileUrl}
+                src={`/api/events/${dashboardData.event.id}/documents/${viewingDocument.id}/file`}
                 className="w-full h-full border-0"
                 title={viewingDocument.title}
               />
             ) : viewingDocument.fileType.includes('image') ? (
               <div className="flex items-center justify-center h-full bg-black p-4">
                 <img
-                  src={viewingDocument.fileUrl}
+                  src={`/api/events/${dashboardData.event.id}/documents/${viewingDocument.id}/file`}
                   alt={viewingDocument.title}
                   className="max-w-full max-h-full object-contain"
                 />
@@ -1533,7 +1535,7 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
                 <p className="text-lg font-medium mb-2">{viewingDocument.title}</p>
                 <p className="text-sm text-gray-400 mb-6">{viewingDocument.fileName}</p>
                 <a
-                  href={viewingDocument.fileUrl}
+                  href={`/api/events/${dashboardData.event.id}/documents/${viewingDocument.id}/file`}
                   download
                   className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium"
                 >

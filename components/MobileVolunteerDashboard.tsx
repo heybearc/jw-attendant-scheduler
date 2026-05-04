@@ -640,7 +640,7 @@ export default function MobileVolunteerDashboard({
             </button>
             <p className="text-sm font-semibold truncate flex-1 text-center px-2">{viewingDoc.title}</p>
             <a
-              href={viewingDoc.fileUrl}
+              href={`/api/events/${event.id}/documents/${viewingDoc.id}/file`}
               download
               className="text-blue-300 text-sm touch-manipulation min-h-[44px] flex items-center pl-4"
             >
@@ -651,14 +651,14 @@ export default function MobileVolunteerDashboard({
           <div className="flex-1 overflow-hidden">
             {viewingDoc.fileType.includes('pdf') ? (
               <iframe
-                src={viewingDoc.fileUrl}
+                src={`/api/events/${event.id}/documents/${viewingDoc.id}/file`}
                 className="w-full h-full border-0"
                 title={viewingDoc.title}
               />
             ) : viewingDoc.fileType.includes('image') ? (
               <div className="flex items-center justify-center h-full bg-black p-4">
                 <img
-                  src={viewingDoc.fileUrl}
+                  src={`/api/events/${event.id}/documents/${viewingDoc.id}/file`}
                   alt={viewingDoc.title}
                   className="max-w-full max-h-full object-contain"
                 />
@@ -669,7 +669,7 @@ export default function MobileVolunteerDashboard({
                 <p className="text-lg font-medium mb-2">{viewingDoc.title}</p>
                 <p className="text-sm text-gray-400 mb-6">{viewingDoc.fileName}</p>
                 <a
-                  href={viewingDoc.fileUrl}
+                  href={`/api/events/${event.id}/documents/${viewingDoc.id}/file`}
                   download
                   className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium touch-manipulation"
                 >

@@ -402,7 +402,7 @@ export default function EventDocumentsPage({ eventId, event, documents, canEdit,
                       </div>
                       <div className="flex items-center space-x-2">
                         <a
-                          href={document.fileUrl}
+                          href={`/api/events/${eventId}/documents/${document.id}/file`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-colors"

@@ -503,7 +503,13 @@ export default function VolunteerChatPage() {
                 </button>
               )}
               <Link
-                href={typeof router.query.eventId === 'string' ? `/volunteer/dashboard?eventId=${router.query.eventId}` : '/volunteer/dashboard'}
+                href={
+                  typeof router.query.eventId === 'string'
+                    ? `/volunteer/dashboard?eventId=${router.query.eventId}${
+                        effectiveViewAsVolunteerId ? `&viewAsVolunteerId=${effectiveViewAsVolunteerId}` : ''
+                      }`
+                    : '/volunteer/dashboard'
+                }
                 className="text-sm text-blue-600 hover:text-blue-800"
               >
                 Back to Dashboard

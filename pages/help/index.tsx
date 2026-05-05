@@ -119,6 +119,12 @@ export default function HelpPage({ userRole }: HelpPageProps) {
       roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN', 'VOLUNTEER']
     },
     {
+      id: 'event-chat',
+      title: '💬 Event Chat',
+      description: 'Real-time event communication for staff and volunteers',
+      roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN', 'VOLUNTEER']
+    },
+    {
       id: 'ivs',
       title: '📋 IVS Module',
       description: 'Manage International Volunteer Service volunteers with Approvals and Early Check-In tabs',

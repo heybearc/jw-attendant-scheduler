@@ -271,6 +271,11 @@ For issues or questions:
 
 ## 📝 Version History
 
+- **v4.20.0** (2026-05-05) - In-app event chat (staff + volunteer) with pinning and moderation
+  - New event-scoped chat channels for announcements, general coordination, and position-specific communication
+  - Staff-only internal channel for overseers/admins/keymen/assistants
+  - Moderation tools for staff: delete, mute, and pin key messages per channel
+
 - **v4.19.0** (2026-05-02) - Volunteer UX: Magic Link, Documents, PWA & Feedback
   - Magic link email matching is case-insensitive so sign-in works regardless of capitalization
   - Desktop volunteer dashboard: published documents open in an in-app full-screen viewer with Back / Escape (aligned with mobile)

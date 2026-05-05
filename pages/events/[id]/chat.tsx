@@ -70,8 +70,12 @@ export default function EventStaffChatPage({
     if (!res.ok || !data.success) throw new Error(data.error || 'Unable to load channels')
     const nextChannels = data.data?.channels || []
     setChannels(nextChannels)
-    if (!selectedChannelId && nextChannels.length > 0) {
-      setSelectedChannelId(nextChannels[0].id)
+    if (nextChannels.length > 0) {
+      // Keep current selection if still present; otherwise fall back to first channel.
+      setSelectedChannelId((current) => {
+        if (current && nextChannels.some((c: ChatChannel) => c.id === current)) return current
+        return nextChannels[0].id
+      })
     }
   }
 
@@ -87,18 +91,18 @@ export default function EventStaffChatPage({
 
   useEffect(() => {
     let timer: NodeJS.Timeout | null = null
-    const run = async () => {
+    const run = async (opts?: { showLoading?: boolean }) => {
       try {
-        setLoading(true)
+        if (opts?.showLoading) setLoading(true)
         await loadChannels()
       } catch (e: any) {
         setError(e.message || 'Unable to load chat')
       } finally {
-        setLoading(false)
+        if (opts?.showLoading) setLoading(false)
       }
     }
-    run()
-    timer = setInterval(run, 7000)
+    run({ showLoading: true })
+    timer = setInterval(() => run({ showLoading: false }), 7000)
     return () => {
       if (timer) clearInterval(timer)
     }

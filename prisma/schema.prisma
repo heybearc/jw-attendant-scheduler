@@ -168,6 +168,7 @@ model volunteers {
   chat_members                 event_chat_members[]
   chat_messages                event_chat_messages[]                @relation("event_chat_messages_sender_volunteer")
   chat_reads                   event_chat_reads[]
+  chat_push_subscriptions      event_chat_push_subscriptions[]
 }
 
 model count_sessions {
@@ -721,6 +722,7 @@ model users {
   chat_members                   event_chat_members[]
   chat_messages                  event_chat_messages[]            @relation("event_chat_messages_sender_user")
   chat_reads                     event_chat_reads[]
+  chat_push_subscriptions        event_chat_push_subscriptions[]
 }
 
 model admin_view_as_audit_logs {

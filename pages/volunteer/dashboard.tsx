@@ -520,6 +520,8 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
   }
 
   const totalUnreadChat = chatChannels.reduce((sum, c) => sum + (c.unreadCount || 0), 0)
+  const effectiveViewAsVolunteerId =
+    session?.user?.role === 'ADMIN' ? (simulatedVolunteerIdFromQuery || getViewAsVolunteerId()) : null
 
   const handleSubmitCount = async (sessionId: string) => {
     const countValue = countValues.get(sessionId) || ''
@@ -736,7 +738,8 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
             onClick={() => {
               dismissChatOnboarding()
               if (selectedEventId) {
-                router.push(`/volunteer/chat?eventId=${selectedEventId}`)
+                const viewAs = effectiveViewAsVolunteerId ? `&viewAsVolunteerId=${effectiveViewAsVolunteerId}` : ''
+                router.push(`/volunteer/chat?eventId=${selectedEventId}${viewAs}`)
               }
             }}
             className="flex-1 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
@@ -813,7 +816,13 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
           chatEnabled={chatChannels.length > 0}
           chatChannelCount={chatChannels.length}
           chatUnreadCount={totalUnreadChat}
-          chatHref={selectedEventId ? `/volunteer/chat?eventId=${selectedEventId}` : '/volunteer/chat'}
+          chatHref={
+            selectedEventId
+              ? `/volunteer/chat?eventId=${selectedEventId}${
+                  effectiveViewAsVolunteerId ? `&viewAsVolunteerId=${effectiveViewAsVolunteerId}` : ''
+                }`
+              : '/volunteer/chat'
+          }
         />
       </>
     )
@@ -916,7 +925,13 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
                   )}
                 </div>
                 <Link
-                  href={selectedEventId ? `/volunteer/chat?eventId=${selectedEventId}` : '/volunteer/chat'}
+                  href={
+                    selectedEventId
+                      ? `/volunteer/chat?eventId=${selectedEventId}${
+                          effectiveViewAsVolunteerId ? `&viewAsVolunteerId=${effectiveViewAsVolunteerId}` : ''
+                        }`
+                      : '/volunteer/chat'
+                  }
                   className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors whitespace-nowrap"
                 >
                   Open Chat

@@ -21,9 +21,13 @@ export async function middleware(request: NextRequest) {
       token?.role === 'ADMIN' &&
       pathname === '/volunteer/dashboard' &&
       !!searchParams.get('viewAsVolunteerId')
+    const isAdminViewAsChat =
+      token?.role === 'ADMIN' &&
+      pathname === '/volunteer/chat' &&
+      !!searchParams.get('viewAsVolunteerId')
 
     // Allow real volunteer sessions, plus admin "view-as" preview route.
-    if (!token || (!isVolunteer && !isAdminViewAsDashboard)) {
+    if (!token || (!isVolunteer && !isAdminViewAsDashboard && !isAdminViewAsChat)) {
       const url = request.nextUrl.clone()
       url.pathname = '/volunteer/login'
       // Preserve the original URL as a callback

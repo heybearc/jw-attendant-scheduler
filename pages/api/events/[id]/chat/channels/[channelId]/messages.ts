@@ -4,6 +4,7 @@ import { authOptions } from '../../../../../auth/[...nextauth]'
 import { prisma } from '@/lib/prisma'
 import { canAccessChatChannel } from '@/lib/chatAccess'
 import { checkEventAccess } from '@/lib/eventAccess'
+import { getActiveLinkedVolunteerId } from '@/lib/eventVolunteerIdentity'
 import { broadcastToChannel, broadcastToEvent } from '@/lib/chatRealtime'
 import { sendWebPush } from '@/lib/webPush'
 
@@ -119,38 +120,72 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ success: false, error: 'Message is too long (max 2000 chars)' })
     }
 
-    const member = await prisma.event_chat_members.findFirst({
-      where: {
-        channelId,
-        ...(access.actor.kind === 'user' ? { userId: access.actor.id } : { volunteerId: access.actor.id })
-      },
-      select: { mutedUntil: true }
-    })
+    const channelRow = access.channel
 
-    if (member?.mutedUntil && member.mutedUntil > new Date()) {
-      return res.status(403).json({ success: false, error: 'You are muted in this channel' })
+    let dmVolunteerSenderId: string | null = null
+    if (channelRow.type === 'VOLUNTEER_DM') {
+      if (access.actor.kind === 'volunteer') {
+        dmVolunteerSenderId = access.actor.id
+      } else {
+        const linked = await getActiveLinkedVolunteerId(access.actor.id, eventId)
+        const a = channelRow.dmVolunteerAId
+        const b = channelRow.dmVolunteerBId
+        if (!linked || !a || !b || (linked !== a && linked !== b)) {
+          return res.status(403).json({ success: false, error: 'Access denied for this channel' })
+        }
+        dmVolunteerSenderId = linked
+      }
+
+      const member = await prisma.event_chat_members.findFirst({
+        where: { channelId, volunteerId: dmVolunteerSenderId },
+        select: { mutedUntil: true }
+      })
+
+      if (member?.mutedUntil && member.mutedUntil > new Date()) {
+        return res.status(403).json({ success: false, error: 'You are muted in this channel' })
+      }
+
+      await prisma.event_chat_members.upsert({
+        where: { channelId_volunteerId: { channelId, volunteerId: dmVolunteerSenderId } },
+        create: { channelId, volunteerId: dmVolunteerSenderId, role: 'MEMBER' },
+        update: {}
+      })
+    } else {
+      const member = await prisma.event_chat_members.findFirst({
+        where: {
+          channelId,
+          ...(access.actor.kind === 'user' ? { userId: access.actor.id } : { volunteerId: access.actor.id })
+        },
+        select: { mutedUntil: true }
+      })
+
+      if (member?.mutedUntil && member.mutedUntil > new Date()) {
+        return res.status(403).json({ success: false, error: 'You are muted in this channel' })
+      }
+
+      await prisma.event_chat_members.upsert({
+        where:
+          access.actor.kind === 'user'
+            ? { channelId_userId: { channelId, userId: access.actor.id } }
+            : { channelId_volunteerId: { channelId, volunteerId: access.actor.id } },
+        create:
+          access.actor.kind === 'user'
+            ? { channelId, userId: access.actor.id, role: 'MEMBER' }
+            : { channelId, volunteerId: access.actor.id, role: 'MEMBER' },
+        update: {}
+      })
     }
-
-    await prisma.event_chat_members.upsert({
-      where:
-        access.actor.kind === 'user'
-          ? { channelId_userId: { channelId, userId: access.actor.id } }
-          : { channelId_volunteerId: { channelId, volunteerId: access.actor.id } },
-      create:
-        access.actor.kind === 'user'
-          ? { channelId, userId: access.actor.id, role: 'MEMBER' }
-          : { channelId, volunteerId: access.actor.id, role: 'MEMBER' },
-      update: {}
-    })
 
     const message = await prisma.event_chat_messages.create({
       data: {
         channelId,
         body,
         kind: 'TEXT',
-        ...(access.actor.kind === 'user'
-          ? { senderUserId: access.actor.id }
-          : { senderVolunteerId: access.actor.id })
+        ...(channelRow.type === 'VOLUNTEER_DM' && dmVolunteerSenderId
+          ? { senderVolunteerId: dmVolunteerSenderId }
+          : access.actor.kind === 'user'
+            ? { senderUserId: access.actor.id }
+            : { senderVolunteerId: access.actor.id })
       },
       select: {
         id: true,
@@ -172,11 +207,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       try {
         const channel = await prisma.event_chat_channels.findFirst({
           where: { id: channelId, eventId },
-          select: { id: true, name: true, type: true, positionId: true }
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            positionId: true,
+            dmVolunteerAId: true,
+            dmVolunteerBId: true
+          }
         })
         if (!channel) return
 
-        const senderKey = `${access.actor.kind}:${access.actor.id}`
+        const senderKey =
+          channel.type === 'VOLUNTEER_DM' && dmVolunteerSenderId
+            ? `volunteer:${dmVolunteerSenderId}`
+            : `${access.actor.kind}:${access.actor.id}`
 
         const staffUserIds = (
           await prisma.event_permissions.findMany({
@@ -200,7 +245,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           )
             .map((a) => a.volunteerId)
             .filter(Boolean)
-        } else if (channel.type === 'EVENT_GENERAL' || channel.type === 'EVENT_ANNOUNCEMENTS') {
+        } else if (channel.type === 'EVENT_GENERAL') {
           volunteerIds = (
             await prisma.event_volunteers.findMany({
               where: { eventId, isActive: true, volunteerId: { not: null } },
@@ -209,6 +254,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           )
             .map((ev) => ev.volunteerId as string)
             .filter(Boolean)
+        } else if (
+          channel.type === 'VOLUNTEER_DM' &&
+          channel.dmVolunteerAId &&
+          channel.dmVolunteerBId
+        ) {
+          volunteerIds = [channel.dmVolunteerAId, channel.dmVolunteerBId]
         }
 
         // STAFF_INTERNAL should notify staff only.
@@ -271,6 +322,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const messageId = typeof req.query.messageId === 'string' ? req.query.messageId : null
     if (!messageId) {
       return res.status(400).json({ success: false, error: 'messageId is required' })
+    }
+
+    if (access.channel.type === 'VOLUNTEER_DM') {
+      const a = access.channel.dmVolunteerAId
+      const b = access.channel.dmVolunteerBId
+      const linked =
+        access.actor.kind === 'user' ? await getActiveLinkedVolunteerId(access.actor.id, eventId) : null
+      const participantVolunteerId =
+        access.actor.kind === 'volunteer' ? access.actor.id : linked
+      const isParticipant = !!(a && b && participantVolunteerId && (participantVolunteerId === a || participantVolunteerId === b))
+      if (!isParticipant) {
+        return res.status(403).json({
+          success: false,
+          error: 'Direct messages are only visible to the two participants'
+        })
+      }
     }
 
     if (access.actor.kind !== 'user') {

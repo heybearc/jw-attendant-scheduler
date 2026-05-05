@@ -15,10 +15,12 @@ interface EventData {
 interface ChatChannel {
   id: string
   eventId: string
-  type: 'EVENT_ANNOUNCEMENTS' | 'EVENT_GENERAL' | 'POSITION' | 'STAFF_INTERNAL'
+  type: 'EVENT_ANNOUNCEMENTS' | 'EVENT_GENERAL' | 'POSITION' | 'STAFF_INTERNAL' | 'VOLUNTEER_DM'
   name: string
   unreadCount?: number
   pinnedMessageId?: string | null
+  dmVolunteerAId?: string | null
+  dmVolunteerBId?: string | null
 }
 
 interface ChatMessage {
@@ -36,6 +38,7 @@ interface Props {
   canEdit: boolean
   canDelete: boolean
   canManagePermissions: boolean
+  canNotifyChatLaunch: boolean
   moduleConfig?: any
   terminology?: any
 }
@@ -45,6 +48,7 @@ export default function EventStaffChatPage({
   canEdit,
   canDelete,
   canManagePermissions,
+  canNotifyChatLaunch,
   moduleConfig,
   terminology
 }: Props) {
@@ -62,6 +66,12 @@ export default function EventStaffChatPage({
   const [pushNotificationsEnabledForEvent, setPushNotificationsEnabledForEvent] = useState<boolean>(false)
   const [pushNotificationsToggleSaving, setPushNotificationsToggleSaving] = useState<boolean>(false)
   const [showEnablePushPrompt, setShowEnablePushPrompt] = useState<boolean>(false)
+  const [linkedVolunteerId, setLinkedVolunteerId] = useState<string | null>(null)
+  const [dmOpen, setDmOpen] = useState(false)
+  const [dmVolunteers, setDmVolunteers] = useState<Array<{ id: string; name: string }>>([])
+  const [dmPeerId, setDmPeerId] = useState('')
+  const [dmBusy, setDmBusy] = useState(false)
+  const [notifySending, setNotifySending] = useState(false)
   const wsRef = useRef<WebSocket | null>(null)
   const refreshPushStatus = async () => {
     try {
@@ -148,6 +158,15 @@ export default function EventStaffChatPage({
   }, [])
 
   useEffect(() => {
+    if (!selectedChannelId || typeof window === 'undefined') return
+    try {
+      sessionStorage.setItem(staffChatStorageKey, selectedChannelId)
+    } catch {
+      // ignore
+    }
+  }, [selectedChannelId, staffChatStorageKey])
+
+  useEffect(() => {
     fetch(`/api/events/${event.id}/chat/push-settings`)
       .then((r) => r.json())
       .then((j) => setPushNotificationsEnabledForEvent(!!j?.data?.enabled))
@@ -186,17 +205,28 @@ export default function EventStaffChatPage({
     }
   }
 
+  const staffChatStorageKey = `staffEventChat:${event.id}`
+
   const loadChannels = async () => {
     const res = await fetch(`/api/events/${event.id}/chat/channels`)
     const data = await res.json()
     if (!res.ok || !data.success) throw new Error(data.error || 'Unable to load channels')
     const nextChannels = data.data?.channels || []
+    setLinkedVolunteerId(data.data?.linkedVolunteerId ?? null)
     setChannels(nextChannels)
     if (nextChannels.length > 0) {
-      // Keep current selection if still present; otherwise fall back to first channel.
       setSelectedChannelId((current) => {
         if (current && nextChannels.some((c: ChatChannel) => c.id === current)) return current
-        return nextChannels[0].id
+        try {
+          if (typeof window !== 'undefined') {
+            const stored = sessionStorage.getItem(staffChatStorageKey)
+            if (stored && nextChannels.some((c: ChatChannel) => c.id === stored)) return stored
+          }
+        } catch {
+          // ignore
+        }
+        const general = nextChannels.find((c: ChatChannel) => c.type === 'EVENT_GENERAL')
+        return general?.id ?? nextChannels[0].id
       })
     }
   }
@@ -505,6 +535,70 @@ export default function EventStaffChatPage({
     alert(`Muted ${senderName(message)} for ${minutes} minutes.`)
   }
 
+  const handleNotifyChatLaunch = async () => {
+    const note = typeof window !== 'undefined' ? window.prompt('Optional note for volunteers (leave blank to skip):') || '' : ''
+    setNotifySending(true)
+    try {
+      const response = await fetch(`/api/events/${event.id}/chat/notify-volunteers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: note })
+      })
+      const data = await response.json()
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to send chat rollout emails')
+      }
+      alert(data.message || `Sent ${data.sent} email(s).`)
+    } catch (err: any) {
+      alert(err?.message || 'Failed to send chat rollout emails')
+    } finally {
+      setNotifySending(false)
+    }
+  }
+
+  const openDmModal = async () => {
+    if (!linkedVolunteerId) {
+      setError('Add yourself as an active volunteer for this event to use direct messages.')
+      return
+    }
+    setDmOpen(true)
+    setDmPeerId('')
+    try {
+      const r = await fetch(`/api/events/${event.id}/volunteers`)
+      const j = await r.json()
+      const vols = (j.volunteers || []) as Array<{ id: string; name: string }>
+      setDmVolunteers(vols.filter((v) => v.id !== linkedVolunteerId))
+    } catch {
+      setDmVolunteers([])
+    }
+  }
+
+  const startDirectMessage = async () => {
+    if (!dmPeerId) return
+    setDmBusy(true)
+    setError('')
+    try {
+      const r = await fetch(`/api/events/${event.id}/chat/direct-message`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ peerVolunteerId: dmPeerId })
+      })
+      const j = await r.json()
+      if (!r.ok || !j.success) {
+        throw new Error(j.error || 'Could not open direct message')
+      }
+      setDmOpen(false)
+      await loadChannels()
+      if (j.data?.channel?.id) {
+        setSelectedChannelId(j.data.channel.id)
+      }
+    } catch (e: any) {
+      setError(e?.message || 'Could not open direct message')
+    } finally {
+      setDmBusy(false)
+    }
+  }
+
   const senderName = (m: ChatMessage) =>
     m.senderUser
       ? `${m.senderUser.firstName} ${m.senderUser.lastName} (${m.senderUser.role})`
@@ -529,7 +623,26 @@ export default function EventStaffChatPage({
               <h1 className="text-2xl font-bold text-gray-900">Staff Chat</h1>
               <p className="text-gray-600">Moderate and coordinate event communication channels.</p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              {canNotifyChatLaunch && (
+                <button
+                  type="button"
+                  onClick={handleNotifyChatLaunch}
+                  disabled={notifySending}
+                  className="text-sm px-3 py-2 rounded-md border border-indigo-200 bg-indigo-50 text-indigo-800 hover:bg-indigo-100 disabled:opacity-60"
+                >
+                  {notifySending ? 'Sending…' : '💬 Notify chat launch'}
+                </button>
+              )}
+              {linkedVolunteerId && (
+                <button
+                  type="button"
+                  onClick={openDmModal}
+                  className="text-sm px-3 py-2 rounded-md border border-gray-300 bg-white hover:bg-gray-50"
+                >
+                  New direct message
+                </button>
+              )}
               <button
                 onClick={async () => {
                   try {
@@ -563,6 +676,45 @@ export default function EventStaffChatPage({
             </div>
           </div>
         </div>
+
+        {dmOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-4">
+              <h2 className="text-lg font-semibold text-gray-900">Direct message a volunteer</h2>
+              <p className="text-sm text-gray-600 mt-1">Only active volunteers in this event. Chat is private to the two of you.</p>
+              <label className="block mt-4 text-sm font-medium text-gray-700">Volunteer</label>
+              <select
+                value={dmPeerId}
+                onChange={(e) => setDmPeerId(e.target.value)}
+                className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+              >
+                <option value="">Select…</option>
+                {dmVolunteers.map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.name}
+                  </option>
+                ))}
+              </select>
+              <div className="mt-4 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setDmOpen(false)}
+                  className="px-3 py-2 text-sm rounded-md border border-gray-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={!dmPeerId || dmBusy}
+                  onClick={startDirectMessage}
+                  className="px-3 py-2 text-sm rounded-md bg-blue-600 text-white disabled:bg-gray-400"
+                >
+                  {dmBusy ? 'Opening…' : 'Open chat'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {showEnablePushPrompt && (
           <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start justify-between gap-4">
@@ -632,6 +784,9 @@ export default function EventStaffChatPage({
                       <h2 className="text-lg font-semibold text-gray-900">{selectedChannel.name}</h2>
                       {selectedChannel.type === 'STAFF_INTERNAL' && (
                         <p className="text-xs text-gray-500">Staff-internal channel. Volunteers cannot see these messages.</p>
+                      )}
+                      {selectedChannel.type === 'VOLUNTEER_DM' && (
+                        <p className="text-xs text-gray-500">Direct message — visible only to you and the other volunteer.</p>
                       )}
                     </div>
                     {pinnedMessageId && (
@@ -714,8 +869,14 @@ export default function EventStaffChatPage({
                           sendTyping(false)
                         }, 1500)
                       }}
+                      onKeyDown={(e) => {
+                        if (e.key !== 'Enter' || e.shiftKey) return
+                        if (!composer.trim()) return
+                        e.preventDefault()
+                        void sendMessage()
+                      }}
                       rows={2}
-                      placeholder="Send a message to this channel..."
+                      placeholder="Send a message… Enter to send, Shift+Enter for a new line."
                       className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                       maxLength={2000}
                     />
@@ -776,6 +937,13 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   const canDelete = await canDeleteEvent(user.id, id)
   const canManagePerms = await canManagePermissions(user.id, id)
 
+  const notifyUser = await prisma.users.findUnique({
+    where: { email: session.user.email },
+    select: { role: true }
+  })
+  const canNotifyChatLaunch =
+    !!notifyUser && ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN'].includes(notifyUser.role)
+
   return {
     props: {
       event: {
@@ -788,6 +956,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       canEdit,
       canDelete,
       canManagePermissions: canManagePerms,
+      canNotifyChatLaunch,
       moduleConfig: (eventSettings?.settings as any)?.modules || null,
       terminology: (eventSettings?.settings as any)?.terminology || null
     }

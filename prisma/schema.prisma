@@ -790,6 +790,9 @@ model event_chat_channels {
   type        ChatChannelType
   name        String
   positionId  String?          @map("position_id")
+  /// Sorted volunteer ids (min lexicographic first) when type is VOLUNTEER_DM; null for other channel types.
+  dmVolunteerAId String?       @map("dm_volunteer_a_id")
+  dmVolunteerBId String?       @map("dm_volunteer_b_id")
   pinnedMessageId String?      @map("pinned_message_id") // DB column is TEXT (matches event_chat_messages.id)
   isArchived  Boolean          @default(false) @map("is_archived")
   createdBy   String?          @map("created_by")
@@ -979,6 +982,7 @@ enum ChatChannelType {
   EVENT_GENERAL
   POSITION
   STAFF_INTERNAL
+  VOLUNTEER_DM
 }
 
 enum ChatMemberRole {

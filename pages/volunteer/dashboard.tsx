@@ -132,7 +132,7 @@ interface DashboardData {
 interface ChatChannel {
   id: string
   eventId: string
-  type: 'EVENT_ANNOUNCEMENTS' | 'EVENT_GENERAL' | 'POSITION'
+  type: 'EVENT_ANNOUNCEMENTS' | 'EVENT_GENERAL' | 'POSITION' | 'VOLUNTEER_DM'
   name: string
   positionId?: string | null
   unreadCount?: number

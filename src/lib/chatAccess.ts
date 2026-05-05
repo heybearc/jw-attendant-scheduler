@@ -1,5 +1,6 @@
 import { prisma } from './prisma'
 import { checkEventAccess } from './eventAccess'
+import { getActiveLinkedVolunteerId } from './eventVolunteerIdentity'
 
 type ChatActor =
   | { kind: 'user'; id: string; role: string }
@@ -77,7 +78,16 @@ export async function canAccessChatChannel(
 
   const channel = await prisma.event_chat_channels.findFirst({
     where: { id: channelId, eventId, isArchived: false },
-    select: { id: true, eventId: true, type: true, positionId: true, name: true, pinnedMessageId: true }
+    select: {
+      id: true,
+      eventId: true,
+      type: true,
+      positionId: true,
+      name: true,
+      pinnedMessageId: true,
+      dmVolunteerAId: true,
+      dmVolunteerBId: true
+    }
   })
 
   if (!channel) {
@@ -94,6 +104,21 @@ export async function canAccessChatChannel(
 
   if (channel.type === 'EVENT_ANNOUNCEMENTS' || channel.type === 'EVENT_GENERAL') {
     return { allowed: true as const, actor: eventAccess.actor, channel }
+  }
+
+  if (channel.type === 'VOLUNTEER_DM') {
+    const a = channel.dmVolunteerAId
+    const b = channel.dmVolunteerBId
+    if (!a || !b) {
+      return { allowed: false as const, actor: eventAccess.actor, channel }
+    }
+    if (eventAccess.actor.kind === 'volunteer') {
+      const ok = eventAccess.actor.id === a || eventAccess.actor.id === b
+      return { allowed: ok, actor: eventAccess.actor, channel }
+    }
+    const linked = await getActiveLinkedVolunteerId(eventAccess.actor.id, eventId)
+    const ok = !!linked && (linked === a || linked === b)
+    return { allowed: ok, actor: eventAccess.actor, channel }
   }
 
   if (channel.type === 'POSITION' && channel.positionId) {

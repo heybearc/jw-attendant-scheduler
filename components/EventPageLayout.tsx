@@ -27,7 +27,6 @@ interface EventPageLayoutProps {
     | 'lanyards'
     | 'ivs'
     | 'documents'
-    | 'announcements'
     | 'chat'
     | 'permissions'
     | 'edit'
@@ -61,8 +60,6 @@ export default function EventPageLayout({
   const isIVSEnabled = moduleConfig?.ivsModule === true
   const isPositionsEnabled = moduleConfig?.positions !== false
   const isDocumentsEnabled = moduleConfig?.documents !== false
-  const isAnnouncementsEnabled = moduleConfig?.announcements !== false
-
   const getStatusBadge = (status: string) => {
     const statusColors = {
       DRAFT: 'bg-gray-100 text-gray-800',
@@ -303,18 +300,6 @@ export default function EventPageLayout({
                 }`}
               >
                 📄 Documents
-              </Link>
-            )}
-            {isAnnouncementsEnabled && (
-              <Link
-                href={`/events/${event.id}/announcements`}
-                className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${
-                  currentPage === 'announcements'
-                    ? 'text-blue-600 border-b-2 border-blue-600'
-                    : 'text-gray-600 hover:text-gray-900 hover:border-gray-300 border-b-2 border-transparent'
-                }`}
-              >
-                📢 Announcements
               </Link>
             )}
             <Link

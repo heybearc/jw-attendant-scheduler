@@ -8,11 +8,13 @@ import { getViewAsHeaders, getViewAsVolunteerId, setViewAsVolunteerId } from '@/
 interface ChatChannel {
   id: string
   eventId: string
-  type: 'EVENT_ANNOUNCEMENTS' | 'EVENT_GENERAL' | 'POSITION'
+  type: 'EVENT_ANNOUNCEMENTS' | 'EVENT_GENERAL' | 'POSITION' | 'VOLUNTEER_DM'
   name: string
   positionId?: string | null
   unreadCount?: number
   lastMessageAt?: string | null
+  dmVolunteerAId?: string | null
+  dmVolunteerBId?: string | null
 }
 
 interface ChatMessage {
@@ -48,6 +50,11 @@ export default function VolunteerChatPage() {
   const [pushStatus, setPushStatus] = useState<'unknown' | 'enabled' | 'disabled' | 'unsupported'>('unknown')
   const [pushNotificationsEnabledForEvent, setPushNotificationsEnabledForEvent] = useState<boolean>(false)
   const [showEnablePushPrompt, setShowEnablePushPrompt] = useState<boolean>(false)
+  const [myVolunteerId, setMyVolunteerId] = useState<string | null>(null)
+  const [dmOpen, setDmOpen] = useState(false)
+  const [dmVolunteers, setDmVolunteers] = useState<Array<{ id: string; name: string }>>([])
+  const [dmPeerId, setDmPeerId] = useState('')
+  const [dmBusy, setDmBusy] = useState(false)
   const wsRef = useRef<WebSocket | null>(null)
   const selectedChannelIdRef = useRef<string | null>(null)
   const subscribedChannelIdRef = useRef<string | null>(null)
@@ -68,6 +75,8 @@ export default function VolunteerChatPage() {
       ? (viewAsVolunteerIdFromQuery || getViewAsVolunteerId())
       : null
   const isViewAsSimulationActive = !!effectiveViewAsVolunteerId
+
+  const eventIdForChat = typeof router.query.eventId === 'string' ? router.query.eventId : null
 
   const refreshPushStatus = async () => {
     try {
@@ -168,12 +177,14 @@ export default function VolunteerChatPage() {
 
   useEffect(() => {
     if (status !== 'authenticated') return
-    const eventId = typeof router.query.eventId === 'string' ? router.query.eventId : null
+    const eventId = eventIdForChat
     if (!eventId) {
       setError('Missing event selection. Please return to your dashboard.')
       setLoading(false)
       return
     }
+
+    const storageKey = `volunteerEventChat:${eventId}`
 
     const load = async () => {
       try {
@@ -187,11 +198,27 @@ export default function VolunteerChatPage() {
           setChannels([])
           return
         }
-        setChannels(data.data?.channels || [])
+        const list = data.data?.channels || []
+        setChannels(list)
         setPushNotificationsEnabledForEvent(!!data.data?.pushNotificationsEnabled)
-        if (!selectedChannelId && (data.data?.channels || []).length > 0) {
-          setSelectedChannelId(data.data.channels[0].id)
-        }
+        const actor = data.data?.actor
+        if (actor?.kind === 'volunteer') setMyVolunteerId(actor.id)
+        else setMyVolunteerId(null)
+
+        setSelectedChannelId((current) => {
+          if (list.length === 0) return null
+          if (current && list.some((c: ChatChannel) => c.id === current)) return current
+          try {
+            if (typeof window !== 'undefined') {
+              const stored = sessionStorage.getItem(storageKey)
+              if (stored && list.some((c: ChatChannel) => c.id === stored)) return stored
+            }
+          } catch {
+            // ignore
+          }
+          const general = list.find((c: ChatChannel) => c.type === 'EVENT_GENERAL')
+          return general?.id ?? list[0].id
+        })
       } catch (e) {
         setError('Unable to load chat channels.')
       } finally {
@@ -200,7 +227,16 @@ export default function VolunteerChatPage() {
     }
 
     load()
-  }, [status, router.query.eventId, selectedChannelId])
+  }, [status, eventIdForChat])
+
+  useEffect(() => {
+    if (!selectedChannelId || !eventIdForChat || typeof window === 'undefined') return
+    try {
+      sessionStorage.setItem(`volunteerEventChat:${eventIdForChat}`, selectedChannelId)
+    } catch {
+      // ignore
+    }
+  }, [selectedChannelId, eventIdForChat])
 
   // Refresh channel list periodically so unread counts work even if WS is unavailable.
   useEffect(() => {
@@ -503,6 +539,48 @@ export default function VolunteerChatPage() {
     }
   }
 
+  const openVolunteerDmModal = async () => {
+    if (!eventIdForChat || !myVolunteerId || isViewAsSimulationActive) return
+    setDmOpen(true)
+    setDmPeerId('')
+    try {
+      const r = await fetch(`/api/events/${eventIdForChat}/volunteers`)
+      const j = await r.json()
+      const vols = (j.volunteers || []) as Array<{ id: string; name: string }>
+      setDmVolunteers(vols.filter((v) => v.id !== myVolunteerId))
+    } catch {
+      setDmVolunteers([])
+    }
+  }
+
+  const startVolunteerDm = async () => {
+    if (!eventIdForChat || !dmPeerId) return
+    setDmBusy(true)
+    setError('')
+    try {
+      const r = await fetch(`/api/events/${eventIdForChat}/chat/direct-message`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getViewAsHeaders() },
+        body: JSON.stringify({ peerVolunteerId: dmPeerId })
+      })
+      const j = await r.json()
+      if (!r.ok || !j.success) throw new Error(j.error || 'Could not open direct message')
+      setDmOpen(false)
+      const refresh = await fetch(`/api/events/${eventIdForChat}/chat/channels`, {
+        headers: { ...getViewAsHeaders() }
+      })
+      const rd = await refresh.json()
+      if (refresh.ok && rd.success) {
+        setChannels(rd.data?.channels || [])
+        if (j.data?.channel?.id) setSelectedChannelId(j.data.channel.id)
+      }
+    } catch (e: any) {
+      setError(e?.message || 'Could not open direct message')
+    } finally {
+      setDmBusy(false)
+    }
+  }
+
   return (
     <>
       <Head>
@@ -565,6 +643,45 @@ export default function VolunteerChatPage() {
         </div>
 
         <div className="max-w-3xl mx-auto px-4 py-8">
+          {dmOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+              <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-4">
+                <h2 className="text-lg font-semibold text-gray-900">Direct message a volunteer</h2>
+                <p className="text-sm text-gray-600 mt-1">Private between you and one other volunteer in this event.</p>
+                <label className="block mt-4 text-sm font-medium text-gray-700">Volunteer</label>
+                <select
+                  value={dmPeerId}
+                  onChange={(e) => setDmPeerId(e.target.value)}
+                  className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                >
+                  <option value="">Select…</option>
+                  {dmVolunteers.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.name}
+                    </option>
+                  ))}
+                </select>
+                <div className="mt-4 flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setDmOpen(false)}
+                    className="px-3 py-2 text-sm rounded-md border border-gray-300"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!dmPeerId || dmBusy}
+                    onClick={startVolunteerDm}
+                    className="px-3 py-2 text-sm rounded-md bg-blue-600 text-white disabled:bg-gray-400"
+                  >
+                    {dmBusy ? 'Opening…' : 'Open chat'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {showEnablePushPrompt && (
             <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start justify-between gap-4">
               <div>
@@ -616,6 +733,15 @@ export default function VolunteerChatPage() {
           {!loading && !error && channels.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="md:col-span-1 space-y-2">
+                {myVolunteerId && !isViewAsSimulationActive && (
+                  <button
+                    type="button"
+                    onClick={openVolunteerDmModal}
+                    className="w-full text-sm px-3 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-gray-800"
+                  >
+                    New direct message
+                  </button>
+                )}
                 {channels.map((channel) => (
                   <button
                     key={channel.id}
@@ -648,6 +774,9 @@ export default function VolunteerChatPage() {
                     <div className="border-b border-gray-200 pb-3 mb-3">
                       <h2 className="text-lg font-semibold text-gray-900">{selectedChannel.name}</h2>
                       <p className="text-xs text-gray-500">{selectedChannel.type.replace('_', ' ')}</p>
+                      {selectedChannel.type === 'VOLUNTEER_DM' && (
+                        <p className="text-xs text-gray-500 mt-1">Direct message — only you and the other volunteer can see this.</p>
+                      )}
                     </div>
 
                     <div className="h-96 overflow-y-auto border border-gray-100 rounded-md p-3 bg-gray-50 mb-3 space-y-2">
@@ -702,7 +831,13 @@ export default function VolunteerChatPage() {
                             sendTyping(false)
                           }, 1500)
                         }}
-                        placeholder="Type a message..."
+                        onKeyDown={(e) => {
+                          if (e.key !== 'Enter' || e.shiftKey) return
+                          if (sending || !composerValue.trim()) return
+                          e.preventDefault()
+                          void handleSend()
+                        }}
+                        placeholder="Type a message… Enter to send, Shift+Enter for a new line."
                         rows={2}
                         className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         maxLength={2000}

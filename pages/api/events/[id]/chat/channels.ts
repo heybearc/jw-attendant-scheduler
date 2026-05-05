@@ -3,21 +3,18 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '@/lib/prisma'
 import { canAccessEventChat } from '@/lib/chatAccess'
+import { sortEventChatChannels } from '@/lib/chatChannelSort'
+import { getActiveLinkedVolunteerId } from '@/lib/eventVolunteerIdentity'
+
+async function archiveLegacyAnnouncementChannels(eventId: string) {
+  await prisma.event_chat_channels.updateMany({
+    where: { eventId, type: 'EVENT_ANNOUNCEMENTS', isArchived: false },
+    data: { isArchived: true }
+  })
+}
 
 async function ensureDefaultChannels(eventId: string) {
-  const announcements = await prisma.event_chat_channels.findFirst({
-    where: { eventId, type: 'EVENT_ANNOUNCEMENTS', isArchived: false }
-  })
-
-  if (!announcements) {
-    await prisma.event_chat_channels.create({
-      data: {
-        eventId,
-        type: 'EVENT_ANNOUNCEMENTS',
-        name: 'Event Announcements'
-      }
-    })
-  }
+  await archiveLegacyAnnouncementChannels(eventId)
 
   const general = await prisma.event_chat_channels.findFirst({
     where: { eventId, type: 'EVENT_GENERAL', isArchived: false }
@@ -47,6 +44,32 @@ async function ensureDefaultChannels(eventId: string) {
   }
 }
 
+async function ensurePositionChannels(eventId: string) {
+  const positions = await prisma.positions.findMany({
+    where: { eventId, isActive: true },
+    select: { id: true, name: true, positionNumber: true }
+  })
+  for (const p of positions) {
+    const name = p.name?.trim() ? p.name.trim() : `Position ${p.positionNumber}`
+    await prisma.event_chat_channels.upsert({
+      where: {
+        eventId_type_positionId: {
+          eventId,
+          type: 'POSITION',
+          positionId: p.id
+        }
+      },
+      create: {
+        eventId,
+        type: 'POSITION',
+        positionId: p.id,
+        name
+      },
+      update: { name }
+    })
+  }
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ success: false, error: 'Method not allowed' })
@@ -70,6 +93,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   await ensureDefaultChannels(eventId)
+  await ensurePositionChannels(eventId)
 
   const event = await prisma.events.findUnique({
     where: { id: eventId },
@@ -89,6 +113,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     positionIdsForVolunteer = [...new Set(assignments.map((a) => a.positionId))]
   }
 
+  let linkedVolunteerId: string | null = null
+  if (chatAccess.actor.kind === 'user') {
+    linkedVolunteerId = await getActiveLinkedVolunteerId(chatAccess.actor.id, eventId)
+  }
+
   const channels = await prisma.event_chat_channels.findMany({
     where: {
       eventId,
@@ -96,15 +125,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       ...(chatAccess.actor.kind === 'volunteer'
         ? {
             OR: [
-              { type: 'EVENT_ANNOUNCEMENTS' },
               { type: 'EVENT_GENERAL' },
               {
                 type: 'POSITION',
-                positionId: { in: positionIdsForVolunteer && positionIdsForVolunteer.length > 0 ? positionIdsForVolunteer : ['__none__'] }
+                positionId:
+                  positionIdsForVolunteer && positionIdsForVolunteer.length > 0
+                    ? { in: positionIdsForVolunteer }
+                    : { in: ['__none__'] }
+              },
+              {
+                type: 'VOLUNTEER_DM',
+                OR: [{ dmVolunteerAId: chatAccess.actor.id }, { dmVolunteerBId: chatAccess.actor.id }]
               }
             ]
           }
-        : {})
+        : {
+            OR: [
+              { type: 'EVENT_GENERAL' },
+              { type: 'POSITION' },
+              { type: 'STAFF_INTERNAL' },
+              ...(linkedVolunteerId
+                ? [
+                    {
+                      type: 'VOLUNTEER_DM' as const,
+                      OR: [{ dmVolunteerAId: linkedVolunteerId }, { dmVolunteerBId: linkedVolunteerId }]
+                    }
+                  ]
+                : [])
+            ]
+          })
     },
     orderBy: [{ type: 'asc' }, { name: 'asc' }],
     select: {
@@ -115,12 +164,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       positionId: true,
       createdAt: true,
       updatedAt: true,
-      pinnedMessageId: true
+      pinnedMessageId: true,
+      dmVolunteerAId: true,
+      dmVolunteerBId: true
     }
   })
 
+  const sortedChannels = sortEventChatChannels(channels)
+
   const channelsWithUnread = await Promise.all(
-    channels.map(async (channel) => {
+    sortedChannels.map(async (channel) => {
       const readState = await prisma.event_chat_reads.findFirst({
         where: {
           channelId: channel.id,
@@ -137,7 +190,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           deletedAt: null,
           ...(readState?.lastReadAt ? { createdAt: { gt: readState.lastReadAt } } : {}),
           ...(chatAccess.actor.kind === 'user'
-            ? { NOT: { senderUserId: chatAccess.actor.id } }
+            ? {
+                NOT: {
+                  OR: [
+                    { senderUserId: chatAccess.actor.id },
+                    ...(linkedVolunteerId ? [{ senderVolunteerId: linkedVolunteerId }] : [])
+                  ]
+                }
+              }
             : { NOT: { senderVolunteerId: chatAccess.actor.id } })
         }
       })
@@ -160,6 +220,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     success: true,
     data: {
       actor: { kind: chatAccess.actor.kind, id: chatAccess.actor.id, role: chatAccess.actor.role },
+      linkedVolunteerId,
       channels: channelsWithUnread,
       pushNotificationsEnabled
     }

@@ -19,7 +19,6 @@ interface EventPageWrapperProps {
     | 'lanyards'
     | 'ivs'
     | 'documents'
-    | 'announcements'
     | 'chat'
     | 'permissions'
     | 'edit'

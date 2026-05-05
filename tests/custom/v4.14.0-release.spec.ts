@@ -167,15 +167,16 @@ test.describe('v4.14.0 Regression: Event Sub-Page Tabs', () => {
     await expect(volunteersTab).toBeVisible({ timeout: 10000 })
   })
 
-  test('Event announcements page has announcements tab in nav', async ({ page }) => {
+  test('Legacy event announcements URL redirects to staff chat', async ({ page }) => {
     await loginAdmin(page)
     const eventId = await getFirstRealEventId(page)
     if (!eventId) { test.skip(); return }
     await page.goto('/events/' + eventId + '/announcements')
     await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(1000)
-    const announcementsTab = page.locator('a[href="/events/' + eventId + '/announcements"]')
-    await expect(announcementsTab).toBeVisible({ timeout: 10000 })
+    await page.waitForTimeout(500)
+    expect(page.url()).toContain('/events/' + eventId + '/chat')
+    const chatTab = page.locator('a[href="/events/' + eventId + '/chat"]')
+    await expect(chatTab).toBeVisible({ timeout: 10000 })
   })
 
   test('ASSISTANT_OVERSEER API fix - events API returns 200', async ({ page }) => {

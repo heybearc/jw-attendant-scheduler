@@ -23,7 +23,7 @@ This follows the usual small-team pattern: **one system of record in the app**, 
 ## Current Phase
 
 ### Active Work
-- (none — next item from Prioritized Backlog or user direction)
+- **TheoShift Native In-App Chat (MVP)** — Increment 1 (schema + APIs + access control) and Increment 2 (basic volunteer/staff UI with polling + moderation) in progress on STANDBY.
 
 ### Completed This Phase
 - ✅ IVS Approvals: inline status updates in grid; Early Entry toggle aligned to PATCH API (`e2ae3bc6`)
@@ -51,10 +51,91 @@ This follows the usual small-team pattern: **one system of record in the app**, 
 ## Prioritized Backlog
 
 ### High Priority
-- **Matrix/Dendrite Chat Platform** — Shared infrastructure for TheoShift, LDC Tools, QuantShift
-  - Status: Planned, awaiting LXC IP assignment
-  - Effort: XL (2-3 weeks across all phases)
-  - Phases: Infrastructure → TheoShift integration → LDC Tools → QuantShift → Push notifications
+- **TheoShift Native In-App Chat (Event-Scoped, Magic-Link Compatible)** — Real-time communication for overseers and volunteers inside TheoShift
+  - Status: Planned (approved direction)
+  - Effort: L (MVP) / XL (full rollout)
+  - Scope: TheoShift first; cross-app platform deferred
+  - Core constraint: Volunteers use dashboard magic-link auth (no full app login)
+
+#### TheoShift Native Chat — Implementation Spec (MVP)
+
+**Goal**
+- Provide reliable real-time chat for event teams (overseers + volunteers) within TheoShift using existing auth and event permission models.
+
+**Architecture choice**
+- App-native chat in TheoShift (PostgreSQL + Prisma + WebSocket layer), not Matrix/Dendrite for MVP.
+- Rationale: Direct fit to event-scoped permissions and magic-link volunteer flow with lower infrastructure complexity.
+
+**Auth and identity model**
+- Admin/oversight users authenticate via existing app session.
+- Volunteers authenticate via existing magic-link dashboard session.
+- Chat auth handshake must validate server-side session and derive identity from session only.
+- Never trust client-supplied role, event, or user identifiers.
+
+**Authorization rules**
+- Membership is always `eventId` scoped.
+- Volunteers can access only channels for events where they are registered/assigned.
+- Overseers/coordinators can access channels within events they can manage.
+- No cross-event message visibility.
+
+**Channel model (MVP)**
+- `event-announcements` (staff-posted; volunteer reply policy configurable)
+- `event-general` (all event participants)
+- `position-{positionId}` (assigned volunteers + relevant oversight)
+
+**Proposed data model (Prisma-level)**
+- `event_chat_channels`
+  - `id`, `eventId`, `type`, `name`, `positionId?`, `isArchived`, timestamps
+- `event_chat_members`
+  - `id`, `channelId`, `userId?`, `volunteerId?`, `role`, `mutedUntil?`, timestamps
+  - Unique constraints for channel+member identity
+- `event_chat_messages`
+  - `id`, `channelId`, `senderUserId?`, `senderVolunteerId?`, `body`, `kind`, `editedAt?`, `deletedAt?`, timestamps
+- `event_chat_reads`
+  - `id`, `channelId`, `userId?`, `volunteerId?`, `lastReadMessageId`, `lastReadAt`
+- Optional after MVP: `event_chat_message_reactions`, `event_chat_attachments`
+
+**Transport/API contract**
+- WebSocket namespace per event (or global namespace with event-scoped rooms).
+- Server events: `chat:join-channel`, `chat:leave-channel`, `chat:message:create`, `chat:message:edit`, `chat:message:delete`, `chat:read`.
+- REST bootstrap endpoints:
+  - `GET /api/events/[id]/chat/channels`
+  - `GET /api/events/[id]/chat/channels/[channelId]/messages?cursor=...`
+  - `POST /api/events/[id]/chat/channels/[channelId]/messages`
+
+**Security and moderation (MVP minimum)**
+- Server-side content length limits and rate limiting.
+- Soft delete for messages; audit metadata retained.
+- Staff moderation permissions per event (delete/mute).
+- Basic profanity/abuse handling deferred unless required by feedback.
+
+**Delivery plan (3 increments)**
+- **Increment 1: Data + permissions**
+  - Create schema/migrations and channel membership resolver.
+  - Seed default channels per event.
+  - Add server authorization tests for role/event boundaries.
+- **Increment 2: Real-time messaging UX**
+  - Add chat UI to staff event pages and volunteer dashboard event view.
+  - Implement live send/receive, pagination, and unread badges.
+  - Add announcement channel posting controls.
+- **Increment 3: Operational hardening**
+  - Add read receipts (per channel last-read), mute/archive, and basic moderation.
+  - Add notifications bridge (in-app first; push/email follow-up).
+  - Add smoke and release-gate tests for chat critical paths.
+
+**Acceptance criteria (MVP)**
+- Volunteer with valid magic-link session can chat only in authorized event channels.
+- Overseer can post announcements and moderate within authorized events.
+- Messages deliver in real time to connected participants and persist to DB.
+- Reconnect restores channel state and unread counts correctly.
+- Cross-event and unauthorized channel access is denied server-side.
+
+**Test plan (release-gate additions)**
+- Volunteer magic-link session joins only permitted event channels.
+- Unauthorized volunteer cannot join non-member channel.
+- Overseer announcement post appears to volunteers in real time.
+- Message persistence + reload history + unread state correctness.
+- Authorization regression test for every chat write endpoint/socket event.
   
 - **Mobile/PWA Optimization** — Continue mobile-first improvements
   - Admin pages mobile optimization (overflow fixes, responsive tables)
@@ -63,6 +144,10 @@ This follows the usual small-team pattern: **one system of record in the app**, 
 - **User Feedback Items** — See **Product feedback (operating model)** above; triage `/admin/feedback` and promote to this list
 
 ### Medium Priority
+- **Matrix/Dendrite Chat Platform (Deferred)** — Keep as future interoperability option, not current implementation path
+  - Status: Deferred pending TheoShift native chat MVP outcomes
+  - Revisit trigger: Need cross-app shared chat fabric or external Matrix client interoperability
+
 - **Edit Assignment Time Feature** — Allow editing shift times after assignment (and **in-place edits** in the assignment flow; production feedback **FB-032** closed as non-blocker — work tracked here when prioritized)
   - Deferred from previous sprint
   - Not a deployment blocker; pick up when this backlog line is scheduled

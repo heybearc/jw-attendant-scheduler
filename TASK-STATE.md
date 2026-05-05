@@ -1,23 +1,26 @@
 # TheoShift Task State
 
-**Last updated:** 2026-05-01 (mid-day)  
+**Last updated:** 2026-05-05 (mid-day)  
 **Current branch:** main  
-**Working on:** v4.18.0 on `main` — IVS approvals UX + ops releases current; no blockers ✅
+**Working on:** TheoShift Native In-App Chat MVP (event-scoped, magic-link compatible) — Increment 1–2 in progress; no blockers ✅
 
 ---
 
 ## Current Task
-**Pick next backlog item** — READY
+**Implement TheoShift Native In-App Chat MVP** — Increment 1–2 in progress
 
 ### What I'm doing right now
-IVS module inline status + early-entry fix shipped; traffic and sync completed. Environments aligned (LIVE=BLUE, STANDBY=GREEN).
+Implementing app-native event chat (schema, APIs, volunteer/staff UI, moderation) with 5s polling; WebSocket transport and pinning queued next.
 
 ### Recent completions
 
-**Today (2026-05-01) — IVS Approvals UX + release**
-- ✅ Inline status dropdown on IVS table (no edit modal); PATCH updates (`e2ae3bc6`)
-- ✅ Early Entry toggle uses PATCH (matches API — fixes 405 from PUT)
-- ✅ Deployed to STANDBY then `/release` + `/sync` (test/bump bypassed per explicit approval); LIVE=BLUE (`10.92.3.24`), STANDBY=GREEN (`10.92.3.22`)
+**Today (2026-05-05) — TheoShift Native Chat MVP (Increment 1–2 partial)**
+- ✅ Added Prisma models + migrations for `event_chat_channels`, `event_chat_members`, `event_chat_messages`, `event_chat_reads` (including `STAFF_INTERNAL` channel type).
+- ✅ Implemented chat access layer (`src/lib/chatAccess.ts`) for event/channel-scoped permissions (users vs volunteers, staff-only channels).
+- ✅ Created REST APIs for channels and messages (unread counts, pagination, soft delete, read tracking, mute enforcement).
+- ✅ Built volunteer chat experience (`/volunteer/dashboard`, `/volunteer/chat`, `MobileVolunteerDashboard`) with event-scoped channels, unread badges, 5s polling.
+- ✅ Built staff chat page (`/events/[id]/chat`) with channel list, message thread, delete + mute moderation, and staff-only internal channel visibility.
+- ✅ Implemented volunteer notification flow for chat launch (email template + `/events/[id]/chat/notify-volunteers` API + admin UI button on announcements page).
 
 **Today (2026-04-30) — release fixes + verification**
 - ✅ Fixed volunteer dashboard event date drift (UTC calendar-date serialization for `@db.Date` in volunteer APIs + safe client formatting) (`6652e104`)

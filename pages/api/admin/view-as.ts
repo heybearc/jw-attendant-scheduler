@@ -5,8 +5,9 @@ import { prisma } from '@/lib/prisma'
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const sessionUser = await getSessionUser(req, res)
   if (!sessionUser) return res.status(401).json({ success: false, error: 'Unauthorized' })
-  if (sessionUser.role !== 'ADMIN') {
-    return res.status(403).json({ success: false, error: 'Only ADMIN can use view-as-volunteer' })
+  const canViewAs = ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER'].includes(sessionUser.role)
+  if (!canViewAs) {
+    return res.status(403).json({ success: false, error: 'Only ADMIN/OVERSEER/ASSISTANT_OVERSEER can use view-as-volunteer' })
   }
 
   if (req.method === 'POST') {

@@ -152,7 +152,7 @@ export default function EventPageLayout({
             </Link>
           )}
 
-          {session?.user?.role === 'ADMIN' && (
+          {['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER'].includes(session?.user?.role || '') && (
             <div className="flex items-center gap-2">
               <select
                 value={viewAsSelection}

@@ -14,7 +14,9 @@ export async function resolveActorFromSessionEmail(
     select: { id: true, role: true }
   })
 
-  if (user && opts?.viewAsVolunteerId && user.role === 'ADMIN') {
+  const canSimulateVolunteer = user && ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER'].includes(user.role)
+
+  if (canSimulateVolunteer && opts?.viewAsVolunteerId) {
     const volunteer = await prisma.volunteers.findUnique({
       where: { id: opts.viewAsVolunteerId },
       select: { id: true }

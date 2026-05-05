@@ -51,14 +51,16 @@ export default function VolunteerChatPage() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    if (session?.user?.role !== 'ADMIN') return
+    if (!['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER'].includes(session?.user?.role || '')) return
     if (viewAsVolunteerIdFromQuery) {
       setViewAsVolunteerId(viewAsVolunteerIdFromQuery)
     }
   }, [session?.user?.role, viewAsVolunteerIdFromQuery])
 
   const effectiveViewAsVolunteerId =
-    session?.user?.role === 'ADMIN' ? (viewAsVolunteerIdFromQuery || getViewAsVolunteerId()) : null
+    ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER'].includes(session?.user?.role || '')
+      ? (viewAsVolunteerIdFromQuery || getViewAsVolunteerId())
+      : null
 
   useEffect(() => {
     if (status !== 'authenticated') return
@@ -300,9 +302,31 @@ export default function VolunteerChatPage() {
                 <p className="text-sm text-gray-600">Magic-link session active for {session?.user?.email}</p>
               )}
             </div>
-            <Link href={typeof router.query.eventId === 'string' ? `/volunteer/dashboard?eventId=${router.query.eventId}` : '/volunteer/dashboard'} className="text-sm text-blue-600 hover:text-blue-800">
-              Back to Dashboard
-            </Link>
+            <div className="flex items-center gap-3">
+              {effectiveViewAsVolunteerId && typeof router.query.eventId === 'string' && (
+                <button
+                  onClick={async () => {
+                    try {
+                      await fetch(`/api/admin/view-as?eventId=${router.query.eventId}`, { method: 'DELETE' })
+                    } catch {
+                      // ignore
+                    } finally {
+                      setViewAsVolunteerId(null)
+                      router.push(`/events/${router.query.eventId}/chat`)
+                    }
+                  }}
+                  className="text-sm px-3 py-1 rounded bg-amber-700 text-white hover:bg-amber-800"
+                >
+                  Exit Simulation
+                </button>
+              )}
+              <Link
+                href={typeof router.query.eventId === 'string' ? `/volunteer/dashboard?eventId=${router.query.eventId}` : '/volunteer/dashboard'}
+                className="text-sm text-blue-600 hover:text-blue-800"
+              >
+                Back to Dashboard
+              </Link>
+            </div>
           </div>
         </div>
 

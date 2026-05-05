@@ -880,6 +880,31 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
           </div>
         </div>
 
+        {effectiveViewAsVolunteerId && dashboardData?.event?.id && (
+          <div className="bg-amber-100 border-b border-amber-200">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
+              <p className="text-sm text-amber-900 font-medium">
+                View-as volunteer simulation is active. You are seeing the volunteer experience.
+              </p>
+              <button
+                onClick={async () => {
+                  try {
+                    await fetch(`/api/admin/view-as?eventId=${dashboardData.event.id}`, { method: 'DELETE' })
+                  } catch {
+                    // ignore
+                  } finally {
+                    setViewAsVolunteerId(null)
+                    router.push(`/events/${dashboardData.event.id}`)
+                  }
+                }}
+                className="px-3 py-1 bg-amber-700 text-white rounded text-sm hover:bg-amber-800"
+              >
+                Exit Simulation
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Announcements Banner */}
         {dashboardData?.event?.id && <AnnouncementBanner eventId={dashboardData.event.id} />}
 

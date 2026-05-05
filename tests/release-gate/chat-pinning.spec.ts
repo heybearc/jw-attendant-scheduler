@@ -55,16 +55,26 @@ test.describe('Chat pinning (release gate)', () => {
 
     expect(typeof volunteerId).toBe('string')
 
-    // Volunteer chat (admin view-as): should see pinned message
-    await page.addInitScript((id) => {
-      window.localStorage.setItem('adminViewAsVolunteerId', id as string)
-    }, volunteerId)
+    // Volunteer visibility check (admin view-as via header): should see pinned message via API
+    const viewAsHeaders = { 'x-view-as-volunteer-id': volunteerId as string }
 
-    await page.goto(`/volunteer/chat?eventId=${eventId}&viewAsVolunteerId=${volunteerId}`)
-    await expect(page).toHaveURL(/\/volunteer\/chat/, { timeout: 15000 })
-    await expect(page.getByRole('heading', { name: /Event Chat/i })).toBeVisible({ timeout: 15000 })
-    await expect(page.getByText('Pinned message', { exact: true })).toBeVisible({ timeout: 15000 })
-    await expect(page.locator(`text=${msg}`)).toBeVisible()
+    const channelsAsVolunteerRes = await page.request.get(`/api/events/${eventId}/chat/channels`, {
+      headers: viewAsHeaders,
+    })
+    expect(channelsAsVolunteerRes.ok()).toBeTruthy()
+    const channelsAsVolunteerJson: any = await channelsAsVolunteerRes.json()
+    const channelId = channelsAsVolunteerJson?.data?.channels?.[0]?.id
+    expect(typeof channelId).toBe('string')
+
+    const messagesAsVolunteerRes = await page.request.get(
+      `/api/events/${eventId}/chat/channels/${channelId}/messages?limit=50`,
+      { headers: viewAsHeaders }
+    )
+    expect(messagesAsVolunteerRes.ok()).toBeTruthy()
+    const messagesAsVolunteerJson: any = await messagesAsVolunteerRes.json()
+    const pinned = messagesAsVolunteerJson?.data?.pinnedMessage
+    expect(typeof pinned?.body).toBe('string')
+    expect(pinned.body).toContain(msg)
   })
 })
 

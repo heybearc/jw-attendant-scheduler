@@ -17,17 +17,18 @@ export async function middleware(request: NextRequest) {
     })
     
     const isVolunteer = token?.role === 'VOLUNTEER'
-    const isAdminViewAsDashboard =
-      token?.role === 'ADMIN' &&
+    const canStaffViewAs = ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER'].includes((token?.role as string) || '')
+    const isStaffViewAsDashboard =
+      canStaffViewAs &&
       pathname === '/volunteer/dashboard' &&
       !!searchParams.get('viewAsVolunteerId')
-    const isAdminViewAsChat =
-      token?.role === 'ADMIN' &&
+    const isStaffViewAsChat =
+      canStaffViewAs &&
       pathname === '/volunteer/chat' &&
       !!searchParams.get('viewAsVolunteerId')
 
-    // Allow real volunteer sessions, plus admin "view-as" preview route.
-    if (!token || (!isVolunteer && !isAdminViewAsDashboard && !isAdminViewAsChat)) {
+    // Allow real volunteer sessions, plus staff "view-as" preview routes.
+    if (!token || (!isVolunteer && !isStaffViewAsDashboard && !isStaffViewAsChat)) {
       const url = request.nextUrl.clone()
       url.pathname = '/volunteer/login'
       // Preserve the original URL as a callback

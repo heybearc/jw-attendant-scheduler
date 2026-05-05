@@ -434,12 +434,12 @@ export async function getServerSideProps(context: any) {
 
   const session = await getServerSession(context.req, context.res, authOptions)
   const isVolunteer = session?.user?.role === 'VOLUNTEER'
-  const isAdminViewAs =
-    session?.user?.role === 'ADMIN' &&
+  const isStaffViewAs =
+    ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER'].includes(session?.user?.role || '') &&
     typeof context.query.viewAsVolunteerId === 'string' &&
     context.query.viewAsVolunteerId.length > 0
 
-  if (!session || (!isVolunteer && !isAdminViewAs)) {
+  if (!session || (!isVolunteer && !isStaffViewAs)) {
     return {
       redirect: {
         destination: '/volunteer/login',

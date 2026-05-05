@@ -180,7 +180,7 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    if (session?.user?.role !== 'ADMIN') return
+    if (!['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER'].includes(session?.user?.role || '')) return
     if (simulatedVolunteerIdFromQuery) {
       setViewAsVolunteerId(simulatedVolunteerIdFromQuery)
     }
@@ -307,7 +307,7 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
         return
       }
       
-      const simulatedVolunteerId = session.user.role === 'ADMIN'
+      const simulatedVolunteerId = ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER'].includes(session.user.role)
         ? (simulatedVolunteerIdFromQuery || getViewAsVolunteerId())
         : null
       const effectiveVolunteerId = simulatedVolunteerId || session.user.id
@@ -529,7 +529,9 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
 
   const totalUnreadChat = chatChannels.reduce((sum, c) => sum + (c.unreadCount || 0), 0)
   const effectiveViewAsVolunteerId =
-    session?.user?.role === 'ADMIN' ? (simulatedVolunteerIdFromQuery || getViewAsVolunteerId()) : null
+    ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER'].includes(session?.user?.role || '')
+      ? (simulatedVolunteerIdFromQuery || getViewAsVolunteerId())
+      : null
 
   const handleSubmitCount = async (sessionId: string) => {
     const countValue = countValues.get(sessionId) || ''
@@ -1708,13 +1710,13 @@ export async function getServerSideProps(context: any) {
   const session = await getServerSession(context.req, context.res, authOptions)
   
   const isVolunteer = session?.user?.role === 'VOLUNTEER'
-  const isAdminViewAs =
-    session?.user?.role === 'ADMIN'
-    && typeof context.query.viewAsVolunteerId === 'string'
-    && context.query.viewAsVolunteerId.length > 0
+  const isStaffViewAs =
+    ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER'].includes(session?.user?.role || '') &&
+    typeof context.query.viewAsVolunteerId === 'string' &&
+    context.query.viewAsVolunteerId.length > 0
 
-  // Allow volunteers normally, and ADMIN only when previewing a selected volunteer.
-  if (!session || (!isVolunteer && !isAdminViewAs)) {
+  // Allow volunteers normally, and staff only when previewing a selected volunteer.
+  if (!session || (!isVolunteer && !isStaffViewAs)) {
     return {
       redirect: {
         destination: '/volunteer/login',

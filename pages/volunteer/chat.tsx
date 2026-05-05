@@ -46,6 +46,8 @@ export default function VolunteerChatPage() {
   const [pinnedMessage, setPinnedMessage] = useState<ChatMessage | null>(null)
   const [typingActors, setTypingActors] = useState<Array<{ key: string; label: string; expiresAt: number }>>([])
   const [pushStatus, setPushStatus] = useState<'unknown' | 'enabled' | 'disabled' | 'unsupported'>('unknown')
+  const [pushNotificationsEnabledForEvent, setPushNotificationsEnabledForEvent] = useState<boolean>(false)
+  const [showEnablePushPrompt, setShowEnablePushPrompt] = useState<boolean>(false)
   const wsRef = useRef<WebSocket | null>(null)
   const selectedChannelIdRef = useRef<string | null>(null)
   const subscribedChannelIdRef = useRef<string | null>(null)
@@ -63,6 +65,7 @@ export default function VolunteerChatPage() {
     ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER'].includes(session?.user?.role || '')
       ? (viewAsVolunteerIdFromQuery || getViewAsVolunteerId())
       : null
+  const isViewAsSimulationActive = !!effectiveViewAsVolunteerId
 
   const refreshPushStatus = async () => {
     try {
@@ -73,7 +76,17 @@ export default function VolunteerChatPage() {
       }
       const reg = await navigator.serviceWorker.ready
       const sub = await reg.pushManager.getSubscription()
-      setPushStatus(sub ? 'enabled' : 'disabled')
+      if (!sub) {
+        setPushStatus('disabled')
+        return
+      }
+      const r = await fetch('/api/chat/push/status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getViewAsHeaders() },
+        body: JSON.stringify({ endpoint: sub.endpoint })
+      })
+      const j = await r.json()
+      setPushStatus(j?.data?.enabled ? 'enabled' : 'disabled')
     } catch {
       setPushStatus('unsupported')
     }
@@ -139,6 +152,19 @@ export default function VolunteerChatPage() {
   }, [])
 
   useEffect(() => {
+    if (typeof window === 'undefined') return
+    const eventId = typeof router.query.eventId === 'string' ? router.query.eventId : null
+    if (!eventId) return
+    if (!pushNotificationsEnabledForEvent) return
+    if (pushStatus !== 'disabled') return
+    if (isViewAsSimulationActive) return
+    const key = `chatPushPromptSeen:${eventId}`
+    if (window.localStorage.getItem(key)) return
+    window.localStorage.setItem(key, '1')
+    setShowEnablePushPrompt(true)
+  }, [router.query.eventId, pushNotificationsEnabledForEvent, pushStatus, isViewAsSimulationActive])
+
+  useEffect(() => {
     if (status !== 'authenticated') return
     const eventId = typeof router.query.eventId === 'string' ? router.query.eventId : null
     if (!eventId) {
@@ -160,6 +186,7 @@ export default function VolunteerChatPage() {
           return
         }
         setChannels(data.data?.channels || [])
+        setPushNotificationsEnabledForEvent(!!data.data?.pushNotificationsEnabled)
         if (!selectedChannelId && (data.data?.channels || []).length > 0) {
           setSelectedChannelId(data.data.channels[0].id)
         }
@@ -447,13 +474,16 @@ export default function VolunteerChatPage() {
               )}
             </div>
             <div className="flex items-center gap-3">
-              {pushStatus !== 'unsupported' && (
+              {pushNotificationsEnabledForEvent && !isViewAsSimulationActive && pushStatus !== 'unsupported' && (
                 <button
                   onClick={() => (pushStatus === 'enabled' ? disablePush() : enablePush())}
                   className="text-sm px-3 py-1 rounded border border-gray-300 bg-white hover:bg-gray-50"
                 >
                   {pushStatus === 'enabled' ? 'Disable notifications' : 'Enable notifications'}
                 </button>
+              )}
+              {pushNotificationsEnabledForEvent && isViewAsSimulationActive && (
+                <span className="text-xs text-gray-500">Notifications are disabled during view-as simulation.</span>
               )}
               {effectiveViewAsVolunteerId && typeof router.query.eventId === 'string' && (
                 <button
@@ -483,6 +513,36 @@ export default function VolunteerChatPage() {
         </div>
 
         <div className="max-w-3xl mx-auto px-4 py-8">
+          {showEnablePushPrompt && (
+            <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold text-blue-900">Enable chat notifications?</p>
+                <p className="text-xs text-blue-800 mt-1">
+                  This event has chat notifications enabled. Turn them on for this device to get push alerts.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={async () => {
+                    try {
+                      await enablePush()
+                    } finally {
+                      setShowEnablePushPrompt(false)
+                    }
+                  }}
+                  className="text-sm px-3 py-1 rounded bg-blue-700 text-white hover:bg-blue-800"
+                >
+                  Enable
+                </button>
+                <button
+                  onClick={() => setShowEnablePushPrompt(false)}
+                  className="text-sm px-3 py-1 rounded border border-blue-300 text-blue-800 hover:bg-blue-100"
+                >
+                  Not now
+                </button>
+              </div>
+            </div>
+          )}
           {loading && (
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <p className="text-gray-600">Loading chat channels...</p>

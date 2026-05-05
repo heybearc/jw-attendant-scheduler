@@ -59,6 +59,9 @@ export default function EventStaffChatPage({
   const [wsReady, setWsReady] = useState(false)
   const [typingActors, setTypingActors] = useState<Array<{ key: string; label: string; expiresAt: number }>>([])
   const [pushStatus, setPushStatus] = useState<'unknown' | 'enabled' | 'disabled' | 'unsupported'>('unknown')
+  const [pushNotificationsEnabledForEvent, setPushNotificationsEnabledForEvent] = useState<boolean>(false)
+  const [pushNotificationsToggleSaving, setPushNotificationsToggleSaving] = useState<boolean>(false)
+  const [showEnablePushPrompt, setShowEnablePushPrompt] = useState<boolean>(false)
   const wsRef = useRef<WebSocket | null>(null)
   const refreshPushStatus = async () => {
     try {
@@ -69,7 +72,17 @@ export default function EventStaffChatPage({
       }
       const reg = await navigator.serviceWorker.ready
       const sub = await reg.pushManager.getSubscription()
-      setPushStatus(sub ? 'enabled' : 'disabled')
+      if (!sub) {
+        setPushStatus('disabled')
+        return
+      }
+      const r = await fetch('/api/chat/push/status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ endpoint: sub.endpoint })
+      })
+      const j = await r.json()
+      setPushStatus(j?.data?.enabled ? 'enabled' : 'disabled')
     } catch {
       setPushStatus('unsupported')
     }
@@ -133,6 +146,23 @@ export default function EventStaffChatPage({
     refreshPushStatus()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  useEffect(() => {
+    fetch(`/api/events/${event.id}/chat/push-settings`)
+      .then((r) => r.json())
+      .then((j) => setPushNotificationsEnabledForEvent(!!j?.data?.enabled))
+      .catch(() => setPushNotificationsEnabledForEvent(false))
+  }, [event.id])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (!pushNotificationsEnabledForEvent) return
+    if (pushStatus !== 'disabled') return
+    const key = `chatPushPromptSeen:${event.id}`
+    if (window.localStorage.getItem(key)) return
+    window.localStorage.setItem(key, '1')
+    setShowEnablePushPrompt(true)
+  }, [event.id, pushNotificationsEnabledForEvent, pushStatus])
 
   const selectedChannelIdRef = useRef<string | null>(null)
   const subscribedChannelIdRef = useRef<string | null>(null)
@@ -478,16 +508,71 @@ export default function EventStaffChatPage({
               <h1 className="text-2xl font-bold text-gray-900">Staff Chat</h1>
               <p className="text-gray-600">Moderate and coordinate event communication channels.</p>
             </div>
-            {pushStatus !== 'unsupported' && (
+            <div className="flex items-center gap-2">
               <button
-                onClick={() => (pushStatus === 'enabled' ? disablePush() : enablePush())}
-                className="text-sm px-3 py-2 rounded-md border border-gray-300 bg-white hover:bg-gray-50"
+                onClick={async () => {
+                  try {
+                    setPushNotificationsToggleSaving(true)
+                    const next = !pushNotificationsEnabledForEvent
+                    const r = await fetch(`/api/events/${event.id}/chat/push-settings`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ enabled: next })
+                    })
+                    const j = await r.json()
+                    if (j?.success) setPushNotificationsEnabledForEvent(!!j?.data?.enabled)
+                  } finally {
+                    setPushNotificationsToggleSaving(false)
+                  }
+                }}
+                disabled={pushNotificationsToggleSaving}
+                className="text-sm px-3 py-2 rounded-md border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-60"
               >
-                {pushStatus === 'enabled' ? 'Disable notifications' : 'Enable notifications'}
+                {pushNotificationsEnabledForEvent ? 'Disable event notifications' : 'Enable event notifications'}
               </button>
-            )}
+
+              {pushNotificationsEnabledForEvent && pushStatus !== 'unsupported' && (
+                <button
+                  onClick={() => (pushStatus === 'enabled' ? disablePush() : enablePush())}
+                  className="text-sm px-3 py-2 rounded-md border border-gray-300 bg-white hover:bg-gray-50"
+                >
+                  {pushStatus === 'enabled' ? 'Disable my notifications' : 'Enable my notifications'}
+                </button>
+              )}
+            </div>
           </div>
         </div>
+
+        {showEnablePushPrompt && (
+          <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start justify-between gap-4">
+            <div>
+              <p className="text-sm font-semibold text-blue-900">Enable chat notifications?</p>
+              <p className="text-xs text-blue-800 mt-1">
+                This event has chat notifications enabled. Turn them on for this device to get push alerts.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={async () => {
+                  try {
+                    await enablePush()
+                  } finally {
+                    setShowEnablePushPrompt(false)
+                  }
+                }}
+                className="text-sm px-3 py-1 rounded bg-blue-700 text-white hover:bg-blue-800"
+              >
+                Enable
+              </button>
+              <button
+                onClick={() => setShowEnablePushPrompt(false)}
+                className="text-sm px-3 py-1 rounded border border-blue-300 text-blue-800 hover:bg-blue-100"
+              >
+                Not now
+              </button>
+            </div>
+          </div>
+        )}
 
         {loading && <p className="text-gray-600">Loading chat...</p>}
         {!loading && error && <p className="text-red-600 mb-4">{error}</p>}

@@ -71,6 +71,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   await ensureDefaultChannels(eventId)
 
+  const event = await prisma.events.findUnique({
+    where: { id: eventId },
+    select: { settings: true }
+  })
+  const pushNotificationsEnabled = !!(event?.settings as any)?.chat?.pushNotificationsEnabled
+
   let positionIdsForVolunteer: string[] | null = null
   if (chatAccess.actor.kind === 'volunteer') {
     const assignments = await prisma.position_assignments.findMany({
@@ -154,7 +160,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     success: true,
     data: {
       actor: { kind: chatAccess.actor.kind, id: chatAccess.actor.id, role: chatAccess.actor.role },
-      channels: channelsWithUnread
+      channels: channelsWithUnread,
+      pushNotificationsEnabled
     }
   })
 }

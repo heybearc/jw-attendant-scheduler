@@ -864,6 +864,26 @@ model event_chat_reads {
   @@index([channelId])
 }
 
+model event_chat_push_subscriptions {
+  id          String     @id @default(uuid())
+  userId      String?    @map("user_id")
+  volunteerId String?    @map("volunteer_id")
+  endpoint    String
+  p256dh      String
+  auth        String
+  userAgent   String?    @map("user_agent")
+  lastSeenAt  DateTime?  @map("last_seen_at")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+
+  user        users?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  volunteer   volunteers? @relation(fields: [volunteerId], references: [id], onDelete: Cascade)
+
+  @@unique([endpoint])
+  @@index([userId])
+  @@index([volunteerId])
+}
+
 enum AssignmentStatus {
   ASSIGNED
   CONFIRMED

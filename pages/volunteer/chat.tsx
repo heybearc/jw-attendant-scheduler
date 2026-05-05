@@ -44,6 +44,8 @@ export default function VolunteerChatPage() {
   const [sending, setSending] = useState(false)
   const [pinnedMessageId, setPinnedMessageId] = useState<string | null>(null)
   const [pinnedMessage, setPinnedMessage] = useState<ChatMessage | null>(null)
+  const [typingActors, setTypingActors] = useState<Array<{ key: string; label: string; expiresAt: number }>>([])
+  const [pushStatus, setPushStatus] = useState<'unknown' | 'enabled' | 'disabled' | 'unsupported'>('unknown')
   const wsRef = useRef<WebSocket | null>(null)
   const selectedChannelIdRef = useRef<string | null>(null)
   const subscribedChannelIdRef = useRef<string | null>(null)
@@ -61,6 +63,80 @@ export default function VolunteerChatPage() {
     ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER'].includes(session?.user?.role || '')
       ? (viewAsVolunteerIdFromQuery || getViewAsVolunteerId())
       : null
+
+  const refreshPushStatus = async () => {
+    try {
+      if (typeof window === 'undefined') return
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        setPushStatus('unsupported')
+        return
+      }
+      const reg = await navigator.serviceWorker.ready
+      const sub = await reg.pushManager.getSubscription()
+      setPushStatus(sub ? 'enabled' : 'disabled')
+    } catch {
+      setPushStatus('unsupported')
+    }
+  }
+
+  const enablePush = async () => {
+    if (typeof window === 'undefined') return
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
+    const perm = await Notification.requestPermission()
+    if (perm !== 'granted') return
+
+    const cfgRes = await fetch('/api/chat/push/config')
+    const cfgJson = await cfgRes.json()
+    const vapidPublicKey: string | null = cfgJson?.data?.vapidPublicKey || null
+    if (!vapidPublicKey) throw new Error('Missing VAPID public key')
+
+    const toUint8 = (base64String: string) => {
+      const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
+      const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+      const raw = atob(base64)
+      const output = new Uint8Array(raw.length)
+      for (let i = 0; i < raw.length; ++i) output[i] = raw.charCodeAt(i)
+      return output
+    }
+
+    const reg = await navigator.serviceWorker.ready
+    const sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: toUint8(vapidPublicKey)
+    })
+    await fetch('/api/chat/push/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getViewAsHeaders() },
+      body: JSON.stringify(sub)
+    })
+    await refreshPushStatus()
+  }
+
+  const disablePush = async () => {
+    try {
+      if (typeof window === 'undefined') return
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
+      const reg = await navigator.serviceWorker.ready
+      const sub = await reg.pushManager.getSubscription()
+      if (!sub) {
+        await refreshPushStatus()
+        return
+      }
+      await fetch('/api/chat/push/unsubscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getViewAsHeaders() },
+        body: JSON.stringify({ endpoint: sub.endpoint })
+      })
+      await sub.unsubscribe()
+    } finally {
+      await refreshPushStatus()
+    }
+  }
+
+  useEffect(() => {
+    refreshPushStatus()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     if (status !== 'authenticated') return
@@ -123,6 +199,8 @@ export default function VolunteerChatPage() {
         setMessages(data.data?.messages || [])
         setPinnedMessageId(data.data?.pinnedMessageId || null)
         setPinnedMessage(data.data?.pinnedMessage || null)
+        const newest = (data.data?.messages || [])[(data.data?.messages || []).length - 1]
+        await markChannelRead(selectedChannelId, newest?.id || null)
       } catch (e) {
         if (mounted) {
           setError('Unable to load channel messages.')
@@ -145,6 +223,22 @@ export default function VolunteerChatPage() {
   const selectedChannel = channels.find((c) => c.id === selectedChannelId) || null
   selectedChannelIdRef.current = selectedChannelId
 
+  const markChannelRead = async (channelId: string, lastReadMessageId?: string | null) => {
+    if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return
+    const eventId = typeof router.query.eventId === 'string' ? router.query.eventId : null
+    if (!eventId) return
+    try {
+      await fetch(`/api/events/${eventId}/chat/channels/${channelId}/read`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getViewAsHeaders() },
+        body: JSON.stringify({ lastReadMessageId: lastReadMessageId || null })
+      })
+      setChannels((prev) => prev.map((c) => (c.id === channelId ? { ...c, unreadCount: 0 } : c)))
+    } catch {
+      // ignore
+    }
+  }
+
   useEffect(() => {
     if (status !== 'authenticated') return
     const eventId = typeof router.query.eventId === 'string' ? router.query.eventId : null
@@ -166,6 +260,11 @@ export default function VolunteerChatPage() {
 
         socket.onopen = () => {
           if (cancelled) return
+          try {
+            socket.send(JSON.stringify({ type: 'subscribeEvent' }))
+          } catch {
+            // ignore
+          }
           const ch = selectedChannelIdRef.current
           if (ch) {
             try {
@@ -181,9 +280,42 @@ export default function VolunteerChatPage() {
           if (cancelled) return
           try {
             const msg = JSON.parse(ev.data)
+            if (msg?.type === 'channel:activity' && msg.channelId) {
+              const active = selectedChannelIdRef.current
+              setChannels((prev) => {
+                const existing = prev.find((c) => c.id === msg.channelId)
+                if (!existing) return prev
+                if (active && msg.channelId === active) return prev
+                return prev.map((c) => {
+                  if (c.id !== msg.channelId) return c
+                  const nextUnread = (c.unreadCount || 0) + 1
+                  return { ...c, unreadCount: nextUnread, lastMessageAt: msg.createdAt || c.lastMessageAt }
+                })
+              })
+              return
+            }
+            if (msg?.type === 'typing' && msg.channelId && msg.actor) {
+              if (msg.channelId !== selectedChannelIdRef.current) return
+              const key = `${msg.actor.kind}:${msg.actor.id}`
+              const label = msg.actor.label || 'Someone'
+              const ttlMs = 8000
+              setTypingActors((prev) => {
+                const now = Date.now()
+                const keep = prev.filter((a) => a.expiresAt > now && a.key !== key)
+                if (!msg.isTyping) return keep
+                return [...keep, { key, label, expiresAt: now + ttlMs }]
+              })
+              return
+            }
             if (msg?.type === 'message:new' && msg.channelId && msg.message) {
               if (msg.channelId !== selectedChannelIdRef.current) return
               setMessages((prev) => [...prev, msg.message])
+              setChannels((prev) =>
+                prev.map((c) =>
+                  c.id === msg.channelId ? { ...c, lastMessageAt: msg.message?.createdAt || c.lastMessageAt } : c
+                )
+              )
+              markChannelRead(msg.channelId, msg.message?.id || null)
               return
             }
             if (msg?.type === 'message:delete' && msg.channelId === selectedChannelIdRef.current && msg.messageId) {
@@ -256,6 +388,15 @@ export default function VolunteerChatPage() {
     }
   }, [selectedChannelId])
 
+  useEffect(() => {
+    if (typingActors.length === 0) return
+    const t = setInterval(() => {
+      const now = Date.now()
+      setTypingActors((prev) => prev.filter((a) => a.expiresAt > now))
+    }, 1000)
+    return () => clearInterval(t)
+  }, [typingActors.length])
+
   const formatSender = (message: ChatMessage) => {
     if (message.senderUser) return `${message.senderUser.firstName} ${message.senderUser.lastName}`
     if (message.senderVolunteer) return `${message.senderVolunteer.firstName} ${message.senderVolunteer.lastName}`
@@ -279,6 +420,9 @@ export default function VolunteerChatPage() {
       }
       setComposerValue('')
       setMessages((prev) => [...prev, data.data])
+      try {
+        wsRef.current?.send(JSON.stringify({ type: 'typing:stop', channelId: selectedChannelId }))
+      } catch {}
     } catch (e: any) {
       setError(e?.message || 'Failed to send message')
     } finally {
@@ -303,6 +447,14 @@ export default function VolunteerChatPage() {
               )}
             </div>
             <div className="flex items-center gap-3">
+              {pushStatus !== 'unsupported' && (
+                <button
+                  onClick={() => (pushStatus === 'enabled' ? disablePush() : enablePush())}
+                  className="text-sm px-3 py-1 rounded border border-gray-300 bg-white hover:bg-gray-50"
+                >
+                  {pushStatus === 'enabled' ? 'Disable notifications' : 'Enable notifications'}
+                </button>
+              )}
               {effectiveViewAsVolunteerId && typeof router.query.eventId === 'string' && (
                 <button
                   onClick={async () => {
@@ -416,10 +568,20 @@ export default function VolunteerChatPage() {
                       ))}
                     </div>
 
+                    {typingActors.length > 0 && (
+                      <p className="text-xs text-gray-500 mb-1">
+                        {typingActors.map((a) => a.label).join(', ')} typing…
+                      </p>
+                    )}
                     <div className="flex gap-2">
                       <textarea
                         value={composerValue}
-                        onChange={(e) => setComposerValue(e.target.value)}
+                        onChange={(e) => {
+                          setComposerValue(e.target.value)
+                          try {
+                            wsRef.current?.send(JSON.stringify({ type: 'typing:start', channelId: selectedChannelId }))
+                          } catch {}
+                        }}
                         placeholder="Type a message..."
                         rows={2}
                         className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"

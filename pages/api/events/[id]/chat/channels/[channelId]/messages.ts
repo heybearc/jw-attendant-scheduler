@@ -4,7 +4,8 @@ import { authOptions } from '../../../../../auth/[...nextauth]'
 import { prisma } from '@/lib/prisma'
 import { canAccessChatChannel } from '@/lib/chatAccess'
 import { checkEventAccess } from '@/lib/eventAccess'
-import { broadcastToChannel } from '@/lib/chatRealtime'
+import { broadcastToChannel, broadcastToEvent } from '@/lib/chatRealtime'
+import { sendWebPush } from '@/lib/webPush'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { id: eventId, channelId } = req.query
@@ -163,6 +164,105 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     })
 
     broadcastToChannel(channelId, { type: 'message:new', channelId, message })
+    broadcastToEvent(eventId, { type: 'channel:activity', eventId, channelId, createdAt: message.createdAt })
+
+    // Best-effort web push notifications (opt-in via subscription).
+    // This is intentionally async and non-blocking for the request.
+    ;(async () => {
+      try {
+        const channel = await prisma.event_chat_channels.findFirst({
+          where: { id: channelId, eventId },
+          select: { id: true, name: true, type: true, positionId: true }
+        })
+        if (!channel) return
+
+        const senderKey = `${access.actor.kind}:${access.actor.id}`
+
+        const staffUserIds = (
+          await prisma.event_permissions.findMany({
+            where: { eventId },
+            select: { userId: true }
+          })
+        )
+          .map((p) => p.userId)
+          .filter(Boolean)
+
+        let volunteerIds: string[] = []
+        if (channel.type === 'POSITION' && channel.positionId) {
+          volunteerIds = (
+            await prisma.position_assignments.findMany({
+              where: {
+                positionId: channel.positionId,
+                positions: { eventId }
+              },
+              select: { volunteerId: true }
+            })
+          )
+            .map((a) => a.volunteerId)
+            .filter(Boolean)
+        } else if (channel.type === 'EVENT_GENERAL' || channel.type === 'EVENT_ANNOUNCEMENTS') {
+          volunteerIds = (
+            await prisma.event_volunteers.findMany({
+              where: { eventId, isActive: true, volunteerId: { not: null } },
+              select: { volunteerId: true }
+            })
+          )
+            .map((ev) => ev.volunteerId as string)
+            .filter(Boolean)
+        }
+
+        // STAFF_INTERNAL should notify staff only.
+        if (channel.type === 'STAFF_INTERNAL') {
+          volunteerIds = []
+        }
+
+        const subs = await prisma.event_chat_push_subscriptions.findMany({
+          where: {
+            OR: [
+              ...(staffUserIds.length ? [{ userId: { in: staffUserIds } }] : []),
+              ...(volunteerIds.length ? [{ volunteerId: { in: volunteerIds } }] : [])
+            ]
+          },
+          select: { endpoint: true, p256dh: true, auth: true, userId: true, volunteerId: true }
+        })
+
+        const payloadBase = {
+          v: 1,
+          kind: 'chat:new-message',
+          eventId,
+          channelId,
+          channelName: channel.name,
+          messageId: message.id,
+          bodyPreview: message.body.slice(0, 140)
+        }
+
+        await Promise.all(
+          subs.map(async (s) => {
+            const recipientKey = s.userId ? `user:${s.userId}` : s.volunteerId ? `volunteer:${s.volunteerId}` : 'unknown'
+            if (recipientKey === senderKey) return
+
+            const url =
+              s.userId
+                ? `/events/${eventId}/chat`
+                : `/volunteer/chat?eventId=${encodeURIComponent(eventId)}`
+
+            try {
+              await sendWebPush(
+                { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
+                { ...payloadBase, url }
+              )
+            } catch (err: any) {
+              const statusCode = err?.statusCode
+              if (statusCode === 404 || statusCode === 410) {
+                await prisma.event_chat_push_subscriptions.deleteMany({ where: { endpoint: s.endpoint } })
+              }
+            }
+          })
+        )
+      } catch {
+        // ignore
+      }
+    })()
 
     return res.status(201).json({ success: true, data: message })
   }

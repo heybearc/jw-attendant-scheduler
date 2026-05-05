@@ -231,6 +231,42 @@ function openPendingDB() {
 
 // Push notifications (future enhancement)
 self.addEventListener('push', (event) => {
-  console.log('[SW] Push notification received');
-  // Future: Implement push notifications
+  try {
+    const data = event.data ? event.data.json() : {};
+    const title = data?.channelName ? `TheoShift: ${data.channelName}` : 'TheoShift'
+    const body = data?.bodyPreview || 'New message'
+    const url = data?.url || '/'
+
+    event.waitUntil(
+      self.registration.showNotification(title, {
+        body,
+        data: { url },
+        icon: '/logo-192.png',
+        badge: '/logo-192.png'
+      })
+    );
+  } catch (err) {
+    console.warn('[SW] Push parse failed', err);
+  }
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = event.notification?.data?.url || '/';
+
+  event.waitUntil((async () => {
+    const allClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const client of allClients) {
+      try {
+        if ('focus' in client) {
+          client.focus();
+          if ('navigate' in client) {
+            await client.navigate(url);
+          }
+          return;
+        }
+      } catch {}
+    }
+    await self.clients.openWindow(url);
+  })());
 });

@@ -1,10 +1,12 @@
 import type { WebSocket } from 'ws'
 
 type ChannelId = string
+type EventId = string
 
 type ChatRealtimeClient = {
   ws: WebSocket
   channelIds: Set<ChannelId>
+  eventIds: Set<EventId>
 }
 
 type ChatRealtimeState = {
@@ -37,6 +39,20 @@ export function broadcastToChannel(channelId: string, payload: unknown) {
 
   for (const client of state.clients) {
     if (!client.channelIds.has(channelId)) continue
+    try {
+      client.ws.send(message)
+    } catch {
+      // ignore broken sockets; cleanup occurs on close
+    }
+  }
+}
+
+export function broadcastToEvent(eventId: string, payload: unknown) {
+  const state = getState()
+  const message = JSON.stringify(payload)
+
+  for (const client of state.clients) {
+    if (!client.eventIds.has(eventId)) continue
     try {
       client.ws.send(message)
     } catch {

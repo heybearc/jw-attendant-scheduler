@@ -55,6 +55,7 @@ export default function EventAnnouncementsPage({ eventId, event, announcements, 
   })
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [notifySending, setNotifySending] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -144,6 +145,27 @@ export default function EventAnnouncementsPage({ eventId, event, announcements, 
     }
   }
 
+  const handleNotifyChatLaunch = async () => {
+    const note = prompt('Optional message for volunteers (leave blank to skip):') || ''
+    setNotifySending(true)
+    try {
+      const response = await fetch(`/api/events/${eventId}/chat/notify-volunteers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: note })
+      })
+      const data = await response.json()
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to send chat rollout emails')
+      }
+      alert(data.message || `Sent ${data.sent} email(s).`)
+    } catch (err: any) {
+      alert(err.message || 'Failed to send chat rollout emails')
+    } finally {
+      setNotifySending(false)
+    }
+  }
+
   return (
     <EventPageWrapper
       event={{
@@ -167,8 +189,24 @@ export default function EventAnnouncementsPage({ eventId, event, announcements, 
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Announcements</h1>
                 <p className="text-gray-600">Manage banner announcements for volunteers</p>
+                {canManage && (
+                  <p className="text-sm mt-2">
+                    <Link href={`/events/${eventId}/chat`} className="text-indigo-600 hover:text-indigo-800 font-medium">
+                      Open Staff Chat →
+                    </Link>
+                  </p>
+                )}
               </div>
               <div className="flex space-x-3">
+                {canManage && (
+                  <button
+                    onClick={handleNotifyChatLaunch}
+                    disabled={notifySending}
+                    className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded transition-colors"
+                  >
+                    {notifySending ? 'Sending...' : '💬 Notify Chat Launch'}
+                  </button>
+                )}
                 {canManage && (
                 <button
                   onClick={() => {

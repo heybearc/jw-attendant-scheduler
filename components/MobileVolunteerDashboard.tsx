@@ -95,6 +95,10 @@ interface MobileVolunteerDashboardProps {
   onAvailabilityResponse: (requestId: string, status: string) => Promise<void>
   onRefresh?: () => Promise<void>
   onSignOut?: () => void
+  chatEnabled?: boolean
+  chatChannelCount?: number
+  chatUnreadCount?: number
+  chatHref?: string
 }
 
 export default function MobileVolunteerDashboard({
@@ -108,7 +112,11 @@ export default function MobileVolunteerDashboard({
   availabilityRequests,
   onAvailabilityResponse,
   onRefresh,
-  onSignOut
+  onSignOut,
+  chatEnabled = false,
+  chatChannelCount = 0,
+  chatUnreadCount = 0,
+  chatHref = '/volunteer/chat'
 }: MobileVolunteerDashboardProps) {
   const [activeTab, setActiveTab] = useState<'assignments' | 'availability' | 'contacts' | 'documents'>('assignments')
   const [expandedAssignment, setExpandedAssignment] = useState<string | null>(null)
@@ -270,6 +278,30 @@ export default function MobileVolunteerDashboard({
         {/* Assignments Tab */}
         {activeTab === 'assignments' && (
           <div className="space-y-3">
+            {chatEnabled && (
+              <Link
+                href={chatHref}
+                className="block bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow touch-manipulation"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-medium text-blue-800 uppercase">Event chat</p>
+                    <h3 className="font-semibold text-gray-900">💬 Real-time team messaging</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {chatChannelCount} channel{chatChannelCount === 1 ? '' : 's'} available for this event.
+                    </p>
+                    {chatUnreadCount > 0 && (
+                      <p className="text-xs font-medium text-blue-800 mt-1">
+                        {chatUnreadCount} unread message{chatUnreadCount === 1 ? '' : 's'}
+                      </p>
+                    )}
+                  </div>
+                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </Link>
+            )}
             {assignments.length === 0 ? (
               <div className="bg-white rounded-lg shadow-sm p-8 text-center">
                 <div className="text-5xl mb-3">📝</div>

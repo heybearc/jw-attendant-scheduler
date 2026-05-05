@@ -129,6 +129,16 @@ interface DashboardData {
   isIVSTeamMember?: boolean
 }
 
+interface ChatChannel {
+  id: string
+  eventId: string
+  type: 'EVENT_ANNOUNCEMENTS' | 'EVENT_GENERAL' | 'POSITION'
+  name: string
+  positionId?: string | null
+  unreadCount?: number
+  lastMessageAt?: string | null
+}
+
 interface VolunteerDashboardProps {
   initialEventId?: string
 }
@@ -163,6 +173,9 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
   const [isMobile, setIsMobile] = useState(false)
   const [activeTab, setActiveTab] = useState<'dashboard' | 'checkin'>('dashboard')
   const [viewingDocument, setViewingDocument] = useState<Document | null>(null)
+  const [chatChannels, setChatChannels] = useState<ChatChannel[]>([])
+  const [chatLoading, setChatLoading] = useState(false)
+  const [showChatOnboarding, setShowChatOnboarding] = useState(false)
   const simulatedVolunteerIdFromQuery = typeof router.query.viewAsVolunteerId === 'string' ? router.query.viewAsVolunteerId : null
 
   useEffect(() => {
@@ -216,6 +229,36 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
       }
     } catch (error) {
       console.error('Failed to fetch availability requests:', error)
+    }
+  }
+
+  const fetchChatChannels = async (eventId: string) => {
+    try {
+      setChatLoading(true)
+      const response = await fetch(`/api/events/${eventId}/chat/channels`, {
+        headers: { ...getViewAsHeaders() }
+      })
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        const channels: ChatChannel[] = data.data?.channels || []
+        setChatChannels(channels)
+
+        if (channels.length > 0 && volunteer?.id) {
+          const onboardingKey = `chatOnboardingSeen:${eventId}:${volunteer.id}`
+          const seen = localStorage.getItem(onboardingKey)
+          if (!seen) {
+            setShowChatOnboarding(true)
+          }
+        }
+      } else {
+        setChatChannels([])
+      }
+    } catch (error) {
+      console.error('Failed to fetch chat channels:', error)
+      setChatChannels([])
+    } finally {
+      setChatLoading(false)
     }
   }
 
@@ -332,6 +375,7 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
         
         // Fetch availability requests for this event
         await fetchAvailabilityRequests(eventId)
+        await fetchChatChannels(eventId)
         
         // Check if profile verification is needed
         // Show verification if: 1) email/phone missing OR 2) profileVerificationRequired flag is set
@@ -467,6 +511,15 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
   const handleSwitchEvent = () => {
     router.push('/volunteer/select-event')
   }
+
+  const dismissChatOnboarding = () => {
+    if (selectedEventId && volunteer?.id) {
+      localStorage.setItem(`chatOnboardingSeen:${selectedEventId}:${volunteer.id}`, '1')
+    }
+    setShowChatOnboarding(false)
+  }
+
+  const totalUnreadChat = chatChannels.reduce((sum, c) => sum + (c.unreadCount || 0), 0)
 
   const handleSubmitCount = async (sessionId: string) => {
     const countValue = countValues.get(sessionId) || ''
@@ -654,6 +707,47 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
     </div>
   ) : null
 
+  const chatOnboardingModal = showChatOnboarding ? (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+        <div className="text-center mb-6">
+          <div className="text-4xl mb-3">💬</div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Event Chat Is Now Available</h2>
+          <p className="text-sm text-gray-600">
+            You can now receive real-time event updates and messages directly in your dashboard.
+            No additional login is required.
+          </p>
+        </div>
+
+        <div className="space-y-3 mb-6 text-sm text-gray-700 bg-blue-50 border border-blue-200 rounded-lg p-3">
+          <p>• <strong>Announcements</strong> from oversight</p>
+          <p>• <strong>Event General</strong> team chat</p>
+          <p>• <strong>Position channels</strong> for your assignments</p>
+        </div>
+
+        <div className="flex gap-3">
+          <button
+            onClick={dismissChatOnboarding}
+            className="flex-1 border border-gray-300 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+          >
+            Maybe Later
+          </button>
+          <button
+            onClick={() => {
+              dismissChatOnboarding()
+              if (selectedEventId) {
+                router.push(`/volunteer/chat?eventId=${selectedEventId}`)
+              }
+            }}
+            className="flex-1 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+          >
+            Open Chat
+          </button>
+        </div>
+      </div>
+    </div>
+  ) : null
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -703,6 +797,7 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
           <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
         </Head>
         {profileVerificationModal}
+        {chatOnboardingModal}
         <MobileVolunteerDashboard
           volunteer={dashboardData.volunteer}
           event={dashboardData.event}
@@ -715,6 +810,10 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
           onAvailabilityResponse={handleAvailabilityResponse}
           onRefresh={loadDashboard}
           onSignOut={() => signOut({ callbackUrl: '/volunteer/login' })}
+          chatEnabled={chatChannels.length > 0}
+          chatChannelCount={chatChannels.length}
+          chatUnreadCount={totalUnreadChat}
+          chatHref={selectedEventId ? `/volunteer/chat?eventId=${selectedEventId}` : '/volunteer/chat'}
         />
       </>
     )
@@ -728,6 +827,7 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
       </Head>
 
       {profileVerificationModal}
+      {chatOnboardingModal}
 
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
@@ -799,6 +899,34 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
               {formatDate(dashboardData.event.startDate)} - {formatDate(dashboardData.event.endDate)}
             </p>
           </div>
+
+          {/* Chat Availability Card */}
+          {chatChannels.length > 0 && (
+            <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-base font-semibold text-blue-900">💬 Event Chat is available</h2>
+                  <p className="text-sm text-blue-800 mt-1">
+                    Join {chatChannels.length} channel{chatChannels.length === 1 ? '' : 's'} for real-time event communication.
+                  </p>
+                  {totalUnreadChat > 0 && (
+                    <p className="text-xs font-medium text-blue-900 mt-1">
+                      {totalUnreadChat} unread message{totalUnreadChat === 1 ? '' : 's'}
+                    </p>
+                  )}
+                </div>
+                <Link
+                  href={selectedEventId ? `/volunteer/chat?eventId=${selectedEventId}` : '/volunteer/chat'}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors whitespace-nowrap"
+                >
+                  Open Chat
+                </Link>
+              </div>
+            </div>
+          )}
+          {chatLoading && (
+            <p className="mb-6 text-sm text-gray-500">Loading chat availability...</p>
+          )}
 
           {/* Tab Navigation for IVS Team Members */}
           {dashboardData.isIVSTeamMember && (

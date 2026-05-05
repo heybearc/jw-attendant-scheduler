@@ -165,6 +165,9 @@ model volunteers {
   primary_count_session_groups    count_session_groups[]            @relation("count_session_groups_primary")
   secondary_count_session_groups  count_session_groups[]            @relation("count_session_groups_secondary")
   volunteer_availability        volunteer_availability[]
+  chat_members                 event_chat_members[]
+  chat_messages                event_chat_messages[]                @relation("event_chat_messages_sender_volunteer")
+  chat_reads                   event_chat_reads[]
 }
 
 model count_sessions {
@@ -381,6 +384,7 @@ model events {
   positions                      positions[]
   volunteer_availability         volunteer_availability[]
   ivs_import_batches             ivs_import_batches[]
+  chat_channels                  event_chat_channels[]
   parentEvent                    events?                          @relation("EventHierarchy", fields: [parentEventId], references: [id], onDelete: Cascade)
   childEvents                    events[]                         @relation("EventHierarchy")
 
@@ -714,6 +718,9 @@ model users {
   locations                      locations[]
   ivs_import_batches             ivs_import_batches[]
   admin_view_as_audit_logs       admin_view_as_audit_logs[]
+  chat_members                   event_chat_members[]
+  chat_messages                  event_chat_messages[]            @relation("event_chat_messages_sender_user")
+  chat_reads                     event_chat_reads[]
 }
 
 model admin_view_as_audit_logs {
@@ -773,6 +780,88 @@ model volunteer_availability {
   @@index([volunteerId])
   @@index([status])
   @@index([respondedAt])
+}
+
+model event_chat_channels {
+  id          String           @id @default(uuid())
+  eventId     String           @map("event_id")
+  type        ChatChannelType
+  name        String
+  positionId  String?          @map("position_id")
+  pinnedMessageId String?      @map("pinned_message_id")
+  isArchived  Boolean          @default(false) @map("is_archived")
+  createdBy   String?          @map("created_by")
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+  event       events           @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  members     event_chat_members[]
+  messages    event_chat_messages[]
+  reads       event_chat_reads[]
+  pinnedMessage event_chat_messages? @relation("ChannelPinnedMessage", fields: [pinnedMessageId], references: [id], onDelete: SetNull)
+
+  @@unique([eventId, type, positionId])
+  @@index([eventId, isArchived])
+  @@index([positionId])
+}
+
+model event_chat_members {
+  id           String         @id @default(uuid())
+  channelId    String         @map("channel_id")
+  userId       String?        @map("user_id")
+  volunteerId  String?        @map("volunteer_id")
+  role         ChatMemberRole @default(MEMBER)
+  mutedUntil   DateTime?      @map("muted_until")
+  joinedAt     DateTime       @default(now()) @map("joined_at")
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+  channel      event_chat_channels @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  user         users?         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  volunteer    volunteers?    @relation(fields: [volunteerId], references: [id], onDelete: Cascade)
+
+  @@unique([channelId, userId])
+  @@unique([channelId, volunteerId])
+  @@index([channelId])
+  @@index([userId])
+  @@index([volunteerId])
+}
+
+model event_chat_messages {
+  id                String       @id @default(uuid())
+  channelId         String       @map("channel_id")
+  senderUserId      String?      @map("sender_user_id")
+  senderVolunteerId String?      @map("sender_volunteer_id")
+  kind              ChatMessageKind @default(TEXT)
+  body              String
+  editedAt          DateTime?    @map("edited_at")
+  deletedAt         DateTime?    @map("deleted_at")
+  createdAt         DateTime     @default(now()) @map("created_at")
+  updatedAt         DateTime     @updatedAt @map("updated_at")
+  channel           event_chat_channels @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  senderUser        users?       @relation("event_chat_messages_sender_user", fields: [senderUserId], references: [id], onDelete: SetNull)
+  senderVolunteer   volunteers?  @relation("event_chat_messages_sender_volunteer", fields: [senderVolunteerId], references: [id], onDelete: SetNull)
+  pinnedInChannels  event_chat_channels[] @relation("ChannelPinnedMessage")
+
+  @@index([channelId, createdAt])
+  @@index([senderUserId])
+  @@index([senderVolunteerId])
+}
+
+model event_chat_reads {
+  id                String   @id @default(uuid())
+  channelId         String   @map("channel_id")
+  userId            String?  @map("user_id")
+  volunteerId       String?  @map("volunteer_id")
+  lastReadMessageId String?  @map("last_read_message_id")
+  lastReadAt        DateTime @default(now()) @map("last_read_at")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+  channel           event_chat_channels @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  user              users?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  volunteer         volunteers? @relation(fields: [volunteerId], references: [id], onDelete: Cascade)
+
+  @@unique([channelId, userId])
+  @@unique([channelId, volunteerId])
+  @@index([channelId])
 }
 
 enum AssignmentStatus {
@@ -861,6 +950,24 @@ enum FeedbackType {
   BUG
   ENHANCEMENT
   FEATURE
+}
+
+enum ChatChannelType {
+  EVENT_ANNOUNCEMENTS
+  EVENT_GENERAL
+  POSITION
+  STAFF_INTERNAL
+}
+
+enum ChatMemberRole {
+  OWNER
+  MODERATOR
+  MEMBER
+}
+
+enum ChatMessageKind {
+  TEXT
+  SYSTEM
 }
 
 model ivs_import_batches {

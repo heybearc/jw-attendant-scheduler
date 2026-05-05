@@ -320,6 +320,13 @@ export default function VolunteerChatPage() {
         const token = tokenJson.data?.token
         if (!token) return
 
+        // Ensure the WS upgrade handler is initialized in the Node process.
+        try {
+          await fetch('/api/chat/ws')
+        } catch {
+          // ignore
+        }
+
         const proto = window.location.protocol === 'https:' ? 'wss' : 'ws'
         const socket = new WebSocket(`${proto}://${window.location.host}/api/chat/ws?token=${encodeURIComponent(token)}`)
         wsRef.current = socket

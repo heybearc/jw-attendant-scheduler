@@ -27,7 +27,7 @@ test.describe('Chat pinning (release gate)', () => {
     page.once('dialog', (d) => d.accept())
     await page.locator('button:has-text("Pin")').first().click()
 
-    await expect(page.locator('text=Pinned message')).toBeVisible({ timeout: 15000 })
+    await expect(page.getByText('Pinned message', { exact: true })).toBeVisible({ timeout: 15000 })
     await expect(page.locator(`text=${msg}`)).toBeVisible()
 
     // Find a volunteer to view-as
@@ -44,7 +44,7 @@ test.describe('Chat pinning (release gate)', () => {
 
     await page.goto(`/volunteer/chat?eventId=${eventId}&viewAsVolunteerId=${volunteerId}`)
     await expect(page.locator('text=Event Chat')).toBeVisible({ timeout: 15000 })
-    await expect(page.locator('text=Pinned message')).toBeVisible({ timeout: 15000 })
+    await expect(page.getByText('Pinned message', { exact: true })).toBeVisible({ timeout: 15000 })
     await expect(page.locator(`text=${msg}`)).toBeVisible()
   })
 })

@@ -73,6 +73,7 @@ export default function EventStaffChatPage({
   const [dmBusy, setDmBusy] = useState(false)
   const [notifySending, setNotifySending] = useState(false)
   const wsRef = useRef<WebSocket | null>(null)
+  const staffChatStorageKey = `staffEventChat:${event.id}`
   const refreshPushStatus = async () => {
     try {
       if (typeof window === 'undefined') return
@@ -204,8 +205,6 @@ export default function EventStaffChatPage({
       // ignore
     }
   }
-
-  const staffChatStorageKey = `staffEventChat:${event.id}`
 
   const loadChannels = async () => {
     const res = await fetch(`/api/events/${event.id}/chat/channels`)

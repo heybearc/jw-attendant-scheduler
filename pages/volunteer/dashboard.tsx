@@ -1267,16 +1267,16 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
                         <div key={task.groupId} className="bg-white rounded-lg p-4 shadow-sm mb-4 border-2 border-teal-100">
                           <div className="mb-3">
                             <div className="flex flex-wrap items-center gap-2 mb-2">
-                              <span className="inline-flex items-center px-2 py-1 rounded-full bg-teal-100 text-teal-900 text-xs font-semibold uppercase tracking-wide">
+                              <h3 className="text-xl font-extrabold text-teal-900 tracking-tight">
                                 {task.sessionName}
-                              </span>
+                              </h3>
                               {task.countTime && (
-                                <span className="inline-flex items-center px-2 py-1 rounded-full bg-gray-900 text-white text-xs font-semibold">
+                                <span className="inline-flex items-center px-2 py-1 rounded-full bg-teal-50 text-teal-900 text-xs font-semibold border border-teal-200">
                                   {new Date(task.countTime).toLocaleString()}
                                 </span>
                               )}
                             </div>
-                            <h3 className="text-lg font-semibold text-gray-900">{task.groupName}</h3>
+                            <p className="text-sm font-semibold text-gray-800">{task.groupName}</p>
                             <p className="text-sm text-gray-600 mt-1">
                               Stations in this section ({task.stations.length}):{' '}
                               {task.stations.map((s) => s.name).join(', ')}
@@ -1389,10 +1389,10 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
                         <div key={session.id} className="bg-white rounded-lg p-4 shadow-sm mb-4">
                           <div className="mb-3">
                             <div className="flex flex-wrap items-center gap-2 mb-2">
-                              <span className="inline-flex items-center px-2 py-1 rounded-full bg-emerald-100 text-emerald-900 text-xs font-semibold uppercase tracking-wide">
+                              <h3 className="text-xl font-extrabold text-emerald-900 tracking-tight">
                                 {session.sessionName}
-                              </span>
-                              <span className="inline-flex items-center px-2 py-1 rounded-full bg-gray-900 text-white text-xs font-semibold">
+                              </h3>
+                              <span className="inline-flex items-center px-2 py-1 rounded-full bg-emerald-50 text-emerald-900 text-xs font-semibold border border-emerald-200">
                                 {new Date(session.countTime).toLocaleString()}
                               </span>
                             </div>

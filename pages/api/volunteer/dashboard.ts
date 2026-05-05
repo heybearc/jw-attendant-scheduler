@@ -238,7 +238,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       where: {
         countSession: {
           eventId: eventId as string,
-          status: 'ACTIVE'
+          status: 'ACTIVE',
+          isActive: true
         },
         OR: [
           { primaryVolunteerId: volunteerId as string },
@@ -275,6 +276,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       where: {
         eventId: eventId as string,
         status: 'ACTIVE',
+        isActive: true,
         assignees: {
           some: {
             volunteerId: volunteerId as string

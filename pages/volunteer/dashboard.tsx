@@ -1266,15 +1266,16 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
                       return (
                         <div key={task.groupId} className="bg-white rounded-lg p-4 shadow-sm mb-4 border-2 border-teal-100">
                           <div className="mb-3">
-                            <p className="text-xs font-medium text-teal-700 uppercase tracking-wide">
-                              {task.sessionName}
+                            <div className="flex flex-wrap items-center gap-2 mb-2">
+                              <span className="inline-flex items-center px-2 py-1 rounded-full bg-teal-100 text-teal-900 text-xs font-semibold uppercase tracking-wide">
+                                {task.sessionName}
+                              </span>
                               {task.countTime && (
-                                <span className="text-gray-600 font-normal normal-case">
-                                  {' '}
-                                  · {new Date(task.countTime).toLocaleString()}
+                                <span className="inline-flex items-center px-2 py-1 rounded-full bg-gray-900 text-white text-xs font-semibold">
+                                  {new Date(task.countTime).toLocaleString()}
                                 </span>
                               )}
-                            </p>
+                            </div>
                             <h3 className="text-lg font-semibold text-gray-900">{task.groupName}</h3>
                             <p className="text-sm text-gray-600 mt-1">
                               Stations in this section ({task.stations.length}):{' '}
@@ -1387,10 +1388,14 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
                       return (
                         <div key={session.id} className="bg-white rounded-lg p-4 shadow-sm mb-4">
                           <div className="mb-3">
-                            <h3 className="font-medium text-gray-900">{session.sessionName}</h3>
-                            <p className="text-sm text-gray-600">
-                              {new Date(session.countTime).toLocaleString()}
-                            </p>
+                            <div className="flex flex-wrap items-center gap-2 mb-2">
+                              <span className="inline-flex items-center px-2 py-1 rounded-full bg-emerald-100 text-emerald-900 text-xs font-semibold uppercase tracking-wide">
+                                {session.sessionName}
+                              </span>
+                              <span className="inline-flex items-center px-2 py-1 rounded-full bg-gray-900 text-white text-xs font-semibold">
+                                {new Date(session.countTime).toLocaleString()}
+                              </span>
+                            </div>
                           </div>
                           
                           {hasSubmitted && !isEditing ? (

@@ -1,7 +1,6 @@
 import { GetServerSideProps } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../api/auth/[...nextauth]'
-import Link from 'next/link'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import EventPageWrapper from '../../../components/EventPageWrapper'
 
@@ -723,12 +722,10 @@ export default function EventStaffChatPage({
               </p>
               {!linkedVolunteerId ? (
                 <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-                  Your login isn&apos;t linked as a volunteer on this event yet, so you can&apos;t start a DM from staff
-                  chat. Add yourself on the{' '}
-                  <Link href={`/events/${event.id}/volunteers`} className="font-semibold underline">
-                    Volunteers
-                  </Link>{' '}
-                  page (or ask an admin), then return here.
+                  We couldn&apos;t match your login to an active volunteer on this event, so DMs from staff chat are
+                  blocked. Ask an admin to link your user to your volunteer profile under{' '}
+                  <span className="font-semibold">Admin → Users</span>, and ensure you appear on this event&apos;s
+                  volunteer list.
                 </div>
               ) : (
                 <>

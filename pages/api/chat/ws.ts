@@ -9,7 +9,7 @@ type WsInbound =
   | { type: 'unsubscribe'; channelId: string }
   | { type: 'ping' }
 
-type WsTokenPayload = { v: 1; eventId: string; email: string; iat?: number; exp?: number }
+type WsTokenPayload = { v: 1; eventId: string; email: string; viewAsVolunteerId?: string | null; iat?: number; exp?: number }
 
 export const config = {
   api: {
@@ -80,7 +80,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         if (msg.type === 'subscribe') {
           const channelId = (msg as any).channelId as string
-          const access = await canAccessChatChannel(payload.eventId, channelId, payload.email)
+          const access = await canAccessChatChannel(payload.eventId, channelId, payload.email, {
+            viewAsVolunteerId: payload.viewAsVolunteerId || null
+          })
           if (!access.allowed) {
             ws.send(JSON.stringify({ type: 'error', error: 'Access denied' }))
             return

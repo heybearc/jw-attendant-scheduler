@@ -20,7 +20,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(401).json({ success: false, error: 'Unauthorized' })
   }
 
-  const access = await canAccessChatChannel(eventId, channelId, session.user.email)
+  const viewAsVolunteerId =
+    typeof req.headers['x-view-as-volunteer-id'] === 'string' ? req.headers['x-view-as-volunteer-id'] : null
+  const access = await canAccessChatChannel(eventId, channelId, session.user.email, { viewAsVolunteerId })
   if (!access.allowed || !access.actor || !access.channel) {
     return res.status(403).json({ success: false, error: 'Access denied for this channel' })
   }

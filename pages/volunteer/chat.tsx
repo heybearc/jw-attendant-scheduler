@@ -3,7 +3,7 @@ import { useRouter } from 'next/router'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import Head from 'next/head'
-import { getViewAsHeaders } from '@/lib/viewAsClient'
+import { getViewAsHeaders, getViewAsVolunteerId, setViewAsVolunteerId } from '@/lib/viewAsClient'
 
 interface ChatChannel {
   id: string
@@ -47,6 +47,18 @@ export default function VolunteerChatPage() {
   const wsRef = useRef<WebSocket | null>(null)
   const selectedChannelIdRef = useRef<string | null>(null)
   const subscribedChannelIdRef = useRef<string | null>(null)
+  const viewAsVolunteerIdFromQuery = typeof router.query.viewAsVolunteerId === 'string' ? router.query.viewAsVolunteerId : null
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (session?.user?.role !== 'ADMIN') return
+    if (viewAsVolunteerIdFromQuery) {
+      setViewAsVolunteerId(viewAsVolunteerIdFromQuery)
+    }
+  }, [session?.user?.role, viewAsVolunteerIdFromQuery])
+
+  const effectiveViewAsVolunteerId =
+    session?.user?.role === 'ADMIN' ? (viewAsVolunteerIdFromQuery || getViewAsVolunteerId()) : null
 
   useEffect(() => {
     if (status !== 'authenticated') return
@@ -282,7 +294,11 @@ export default function VolunteerChatPage() {
           <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
             <div>
               <h1 className="text-xl font-semibold text-gray-900">💬 Event Chat</h1>
-              <p className="text-sm text-gray-600">Magic-link session active for {session?.user?.email}</p>
+              {effectiveViewAsVolunteerId ? (
+                <p className="text-sm text-amber-700">View-as volunteer simulation is active.</p>
+              ) : (
+                <p className="text-sm text-gray-600">Magic-link session active for {session?.user?.email}</p>
+              )}
             </div>
             <Link href={typeof router.query.eventId === 'string' ? `/volunteer/dashboard?eventId=${router.query.eventId}` : '/volunteer/dashboard'} className="text-sm text-blue-600 hover:text-blue-800">
               Back to Dashboard

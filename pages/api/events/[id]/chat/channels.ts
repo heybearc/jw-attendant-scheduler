@@ -62,7 +62,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(401).json({ success: false, error: 'Unauthorized' })
   }
 
-  const chatAccess = await canAccessEventChat(eventId, session.user.email)
+  const viewAsVolunteerId =
+    typeof req.headers['x-view-as-volunteer-id'] === 'string' ? req.headers['x-view-as-volunteer-id'] : null
+  const chatAccess = await canAccessEventChat(eventId, session.user.email, { viewAsVolunteerId })
   if (!chatAccess.allowed || !chatAccess.actor) {
     return res.status(403).json({ success: false, error: 'Access denied for event chat' })
   }

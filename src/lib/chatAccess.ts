@@ -5,11 +5,24 @@ type ChatActor =
   | { kind: 'user'; id: string; role: string }
   | { kind: 'volunteer'; id: string; role: string }
 
-export async function resolveActorFromSessionEmail(email: string): Promise<ChatActor | null> {
+export async function resolveActorFromSessionEmail(
+  email: string,
+  opts?: { viewAsVolunteerId?: string | null }
+): Promise<ChatActor | null> {
   const user = await prisma.users.findUnique({
     where: { email },
     select: { id: true, role: true }
   })
+
+  if (user && opts?.viewAsVolunteerId && user.role === 'ADMIN') {
+    const volunteer = await prisma.volunteers.findUnique({
+      where: { id: opts.viewAsVolunteerId },
+      select: { id: true }
+    })
+    if (volunteer) {
+      return { kind: 'volunteer', id: volunteer.id, role: 'VOLUNTEER' }
+    }
+  }
 
   if (user) {
     return { kind: 'user', id: user.id, role: user.role }
@@ -27,8 +40,8 @@ export async function resolveActorFromSessionEmail(email: string): Promise<ChatA
   return null
 }
 
-export async function canAccessEventChat(eventId: string, sessionEmail: string) {
-  const actor = await resolveActorFromSessionEmail(sessionEmail)
+export async function canAccessEventChat(eventId: string, sessionEmail: string, opts?: { viewAsVolunteerId?: string | null }) {
+  const actor = await resolveActorFromSessionEmail(sessionEmail, opts)
   if (!actor) return { allowed: false as const, actor: null }
 
   if (actor.kind === 'user') {
@@ -49,8 +62,13 @@ export async function canAccessEventChat(eventId: string, sessionEmail: string) 
   return { allowed: !!membership?.isActive, actor }
 }
 
-export async function canAccessChatChannel(eventId: string, channelId: string, sessionEmail: string) {
-  const eventAccess = await canAccessEventChat(eventId, sessionEmail)
+export async function canAccessChatChannel(
+  eventId: string,
+  channelId: string,
+  sessionEmail: string,
+  opts?: { viewAsVolunteerId?: string | null }
+){
+  const eventAccess = await canAccessEventChat(eventId, sessionEmail, opts)
   if (!eventAccess.allowed || !eventAccess.actor) {
     return { allowed: false as const, actor: null, channel: null }
   }

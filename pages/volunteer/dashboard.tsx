@@ -8,7 +8,7 @@ import { formatCalendarDateLabel } from '@/lib/calendarDate'
 import dynamic from 'next/dynamic'
 import AnnouncementBanner from '../../components/AnnouncementBanner'
 import EarlyCheckinPanel from '../../components/EarlyCheckinPanel'
-import { getViewAsHeaders, getViewAsVolunteerId } from '@/lib/viewAsClient'
+import { getViewAsHeaders, getViewAsVolunteerId, setViewAsVolunteerId } from '@/lib/viewAsClient'
 
 // Lazy load mobile dashboard (only loaded on mobile devices)
 const MobileVolunteerDashboard = dynamic(() => import('../../components/MobileVolunteerDashboard'), {
@@ -177,6 +177,14 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
   const [chatLoading, setChatLoading] = useState(false)
   const [showChatOnboarding, setShowChatOnboarding] = useState(false)
   const simulatedVolunteerIdFromQuery = typeof router.query.viewAsVolunteerId === 'string' ? router.query.viewAsVolunteerId : null
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (session?.user?.role !== 'ADMIN') return
+    if (simulatedVolunteerIdFromQuery) {
+      setViewAsVolunteerId(simulatedVolunteerIdFromQuery)
+    }
+  }, [session?.user?.role, simulatedVolunteerIdFromQuery])
 
   useEffect(() => {
     if (!viewingDocument) return

@@ -1,5 +1,20 @@
 # TheoShift Backlog & Known Issues
 
+## IVS module tab — pagination (match Volunteers page)
+
+**Status:** Backlog  
+**Priority:** Medium  
+**Created:** 2026-05-06
+
+### Request
+The IVS module event tab should use **pagination like the Volunteers page**: page controls plus **“show all”** or **page size 10–100** (or equivalent) so large lists stay usable.
+
+### Acceptance criteria
+- [ ] IVS list view supports paging consistent with `/events/[id]/volunteers` patterns
+- [ ] Options include a reasonable default page size and user-selectable sizes (e.g. 10–100) and/or “show all” where appropriate
+
+---
+
 ## Database Cleanup - Remove PIN Column
 
 **Status:** Scheduled Cleanup  

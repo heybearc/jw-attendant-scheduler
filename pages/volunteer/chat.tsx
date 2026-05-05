@@ -51,6 +51,8 @@ export default function VolunteerChatPage() {
   const wsRef = useRef<WebSocket | null>(null)
   const selectedChannelIdRef = useRef<string | null>(null)
   const subscribedChannelIdRef = useRef<string | null>(null)
+  const typingStopTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const typingStartedRef = useRef(false)
   const viewAsVolunteerIdFromQuery = typeof router.query.viewAsVolunteerId === 'string' ? router.query.viewAsVolunteerId : null
 
   useEffect(() => {
@@ -200,6 +202,32 @@ export default function VolunteerChatPage() {
     load()
   }, [status, router.query.eventId, selectedChannelId])
 
+  // Refresh channel list periodically so unread counts work even if WS is unavailable.
+  useEffect(() => {
+    if (status !== 'authenticated') return
+    const eventId = typeof router.query.eventId === 'string' ? router.query.eventId : null
+    if (!eventId) return
+
+    let timer: NodeJS.Timeout | null = null
+    const refresh = async () => {
+      try {
+        const response = await fetch(`/api/events/${eventId}/chat/channels`, { headers: { ...getViewAsHeaders() } })
+        const data = await response.json()
+        if (response.ok && data?.success) {
+          setChannels(data.data?.channels || [])
+          setPushNotificationsEnabledForEvent(!!data.data?.pushNotificationsEnabled)
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    timer = setInterval(refresh, 8000)
+    return () => {
+      if (timer) clearInterval(timer)
+    }
+  }, [status, router.query.eventId])
+
   useEffect(() => {
     if (status !== 'authenticated') return
     const eventId = typeof router.query.eventId === 'string' ? router.query.eventId : null
@@ -249,6 +277,17 @@ export default function VolunteerChatPage() {
 
   const selectedChannel = channels.find((c) => c.id === selectedChannelId) || null
   selectedChannelIdRef.current = selectedChannelId
+
+  const sendTyping = (isTyping: boolean) => {
+    const ch = selectedChannelIdRef.current
+    if (!ch) return
+    const ws = wsRef.current
+    if (!ws || ws.readyState !== WebSocket.OPEN) return
+    if (subscribedChannelIdRef.current !== ch) return
+    try {
+      ws.send(JSON.stringify({ type: isTyping ? 'typing:start' : 'typing:stop', channelId: ch }))
+    } catch {}
+  }
 
   const markChannelRead = async (channelId: string, lastReadMessageId?: string | null) => {
     if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return
@@ -448,7 +487,7 @@ export default function VolunteerChatPage() {
       setComposerValue('')
       setMessages((prev) => [...prev, data.data])
       try {
-        wsRef.current?.send(JSON.stringify({ type: 'typing:stop', channelId: selectedChannelId }))
+        sendTyping(false)
       } catch {}
     } catch (e: any) {
       setError(e?.message || 'Failed to send message')
@@ -644,9 +683,17 @@ export default function VolunteerChatPage() {
                         value={composerValue}
                         onChange={(e) => {
                           setComposerValue(e.target.value)
-                          try {
-                            wsRef.current?.send(JSON.stringify({ type: 'typing:start', channelId: selectedChannelId }))
-                          } catch {}
+                          if (!typingStartedRef.current) {
+                            typingStartedRef.current = true
+                            sendTyping(true)
+                          } else {
+                            sendTyping(true)
+                          }
+                          if (typingStopTimerRef.current) clearTimeout(typingStopTimerRef.current)
+                          typingStopTimerRef.current = setTimeout(() => {
+                            typingStartedRef.current = false
+                            sendTyping(false)
+                          }, 1500)
                         }}
                         placeholder="Type a message..."
                         rows={2}

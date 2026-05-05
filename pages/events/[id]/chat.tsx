@@ -166,6 +166,8 @@ export default function EventStaffChatPage({
 
   const selectedChannelIdRef = useRef<string | null>(null)
   const subscribedChannelIdRef = useRef<string | null>(null)
+  const typingStopTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const typingStartedRef = useRef(false)
 
   const selectedChannel = channels.find((c) => c.id === selectedChannelId) || null
   selectedChannelIdRef.current = selectedChannelId
@@ -404,7 +406,18 @@ export default function EventStaffChatPage({
     setComposer('')
     setMessages((prev) => [...prev, data.data])
     try {
-      wsRef.current?.send(JSON.stringify({ type: 'typing:stop', channelId: selectedChannelId }))
+      sendTyping(false)
+    } catch {}
+  }
+
+  const sendTyping = (isTyping: boolean) => {
+    const ch = selectedChannelIdRef.current
+    if (!ch) return
+    const ws = wsRef.current
+    if (!ws || ws.readyState !== WebSocket.OPEN) return
+    if (subscribedChannelIdRef.current !== ch) return
+    try {
+      ws.send(JSON.stringify({ type: isTyping ? 'typing:start' : 'typing:stop', channelId: ch }))
     } catch {}
   }
 
@@ -681,9 +694,17 @@ export default function EventStaffChatPage({
                       value={composer}
                       onChange={(e) => {
                         setComposer(e.target.value)
-                        try {
-                          wsRef.current?.send(JSON.stringify({ type: 'typing:start', channelId: selectedChannelId }))
-                        } catch {}
+                        if (!typingStartedRef.current) {
+                          typingStartedRef.current = true
+                          sendTyping(true)
+                        } else {
+                          sendTyping(true)
+                        }
+                        if (typingStopTimerRef.current) clearTimeout(typingStopTimerRef.current)
+                        typingStopTimerRef.current = setTimeout(() => {
+                          typingStartedRef.current = false
+                          sendTyping(false)
+                        }, 1500)
                       }}
                       rows={2}
                       placeholder="Send a message to this channel..."

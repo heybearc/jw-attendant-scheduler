@@ -73,6 +73,10 @@ export default function EventStaffChatPage({
   const [dmBusy, setDmBusy] = useState(false)
   const [notifySending, setNotifySending] = useState(false)
   const wsRef = useRef<WebSocket | null>(null)
+  const selectedChannelIdRef = useRef<string | null>(null)
+  const subscribedChannelIdRef = useRef<string | null>(null)
+  const typingStopTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const typingStartedRef = useRef(false)
   const staffChatStorageKey = `staffEventChat:${event.id}`
   const refreshPushStatus = async () => {
     try {
@@ -153,45 +157,6 @@ export default function EventStaffChatPage({
     }
   }
 
-  useEffect(() => {
-    refreshPushStatus()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  useEffect(() => {
-    if (!selectedChannelId || typeof window === 'undefined') return
-    try {
-      sessionStorage.setItem(staffChatStorageKey, selectedChannelId)
-    } catch {
-      // ignore
-    }
-  }, [selectedChannelId, staffChatStorageKey])
-
-  useEffect(() => {
-    fetch(`/api/events/${event.id}/chat/push-settings`)
-      .then((r) => r.json())
-      .then((j) => setPushNotificationsEnabledForEvent(!!j?.data?.enabled))
-      .catch(() => setPushNotificationsEnabledForEvent(false))
-  }, [event.id])
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    if (!pushNotificationsEnabledForEvent) return
-    if (pushStatus !== 'disabled') return
-    const key = `chatPushPromptSeen:${event.id}`
-    if (window.localStorage.getItem(key)) return
-    window.localStorage.setItem(key, '1')
-    setShowEnablePushPrompt(true)
-  }, [event.id, pushNotificationsEnabledForEvent, pushStatus])
-
-  const selectedChannelIdRef = useRef<string | null>(null)
-  const subscribedChannelIdRef = useRef<string | null>(null)
-  const typingStopTimerRef = useRef<NodeJS.Timeout | null>(null)
-  const typingStartedRef = useRef(false)
-
-  const selectedChannel = channels.find((c) => c.id === selectedChannelId) || null
-  selectedChannelIdRef.current = selectedChannelId
-
   const markChannelRead = async (channelId: string, lastReadMessageId?: string | null) => {
     if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return
     try {
@@ -242,6 +207,37 @@ export default function EventStaffChatPage({
     const newest = (data.data?.messages || [])[(data.data?.messages || []).length - 1]
     await markChannelRead(selectedChannelId, newest?.id || null)
   }
+
+  useEffect(() => {
+    refreshPushStatus()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    if (!selectedChannelId || typeof window === 'undefined') return
+    try {
+      sessionStorage.setItem(staffChatStorageKey, selectedChannelId)
+    } catch {
+      // ignore
+    }
+  }, [selectedChannelId, staffChatStorageKey])
+
+  useEffect(() => {
+    fetch(`/api/events/${event.id}/chat/push-settings`)
+      .then((r) => r.json())
+      .then((j) => setPushNotificationsEnabledForEvent(!!j?.data?.enabled))
+      .catch(() => setPushNotificationsEnabledForEvent(false))
+  }, [event.id])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (!pushNotificationsEnabledForEvent) return
+    if (pushStatus !== 'disabled') return
+    const key = `chatPushPromptSeen:${event.id}`
+    if (window.localStorage.getItem(key)) return
+    window.localStorage.setItem(key, '1')
+    setShowEnablePushPrompt(true)
+  }, [event.id, pushNotificationsEnabledForEvent, pushStatus])
 
   useEffect(() => {
     let timer: NodeJS.Timeout | null = null
@@ -428,6 +424,20 @@ export default function EventStaffChatPage({
     }
   }, [wsReady, selectedChannelId])
 
+  selectedChannelIdRef.current = selectedChannelId
+  const selectedChannel = channels.find((c) => c.id === selectedChannelId) || null
+
+  const sendTyping = (isTyping: boolean) => {
+    const ch = selectedChannelIdRef.current
+    if (!ch) return
+    const ws = wsRef.current
+    if (!ws || ws.readyState !== WebSocket.OPEN) return
+    if (subscribedChannelIdRef.current !== ch) return
+    try {
+      ws.send(JSON.stringify({ type: isTyping ? 'typing:start' : 'typing:stop', channelId: ch }))
+    } catch {}
+  }
+
   const sendMessage = async () => {
     if (!selectedChannelId || !composer.trim()) return
     const res = await fetch(`/api/events/${event.id}/chat/channels/${selectedChannelId}/messages`, {
@@ -444,17 +454,6 @@ export default function EventStaffChatPage({
     setMessages((prev) => [...prev, data.data])
     try {
       sendTyping(false)
-    } catch {}
-  }
-
-  const sendTyping = (isTyping: boolean) => {
-    const ch = selectedChannelIdRef.current
-    if (!ch) return
-    const ws = wsRef.current
-    if (!ws || ws.readyState !== WebSocket.OPEN) return
-    if (subscribedChannelIdRef.current !== ch) return
-    try {
-      ws.send(JSON.stringify({ type: isTyping ? 'typing:start' : 'typing:stop', channelId: ch }))
     } catch {}
   }
 
@@ -511,6 +510,13 @@ export default function EventStaffChatPage({
     setPinnedMessageId(null)
     setPinnedMessage(null)
   }
+
+  const senderName = (m: ChatMessage) =>
+    m.senderUser
+      ? `${m.senderUser.firstName} ${m.senderUser.lastName} (${m.senderUser.role})`
+      : m.senderVolunteer
+        ? `${m.senderVolunteer.firstName} ${m.senderVolunteer.lastName} (Volunteer)`
+        : 'Unknown sender'
 
   const muteSender = async (message: ChatMessage, minutes = 60) => {
     if (!selectedChannelId) return
@@ -597,13 +603,6 @@ export default function EventStaffChatPage({
       setDmBusy(false)
     }
   }
-
-  const senderName = (m: ChatMessage) =>
-    m.senderUser
-      ? `${m.senderUser.firstName} ${m.senderUser.lastName} (${m.senderUser.role})`
-      : m.senderVolunteer
-      ? `${m.senderVolunteer.firstName} ${m.senderVolunteer.lastName} (Volunteer)`
-      : 'Unknown sender'
 
   return (
     <EventPageWrapper

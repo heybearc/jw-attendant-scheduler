@@ -81,7 +81,8 @@ export default function EventPageLayout({
   }, [])
 
   useEffect(() => {
-    if (session?.user?.role !== 'ADMIN') return
+    const canViewAs = ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER'].includes(session?.user?.role || '')
+    if (!canViewAs) return
     fetch(`/api/events/${event.id}/volunteers`)
       .then((response) => response.json())
       .then((data) => {

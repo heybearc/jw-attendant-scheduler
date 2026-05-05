@@ -317,7 +317,7 @@ export default function EventStaffChatPage({
   return (
     <EventPageWrapper
       event={event}
-      currentPage="announcements"
+      currentPage="chat"
       canEdit={canEdit}
       canDelete={canDelete}
       canManagePermissions={canManagePermissions}

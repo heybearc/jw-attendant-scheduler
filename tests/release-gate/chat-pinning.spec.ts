@@ -34,7 +34,25 @@ test.describe('Chat pinning (release gate)', () => {
     const volsRes = await page.request.get(`/api/events/${eventId}/volunteers`)
     expect(volsRes.ok()).toBeTruthy()
     const volsJson: any = await volsRes.json()
-    const volunteerId = volsJson?.volunteers?.[0]?.id
+    let volunteerId = volsJson?.volunteers?.[0]?.id
+
+    // Ensure we have at least one volunteer to view-as (release gate must be deterministic)
+    if (!volunteerId) {
+      const createRes = await page.request.post(`/api/events/${eventId}/volunteers`, {
+        data: {
+          firstName: 'Test',
+          lastName: 'Volunteer',
+          email: `test.volunteer.${Date.now()}@example.com`,
+          phone: '555-0100',
+          congregation: 'Test Congregation',
+          formsOfService: ['Elder'],
+        },
+      })
+      expect(createRes.ok()).toBeTruthy()
+      const created: any = await createRes.json()
+      volunteerId = created?.data?.id || created?.volunteer?.id || created?.id
+    }
+
     expect(typeof volunteerId).toBe('string')
 
     // Volunteer chat (admin view-as): should see pinned message

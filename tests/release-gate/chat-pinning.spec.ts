@@ -61,7 +61,8 @@ test.describe('Chat pinning (release gate)', () => {
     }, volunteerId)
 
     await page.goto(`/volunteer/chat?eventId=${eventId}&viewAsVolunteerId=${volunteerId}`)
-    await expect(page.locator('text=Event Chat')).toBeVisible({ timeout: 15000 })
+    await expect(page).toHaveURL(/\/volunteer\/chat/, { timeout: 15000 })
+    await expect(page.getByRole('heading', { name: /Event Chat/i })).toBeVisible({ timeout: 15000 })
     await expect(page.getByText('Pinned message', { exact: true })).toBeVisible({ timeout: 15000 })
     await expect(page.locator(`text=${msg}`)).toBeVisible()
   })

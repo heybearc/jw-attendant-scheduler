@@ -1,8 +1,8 @@
 // TheoShift Service Worker
-// Version 2.0.2 — do not intercept document navigations (fixes magic link / session flows)
+// Version 2.0.3 — staff /api/events/* and /_next/* bypass SW (no synthetic 503 offline responses)
 
-const STATIC_CACHE = 'theoshift-static-v2.0.2';
-const DATA_CACHE = 'theoshift-data-v2.0.2';
+const STATIC_CACHE = 'theoshift-static-v2.0.3';
+const DATA_CACHE = 'theoshift-data-v2.0.3';
 const OFFLINE_URL = '/offline.html';
 
 // Static assets to precache on install
@@ -44,7 +44,7 @@ function isVolunteerPage(url) {
 
 // Install event - precache static assets and volunteer pages
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing v2.0.2...');
+  console.log('[SW] Installing v2.0.3...');
   event.waitUntil(
     caches.open(STATIC_CACHE)
       .then((cache) => {
@@ -62,7 +62,7 @@ self.addEventListener('install', (event) => {
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating v2.0.2...');
+  console.log('[SW] Activating v2.0.3...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -93,6 +93,20 @@ self.addEventListener('fetch', (event) => {
   // Exclude auth routes from service worker (allow redirects for magic links)
   if (url.includes('/api/auth/') || url.includes('/auth/')) {
     return; // Let browser handle auth routes natively
+  }
+
+  const pathname = new URL(url).pathname
+
+  // Next.js bundles: never wrap — flaky fetch + Strategy 3 produced bogus 503 "Offline" for chunks.
+  if (pathname.startsWith('/_next/')) {
+    return
+  }
+
+  // Staff / admin / general APIs (everything except volunteer offline list): bypass SW entirely.
+  // Otherwise Strategy 3 returns synthetic Response(status 503) when fetch() rejects, which
+  // breaks pages like /events/[id]/volunteers that call /api/events/.../volunteers.
+  if (pathname.startsWith('/api/') && !isVolunteerApiRoute(url)) {
+    return
   }
 
   // Strategy 1: Stale-while-revalidate for volunteer API routes

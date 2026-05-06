@@ -61,16 +61,16 @@ test.describe('v4.15.0: Global Announcements Banner', () => {
   })
 })
 
-// --- Service Worker v2.0.0 ---
+// --- Service Worker (version bumps with public/sw.js) ---
 
-test.describe('v4.15.0: Service Worker v2.0.0', () => {
-  test('sw.js is served and contains v2.0.0', async ({ page }) => {
+test.describe('v4.15.0: Service Worker', () => {
+  test('sw.js is served and contains current cache version', async ({ page }) => {
     const response = await page.request.get('/sw.js')
     expect(response.status()).toBe(200)
     const body = await response.text()
-    expect(body).toContain('Version 2.0.0')
-    expect(body).toContain('theoshift-static-v2')
-    expect(body).toContain('theoshift-data-v2')
+    expect(body).toContain('Version 2.0.3')
+    expect(body).toContain('theoshift-static-v2.0.3')
+    expect(body).toContain('theoshift-data-v2.0.3')
   })
 
   test('sw.js contains stale-while-revalidate for volunteer API routes', async ({ page }) => {

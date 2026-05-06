@@ -271,6 +271,7 @@ For issues or questions:
 
 ## 📝 Version History
 
+- **v4.21.0** (2026-05-06) - Document and volunteer save reliability; PWA load fixes
 - **v4.20.1** (2026-05-05) - Chat navigation and staff–volunteer linking
   - Staff and volunteer chat: clearer sidebar with **New message** (DMs and position channels) and searchable **Browse position channels** instead of a long list
   - Staff direct messages: accounts linked to a volunteer in **Admin → Users** are recognized for event chat and DMs when that volunteer is on the event roster

@@ -1,5 +1,13 @@
 # Test Failures Log
 
+## 2026-05-06 — qa-01 E2E (`/test-release` before v4.21.0)
+
+- **Suite:** `npm run test:e2e` (smoke + release-gate)
+- **Result:** 4 passed, 1 skipped
+- **Outcome:** Green for bump / release
+
+---
+
 **Date:** 2026-02-17  
 **Test Run:** Pre-Release Testing for Phase 1-3 Deployment  
 **Target:** STANDBY (green.theoshift.com)

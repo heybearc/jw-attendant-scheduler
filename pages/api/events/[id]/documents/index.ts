@@ -50,7 +50,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   } catch (error) {
     console.error('Documents API error:', error)
-    fs.appendFileSync('/tmp/upload-debug.log', `\n${new Date().toISOString()} - Main handler ERROR: ${error}\n`)
     return res.status(500).json({ success: false, error: `Internal server error: ${error instanceof Error ? error.message : String(error)}` })
   }
 }
@@ -79,7 +78,6 @@ async function handleGetDocuments(req: NextApiRequest, res: NextApiResponse, eve
 }
 
 async function handleUploadDocument(req: NextApiRequest, res: NextApiResponse, eventId: string, uploadedBy: string) {
-  fs.appendFileSync('/tmp/upload-debug.log', `\n${new Date().toISOString()} - Upload starting for event: ${eventId}, by: ${uploadedBy}\n`)
   try {
     ensureDocumentsUploadDir()
     const uploadsDir = getDocumentsUploadDir()
@@ -117,6 +115,14 @@ async function handleUploadDocument(req: NextApiRequest, res: NextApiResponse, e
     const filePath = file.filepath
     const fileUrl = `/api/uploads/documents/${path.basename(filePath)}`
 
+    if (!fs.existsSync(filePath)) {
+      console.error('Upload missing on disk after parse:', filePath)
+      return res.status(500).json({
+        success: false,
+        error: 'Upload failed: file was not written to disk. Check server permissions and storage.',
+      })
+    }
+
     // Save document to database
     const document = await prisma.event_documents.create({
       data: {
@@ -153,8 +159,6 @@ async function handleUploadDocument(req: NextApiRequest, res: NextApiResponse, e
   } catch (error) {
     console.error('Upload document error:', error)
     const errorMessage = error instanceof Error ? error.message : String(error)
-    const errorStack = error instanceof Error ? error.stack : 'No stack trace'
-    fs.appendFileSync('/tmp/upload-debug.log', `\n${new Date().toISOString()} - Upload ERROR: ${errorMessage}\nStack: ${errorStack}\n`)
     return res.status(500).json({ success: false, error: `Failed to upload document: ${errorMessage}` })
   }
 }

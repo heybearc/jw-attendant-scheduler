@@ -1,6 +1,10 @@
 import fs from 'fs'
 import path from 'path'
-import { getDocumentsUploadDir, getUploadsRootAbsolute } from './uploadsPaths'
+import {
+  getDocumentsUploadDir,
+  getLegacyPublicUploadsRootAbsolute,
+  getUploadsRootAbsolute,
+} from './uploadsPaths'
 
 /**
  * Resolve an uploaded event document to its absolute path under the uploads root.
@@ -8,6 +12,7 @@ import { getDocumentsUploadDir, getUploadsRootAbsolute } from './uploadsPaths'
  * Handles legacy `/uploads/documents/...` and bare filenames.
  *
  * Physical root: `THEOSHIFT_UPLOADS_ROOT` or `{cwd}/public/uploads` (see `uploadsPaths.ts`).
+ * When both exist (NFS + legacy), prefers the path where the file actually exists.
  */
 export function getDocumentAbsolutePath(fileUrl: string): string {
   const u = fileUrl.trim().split('?')[0] || ''
@@ -31,14 +36,30 @@ export function getDocumentAbsolutePath(fileUrl: string): string {
     return ''
   }
 
-  const documentsDir = getDocumentsUploadDir()
-  const full = path.join(documentsDir, basenameFile)
-  const uploadsRoot = path.resolve(getUploadsRootAbsolute())
-  if (!full.startsWith(uploadsRoot)) {
-    return ''
+  const primaryDir = getDocumentsUploadDir()
+  const legacyDocumentsDir = path.join(getLegacyPublicUploadsRootAbsolute(), 'documents')
+
+  const primaryFull = path.resolve(path.join(primaryDir, basenameFile))
+  const primaryRoot = path.resolve(getUploadsRootAbsolute())
+
+  const legacyFull = path.resolve(path.join(legacyDocumentsDir, basenameFile))
+  const legacyUploadsRoot = path.resolve(getLegacyPublicUploadsRootAbsolute())
+
+  if (primaryFull.startsWith(primaryRoot) && fs.existsSync(primaryFull)) {
+    return primaryFull
+  }
+  if (legacyFull.startsWith(legacyUploadsRoot) && fs.existsSync(legacyFull)) {
+    return legacyFull
   }
 
-  return full
+  if (primaryFull.startsWith(primaryRoot)) {
+    return primaryFull
+  }
+  if (legacyFull.startsWith(legacyUploadsRoot)) {
+    return legacyFull
+  }
+
+  return ''
 }
 
 export function documentFileExists(fileUrl: string): boolean {

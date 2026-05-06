@@ -19,6 +19,8 @@ interface Document {
   publishedTo: 'all' | 'individual' | 'none'
   publishedCount: number
   description?: string
+  /** False when no blob exists on disk for this row (re-upload required). */
+  fileOnDisk: boolean
 }
 
 interface Event {
@@ -401,14 +403,23 @@ export default function EventDocumentsPage({ eventId, event, documents, canEdit,
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <a
-                          href={`/api/events/${eventId}/documents/${document.id}/file`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-colors"
-                        >
-                          👁️ View
-                        </a>
+                        {document.fileOnDisk ? (
+                          <a
+                            href={`/api/events/${eventId}/documents/${document.id}/file`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-colors"
+                          >
+                            👁️ View
+                          </a>
+                        ) : (
+                          <span
+                            className="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded cursor-not-allowed"
+                            title="No file on server for this record — delete and upload again."
+                          >
+                            File missing
+                          </span>
+                        )}
                         {(document.publishedCount > 0 || document.publishedTo !== 'none') ? (
                           <button
                             onClick={() => handleUnpublishDocument(document.id)}
@@ -619,6 +630,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       }
     })
     
+    const { documentFileExists } = await import('../../../src/lib/documentFileStorage')
+
     const documents: Document[] = docs.map(doc => ({
       id: doc.id,
       title: doc.title,
@@ -630,7 +643,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       uploadedAt: doc.uploadedAt.toISOString(),
       publishedTo: doc.publishedTo as 'all' | 'individual',
       publishedCount: doc.publishedCount,
-      description: doc.description || undefined
+      description: doc.description || undefined,
+      fileOnDisk: documentFileExists(doc.fileUrl),
     }))
 
     // Fetch attendants for publishing

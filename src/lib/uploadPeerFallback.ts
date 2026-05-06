@@ -2,6 +2,16 @@ import { Readable } from 'stream'
 import { pipeline } from 'stream/promises'
 import type { NextApiResponse } from 'next'
 
+function readHostEnv(name: string): string {
+  if (typeof process === 'undefined') return ''
+  const v = process.env[name]
+  return typeof v === 'string' ? v.trim() : ''
+}
+
+function peerUrlsRaw(): string {
+  return readHostEnv('THEOSHIFT_UPLOAD_PEER_URLS')
+}
+
 /**
  * Comma-separated base URLs of TheoShift nodes (scheme + host + port, no trailing slash).
  * Used when a file is missing locally after blue/green traffic switches (upload landed on the peer).
@@ -10,7 +20,7 @@ import type { NextApiResponse } from 'next'
  */
 export function getPeerUploadBaseUrls(): string[] {
   const raw =
-    process.env.THEOSHIFT_UPLOAD_PEER_URLS ||
+    peerUrlsRaw() ||
     'http://10.92.3.24:3001,http://10.92.3.22:3001'
   return raw
     .split(',')

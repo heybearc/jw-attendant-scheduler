@@ -1,15 +1,24 @@
 import fs from 'fs'
 import path from 'path'
 
+/** Dynamic lookup so Next/webpack does not inline `process.env.THEOSHIFT_UPLOADS_ROOT` from the build CI env (undefined). */
+function readHostEnv(name: string): string {
+  if (typeof process === 'undefined') return ''
+  const v = process.env[name]
+  return typeof v === 'string' ? v.trim() : ''
+}
+
 /**
  * Absolute directory that contains `documents/`, `feedback/`, etc.
  * Default: `{cwd}/public/uploads` (backward compatible).
  *
  * For blue/green: mount shared storage (e.g. NFS) at the same path on both nodes and set:
  *   THEOSHIFT_UPLOADS_ROOT=/mnt/theoshift-shared/uploads
+ *
+ * Uses bracket/dynamic env reads so production `next start` sees the host `.env`, not build-time inlining.
  */
 export function getUploadsRootAbsolute(): string {
-  const env = process.env.THEOSHIFT_UPLOADS_ROOT?.trim()
+  const env = readHostEnv('THEOSHIFT_UPLOADS_ROOT')
   if (env) return path.resolve(env)
   return path.join(process.cwd(), 'public', 'uploads')
 }

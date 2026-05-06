@@ -583,6 +583,14 @@ This document tracks significant technical decisions made during development.
 - Standard checklist before deploy: clean/intentional `git status`, commit, push, verify remote sync, then deploy.
 - When running from Cursor, use MCP tool calls for deploy actions; shell aliases may be unavailable by terminal session.
 
+### D-TS-041: Chat user↔volunteer identity resolution must support admin linking
+**Date:** 2026-05-06  
+**Context:** Staff chat direct messages require mapping a staff user account to an event volunteer identity. Admin linking occurs on the global volunteer record (`volunteers.userId`), while older chat flows expected `event_volunteers.userId` to be populated for the event. This mismatch blocked staff DMs even when the user was correctly linked as a volunteer and on the event roster.  
+**Decision:** `getActiveLinkedVolunteerId(userId, eventId)` must:
+1) Prefer explicit `event_volunteers.userId` rows (legacy/explicit tie-in), then  
+2) Fall back to `volunteers.userId` when that volunteer has an active `event_volunteers` row for the event.  
+**Consequences:** Staff DM eligibility reflects the admin linking mechanism and stays event-scoped (no volunteer-on-other-event leakage). No schema migration required; identity remains derived server-side.
+
 ---
 
 ## Shared Decisions

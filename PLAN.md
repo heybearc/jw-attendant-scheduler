@@ -1,8 +1,8 @@
 # TheoShift Plan
 
-**Last updated:** 2026-05-02  
+**Last updated:** 2026-05-06  
 **Current phase:** Feature Development + Platform Infrastructure  
-**Status:** v4.18.0 on `main`. IVS export + inline approvals shipped; nodes synced (LIVE=BLUE, STANDBY=GREEN). Next: backlog or user priority.
+**Status:** v4.20.1 released. Chat UX upgraded (Slack-style sidebar, searchable position channels, DM flow) and staff↔volunteer linking for DMs corrected. Nodes synced (LIVE=BLUE, STANDBY=GREEN). Next: stabilize + test cleanup.
 
 ---
 
@@ -23,9 +23,12 @@ This follows the usual small-team pattern: **one system of record in the app**, 
 ## Current Phase
 
 ### Active Work
-- **TheoShift Native In-App Chat (MVP)** — Increment 1 (schema + APIs + access control) and Increment 2 (basic volunteer/staff UI with polling + moderation) in progress on STANDBY.
+- **Chat stabilization & polish** — small UX refinements, help docs accuracy, and test suite maintenance after v4.20.1 release.
 
 ### Completed This Phase
+- ✅ v4.20.1: Chat navigation UX (New message + searchable position channels) for staff + volunteers
+- ✅ v4.20.1: Staff DMs correctly recognize Admin→Users volunteer link when the volunteer is on the event roster
+- ✅ v4.20.1: Release gate updated for new chat composer placeholder; qa-01 /test-release passing; traffic switched + synced
 - ✅ IVS Approvals: inline status updates in grid; Early Entry toggle aligned to PATCH API (`e2ae3bc6`)
 - ✅ v4.18.0 patch: fixed volunteer event date drift (UTC-safe `@db.Date` serialization + shared calendar-date formatter)
 - ✅ IVS approvals export fixed: frontend now uses POST with JSON body (matches API; resolves 405)

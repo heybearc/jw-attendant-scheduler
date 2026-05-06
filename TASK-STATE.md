@@ -1,18 +1,27 @@
 # TheoShift Task State
 
-**Last updated:** 2026-05-05 (mid-day)  
+**Last updated:** 2026-05-06  
 **Current branch:** main  
-**Working on:** TheoShift Native In-App Chat MVP (event-scoped, magic-link compatible) — Increment 1–2 in progress; no blockers ✅
+**Working on:** Post-release follow-ups for TheoShift in-app chat (v4.20.1) — stability, tests, and small UX polish ✅
 
 ---
 
 ## Current Task
-**Implement TheoShift Native In-App Chat MVP** — Increment 1–2 in progress
+**TheoShift In-App Chat MVP** — Released ✅ (v4.20.1)
 
 ### What I'm doing right now
-Implementing app-native event chat (schema, APIs, volunteer/staff UI, moderation) with 5s polling; WebSocket transport and pinning queued next.
+Wrapping up the v4.20.1 release cycle: verify chat UX + DM identity linking in production, and address any residual test-suite issues discovered during release gating.
 
 ### Recent completions
+
+**Today (2026-05-06) — v4.20.1 release: chat UX + identity linking**
+- ✅ Improved staff + volunteer chat navigation (Slack-style sidebar, “New message” menu, searchable position channel picker)
+- ✅ Staff DMs: correctly resolve linked volunteer identity via Admin→Users volunteer link when the volunteer is active on the event roster
+- ✅ Mirrored improved chat sidebar UX to volunteer portal chat
+- ✅ Fixed release-gate Playwright locator for chat composer placeholder (qa-01 `/test-release` passing)
+- ✅ Version bumped + release notes + help docs updated; GitHub release created (`v4.20.1`)
+- ✅ Deploy to STANDBY, `/release` traffic switch, then `/sync` to keep both nodes aligned
+- ✅ Current blue/green state after release: LIVE=BLUE (10.92.3.24), STANDBY=GREEN (10.92.3.22)
 
 **Today (2026-05-05) — TheoShift Native Chat MVP (Increment 1–2 partial)**
 - ✅ Added Prisma models + migrations for `event_chat_channels`, `event_chat_members`, `event_chat_messages`, `event_chat_reads` (including `STAFF_INTERNAL` channel type).
@@ -699,10 +708,10 @@ Also fixed real production bug:
 - Repository significantly cleaner and organized
 
 ### Next steps
-1. **Next session:** Run `/start-day`, then choose next item from `PLAN.md` Prioritized Backlog (or user-directed work).
-2. **Every `/bump`:** Run MCP `deploy_to_standby` after push so STANDBY’s build includes the new version before `/release` (HAProxy does not pull or build).
-3. Verify IVS export on LIVE with an OVERSEER account; if stable, close the issue.
-4. PIN column cleanup — May 19, 2026 (`BACKLOG.md`).
+1. Fix/modernize local Jest failure in `__tests__/lib/positionService.test.ts` (mock `fetch().json()` contract).
+2. Optional UX polish: add Escape-to-close for chat modals; keyboard focus handling.
+3. Review new feedback in `/admin/feedback` and promote anything urgent into `PLAN.md`.
+4. Continue normal release discipline: commit → push → deploy_to_standby → `/test-release` → `/bump` → `/release` → `/sync`.
 
 ## Exact Next Command
 `/start-day`

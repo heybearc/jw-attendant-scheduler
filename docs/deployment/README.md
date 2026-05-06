@@ -11,6 +11,7 @@ This directory contains technical deployment details, infrastructure information
 ```
 docs/deployment/
 ├── README.md                           # This file
+├── NFS_SHARED_UPLOADS_TRUENAS.md      # TrueNAS + Proxmox NFS for shared TheoShift uploads
 ├── v2.2.1-technical-details.md        # Example technical deployment doc
 └── [future deployment docs]
 ```

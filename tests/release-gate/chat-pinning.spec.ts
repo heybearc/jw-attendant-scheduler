@@ -19,7 +19,7 @@ test.describe('Chat pinning (release gate)', () => {
     await expect(page.locator('text=Staff Chat')).toBeVisible({ timeout: 15000 })
 
     const msg = `Pin test ${Date.now()}`
-    await page.fill('textarea[placeholder="Send a message to this channel..."]', msg)
+    await page.getByPlaceholder(/Send a message/i).fill(msg)
     await page.click('button:has-text("Send")')
     await expect(page.locator(`text=${msg}`)).toBeVisible({ timeout: 15000 })
 

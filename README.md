@@ -271,6 +271,11 @@ For issues or questions:
 
 ## 📝 Version History
 
+- **v4.20.1** (2026-05-05) - Chat navigation and staff–volunteer linking
+  - Staff and volunteer chat: clearer sidebar with **New message** (DMs and position channels) and searchable **Browse position channels** instead of a long list
+  - Staff direct messages: accounts linked to a volunteer in **Admin → Users** are recognized for event chat and DMs when that volunteer is on the event roster
+  - Release and smoke tests updated for the new chat UI
+
 - **v4.20.0** (2026-05-05) - In-app event chat (staff + volunteer) with pinning and moderation
   - New event-scoped chat channels for announcements, general coordination, and position-specific communication
   - Staff-only internal channel for overseers/admins/keymen/assistants

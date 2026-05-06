@@ -38,6 +38,18 @@ export default function EventChatHelpPage({ userRole }: Props) {
             </div>
           </section>
 
+          {isStaff && (
+            <section>
+              <h2 className="text-lg font-semibold text-gray-900 mb-2">Finding channels (staff)</h2>
+              <p className="text-sm text-gray-700">
+                Use <strong>+ New message</strong> to start a <strong>direct message</strong> to another volunteer or to
+                open a <strong>position channel</strong> from a searchable list. Main channels (for example Event
+                General) stay in the sidebar; use <strong>Browse position channels</strong> when you need a specific
+                station or assignment without scrolling every position.
+              </p>
+            </section>
+          )}
+
           <section>
             <h2 className="text-lg font-semibold text-gray-900 mb-2">Channels you may see</h2>
             <ul className="list-disc pl-5 text-sm text-gray-700 space-y-1">

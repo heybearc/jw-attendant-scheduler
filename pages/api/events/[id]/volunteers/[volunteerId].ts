@@ -161,118 +161,119 @@ async function handleUpdateVolunteer(req: NextApiRequest, res: NextApiResponse, 
     
     updateData.updatedAt = new Date()
 
+    const volunteerUserId = existingVolunteer.userId
 
-    // Update volunteer
-    const updatedVolunteer = await prisma.volunteers.update({
-      where: { id: volunteerId },
-      data: updateData
+    const updatedVolunteer = await prisma.$transaction(async (tx) => {
+      const vol = await tx.volunteers.update({
+        where: { id: volunteerId },
+        data: updateData
+      })
+
+      console.log(
+        `[ROLE-UPDATE] isOverseer=${JSON.stringify(isOverseer)} isKeyman=${JSON.stringify(isKeyman)} volunteerId=${volunteerId} eventId=${eventId}`
+      )
+      if (isOverseer !== undefined || isKeyman !== undefined) {
+        const eventVolunteerUpdateData: any = {}
+        if (isOverseer !== undefined) eventVolunteerUpdateData.isOverseer = isOverseer
+        if (isKeyman !== undefined) eventVolunteerUpdateData.isKeyman = isKeyman
+        eventVolunteerUpdateData.updatedAt = new Date()
+
+        console.log(`[ROLE-UPDATE] volunteerUserId=${volunteerUserId} updateData=${JSON.stringify(eventVolunteerUpdateData)}`)
+
+        const existing = await tx.event_volunteers.findMany({
+          where: {
+            eventId: eventId,
+            OR: [
+              { volunteerId: volunteerId },
+              ...(volunteerUserId ? [{ userId: volunteerUserId }] : [])
+            ]
+          },
+          select: { id: true, volunteerId: true, userId: true, isOverseer: true }
+        })
+        console.log(`[ROLE-UPDATE] Found ${existing.length} matching event_volunteers rows: ${JSON.stringify(existing)}`)
+
+        const updated = await tx.event_volunteers.updateMany({
+          where: {
+            eventId: eventId,
+            OR: [
+              { volunteerId: volunteerId },
+              ...(volunteerUserId ? [{ userId: volunteerUserId }] : [])
+            ]
+          },
+          data: eventVolunteerUpdateData
+        })
+
+        console.log(`[ROLE-UPDATE] updateMany result: count=${updated.count}`)
+
+        if (isOverseer === false) {
+          await tx.event_volunteers.updateMany({
+            where: {
+              eventId: eventId,
+              overseerId: volunteerId
+            },
+            data: {
+              overseerId: null
+            }
+          })
+
+          await tx.position_assignments.updateMany({
+            where: {
+              position: { eventId: eventId },
+              overseerId: volunteerId
+            },
+            data: {
+              overseerId: null
+            }
+          })
+
+          await tx.position_oversight_assignments.updateMany({
+            where: {
+              eventId: eventId,
+              overseerId: volunteerId
+            },
+            data: {
+              overseerId: null
+            }
+          })
+        }
+
+        if (isKeyman === false) {
+          await tx.event_volunteers.updateMany({
+            where: {
+              eventId: eventId,
+              keymanId: volunteerId
+            },
+            data: {
+              keymanId: null
+            }
+          })
+
+          await tx.position_assignments.updateMany({
+            where: {
+              position: { eventId: eventId },
+              keymanId: volunteerId
+            },
+            data: {
+              keymanId: null
+            }
+          })
+
+          await tx.position_oversight_assignments.updateMany({
+            where: {
+              eventId: eventId,
+              keymanId: volunteerId
+            },
+            data: {
+              keymanId: null
+            }
+          })
+        }
+      } else {
+        console.log(`[ROLE-UPDATE] Skipped — isOverseer and isKeyman both undefined in request body`)
+      }
+
+      return vol
     })
-
-    // Update event-specific roles if provided
-    console.log(`[ROLE-UPDATE] isOverseer=${JSON.stringify(isOverseer)} isKeyman=${JSON.stringify(isKeyman)} volunteerId=${volunteerId} eventId=${eventId}`)
-    if (isOverseer !== undefined || isKeyman !== undefined) {
-      const eventVolunteerUpdateData: any = {}
-      if (isOverseer !== undefined) eventVolunteerUpdateData.isOverseer = isOverseer
-      if (isKeyman !== undefined) eventVolunteerUpdateData.isKeyman = isKeyman
-      eventVolunteerUpdateData.updatedAt = new Date()
-
-      const volunteerUserId = existingVolunteer.userId
-      console.log(`[ROLE-UPDATE] volunteerUserId=${volunteerUserId} updateData=${JSON.stringify(eventVolunteerUpdateData)}`)
-
-      // First: find matching rows to confirm they exist
-      const existing = await prisma.event_volunteers.findMany({
-        where: {
-          eventId: eventId,
-          OR: [
-            { volunteerId: volunteerId },
-            ...(volunteerUserId ? [{ userId: volunteerUserId }] : [])
-          ]
-        },
-        select: { id: true, volunteerId: true, userId: true, isOverseer: true }
-      })
-      console.log(`[ROLE-UPDATE] Found ${existing.length} matching event_volunteers rows: ${JSON.stringify(existing)}`)
-
-      const updated = await prisma.event_volunteers.updateMany({
-        where: {
-          eventId: eventId,
-          OR: [
-            { volunteerId: volunteerId },
-            ...(volunteerUserId ? [{ userId: volunteerUserId }] : [])
-          ]
-        },
-        data: eventVolunteerUpdateData
-      })
-
-      console.log(`[ROLE-UPDATE] updateMany result: count=${updated.count}`)
-
-      // If a volunteer is no longer an overseer/keyman for this event, clear dependent assignments.
-      // This prevents stale references that block role removal in the volunteers UI.
-      if (isOverseer === false) {
-        await prisma.event_volunteers.updateMany({
-          where: {
-            eventId: eventId,
-            overseerId: volunteerId
-          },
-          data: {
-            overseerId: null
-          }
-        })
-
-        await prisma.position_assignments.updateMany({
-          where: {
-            position: { eventId: eventId },
-            overseerId: volunteerId
-          },
-          data: {
-            overseerId: null
-          }
-        })
-
-        await prisma.position_oversight_assignments.updateMany({
-          where: {
-            eventId: eventId,
-            overseerId: volunteerId
-          },
-          data: {
-            overseerId: null
-          }
-        })
-      }
-
-      if (isKeyman === false) {
-        await prisma.event_volunteers.updateMany({
-          where: {
-            eventId: eventId,
-            keymanId: volunteerId
-          },
-          data: {
-            keymanId: null
-          }
-        })
-
-        await prisma.position_assignments.updateMany({
-          where: {
-            position: { eventId: eventId },
-            keymanId: volunteerId
-          },
-          data: {
-            keymanId: null
-          }
-        })
-
-        await prisma.position_oversight_assignments.updateMany({
-          where: {
-            eventId: eventId,
-            keymanId: volunteerId
-          },
-          data: {
-            keymanId: null
-          }
-        })
-      }
-    } else {
-      console.log(`[ROLE-UPDATE] Skipped — isOverseer and isKeyman both undefined in request body`)
-    }
 
     return res.status(200).json({
       success: true,
@@ -292,7 +293,7 @@ async function handleUpdateVolunteer(req: NextApiRequest, res: NextApiResponse, 
       }
     })
   } catch (error) {
-    // Error logged by handleApiError
+    console.error('[volunteers PUT]', error)
     return res.status(500).json({ error: 'Failed to update volunteer' })
   }
 }

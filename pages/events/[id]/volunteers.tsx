@@ -514,12 +514,24 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
         body: JSON.stringify(formData)
       })
 
-      if (response.ok) {
+      const raw = await response.text()
+      let payload: { error?: string; success?: boolean } = {}
+      try {
+        if (raw) payload = JSON.parse(raw)
+      } catch {
+        alert(
+          response.ok
+            ? 'Changes may have saved, but the server returned an unexpected response. Refresh the page to confirm.'
+            : 'Failed to save attendant (invalid server response).'
+        )
+        return
+      }
+
+      if (response.ok && payload.success !== false) {
         setShowAddModal(false)
         preserveStateAndReload()
       } else {
-        const error = await response.json()
-        alert(error.error || 'Failed to save attendant')
+        alert(payload.error || 'Failed to save attendant')
       }
     } catch (error) {
       console.error('Error saving attendant:', error)

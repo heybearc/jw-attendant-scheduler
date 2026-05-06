@@ -5,6 +5,7 @@ import { prisma } from '../../../../../src/lib/prisma'
 import fs from 'fs'
 import path from 'path'
 import crypto from 'crypto'
+import { ensureDocumentsUploadDir, getDocumentsUploadDir } from '@/lib/uploadsPaths'
 
 // Disable default body parser for file uploads
 export const config = {
@@ -80,11 +81,8 @@ async function handleGetDocuments(req: NextApiRequest, res: NextApiResponse, eve
 async function handleUploadDocument(req: NextApiRequest, res: NextApiResponse, eventId: string, uploadedBy: string) {
   fs.appendFileSync('/tmp/upload-debug.log', `\n${new Date().toISOString()} - Upload starting for event: ${eventId}, by: ${uploadedBy}\n`)
   try {
-    // Create uploads directory if it doesn't exist
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'documents')
-    if (!fs.existsSync(uploadsDir)) {
-      fs.mkdirSync(uploadsDir, { recursive: true })
-    }
+    ensureDocumentsUploadDir()
+    const uploadsDir = getDocumentsUploadDir()
 
     // Parse form data
     console.log('Parsing form data...')

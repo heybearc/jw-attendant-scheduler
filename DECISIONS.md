@@ -583,6 +583,15 @@ This document tracks significant technical decisions made during development.
 - Standard checklist before deploy: clean/intentional `git status`, commit, push, verify remote sync, then deploy.
 - When running from Cursor, use MCP tool calls for deploy actions; shell aliases may be unavailable by terminal session.
 
+### D-TS-042: Blue-green uploads storage + peer fallback
+**Date:** 2026-05-06  
+**Context:** Event documents are stored on local disk (`uploads/documents`). Each blue/green node has its own filesystem; after HAProxy switches LIVE traffic, users hit the other node and files uploaded on the former LIVE node were missing (404).  
+**Decision:**  
+1. **`THEOSHIFT_UPLOADS_ROOT`** — Optional absolute path to the shared `uploads` directory (mount NFS/Longhorn/etc. at the same path on both nodes). Defaults to `{cwd}/public/uploads`.  
+2. **`THEOSHIFT_UPLOAD_PEER_URLS`** — Comma-separated base URLs (`http://IP:3001`) used for one-hop peer fetch when a file is missing locally (already partially implemented; extended to `/api/uploads/*`).  
+3. **`X-TheoShift-Peer-Relay`** header on peer requests to prevent infinite peer loops when neither node has the file.  
+**Consequences:** Immediate relief via peer proxy without infra changes; production-grade fix is shared storage + env pointer so both nodes see identical files.
+
 ### D-TS-041: Chat user↔volunteer identity resolution must support admin linking
 **Date:** 2026-05-06  
 **Context:** Staff chat direct messages require mapping a staff user account to an event volunteer identity. Admin linking occurs on the global volunteer record (`volunteers.userId`), while older chat flows expected `event_volunteers.userId` to be populated for the event. This mismatch blocked staff DMs even when the user was correctly linked as a volunteer and on the event roster.  

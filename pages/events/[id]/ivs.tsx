@@ -35,17 +35,18 @@ export default function IVSModulePage({ event, canEdit }: IVSModulePageProps) {
         currentPage="ivs"
         canEdit={canEdit}
       >
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold">IVS Module</h1>
+        <div className="p-4 sm:p-6 max-w-full min-w-0">
+          <div className="flex justify-between items-center mb-4 sm:mb-6">
+            <h1 className="text-xl sm:text-2xl font-bold">IVS Module</h1>
           </div>
 
-          {/* Tab Navigation */}
-          <div className="mb-6 border-b border-gray-200">
-            <div className="flex gap-4">
+          {/* Tab Navigation — full-width taps on small screens */}
+          <div className="mb-4 sm:mb-6 border-b border-gray-200">
+            <div className="grid grid-cols-2 sm:flex sm:gap-4">
               <button
+                type="button"
                 onClick={() => setActiveTab('approvals')}
-                className={`px-4 py-2 font-semibold transition-colors border-b-2 ${
+                className={`px-3 py-3 sm:px-4 sm:py-2 text-sm sm:text-base font-semibold transition-colors border-b-2 text-center sm:text-left min-h-[44px] sm:min-h-0 ${
                   activeTab === 'approvals'
                     ? 'border-blue-600 text-blue-600'
                     : 'border-transparent text-gray-600 hover:text-gray-900'
@@ -54,8 +55,9 @@ export default function IVSModulePage({ event, canEdit }: IVSModulePageProps) {
                 Approvals
               </button>
               <button
+                type="button"
                 onClick={() => setActiveTab('checkin')}
-                className={`px-4 py-2 font-semibold transition-colors border-b-2 ${
+                className={`px-3 py-3 sm:px-4 sm:py-2 text-sm sm:text-base font-semibold transition-colors border-b-2 text-center sm:text-left min-h-[44px] sm:min-h-0 ${
                   activeTab === 'checkin'
                     ? 'border-blue-600 text-blue-600'
                     : 'border-transparent text-gray-600 hover:text-gray-900'

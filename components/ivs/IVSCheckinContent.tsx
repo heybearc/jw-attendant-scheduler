@@ -168,11 +168,12 @@ export default function IVSCheckinContent({ event }: IVSCheckinContentProps) {
   return (
     <>
       {/* Action Buttons */}
-      <div className="flex gap-2 mb-4">
+      <div className="flex flex-col sm:flex-row gap-2 mb-4">
         <button
+          type="button"
           onClick={handleExport}
           disabled={exporting}
-          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
+          className="w-full sm:w-auto min-h-[44px] px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 text-base font-medium"
         >
           {exporting ? 'Exporting...' : 'Export Check-In Report'}
         </button>
@@ -181,34 +182,35 @@ export default function IVSCheckinContent({ event }: IVSCheckinContentProps) {
       {/* Search Bar */}
       <div className="mb-4">
         <input
-          type="text"
+          type="search"
+          enterKeyHint="search"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Search by name or congregation..."
-          className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+          className="w-full min-h-[44px] px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 text-base"
         />
       </div>
 
       {/* Stats */}
-      <div className="p-4 bg-white border rounded-lg shadow-sm mb-4">
-        <div className="flex justify-around text-center">
-          <div>
-            <div className="text-2xl font-bold text-orange-600">
+      <div className="p-3 sm:p-4 bg-white border rounded-lg shadow-sm mb-4">
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="min-w-0">
+            <div className="text-xl sm:text-2xl font-bold text-orange-600 tabular-nums">
               {pendingVolunteers.length}
             </div>
-            <div className="text-xs text-gray-600">Pending</div>
+            <div className="text-[10px] sm:text-xs text-gray-600 leading-tight">Pending</div>
           </div>
-          <div>
-            <div className="text-2xl font-bold text-green-600">
+          <div className="min-w-0">
+            <div className="text-xl sm:text-2xl font-bold text-green-600 tabular-nums">
               {checkedInVolunteers.length}
             </div>
-            <div className="text-xs text-gray-600">Checked In</div>
+            <div className="text-[10px] sm:text-xs text-gray-600 leading-tight">Checked In</div>
           </div>
-          <div>
-            <div className="text-2xl font-bold text-gray-600">
+          <div className="min-w-0">
+            <div className="text-xl sm:text-2xl font-bold text-gray-600 tabular-nums">
               {volunteers.filter(v => v.earlyCheckinEligible).length}
             </div>
-            <div className="text-xs text-gray-600">Total Eligible</div>
+            <div className="text-[10px] sm:text-xs text-gray-600 leading-tight">Eligible</div>
           </div>
         </div>
         <div className="mt-2 text-center text-xs text-gray-500">
@@ -225,13 +227,14 @@ export default function IVSCheckinContent({ event }: IVSCheckinContentProps) {
           {/* Pending Section */}
           <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
             <button
+              type="button"
               onClick={() => setPendingCollapsed(!pendingCollapsed)}
-              className="w-full px-4 py-3 bg-orange-50 border-l-4 border-orange-500 flex items-center justify-between hover:bg-orange-100 transition-colors"
+              className="w-full px-4 py-3 bg-orange-50 border-l-4 border-orange-500 flex items-center justify-between gap-2 hover:bg-orange-100 transition-colors text-left min-h-[48px]"
             >
-              <div className="flex items-center gap-2">
-                <span className="text-lg">{pendingCollapsed ? '▶' : '▼'}</span>
-                <h2 className="font-bold text-lg text-orange-900">PENDING CHECK-IN</h2>
-                <span className="px-2 py-1 bg-orange-200 text-orange-900 rounded-full text-sm font-semibold">
+              <div className="flex flex-wrap items-center gap-2 min-w-0">
+                <span className="text-lg shrink-0">{pendingCollapsed ? '▶' : '▼'}</span>
+                <h2 className="font-bold text-base sm:text-lg text-orange-900">PENDING CHECK-IN</h2>
+                <span className="px-2 py-1 bg-orange-200 text-orange-900 rounded-full text-sm font-semibold shrink-0">
                   {pendingVolunteers.length}
                 </span>
               </div>
@@ -250,18 +253,19 @@ export default function IVSCheckinContent({ event }: IVSCheckinContentProps) {
                         key={volunteer.id}
                         className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
                       >
-                        <div className="flex items-center justify-between gap-4">
-                          <div className="flex-1">
-                            <div className="font-semibold text-lg">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-lg break-words">
                               {volunteer.firstName} {volunteer.lastName}
                             </div>
-                            <div className="text-sm text-gray-600">
+                            <div className="text-sm text-gray-600 break-words">
                               {volunteer.congregation}
                             </div>
                           </div>
                           <button
+                            type="button"
                             onClick={() => handleCheckIn(volunteer.id)}
-                            className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold text-lg hover:bg-green-700 active:bg-green-800 shadow-lg whitespace-nowrap"
+                            className="w-full sm:w-auto shrink-0 min-h-[48px] px-6 py-3 bg-green-600 text-white rounded-lg font-semibold text-base sm:text-lg hover:bg-green-700 active:bg-green-800 shadow-lg"
                           >
                             Check In
                           </button>
@@ -277,13 +281,14 @@ export default function IVSCheckinContent({ event }: IVSCheckinContentProps) {
           {/* Checked In Section */}
           <div className="bg-white rounded-lg shadow overflow-hidden">
             <button
+              type="button"
               onClick={() => setCheckedInCollapsed(!checkedInCollapsed)}
-              className="w-full px-4 py-3 bg-green-50 border-l-4 border-green-500 flex items-center justify-between hover:bg-green-100 transition-colors"
+              className="w-full px-4 py-3 bg-green-50 border-l-4 border-green-500 flex items-center justify-between gap-2 hover:bg-green-100 transition-colors text-left min-h-[48px]"
             >
-              <div className="flex items-center gap-2">
-                <span className="text-lg">{checkedInCollapsed ? '▶' : '▼'}</span>
-                <h2 className="font-bold text-lg text-green-900">CHECKED IN</h2>
-                <span className="px-2 py-1 bg-green-200 text-green-900 rounded-full text-sm font-semibold">
+              <div className="flex flex-wrap items-center gap-2 min-w-0">
+                <span className="text-lg shrink-0">{checkedInCollapsed ? '▶' : '▼'}</span>
+                <h2 className="font-bold text-base sm:text-lg text-green-900">CHECKED IN</h2>
+                <span className="px-2 py-1 bg-green-200 text-green-900 rounded-full text-sm font-semibold shrink-0">
                   {checkedInVolunteers.length}
                 </span>
               </div>
@@ -302,15 +307,15 @@ export default function IVSCheckinContent({ event }: IVSCheckinContentProps) {
                         key={volunteer.id}
                         className="border rounded-lg p-4 bg-gray-50"
                       >
-                        <div className="flex items-center justify-between gap-3">
-                          <div className="flex-1">
-                            <div className="font-semibold text-lg">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-lg break-words">
                               {volunteer.firstName} {volunteer.lastName}
                             </div>
-                            <div className="text-sm text-gray-600">
+                            <div className="text-sm text-gray-600 break-words">
                               {volunteer.congregation}
                             </div>
-                            <div className="text-xs text-gray-500 mt-1">
+                            <div className="text-xs text-gray-500 mt-1 break-words">
                               Checked in: {new Date(volunteer.checkedInAt!).toLocaleString('en-US', {
                                 month: 'short',
                                 day: 'numeric',
@@ -320,11 +325,14 @@ export default function IVSCheckinContent({ event }: IVSCheckinContentProps) {
                               })}
                             </div>
                           </div>
-                          <div className="flex items-center gap-3">
-                            <div className="text-green-600 text-2xl">✓</div>
+                          <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
+                            <div className="text-green-600 text-2xl" aria-hidden>
+                              ✓
+                            </div>
                             <button
+                              type="button"
                               onClick={() => handleUndoCheckIn(volunteer.id)}
-                              className="px-4 py-2 bg-red-100 text-red-700 rounded-md text-sm font-medium hover:bg-red-200 active:bg-red-300 whitespace-nowrap"
+                              className="flex-1 sm:flex-initial min-h-[44px] px-4 py-2 bg-red-100 text-red-700 rounded-md text-sm font-medium hover:bg-red-200 active:bg-red-300 sm:whitespace-nowrap"
                             >
                               Undo
                             </button>

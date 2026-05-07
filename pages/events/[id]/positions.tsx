@@ -520,18 +520,27 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
     }
     
     // Apply role filter (Phase 5B: Oversight Role Filtering)
+    // PositionRole is OVERSEER | KEYMAN | VOLUNTEER | ATTENDANT — not ASSISTANT_OVERSEER.
+    // "Assistants" = volunteer assignment where linked user account is ASSISTANT_OVERSEER.
     if (roleFilter !== 'all') {
       filtered = filtered.filter(position => {
         const assignments = position.assignments || []
-        
+
         if (roleFilter === 'overseers') {
           return assignments.some(a => a.role === 'OVERSEER')
-        } else if (roleFilter === 'assistants') {
-          return assignments.some(a => a.role === 'ASSISTANT_OVERSEER')
-        } else if (roleFilter === 'keymen') {
+        }
+        if (roleFilter === 'assistants') {
+          return assignments.some(
+            a =>
+              (a.role === 'VOLUNTEER' || a.role === 'ATTENDANT') &&
+              (a.volunteer as { user?: { role?: string } } | undefined)?.user?.role ===
+                'ASSISTANT_OVERSEER'
+          )
+        }
+        if (roleFilter === 'keymen') {
           return assignments.some(a => a.role === 'KEYMAN')
         }
-        
+
         return true
       })
     }
@@ -1616,44 +1625,94 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
 
           {/* Conditional View: Grid or List */}
           {viewMode === 'grid' ? (
-            <PositionGridView
-              positions={getFilteredPositions().filter(p => showInactive ? true : p.isActive)}
-              attendants={attendants}
-              eventId={eventId}
-              onAssign={async (positionId, shiftId, attendantId) => {
-                try {
-                  const success = await positionService.createAssignment({
-                    positionId,
-                    attendantId,
-                    shiftId
-                  })
-                  if (success) {
-                    router.reload()
-                  } else {
+            positions.length === 0 ? (
+              <div className="bg-white rounded-lg shadow p-12 text-center">
+                <span className="text-6xl mb-4 block">📋</span>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No positions created</h3>
+                <p className="text-gray-500 mb-4">{canManageContent ? 'Create your first position to get started' : 'No positions have been created for this event yet'}</p>
+                {canManageContent && (
+                  <div className="flex justify-center space-x-4">
+                    <button
+                      onClick={() => setShowBulkCreator(true)}
+                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                    >
+                      🚀 Bulk Create
+                    </button>
+                    <button
+                      onClick={() => setShowCreateModal(true)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                    >
+                      Create Position
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : getFilteredPositions().length === 0 ? (
+              <div className="bg-white rounded-lg shadow p-12 text-center">
+                <span className="text-6xl mb-4 block">👁️</span>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No positions visible</h3>
+                <p className="text-gray-500 mb-4">
+                  All positions may be inactive. Turn on Show Inactive in Filters to see them.
+                </p>
+              </div>
+            ) : getFilteredPositionsWithOverseer().length === 0 ? (
+              <div className="bg-white rounded-lg shadow p-12 text-center">
+                <span className="text-6xl mb-4 block">🔍</span>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No positions match filters</h3>
+                <p className="text-gray-500 mb-4">
+                  Try clearing Overseer / Role filters or adjusting Show Inactive.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedOverseer('all')
+                    setRoleFilter('all')
+                  }}
+                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg font-medium"
+                >
+                  Reset filters
+                </button>
+              </div>
+            ) : (
+              <PositionGridView
+                positions={getFilteredPositionsWithOverseer()}
+                attendants={attendants}
+                eventId={eventId}
+                onAssign={async (positionId, shiftId, attendantId) => {
+                  try {
+                    const success = await positionService.createAssignment({
+                      positionId,
+                      attendantId,
+                      shiftId
+                    })
+                    if (success) {
+                      router.reload()
+                    } else {
+                      alert('Failed to create assignment')
+                    }
+                  } catch (error) {
+                    console.error('Assignment error:', error)
                     alert('Failed to create assignment')
                   }
-                } catch (error) {
-                  console.error('Assignment error:', error)
-                  alert('Failed to create assignment')
-                }
-              }}
-              onUnassign={async (assignmentId) => {
-                try {
-                  const success = await positionService.deleteAssignment(assignmentId)
-                  if (success) {
-                    router.reload()
-                  } else {
+                }}
+                onUnassign={async (assignmentId) => {
+                  try {
+                    const success = await positionService.deleteAssignment(assignmentId)
+                    if (success) {
+                      router.reload()
+                    } else {
+                      alert('Failed to remove assignment')
+                    }
+                  } catch (error) {
+                    console.error('Error removing assignment:', error)
                     alert('Failed to remove assignment')
                   }
-                } catch (error) {
-                  console.error('Error removing assignment:', error)
-                  alert('Failed to remove assignment')
-                }
-              }}
-            />
+                }}
+              />
+            )
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {getFilteredPositions().filter(p => p.isActive).length === 0 ? (
+              {positions.length === 0 ? (
               <div className="col-span-full bg-white rounded-lg shadow p-12 text-center">
                 <span className="text-6xl mb-4 block">📋</span>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No positions created</h3>
@@ -1675,8 +1734,34 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                   </div>
                 )}
               </div>
+            ) : getFilteredPositions().length === 0 ? (
+              <div className="col-span-full bg-white rounded-lg shadow p-12 text-center">
+                <span className="text-6xl mb-4 block">👁️</span>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No positions visible</h3>
+                <p className="text-gray-500 mb-4">
+                  All positions may be inactive. Turn on Show Inactive in Filters to see them.
+                </p>
+              </div>
+            ) : getFilteredPositionsWithOverseer().length === 0 ? (
+              <div className="col-span-full bg-white rounded-lg shadow p-12 text-center">
+                <span className="text-6xl mb-4 block">🔍</span>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No positions match filters</h3>
+                <p className="text-gray-500 mb-4">
+                  Try clearing Overseer / Role filters or adjusting Show Inactive.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedOverseer('all')
+                    setRoleFilter('all')
+                  }}
+                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg font-medium"
+                >
+                  Reset filters
+                </button>
+              </div>
             ) : (
-              getFilteredPositions().filter(p => showInactive ? true : p.isActive).map((position) => {
+              getFilteredPositionsWithOverseer().map((position) => {
                 // Calculate completion percentage for this position
                 const totalShifts = position.shifts?.length || 0
                 const assignedShifts = position.shifts?.filter(shift => {
@@ -2860,7 +2945,8 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
                   select: {
                     id: true,
                     firstName: true,
-                    lastName: true
+                    lastName: true,
+                    user: { select: { role: true } }
                   }
                 },
                 overseer: {

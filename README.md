@@ -32,6 +32,7 @@ Theocratic Shift Scheduler is a comprehensive web application designed to manage
 
 ### Position & Assignment Management
 - **Filters** - Overseer and role filters on the positions page apply everywhere you view positions (list, grid, and export), with clearer messages when nothing matches (v4.21.1+)
+- **IVS Module** - Approvals and Early Check-In are laid out for phones and tablets (cards and large tap targets) while keeping the full table on larger screens (v4.21.2+)
 - **Unlimited Positions** - Create numbered positions per event
 - **Position Shifts** - Time-based shift assignments
 - **Position Templates** - Reusable position configurations
@@ -272,6 +273,7 @@ For issues or questions:
 
 ## 📝 Version History
 
+- **v4.21.2** (2026-05-07) - IVS Module mobile-friendly layouts (Approvals cards on small screens, Early Check-In full-width actions)
 - **v4.21.1** (2026-05-06) - Positions page filters (Overseer, Role, visibility) now apply to list and grid views; clearer empty states when filters hide everything
 - **v4.21.0** (2026-05-06) - Document and volunteer save reliability; PWA load fixes
 - **v4.20.1** (2026-05-05) - Chat navigation and staff–volunteer linking

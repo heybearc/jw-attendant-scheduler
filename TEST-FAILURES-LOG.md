@@ -1,5 +1,14 @@
 # Test Failures Log
 
+## 2026-05-07 — qa-01 E2E (`/test-release` before v4.21.2 bump)
+
+- **Suite:** `npm run test:e2e` (smoke + release-gate)
+- **Target:** per `.env.test` on qa-01 (STANDBY URL)
+- **Result:** 4 passed, 1 skipped
+- **Outcome:** Green for bump / release
+
+---
+
 ## 2026-05-06 — qa-01 E2E (`/test-release` before v4.21.1 bump)
 
 - **Suite:** `npm run test:e2e` (smoke + release-gate)

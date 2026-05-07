@@ -25,6 +25,11 @@ export default function IVSApprovalsHelp() {
               to serve at your event. You can import volunteer lists, review and approve requests,
               manage early check-in eligibility, and check volunteers in on the day of the event.
             </p>
+            <p className="text-gray-700 mb-4">
+              On a phone or tablet, <strong>Approvals</strong> uses a card layout (no sideways scrolling),
+              and <strong>Early Check-In</strong> uses large buttons—handy at the registration table.
+              On a wider screen, Approvals still shows the full table.
+            </p>
             <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4">
               <p className="text-blue-800">
                 <strong>💡 Tip:</strong> IVS volunteers are managed separately from your local volunteers

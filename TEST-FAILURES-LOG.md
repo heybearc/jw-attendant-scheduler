@@ -1,5 +1,14 @@
 # Test Failures Log
 
+## 2026-05-06 — qa-01 E2E (`/test-release` before v4.21.1 bump)
+
+- **Suite:** `npm run test:e2e` (smoke + release-gate)
+- **Target:** `BASE_URL=https://blue.theoshift.com` (STANDBY)
+- **Result:** 4 passed, 1 skipped
+- **Outcome:** Green for bump / release
+
+---
+
 ## 2026-05-06 — qa-01 E2E (`/test-release` before v4.21.0)
 
 - **Suite:** `npm run test:e2e` (smoke + release-gate)

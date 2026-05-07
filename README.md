@@ -31,6 +31,7 @@ Theocratic Shift Scheduler is a comprehensive web application designed to manage
 - **Volunteer Portal** - Self-service login and assignment viewing; **magic link** email entry is case-insensitive (v4.19.0+)
 
 ### Position & Assignment Management
+- **Filters** - Overseer and role filters on the positions page apply everywhere you view positions (list, grid, and export), with clearer messages when nothing matches (v4.21.1+)
 - **Unlimited Positions** - Create numbered positions per event
 - **Position Shifts** - Time-based shift assignments
 - **Position Templates** - Reusable position configurations
@@ -271,6 +272,7 @@ For issues or questions:
 
 ## 📝 Version History
 
+- **v4.21.1** (2026-05-06) - Positions page filters (Overseer, Role, visibility) now apply to list and grid views; clearer empty states when filters hide everything
 - **v4.21.0** (2026-05-06) - Document and volunteer save reliability; PWA load fixes
 - **v4.20.1** (2026-05-05) - Chat navigation and staff–volunteer linking
   - Staff and volunteer chat: clearer sidebar with **New message** (DMs and position channels) and searchable **Browse position channels** instead of a long list

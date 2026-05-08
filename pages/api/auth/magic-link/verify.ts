@@ -59,9 +59,12 @@ export default async function handler(
       return res.redirect('/auth/signin?error=TokenExpired')
     }
 
-    const volunteer = await prisma.volunteers.findUnique({
-      where: { email: verificationToken.identifier }
+    let volunteer = await prisma.volunteers.findUnique({
+      where: { email: verificationToken.identifier },
     })
+    if (!volunteer) {
+      volunteer = await findVolunteerByEmailCaseInsensitive(verificationToken.identifier)
+    }
 
     if (!volunteer) {
       return res.redirect('/auth/signin?error=VolunteerNotFound')

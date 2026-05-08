@@ -77,13 +77,38 @@ export default async function handler(
       })
     }
 
-    // Build magic link URL
-    const baseUrl = process.env.NEXTAUTH_URL || `https://${req.headers.host}`
+    const envBase = process.env.NEXTAUTH_URL?.replace(/\/$/, '')
+    const xfProto = req.headers['x-forwarded-proto']
+    const proto =
+      typeof xfProto === 'string'
+        ? xfProto.split(',')[0].trim().toLowerCase()
+        : ''
+    const xfHost = req.headers['x-forwarded-host']
+    const host =
+      (typeof xfHost === 'string' ? xfHost.split(',')[0].trim() : '') ||
+      req.headers.host ||
+      'localhost'
+    const inferredBase =
+      proto === 'https' || proto === 'http'
+        ? `${proto}://${host}`
+        : `http://${host}`
+    const baseUrl = envBase || inferredBase
+
     const magicLink = `${baseUrl}/api/auth/magic-link/verify?token=${token}&email=${encodeURIComponent(email)}`
+
+    const fromEmail =
+      config.fromEmail ||
+      config.gmailEmail ||
+      config.smtpUser ||
+      process.env.EMAIL_FROM ||
+      process.env.SMTP_USER
+    if (!fromEmail || typeof fromEmail !== 'string') {
+      throw new Error('Email "from" address not configured (fromEmail / gmailEmail / smtpUser)')
+    }
 
     // Send email
     await transporter.sendMail({
-      from: `"TheoShift Team" <${config.fromEmail}>`,
+      from: `"TheoShift Team" <${fromEmail}>`,
       to: email,
       subject: 'Sign in to TheoShift',
       html: `

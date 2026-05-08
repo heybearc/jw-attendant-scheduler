@@ -1,7 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
+import { serialize } from 'cookie'
 import { prisma } from '../../../../src/lib/prisma'
 import { findVolunteerByEmailCaseInsensitive } from '@/lib/volunteerEmailLookup'
 import { encode } from 'next-auth/jwt'
+import { sessionTokenCookieName, useSecureCookies } from '@/lib/nextAuthCookieHelpers'
 
 export default async function handler(
   req: NextApiRequest,
@@ -48,14 +50,20 @@ export default async function handler(
       maxAge: 30 * 24 * 60 * 60 // 30 days
     })
 
-    // Set the session cookie with NextAuth's expected format
-    const cookieName = process.env.NODE_ENV === 'production' 
-      ? '__Secure-next-auth.session-token'
-      : 'next-auth.session-token'
-    
-    res.setHeader('Set-Cookie', [
-      `${cookieName}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${30 * 24 * 60 * 60}${process.env.NODE_ENV === 'production' ? '; Secure' : ''}`
-    ])
+    const secure = useSecureCookies(req)
+    const cookieName = sessionTokenCookieName(req)
+    const maxAge = 30 * 24 * 60 * 60
+
+    res.setHeader(
+      'Set-Cookie',
+      serialize(cookieName, token, {
+        path: '/',
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: secure,
+        maxAge,
+      })
+    )
 
     // Redirect to volunteer dashboard
     return res.redirect('/volunteer/select-event')

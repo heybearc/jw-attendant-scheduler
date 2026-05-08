@@ -24,6 +24,7 @@ Theocratic Shift Scheduler is a comprehensive web application designed to manage
 - **Smart Selector** - Autocomplete dropdown with recent/popular locations
 
 ### Volunteer Management
+- **Email volunteers (event)** - Send a subject and message to **selected** volunteers or **all active** volunteers who have an email on file; uses your TheoShift mail settings (v4.21.5+)
 - **User Roles** - Admin, Overseer, Assistant Overseer, Keyman, Volunteer
 - **Invitation System** - Secure token-based user invitations
 - **User-Volunteer Linking** - Connect user accounts to volunteer profiles
@@ -275,6 +276,7 @@ For issues or questions:
 
 ## 📝 Version History
 
+- **v4.21.5** (2026-05-08) - Event volunteer email broadcast; checkbox multi-select fixes; IVS Approvals shift-click range selection reliability
 - **v4.21.4** (2026-05-08) - IVS Approvals per-page control; scroll position survives refresh on Volunteers and IVS; Shift+click range selection on Volunteers and IVS Approvals
 - **v4.21.3** (2026-05-08) - Mobile event navigation (Section + More for event tabs and settings); volunteers/positions pages tuned for small screens (cards, tap targets, filter controls)
 - **v4.21.2** (2026-05-07) - IVS Module mobile-friendly layouts (Approvals cards on small screens, Early Check-In full-width actions)

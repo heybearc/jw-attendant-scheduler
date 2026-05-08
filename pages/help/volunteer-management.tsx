@@ -28,6 +28,21 @@ export default function VolunteerManagementHelp({ userRole }: VolunteerManagemen
           </p>
         </section>
 
+        {/* Email volunteers */}
+        <section className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-4">📧 Email volunteers on an event</h2>
+          <p className="text-gray-700 mb-4">
+            Open an event and go to the <strong>Volunteers</strong> section. Use <strong>Email volunteers</strong>{' '}
+            (near Add / Import) to message <strong>all active volunteers</strong> who have an email on file, or
+            select rows and use <strong>Email selected</strong> in the blue toolbar.
+          </p>
+          <p className="text-gray-700 mb-0">
+            Enter a subject and message; TheoShift sends through your organization&apos;s configured email
+            settings. To select several rows at once on one page, click one checkbox, then hold{' '}
+            <strong>Shift</strong> and click another to include everyone in between.
+          </p>
+        </section>
+
         {/* Smart Default Filtering */}
         <section className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <h2 className="text-2xl font-semibold text-gray-900 mb-4">🎯 Smart Default View</h2>

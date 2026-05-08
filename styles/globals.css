@@ -98,6 +98,12 @@ body {
   .scroll-snap-child {
     scroll-snap-align: start;
   }
+
+  /* Horizontal tab strips / tables: iOS momentum scroll + no chained overscroll (Safari, Chrome, Firefox, Edge) */
+  .theoshift-x-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
 }
 
 /* Hide scrollbars on mobile but keep functionality */

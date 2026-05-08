@@ -102,17 +102,18 @@ export default function EventPageLayout({
     >
       <div className="space-y-6">
         {viewAsVolunteerId && (
-          <div className="bg-amber-100 border border-amber-300 rounded-lg p-3 flex items-center justify-between">
-            <p className="text-sm text-amber-900 font-medium">
+          <div className="bg-amber-100 border border-amber-300 rounded-lg p-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-amber-900 font-medium min-w-0">
               View-as-volunteer simulation is active (read-only mode). All write actions are blocked.
             </p>
             <button
+              type="button"
               onClick={async () => {
                 await fetch(`/api/admin/view-as?eventId=${event.id}`, { method: 'DELETE' })
                 setViewAsVolunteerId(null)
                 setViewAsVolunteerIdState(null)
               }}
-              className="px-3 py-1 bg-amber-700 text-white rounded text-sm"
+              className="w-full sm:w-auto shrink-0 px-3 py-2 min-h-[44px] bg-amber-700 text-white rounded text-sm"
             >
               Exit Simulation
             </button>
@@ -120,22 +121,25 @@ export default function EventPageLayout({
         )}
 
         {/* Action Toolbar */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-start">
+          <div className="flex flex-wrap items-center gap-2">
           <EventQRCode eventId={event.id} eventName={event.name} />
 
           {/* Status Actions */}
           {event.status === 'UPCOMING' && onStatusChange && (
             <button
+              type="button"
               onClick={() => onStatusChange('CURRENT')}
-              className="inline-flex items-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-semibold transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-3 py-2 min-h-[44px] bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-semibold transition-colors touch-manipulation"
             >
               🚀 Start Event
             </button>
           )}
           {event.status === 'CURRENT' && onStatusChange && (
             <button
+              type="button"
               onClick={() => onStatusChange('COMPLETED')}
-              className="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-3 py-2 min-h-[44px] bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-colors touch-manipulation"
             >
               ✅ Complete Event
             </button>
@@ -144,25 +148,29 @@ export default function EventPageLayout({
           {canEdit && (
             <Link
               href={`/events/${event.id}/edit`}
-              className="inline-flex items-center px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              className="inline-flex items-center justify-center px-3 py-2 min-h-[44px] bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors touch-manipulation"
             >
               ⚙️ Settings
             </Link>
           )}
+          </div>
 
           {['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER'].includes(session?.user?.role || '') && (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full lg:w-auto lg:max-w-xl min-w-0">
               <select
                 value={viewAsSelection}
                 onChange={(e) => setViewAsSelection(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                className="w-full sm:w-auto min-w-0 flex-1 sm:flex-initial px-3 py-2 min-h-[44px] border border-gray-300 rounded-lg text-sm"
               >
                 <option value="">View as volunteer...</option>
                 {eventVolunteers.map((volunteer) => (
-                  <option key={volunteer.id} value={volunteer.id}>{volunteer.name}</option>
+                  <option key={volunteer.id} value={volunteer.id}>
+                    {volunteer.name}
+                  </option>
                 ))}
               </select>
               <button
+                type="button"
                 onClick={async () => {
                   if (!viewAsSelection) return
                   const response = await fetch('/api/admin/view-as', {
@@ -177,7 +185,7 @@ export default function EventPageLayout({
                     router.push(`/volunteer/dashboard?eventId=${event.id}&viewAsVolunteerId=${viewAsSelection}`)
                   }
                 }}
-                className="px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm"
+                className="w-full sm:w-auto shrink-0 px-3 py-2 min-h-[44px] bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm touch-manipulation"
               >
                 Start View-As
               </button>
@@ -186,19 +194,24 @@ export default function EventPageLayout({
 
           {/* More Actions Dropdown - Only show if there are actions available */}
           {(onExport || (event.status === 'COMPLETED' && onStatusChange)) && (
-            <div className="relative inline-block ml-auto">
+            <div className="relative w-full sm:w-auto lg:ml-auto flex justify-end min-w-0">
               <button
+                type="button"
                 onClick={() => setShowMoreMenu(!showMoreMenu)}
-                className="inline-flex items-center gap-1 px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                className="inline-flex items-center justify-center gap-1 px-3 py-2 min-h-[44px] w-full sm:w-auto bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors touch-manipulation"
               >
                 ⋯ More
               </button>
               {showMoreMenu && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                <div className="absolute right-0 mt-2 w-48 max-w-[calc(100vw-2rem)] bg-white rounded-lg shadow-lg border border-gray-200 z-20">
                   {onExport && (
                     <button
-                      onClick={() => { onExport(); setShowMoreMenu(false); }}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                      type="button"
+                      onClick={() => {
+                        onExport()
+                        setShowMoreMenu(false)
+                      }}
+                      className="w-full text-left px-4 py-3 min-h-[44px] text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 touch-manipulation"
                     >
                       <span>📥</span>
                       <span>Export Data</span>
@@ -206,8 +219,12 @@ export default function EventPageLayout({
                   )}
                   {event.status === 'COMPLETED' && onStatusChange && (
                     <button
-                      onClick={() => { onStatusChange('ARCHIVED'); setShowMoreMenu(false); }}
-                      className="w-full text-left px-4 py-2 text-sm text-yellow-700 hover:bg-yellow-50 flex items-center gap-2"
+                      type="button"
+                      onClick={() => {
+                        onStatusChange('ARCHIVED')
+                        setShowMoreMenu(false)
+                      }}
+                      className="w-full text-left px-4 py-3 min-h-[44px] text-sm text-yellow-700 hover:bg-yellow-50 flex items-center gap-2 touch-manipulation"
                     >
                       <span>📦</span>
                       <span>Archive Event</span>
@@ -220,11 +237,11 @@ export default function EventPageLayout({
         </div>
 
         {/* Tab Navigation - Workflow Order */}
-        <div className="border-b border-gray-200 overflow-x-auto">
-          <nav className="flex gap-1 min-w-max">
+        <div className="-mx-3 sm:mx-0 border-b border-gray-200 overflow-x-auto theoshift-x-scroll">
+          <nav className="flex gap-1 min-w-max px-3 sm:px-0 pb-0.5" aria-label="Event sections">
             <Link
               href={`/events/${event.id}`}
-              className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${
+              className={`flex-shrink-0 px-3 sm:px-4 py-2.5 text-sm font-medium whitespace-nowrap min-h-[44px] flex items-center touch-manipulation ${
                 currentPage === 'overview'
                   ? 'text-blue-600 border-b-2 border-blue-600'
                   : 'text-gray-600 hover:text-gray-900 hover:border-gray-300 border-b-2 border-transparent'
@@ -235,7 +252,7 @@ export default function EventPageLayout({
             {isPositionsEnabled && (
               <Link
                 href={`/events/${event.id}/positions`}
-                className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${
+                className={`flex-shrink-0 px-3 sm:px-4 py-2.5 text-sm font-medium whitespace-nowrap min-h-[44px] flex items-center touch-manipulation ${
                   currentPage === 'positions'
                     ? 'text-blue-600 border-b-2 border-blue-600'
                     : 'text-gray-600 hover:text-gray-900 hover:border-gray-300 border-b-2 border-transparent'
@@ -246,7 +263,7 @@ export default function EventPageLayout({
             )}
             <Link
               href={`/events/${event.id}/volunteers`}
-              className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${
+              className={`flex-shrink-0 px-3 sm:px-4 py-2.5 text-sm font-medium whitespace-nowrap min-h-[44px] flex items-center touch-manipulation ${
                 currentPage === 'volunteers'
                   ? 'text-blue-600 border-b-2 border-blue-600'
                   : 'text-gray-600 hover:text-gray-900 hover:border-gray-300 border-b-2 border-transparent'
@@ -257,7 +274,7 @@ export default function EventPageLayout({
             {isCountTimesEnabled && (
               <Link
                 href={`/events/${event.id}/count-times`}
-                className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${
+                className={`flex-shrink-0 px-3 sm:px-4 py-2.5 text-sm font-medium whitespace-nowrap min-h-[44px] flex items-center touch-manipulation ${
                   currentPage === 'count-times'
                     ? 'text-blue-600 border-b-2 border-blue-600'
                     : 'text-gray-600 hover:text-gray-900 hover:border-gray-300 border-b-2 border-transparent'
@@ -269,7 +286,7 @@ export default function EventPageLayout({
             {isLanyardsEnabled && (
               <Link
                 href={`/events/${event.id}/lanyards`}
-                className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${
+                className={`flex-shrink-0 px-3 sm:px-4 py-2.5 text-sm font-medium whitespace-nowrap min-h-[44px] flex items-center touch-manipulation ${
                   currentPage === 'lanyards'
                     ? 'text-blue-600 border-b-2 border-blue-600'
                     : 'text-gray-600 hover:text-gray-900 hover:border-gray-300 border-b-2 border-transparent'
@@ -281,7 +298,7 @@ export default function EventPageLayout({
             {isIVSEnabled && (
               <Link
                 href={`/events/${event.id}/ivs`}
-                className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${
+                className={`flex-shrink-0 px-3 sm:px-4 py-2.5 text-sm font-medium whitespace-nowrap min-h-[44px] flex items-center touch-manipulation ${
                   currentPage === 'ivs'
                     ? 'text-blue-600 border-b-2 border-blue-600'
                     : 'text-gray-600 hover:text-gray-900 hover:border-gray-300 border-b-2 border-transparent'
@@ -293,7 +310,7 @@ export default function EventPageLayout({
             {isDocumentsEnabled && (
               <Link
                 href={`/events/${event.id}/documents`}
-                className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${
+                className={`flex-shrink-0 px-3 sm:px-4 py-2.5 text-sm font-medium whitespace-nowrap min-h-[44px] flex items-center touch-manipulation ${
                   currentPage === 'documents'
                     ? 'text-blue-600 border-b-2 border-blue-600'
                     : 'text-gray-600 hover:text-gray-900 hover:border-gray-300 border-b-2 border-transparent'
@@ -304,7 +321,7 @@ export default function EventPageLayout({
             )}
             <Link
               href={`/events/${event.id}/chat`}
-              className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${
+              className={`flex-shrink-0 px-3 sm:px-4 py-2.5 text-sm font-medium whitespace-nowrap min-h-[44px] flex items-center touch-manipulation ${
                 currentPage === 'chat'
                   ? 'text-blue-600 border-b-2 border-blue-600'
                   : 'text-gray-600 hover:text-gray-900 hover:border-gray-300 border-b-2 border-transparent'
@@ -315,7 +332,7 @@ export default function EventPageLayout({
             {canManagePermissions && (
               <Link
                 href={`/events/${event.id}/permissions`}
-                className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${
+                className={`flex-shrink-0 px-3 sm:px-4 py-2.5 text-sm font-medium whitespace-nowrap min-h-[44px] flex items-center touch-manipulation ${
                   currentPage === 'permissions'
                     ? 'text-blue-600 border-b-2 border-blue-600'
                     : 'text-gray-600 hover:text-gray-900 hover:border-gray-300 border-b-2 border-transparent'

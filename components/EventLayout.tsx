@@ -78,19 +78,23 @@ export default function EventLayout({
     <div className="min-h-screen bg-gray-50">
       {/* Navigation Header */}
       <nav className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 min-w-0">
+          <div className="flex justify-between items-center gap-2 min-h-16 min-w-0 py-2 md:py-0 md:h-16">
             {/* Left side - Logo and Navigation */}
-            <div className="flex items-center">
-              <Link href="/events/select" className="flex items-center">
-                <img src="/logo.svg" alt="TheoShift Logo" className="h-12 w-12" />
-                <span className="ml-3 text-xl font-semibold text-gray-900">
+            <div className="flex items-center min-w-0 flex-1">
+              <Link href="/events/select" className="flex items-center min-w-0">
+                <img
+                  src="/logo.svg"
+                  alt="TheoShift Logo"
+                  className="h-10 w-10 sm:h-12 sm:w-12 shrink-0"
+                />
+                <span className="ml-2 sm:ml-3 text-lg sm:text-xl font-semibold text-gray-900 truncate">
                   TheoShift
                 </span>
               </Link>
-              
+
               {/* Navigation Items */}
-              <div className="hidden md:ml-8 md:flex md:space-x-4">
+              <div className="hidden md:ml-8 md:flex md:space-x-4 shrink-0">
                 {filteredNavigation.map((item) => (
                   <Link
                     key={item.href}
@@ -109,13 +113,13 @@ export default function EventLayout({
             </div>
 
             {/* Right side - Mobile Menu and User Menu */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 min-w-0">
               {/* Mobile Navigation Button */}
               <MobileNav selectedEvent={selectedEvent} />
               {/* Selected Event Indicator */}
               {selectedEvent && (
-                <div className="hidden md:flex items-center bg-blue-50 px-3 py-1 rounded-lg">
-                  <span className="text-sm text-blue-600 font-medium">
+                <div className="hidden md:flex items-center bg-blue-50 px-3 py-1 rounded-lg max-w-[14rem] lg:max-w-md min-w-0">
+                  <span className="text-sm text-blue-600 font-medium truncate">
                     📅 {selectedEvent.name}
                   </span>
                   {selectedEvent.status && (
@@ -134,22 +138,25 @@ export default function EventLayout({
 
               {/* User Menu */}
               {session?.user && (
-                <div className="flex items-center space-x-3">
-                  <span className="text-sm text-gray-700">
+                <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                  <span className="hidden sm:inline text-sm text-gray-700 truncate max-w-[8rem] md:max-w-[14rem]">
                     {session.user.name}
                   </span>
-                  <span className={`px-2 py-1 text-xs rounded-full ${
-                    session.user.role === 'ADMIN' 
-                      ? 'bg-red-100 text-red-800'
-                      : session.user.role === 'OVERSEER'
-                      ? 'bg-purple-100 text-purple-800'
-                      : 'bg-blue-100 text-blue-800'
-                  }`}>
+                  <span
+                    className={`hidden sm:inline-flex px-2 py-1 text-xs rounded-full shrink-0 ${
+                      session.user.role === 'ADMIN'
+                        ? 'bg-red-100 text-red-800'
+                        : session.user.role === 'OVERSEER'
+                          ? 'bg-purple-100 text-purple-800'
+                          : 'bg-blue-100 text-blue-800'
+                    }`}
+                  >
                     {session.user.role}
                   </span>
                   <button
+                    type="button"
                     onClick={handleSignOut}
-                    className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                    className="text-xs sm:text-sm text-gray-600 hover:text-gray-900 transition-colors whitespace-nowrap px-1 py-2 min-h-[44px] sm:min-h-0 touch-manipulation"
                   >
                     Sign Out
                   </button>
@@ -163,9 +170,9 @@ export default function EventLayout({
       {/* Breadcrumbs */}
       {breadcrumbs.length > 0 && (
         <div className="bg-white border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-            <nav className="flex" aria-label="Breadcrumb">
-              <ol className="flex items-center space-x-2">
+          <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 min-w-0">
+            <nav className="flex overflow-x-auto theoshift-x-scroll pb-1" aria-label="Breadcrumb">
+              <ol className="flex items-center space-x-2 flex-nowrap min-w-0">
                 {breadcrumbs.map((crumb, index) => (
                   <li key={index} className="flex items-center">
                     {index > 0 && (
@@ -189,7 +196,7 @@ export default function EventLayout({
       )}
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24 md:pb-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 pb-24 md:pb-8 min-w-0 w-full">
         {title && !hideTitle && (
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900">{title}</h1>

@@ -119,12 +119,12 @@ function CountTimesSummary({ event }: { event: Event }) {
   if (!isCountTimesEnabled) return null
 
   return (
-    <div className="bg-white shadow-lg rounded-xl p-6 border border-gray-200">
-      <div className="flex items-center mb-6">
-        <div className="w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center mr-4">
+    <div className="bg-white shadow-lg rounded-xl p-4 sm:p-6 border border-gray-200 min-w-0">
+      <div className="flex items-start sm:items-center gap-3 mb-6 min-w-0">
+        <div className="w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center shrink-0">
           <span className="text-2xl">📈</span>
         </div>
-        <h3 className="text-xl font-bold text-gray-900">Count Times Summary</h3>
+        <h3 className="text-lg sm:text-xl font-bold text-gray-900 min-w-0 break-words">Count Times Summary</h3>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -150,14 +150,18 @@ function CountTimesSummary({ event }: { event: Event }) {
           <h4 className="text-sm font-semibold text-gray-700 mb-3">Session Breakdown</h4>
           <div className="space-y-2 max-h-64 overflow-y-auto">
             {event.countStats.sessionBreakdown.map((session) => (
-              <div key={session.id} className="flex items-center justify-between bg-gray-50 rounded-lg p-3 border border-gray-200">
-                <div className="flex-1">
-                  <div className="font-medium text-gray-900">{session.sessionName}</div>
-                  <div className="text-xs text-gray-500">
-                    <SafeDate dateString={session.countTime} format="datetime" /> • {session.positionsReported} positions
+              <div
+                key={session.id}
+                className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between bg-gray-50 rounded-lg p-3 border border-gray-200 min-w-0"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-gray-900 break-words">{session.sessionName}</div>
+                  <div className="text-xs text-gray-500 break-words">
+                    <SafeDate dateString={session.countTime} format="datetime" /> •{' '}
+                    {session.positionsReported} positions
                   </div>
                 </div>
-                <div className="text-right">
+                <div className="text-left sm:text-right shrink-0">
                   <div className="text-lg font-bold text-purple-600">{session.totalCount}</div>
                   <div className="text-xs text-gray-500">Total</div>
                 </div>
@@ -170,7 +174,7 @@ function CountTimesSummary({ event }: { event: Event }) {
       <div className="text-center mt-6">
         <Link
           href={`/events/${event.id}/count-times`}
-          className="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
+          className="inline-flex items-center justify-center w-full sm:w-auto px-4 py-3 min-h-[44px] bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors touch-manipulation"
         >
           📊 View Detailed Count Reports →
         </Link>
@@ -332,10 +336,6 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
     window.URL.revokeObjectURL(url)
   }
 
-  // Debug: Log event data
-  console.log('Event data:', event)
-  console.log('Event exists:', !!event)
-  
   if (!event) {
     console.error('No event data available')
     return (
@@ -387,16 +387,18 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
 
 
         {/* APEX GUARDIAN: Event Command Center Dashboard */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 min-w-0">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6 min-w-0">
             {/* Enhanced Event Details */}
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-100 border border-blue-200 rounded-xl shadow-lg p-6">
-              <div className="flex items-center mb-4">
-                <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mr-4">
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-100 border border-blue-200 rounded-xl shadow-lg p-4 sm:p-6 min-w-0">
+              <div className="flex items-start sm:items-center gap-3 mb-4 min-w-0">
+                <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mr-1 sm:mr-0 shrink-0">
                   <span className="text-2xl">📋</span>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900">Event Command Center</h3>
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 min-w-0 break-words">
+                  Event Command Center
+                </h3>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -427,15 +429,15 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
                     {event.endTime ? <SafeDate dateString={event.endTime} format="time" /> : 'Not specified'}
                   </p>
                 </div>
-                <div className="md:col-span-2">
+                <div className="md:col-span-2 min-w-0">
                   <label className="block text-sm font-medium text-gray-500">Location</label>
-                  <p className="mt-1 text-sm font-semibold text-gray-900">{event.location}</p>
+                  <p className="mt-1 text-sm font-semibold text-gray-900 break-words">{event.location}</p>
                 </div>
                 {event.description && (
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-500">Description</label>
-                    <p className="mt-1 text-sm text-gray-900">{event.description}</p>
-                  </div>
+                <div className="md:col-span-2 min-w-0">
+                  <label className="block text-sm font-medium text-gray-500">Description</label>
+                  <p className="mt-1 text-sm text-gray-900 break-words">{event.description}</p>
+                </div>
                 )}
                 <div>
                   <label className="block text-sm font-medium text-gray-500">Capacity</label>
@@ -454,12 +456,14 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
 
             {/* Parent Event Info */}
             {event.parentEvent && (
-              <div className="bg-white shadow-lg rounded-xl p-6 border border-gray-200">
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center mr-4">
+              <div className="bg-white shadow-lg rounded-xl p-4 sm:p-6 border border-gray-200 min-w-0">
+                <div className="flex items-start sm:items-center gap-3 mb-4 min-w-0">
+                  <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center shrink-0">
                     <span className="text-2xl">🔗</span>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900">Event Relationships</h3>
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 min-w-0 break-words">
+                    Event Relationships
+                  </h3>
                 </div>
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <label className="block text-sm font-medium text-blue-700 mb-2">Parent Event</label>
@@ -476,12 +480,14 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
 
             {/* Child Events Section */}
             {event.childEvents && event.childEvents.length > 0 && (
-              <div className="bg-white shadow-lg rounded-xl p-6 border border-gray-200">
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 bg-teal-600 rounded-xl flex items-center justify-center mr-4">
+              <div className="bg-white shadow-lg rounded-xl p-4 sm:p-6 border border-gray-200 min-w-0">
+                <div className="flex items-start sm:items-center gap-3 mb-4 min-w-0">
+                  <div className="w-12 h-12 bg-teal-600 rounded-xl flex items-center justify-center shrink-0">
                     <span className="text-2xl">📅</span>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900">Child Events ({event.childEvents.length})</h3>
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 min-w-0 break-words">
+                    Child Events ({event.childEvents.length})
+                  </h3>
                 </div>
                 <div className="space-y-3">
                   {event.childEvents.map((childEvent) => (
@@ -490,24 +496,29 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
                       href={`/events/${childEvent.id}`}
                       className="block bg-gradient-to-r from-teal-50 to-cyan-50 border border-teal-200 rounded-lg p-4 hover:shadow-md transition-shadow"
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-gray-900">{childEvent.name}</h4>
-                          <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
-                            <span className="flex items-center">
-                              <span className="mr-1">📋</span>
-                              {getEventTypeLabel(childEvent.eventType)}
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between min-w-0">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-gray-900 break-words">{childEvent.name}</h4>
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-2 text-sm text-gray-600">
+                            <span className="flex items-center gap-1 min-w-0">
+                              <span className="shrink-0">📋</span>
+                              <span className="break-words">{getEventTypeLabel(childEvent.eventType)}</span>
                             </span>
-                            <span className="flex items-center">
-                              <span className="mr-1">📅</span>
-                              <SafeDate dateString={childEvent.startDate} format="full" /> - <SafeDate dateString={childEvent.endDate} format="full" />
+                            <span className="flex flex-wrap items-center gap-1 min-w-0">
+                              <span className="shrink-0">📅</span>
+                              <span className="break-words">
+                                <SafeDate dateString={childEvent.startDate} format="full" /> -{' '}
+                                <SafeDate dateString={childEvent.endDate} format="full" />
+                              </span>
                             </span>
-                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusBadge(childEvent.status)}`}>
+                            <span
+                              className={`inline-flex px-2 py-1 text-xs font-medium rounded-full shrink-0 ${getStatusBadge(childEvent.status)}`}
+                            >
                               {childEvent.status}
                             </span>
                           </div>
                         </div>
-                        <div className="text-teal-600 font-bold">→</div>
+                        <div className="text-teal-600 font-bold shrink-0 self-end sm:self-auto">→</div>
                       </div>
                     </Link>
                   ))}
@@ -517,12 +528,14 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
 
             {/* APEX GUARDIAN: Assignment Progress Dashboard - Only show if positions module is enabled */}
             {effectiveModuleConfig?.positions !== false && (
-              <div className="bg-white shadow-lg rounded-xl p-6 border border-gray-200">
-                <div className="flex items-center mb-6">
-                  <div className="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center mr-4">
+              <div className="bg-white shadow-lg rounded-xl p-4 sm:p-6 border border-gray-200 min-w-0">
+                <div className="flex items-start sm:items-center gap-3 mb-6 min-w-0">
+                  <div className="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center shrink-0">
                     <span className="text-2xl">📊</span>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900">Assignment Progress Dashboard</h3>
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 min-w-0 break-words">
+                    Assignment Progress Dashboard
+                  </h3>
                 </div>
               
               {/* Progress Stats Grid */}
@@ -573,7 +586,7 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
               )}
 
               {/* Readiness Indicator */}
-              <div className="flex items-center justify-center p-4 rounded-lg bg-gradient-to-r from-gray-50 to-gray-100">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 p-4 rounded-lg bg-gradient-to-r from-gray-50 to-gray-100 text-center sm:text-left">
                 {(() => {
                   // Calculate fill rate based on totalShiftsNeeded or positions
                   const totalNeeded = (event as any).totalShiftsNeeded || event._count.positions || 1
@@ -581,23 +594,29 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
                   
                   if (fillRate >= 100) {
                     return (
-                      <div className="flex items-center text-green-700">
-                        <span className="text-2xl mr-2">✅</span>
-                        <span className="font-bold">Event Ready - All Positions Filled</span>
+                      <div className="flex flex-col sm:flex-row items-center gap-2 text-green-700 px-1">
+                        <span className="text-2xl shrink-0">✅</span>
+                        <span className="font-bold text-sm sm:text-base leading-snug break-words">
+                          Event Ready - All Positions Filled
+                        </span>
                       </div>
                     )
                   } else if (fillRate >= 75) {
                     return (
-                      <div className="flex items-center text-yellow-700">
-                        <span className="text-2xl mr-2">⏳</span>
-                        <span className="font-bold">Nearly Ready - {Math.round(100 - fillRate)}% Remaining</span>
+                      <div className="flex flex-col sm:flex-row items-center gap-2 text-yellow-700 px-1">
+                        <span className="text-2xl shrink-0">⏳</span>
+                        <span className="font-bold text-sm sm:text-base leading-snug break-words">
+                          Nearly Ready - {Math.round(100 - fillRate)}% Remaining
+                        </span>
                       </div>
                     )
                   } else {
                     return (
-                      <div className="flex items-center text-red-700">
-                        <span className="text-2xl mr-2">🔴</span>
-                        <span className="font-bold">Needs Attention - {Math.round(100 - fillRate)}% Unfilled</span>
+                      <div className="flex flex-col sm:flex-row items-center gap-2 text-red-700 px-1">
+                        <span className="text-2xl shrink-0">🔴</span>
+                        <span className="font-bold text-sm sm:text-base leading-snug break-words">
+                          Needs Attention - {Math.round(100 - fillRate)}% Unfilled
+                        </span>
                       </div>
                     )
                   }
@@ -611,14 +630,16 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6 min-w-0">
             {/* APEX GUARDIAN: Oversight Command Structure */}
-            <div className="bg-gradient-to-br from-yellow-50 to-orange-100 border border-yellow-200 shadow-lg rounded-xl p-6">
-              <div className="flex items-center mb-4">
-                <div className="w-10 h-10 bg-yellow-600 rounded-lg flex items-center justify-center mr-3">
+            <div className="bg-gradient-to-br from-yellow-50 to-orange-100 border border-yellow-200 shadow-lg rounded-xl p-4 sm:p-6 min-w-0">
+              <div className="flex items-start sm:items-center gap-3 mb-4 min-w-0">
+                <div className="w-10 h-10 bg-yellow-600 rounded-lg flex items-center justify-center shrink-0">
                   <span className="text-xl">👥</span>
                 </div>
-                <h3 className="text-lg font-bold text-gray-900">Oversight Command</h3>
+                <h3 className="text-base sm:text-lg font-bold text-gray-900 min-w-0 break-words">
+                  Oversight Command
+                </h3>
               </div>
               <div className="space-y-3">
                 <div className="bg-white bg-opacity-60 rounded-lg p-4">
@@ -631,9 +652,9 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
                     </div>
                   )}
                   {event.departmentOverseerEmail && (
-                    <div className="flex items-center gap-1 mt-0.5 text-xs text-gray-500">
-                      <span>✉️</span>
-                      <span>{event.departmentOverseerEmail}</span>
+                    <div className="flex items-start gap-1 mt-0.5 text-xs text-gray-500 min-w-0">
+                      <span className="shrink-0">✉️</span>
+                      <span className="break-all">{event.departmentOverseerEmail}</span>
                     </div>
                   )}
                   
@@ -686,8 +707,10 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
             <OversightCoverageCard eventId={event.id} />
 
             {/* Event Timeline */}
-            <div className="bg-white shadow rounded-lg p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Event Timeline</h3>
+            <div className="bg-white shadow rounded-lg p-4 sm:p-6 min-w-0">
+              <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-4 break-words">
+                Event Timeline
+              </h3>
               <div className="space-y-3">
                 <div className="flex items-center text-sm">
                   <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>

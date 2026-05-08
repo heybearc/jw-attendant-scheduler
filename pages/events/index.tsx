@@ -186,19 +186,19 @@ export default function EventsPage() {
         { label: 'Events', href: '/events' }
       ]}
     >
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto min-w-0 px-0 sm:px-0">
         {/* Header */}
         <div className="mb-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="mt-2 text-sm text-gray-600">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <p className="mt-2 text-sm text-gray-600 break-words">
                 Manage events, assignments, and attendant scheduling
               </p>
             </div>
             {session?.user?.role === 'ADMIN' && (
               <Link
                 href="/events/create"
-                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors min-h-[44px] touch-manipulation flex items-center justify-center"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors min-h-[44px] touch-manipulation flex items-center justify-center shrink-0 w-full sm:w-auto"
               >
                 ➕ Create Event
               </Link>
@@ -207,7 +207,7 @@ export default function EventsPage() {
         </div>
 
         {/* Filters */}
-        <div className="bg-white shadow rounded-lg p-6 mb-6">
+        <div className="bg-white shadow rounded-lg p-4 sm:p-6 mb-6">
           <form onSubmit={handleSearch} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             <div>
               <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1">
@@ -311,7 +311,72 @@ export default function EventsPage() {
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto">
+              {/* Mobile: cards */}
+              <div className="md:hidden divide-y divide-gray-200 border-b border-gray-200">
+                {events.map((event) => (
+                  <div key={event.id} className="p-4 space-y-3 min-w-0">
+                    <div className="min-w-0">
+                      <div className="text-base font-semibold text-gray-900 break-words">{event.name}</div>
+                      {event.description && (
+                        <div className="text-sm text-gray-500 mt-1 line-clamp-2 break-words">{event.description}</div>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-2 text-sm text-gray-700">
+                      <span className="bg-gray-100 px-2 py-1 rounded">{getEventTypeLabel(event.eventType)}</span>
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusBadge(event.status)}`}>
+                        {event.status}
+                      </span>
+                    </div>
+                    <div className="text-sm text-gray-600 break-words">
+                      <div>{formatDate(event.startDate)}</div>
+                      <div className="text-gray-500">
+                        {formatTime(event.startTime)}
+                        {event.endTime && ` - ${formatTime(event.endTime)}`}
+                      </div>
+                      {event.location && <div className="mt-1 text-gray-700">{event.location}</div>}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
+                        {event._count?.event_attendants || 0} assigned
+                      </span>
+                      <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">
+                        {event._count?.positions || 0} positions
+                      </span>
+                    </div>
+                    <div className="flex flex-col gap-2 pt-1">
+                      <Link
+                        href={`/events/${event.id}`}
+                        className="w-full text-center py-3 rounded-lg bg-blue-600 text-white font-medium min-h-[44px] flex items-center justify-center touch-manipulation"
+                      >
+                        📋 Manage
+                      </Link>
+                      {session?.user?.role &&
+                        ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN'].includes(session.user.role) && (
+                          <div className="flex flex-col gap-2">
+                            <Link
+                              href={`/events/${event.id}/edit`}
+                              className="text-center py-3 rounded-lg border border-gray-300 text-green-700 font-medium min-h-[44px] flex items-center justify-center touch-manipulation"
+                            >
+                              ✏️ Edit
+                            </Link>
+                            {session.user.role === 'ADMIN' && (
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteEvent(event.id, event.name)}
+                                className="py-3 rounded-lg border border-red-200 text-red-700 font-medium min-h-[44px] touch-manipulation"
+                              >
+                                🗑️ Delete
+                              </button>
+                            )}
+                          </div>
+                        )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop: table */}
+              <div className="hidden md:block overflow-x-auto theoshift-x-scroll">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
@@ -420,11 +485,11 @@ export default function EventsPage() {
               {/* Pagination */}
               {pagination.pages > 1 && (
                 <div className="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm text-gray-700">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="text-sm text-gray-700 text-center sm:text-left">
                       Showing page {pagination.page} of {pagination.pages} ({pagination.total} total events)
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 justify-center sm:justify-end">
                       <button
                         onClick={() => fetchEvents(pagination.page - 1)}
                         disabled={!pagination.hasPrev}

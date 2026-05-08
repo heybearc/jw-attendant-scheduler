@@ -149,7 +149,7 @@ export default function EditEventPage({ event }: EditEventPageProps) {
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    const mq = window.matchMedia('(max-width: 639px)') // < sm
+    const mq = window.matchMedia('(max-width: 1023px)') // < lg (phones + most tablets)
     const sync = () => setIsSmallScreen(mq.matches)
     sync()
     mq.addEventListener?.('change', sync)

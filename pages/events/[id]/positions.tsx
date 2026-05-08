@@ -468,12 +468,29 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
   const [showFiltersMenu, setShowFiltersMenu] = useState(false)
   const [showExportMenu, setShowExportMenu] = useState(false)
   const [showActionsMenu, setShowActionsMenu] = useState(false)
+  const [isSmallScreen, setIsSmallScreen] = useState(false)
 
   // Persist viewMode to localStorage whenever it changes
   useEffect(() => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('positions-view-mode', viewMode)
     }
+  }, [viewMode])
+
+  // Track screen size and prevent "grid" mode on small screens (PositionGridView is desktop-oriented)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const mq = window.matchMedia('(max-width: 1023px)') // < lg
+
+    const sync = () => {
+      const small = mq.matches
+      setIsSmallScreen(small)
+      if (small && viewMode === 'grid') setViewMode('list')
+    }
+
+    sync()
+    mq.addEventListener?.('change', sync)
+    return () => mq.removeEventListener?.('change', sync)
   }, [viewMode])
 
   // Restore scroll position after content loads
@@ -1229,14 +1246,14 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="mb-8">
             {/* Professional Action Toolbar */}
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex flex-wrap items-center gap-2">
                 {/* Primary Actions */}
                 {canManageContent && (
                   <>
                     <button
                       onClick={() => setShowCreateModal(true)}
-                      className="inline-flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors"
+                      className="inline-flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors min-h-[44px] touch-manipulation"
                     >
                       <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -1245,7 +1262,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                     </button>
                     <button
                       onClick={() => setShowBulkCreator(true)}
-                      className="inline-flex items-center px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-md transition-colors"
+                      className="inline-flex items-center px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-md transition-colors min-h-[44px] touch-manipulation"
                     >
                       <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -1260,7 +1277,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                   <button
                     onClick={handleAutoAssignOversightAware}
                     disabled={isSubmitting || getUnassignedCount() === 0}
-                    className="inline-flex items-center px-3 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white text-sm font-medium rounded-md transition-colors"
+                    className="inline-flex items-center px-3 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white text-sm font-medium rounded-md transition-colors min-h-[44px] touch-manipulation"
                     title={getUnassignedCount() === 0 ? "No unassigned volunteers available" : `Auto-assign ${getUnassignedCount()} unassigned volunteers`}
                   >
                     {isSubmitting ? (
@@ -1283,7 +1300,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                 <div className="flex border border-gray-300 rounded-md overflow-hidden">
                   <button
                     onClick={() => setViewMode('list')}
-                    className={`px-3 py-2 text-sm font-medium transition-colors ${
+                    className={`px-3 py-2 text-sm font-medium transition-colors min-h-[44px] touch-manipulation ${
                       viewMode === 'list'
                         ? 'bg-gray-100 text-gray-900'
                         : 'bg-white text-gray-600 hover:bg-gray-50'
@@ -1296,12 +1313,13 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                   </button>
                   <button
                     onClick={() => setViewMode('grid')}
-                    className={`px-3 py-2 text-sm font-medium border-l border-gray-300 transition-colors ${
+                    disabled={isSmallScreen}
+                    className={`px-3 py-2 text-sm font-medium border-l border-gray-300 transition-colors min-h-[44px] touch-manipulation ${
                       viewMode === 'grid'
                         ? 'bg-gray-100 text-gray-900'
                         : 'bg-white text-gray-600 hover:bg-gray-50'
-                    }`}
-                    title="Grid View"
+                    } ${isSmallScreen ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    title={isSmallScreen ? 'Grid view is available on desktop' : 'Grid View'}
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -1313,7 +1331,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                 <div className="relative inline-block">
                   <button
                     onClick={() => setShowFiltersMenu(!showFiltersMenu)}
-                    className="inline-flex items-center gap-1 px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                    className="inline-flex items-center gap-1 px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors min-h-[44px] touch-manipulation"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
@@ -1396,7 +1414,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                 <div className="relative inline-block">
                   <button
                     onClick={() => setShowActionsMenu(!showActionsMenu)}
-                    className="inline-flex items-center gap-1 px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                    className="inline-flex items-center gap-1 px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors min-h-[44px] touch-manipulation"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />

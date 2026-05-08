@@ -1321,7 +1321,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
           </button>
         </div>
 
-        {/* Attendants Table */}
+        {/* Volunteers List (Cards on mobile, table on desktop) */}
         <div className="bg-white shadow rounded-lg overflow-visible">
           <div className="px-4 py-5 sm:p-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Volunteers List</h3>
@@ -1338,8 +1338,213 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                 </button>
               </div>
             ) : (
-              <div className="overflow-x-auto overflow-y-visible">
-                <table className="w-full divide-y divide-gray-200 table-fixed">
+              <>
+                {/* Mobile-first card list (no horizontal scroll) */}
+                <div className="lg:hidden space-y-3">
+                  {paginatedAttendants.map((attendant) => (
+                    <div
+                      key={attendant.id}
+                      className="border border-gray-200 rounded-lg p-4 shadow-sm"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="pt-1">
+                          <input
+                            type="checkbox"
+                            checked={selectedAttendants.has(attendant.associationId)}
+                            onChange={() => handleSelectAttendant(attendant.associationId)}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          />
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <VolunteerDetailsPopup
+                            volunteer={attendant}
+                            onEdit={() => handleEditAttendant(attendant)}
+                          >
+                            <div className="min-w-0">
+                              <div className="text-base font-semibold text-gray-900 hover:text-blue-600 transition-colors truncate">
+                                {attendant.firstName} {attendant.lastName}
+                              </div>
+                              <div className="text-sm text-gray-600 truncate">
+                                {attendant.email}
+                              </div>
+                            </div>
+                          </VolunteerDetailsPopup>
+
+                          <div className="mt-2">
+                            <VolunteerBadges
+                              isActive={attendant.isActive}
+                              profileVerificationRequired={attendant.profileVerificationRequired}
+                              profileVerifiedAt={attendant.profileVerifiedAt}
+                              availabilityStatus={attendant.availability?.status as any}
+                              availabilityNotes={attendant.availability?.notes}
+                              formsOfService={attendant.formsOfService}
+                              isOverseer={attendant.isOverseer}
+                              isKeyman={attendant.isKeyman}
+                              onAvailabilityClick={() => handleAvailabilityClick(attendant.id)}
+                            />
+                          </div>
+
+                          {canManageContent && (
+                            <div className="mt-3 grid grid-cols-1 gap-2">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                                    Overseer
+                                  </label>
+                                  <select
+                                    value={attendant.overseerId || ''}
+                                    onChange={async (e) => {
+                                      const overseerId = e.target.value || null
+                                      try {
+                                        const response = await fetch(`/api/events/${eventId}/volunteers/${attendant.id}/oversight`, {
+                                          method: 'PUT',
+                                          headers: { 'Content-Type': 'application/json' },
+                                          body: JSON.stringify({ overseerId })
+                                        })
+                                        if (response.ok) {
+                                          preserveStateAndReload()
+                                        } else {
+                                          const error = await response.json().catch(() => null)
+                                          alert(error?.error || 'Failed to update overseer')
+                                        }
+                                      } catch (error) {
+                                        console.error('Error updating overseer:', error)
+                                        alert('Failed to update overseer')
+                                      }
+                                    }}
+                                    className="w-full text-sm border border-gray-300 rounded-md px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px] touch-manipulation"
+                                  >
+                                    <option value="">No Overseer</option>
+                                    {attendants.filter(att => att.isActive && att.isOverseer).map(overseer => (
+                                      <option key={overseer.id} value={overseer.id}>
+                                        {overseer.firstName} {overseer.lastName}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                                    Keyman
+                                  </label>
+                                  <select
+                                    value={attendant.keymanId || ''}
+                                    onChange={async (e) => {
+                                      const keymanId = e.target.value || null
+                                      try {
+                                        const response = await fetch(`/api/events/${eventId}/volunteers/${attendant.id}/oversight`, {
+                                          method: 'PUT',
+                                          headers: { 'Content-Type': 'application/json' },
+                                          body: JSON.stringify({ keymanId })
+                                        })
+                                        if (response.ok) {
+                                          preserveStateAndReload()
+                                        } else {
+                                          const error = await response.json().catch(() => null)
+                                          alert(error?.error || 'Failed to update keyman')
+                                        }
+                                      } catch (error) {
+                                        console.error('Error updating keyman:', error)
+                                        alert('Failed to update keyman')
+                                      }
+                                    }}
+                                    className="w-full text-sm border border-gray-300 rounded-md px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px] touch-manipulation"
+                                  >
+                                    <option value="">No Keyman</option>
+                                    {attendants.filter(att => att.isActive && att.isKeyman).map(keyman => (
+                                      <option key={keyman.id} value={keyman.id}>
+                                        {keyman.firstName} {keyman.lastName}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {attendant.assignments && attendant.assignments.length > 0 && (
+                            <div className="mt-3 text-sm text-gray-700">
+                              <span className="font-medium">Assignments:</span>{' '}
+                              <span>{attendant.assignments.length}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {canManageContent && (
+                          <div className="flex flex-col items-end gap-2">
+                            <div className="relative inline-block text-left">
+                              <button
+                                id={`actions-btn-${attendant.id}`}
+                                onClick={() => toggleDropdown(attendant.id)}
+                                className="inline-flex items-center justify-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 min-h-[44px] touch-manipulation"
+                              >
+                                Actions
+                                <svg className="ml-1 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                                </svg>
+                              </button>
+
+                              {openDropdowns.has(attendant.id) && (
+                                <div
+                                  id={`dropdown-${attendant.id}`}
+                                  className="absolute right-0 mt-1 z-50 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5"
+                                  style={{
+                                    maxHeight: '300px',
+                                    overflowY: 'auto'
+                                  }}
+                                >
+                                  <div className="py-1">
+                                    <button
+                                      onClick={() => {
+                                        handleForceVerification(attendant)
+                                        closeDropdown(attendant.id)
+                                      }}
+                                      className="block w-full text-left px-3 py-2 text-sm text-orange-600 hover:bg-orange-50 min-h-[44px] touch-manipulation"
+                                    >
+                                      Force Verify
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setViewingAttendant(attendant)
+                                        closeDropdown(attendant.id)
+                                      }}
+                                      className="block w-full text-left px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 min-h-[44px] touch-manipulation"
+                                    >
+                                      View Details
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        handleEditAttendant(attendant)
+                                        closeDropdown(attendant.id)
+                                      }}
+                                      className="block w-full text-left px-3 py-2 text-sm text-indigo-600 hover:bg-indigo-50 min-h-[44px] touch-manipulation"
+                                    >
+                                      Edit
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        handleRemoveAttendant(attendant)
+                                        closeDropdown(attendant.id)
+                                      }}
+                                      className="block w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 min-h-[44px] touch-manipulation"
+                                    >
+                                      Remove
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Desktop table */}
+                <div className="hidden lg:block overflow-x-auto overflow-y-visible">
+                  <table className="w-full divide-y divide-gray-200 table-fixed">
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="w-12 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -1593,7 +1798,8 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                 </table>
                 {/* Add space for dropdown at bottom */}
                 <div className="h-48"></div>
-              </div>
+                </div>
+              </>
             )}
           </div>
 

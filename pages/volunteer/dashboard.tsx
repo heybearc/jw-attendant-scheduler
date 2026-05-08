@@ -1697,11 +1697,11 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
               ⬇️
             </a>
           </div>
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 min-h-0 overflow-hidden">
             {viewingDocument.fileType.includes('pdf') ? (
               <iframe
                 src={`/api/events/${dashboardData.event.id}/documents/${viewingDocument.id}/file`}
-                className="w-full h-full border-0"
+                className="w-full h-full min-h-0 border-0"
                 title={viewingDocument.title}
               />
             ) : viewingDocument.fileType.includes('image') ? (

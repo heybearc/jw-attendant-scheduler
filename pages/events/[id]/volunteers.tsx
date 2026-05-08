@@ -220,6 +220,8 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
   const [broadcastSubject, setBroadcastSubject] = useState('')
   const [broadcastMessage, setBroadcastMessage] = useState('')
   const [broadcastSending, setBroadcastSending] = useState(false)
+  /** Snapshot of association IDs when emailing “selected” so sends aren’t affected if selection changes while the modal is open. */
+  const [broadcastPinnedSelection, setBroadcastPinnedSelection] = useState<string[]>([])
   const [filters, setFilters] = useState<{
     search: string
     congregation: string
@@ -717,6 +719,11 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
     setBroadcastEmailScope(scope)
     setBroadcastSubject('')
     setBroadcastMessage('')
+    if (scope === 'selected') {
+      setBroadcastPinnedSelection(Array.from(selectedAttendants))
+    } else {
+      setBroadcastPinnedSelection([])
+    }
     setShowBroadcastEmailModal(true)
   }
 
@@ -727,7 +734,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
       alert('Please enter a subject and message.')
       return
     }
-    if (broadcastEmailScope === 'selected' && selectedAttendants.size === 0) {
+    if (broadcastEmailScope === 'selected' && broadcastPinnedSelection.length === 0) {
       alert('Select at least one volunteer, or choose “All active volunteers”.')
       return
     }
@@ -740,7 +747,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
         body: JSON.stringify({
           scope: broadcastEmailScope,
           associationIds:
-            broadcastEmailScope === 'selected' ? Array.from(selectedAttendants) : [],
+            broadcastEmailScope === 'selected' ? [...broadcastPinnedSelection] : [],
           subject,
           message,
         }),
@@ -771,6 +778,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
       setShowBroadcastEmailModal(false)
       setBroadcastSubject('')
       setBroadcastMessage('')
+      setBroadcastPinnedSelection([])
     } catch (e) {
       console.error(e)
       alert('Failed to send email')
@@ -781,6 +789,18 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
 
   const handleSelectAll = () => {
     selectionAnchorIndexRef.current = null
+    // With exactly one visible row, the header checkbox matches the row checkbox. A second
+    // header click would otherwise clear the only selection — surprising when emailing one volunteer.
+    if (filteredAttendants.length === 1) {
+      const onlyId = filteredAttendants[0].associationId
+      setSelectedAttendants((prev) => {
+        if (prev.has(onlyId) && prev.size === 1) {
+          return prev
+        }
+        return new Set([onlyId])
+      })
+      return
+    }
     if (selectedAttendants.size === filteredAttendants.length) {
       setSelectedAttendants(new Set())
     } else {
@@ -2520,7 +2540,10 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
 
         {/* Email volunteers (broadcast) */}
         {showBroadcastEmailModal && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
+          <div
+            className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4"
+            onMouseDown={(e) => e.stopPropagation()}
+          >
             <div className="relative bg-white rounded-lg shadow-xl max-w-lg w-full">
               <div className="p-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Email volunteers</h3>
@@ -2538,7 +2561,10 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                       name="broadcast-scope"
                       className="mt-1"
                       checked={broadcastEmailScope === 'selected'}
-                      onChange={() => setBroadcastEmailScope('selected')}
+                      onChange={() => {
+                        setBroadcastEmailScope('selected')
+                        setBroadcastPinnedSelection(Array.from(selectedAttendants))
+                      }}
                       disabled={selectedAttendants.size === 0}
                     />
                     <span className={selectedAttendants.size === 0 ? 'text-gray-400' : ''}>
@@ -2594,6 +2620,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                       setShowBroadcastEmailModal(false)
                       setBroadcastSubject('')
                       setBroadcastMessage('')
+                      setBroadcastPinnedSelection([])
                     }}
                     disabled={broadcastSending}
                     className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50 min-h-[44px]"
@@ -2605,7 +2632,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                     onClick={handleSendBroadcastEmail}
                     disabled={
                       broadcastSending ||
-                      (broadcastEmailScope === 'selected' && selectedAttendants.size === 0) ||
+                      (broadcastEmailScope === 'selected' && broadcastPinnedSelection.length === 0) ||
                       (broadcastEmailScope === 'all_active' && activeVolunteersWithEmailCount === 0)
                     }
                     className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 min-h-[44px]"

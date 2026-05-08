@@ -680,11 +680,11 @@ export default function MobileVolunteerDashboard({
             </a>
           </div>
           {/* Viewer Content */}
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 min-h-0 overflow-hidden">
             {viewingDoc.fileType.includes('pdf') ? (
               <iframe
                 src={`/api/events/${event.id}/documents/${viewingDoc.id}/file`}
-                className="w-full h-full border-0"
+                className="w-full h-full min-h-0 border-0"
                 title={viewingDoc.title}
               />
             ) : viewingDoc.fileType.includes('image') ? (

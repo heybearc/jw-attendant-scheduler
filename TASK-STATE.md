@@ -1,33 +1,31 @@
 # TheoShift Task State
 
-**Last updated:** 2026-05-06  
+**Last updated:** 2026-05-08  
 **Branch:** `main`  
-**Production:** LIVE = **GREEN** `10.92.3.22` (CT 132) · STANDBY = **BLUE** `10.92.3.24` (CT 134) · App **v4.21.0**
+**Production:** LIVE = **GREEN** `10.92.3.22` (CT 132) · STANDBY = **BLUE** `10.92.3.24` (CT 134) · App **v4.21.2**
 
 ---
 
 ## Current Task
 
-**Post–v4.21.0 stabilization** — MONITORING ✅
+**Mobile readiness audit + optimization** — IN PROGRESS 🚧
 
 ### What I'm doing right now
 
-Same-day pipeline finished: shared uploads / runtime env fixes, volunteer save transaction, PWA service worker bypass for staff APIs, full `/test-release` → `/bump` (`v4.21.0`) → `/release` → `/sync`. Pick up next session with smoke checks or backlog items below.
+Focused on making the app reliably mobile-friendly across Safari/Chrome/Edge/Firefox, starting with the event shell and IVS module. Released v4.21.2, then improved the event shell + overview pages and deployed those changes to STANDBY for verification.
 
-### Recent completions (2026-05-06)
+### Recent completions (2026-05-08)
 
-- ✅ **v4.21.0** — Documents on NFS + legacy `public/uploads`, runtime `THEOSHIFT_*` reads (no webpack inlining), “File missing” in UI when blob absent, **transactional** `PUT` for event volunteers, **PWA `sw.js` v2.0.3** (no synthetic 503 on `/api/events/*` or `/_next/*`)
-- ✅ **Infra** — TrueNAS dataset `media-pool/theoshift-uploads`, Proxmox NFS + `pct` bind mounts, `.env` `THEOSHIFT_UPLOADS_ROOT` on both CTs; SSH config comments aligned with HAProxy blue/green
-- ✅ **`/test-release`** on qa-01 — 4 passed, 1 skipped; logged in `TEST-FAILURES-LOG.md`
-- ✅ **Release pipeline** — GitHub release `v4.21.0`; deploy STANDBY → **traffic switch** (new LIVE = GREEN) → **sync** STANDBY (BLUE now has same build)
-- ✅ **DECISIONS** — D-TS-042 documents uploads + peer fallback (already in `DECISIONS.md`)
+- ✅ **IVS Module mobile UX** — Approvals uses cards on small screens; Early Check-In uses full-width actions + stacked rows; keeps the full table on larger screens (`v4.21.2`)
+- ✅ **Event shell mobile-first** — safer viewport (`viewport-fit=cover`), iOS momentum scrolling helper, tighter header/breadcrumbs, stacked toolbar + 44px tab targets, event overview wrapping fixes
+- ✅ **Release pipeline** — qa-01 `/test-release` (4 passed, 1 skipped) → bump to `v4.21.2` → GitHub release → deploy STANDBY → traffic switch → sync (both nodes built from the same `main`)
 
 ### Next steps
 
-1. Smoke **theoshift.com**: event **Documents** (view + upload), **Volunteers** save + bulk paths, no console 503 noise after SW update (hard refresh once).
-2. Optional: fix local Jest mock in `__tests__/lib/positionService.test.ts` (`fetch().json()` contract).
-3. Review **`/admin/feedback`**; promote anything urgent into planning docs.
-4. Optional UX: Escape-to-close for chat modals; keyboard focus.
+1. Mobile audit next: `/events/[id]/positions` and `/events/[id]/volunteers` (tables/filters/bulk actions) — convert the worst offenders to card layouts under `md`, ensure 44px controls, and avoid horizontal scroll where possible.
+2. Run `/test-release theoshift standby` after any large UI changes (qa-01 smoke + release-gate).
+3. Smoke test on **Safari iOS** + **Chrome Android** (event overview, tabs scroll, IVS module, positions/volunteers core actions).
+4. Review **`/admin/feedback`**; promote anything urgent into planning docs.
 
 ## Exact next command
 
@@ -54,11 +52,11 @@ Same-day pipeline finished: shared uploads / runtime env fixes, volunteer save t
 
 ## Session snapshot — recent `main` commits
 
-- `f6088d79` — Release v4.21.0 (package.json, README, release notes, test log)
-- `0534f8b6` — Volunteer `PUT` transactional + safer client parse
-- `2bd081b7` — PWA SW bypass staff/`_next`
-- `44d70ae5` — Documents dual-path + upload disk check + UI
-- `2d9ce267` — Runtime `THEOSHIFT_UPLOADS_ROOT` read for Next bundle
+- `c82541fb` — Mobile-first event shell, overview, and events list (STANDBY deploy for verification)
+- `070a756e` — Release v4.21.2 (mobile IVS layouts + notes/help + submodule update)
+- `116a3641` — IVS: mobile-friendly approvals and early check-in layouts
+- `3d471fce` — Release v4.21.1 (positions filters)
+- `f6088d79` — Release v4.21.0 (Documents, volunteer saves, PWA reliability)
 
 ---
 

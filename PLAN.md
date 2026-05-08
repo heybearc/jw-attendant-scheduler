@@ -1,8 +1,8 @@
 # TheoShift Plan
 
-**Last updated:** 2026-05-06  
+**Last updated:** 2026-05-08  
 **Current phase:** Feature Development + Platform Infrastructure  
-**Status:** v4.20.1 released. Chat UX upgraded (Slack-style sidebar, searchable position channels, DM flow) and staff↔volunteer linking for DMs corrected. Nodes synced (LIVE=BLUE, STANDBY=GREEN). Next: stabilize + test cleanup.
+**Status:** v4.21.2 released. IVS Module and event shell have mobile-first improvements; continued work needed to make Positions/Volunteers/Admin consistently usable on phones.
 
 ---
 
@@ -23,9 +23,11 @@ This follows the usual small-team pattern: **one system of record in the app**, 
 ## Current Phase
 
 ### Active Work
-- **Chat stabilization & polish** — small UX refinements, help docs accuracy, and test suite maintenance after v4.20.1 release.
+- **Mobile readiness across TheoShift** — eliminate horizontal-scroll-only workflows, ensure 44px tap targets, improve responsive layouts on event and admin pages, verify on Safari/Chrome/Edge/Firefox.
 
 ### Completed This Phase
+- ✅ v4.21.2: IVS Module mobile layouts (Approvals cards on small screens; Early Check-In full-width actions + stacked rows)
+- ✅ v4.21.2: Event shell + overview mobile-first tweaks (viewport-fit=cover; momentum scroll utility; stacked toolbar; 44px tab targets; overflow/wrapping fixes)
 - ✅ v4.20.1: Chat navigation UX (New message + searchable position channels) for staff + volunteers
 - ✅ v4.20.1: Staff DMs correctly recognize Admin→Users volunteer link when the volunteer is on the event roster
 - ✅ v4.20.1: Release gate updated for new chat composer placeholder; qa-01 /test-release passing; traffic switched + synced
@@ -159,6 +161,12 @@ This follows the usual small-team pattern: **one system of record in the app**, 
   - **Why:** Quickly find who still needs follow-up or who is available before assigning positions.
   - **Scope:** Toolbar or filter row + client/query or API params; reuse existing availability fields — avoid duplicate truth.
   - **Effort:** S–M (depends on current volunteers list and availability APIs).
+
+- **Mobile optimization: Event Positions + Volunteers pages** — Reduce reliance on horizontal scrolling tables; add card views under `md`, make filters/actions usable with one hand.
+  - Targets: `/events/[id]/positions`, `/events/[id]/volunteers`
+  - Acceptance: 44px controls, clear primary actions, no clipped text, safe-area friendly on iOS.
+
+- **Mobile optimization: Admin tables** — Pick the top 3 admin surfaces used on phones and apply the same patterns (stacked toolbars, card lists under `md`, overflow scroll with momentum when needed).
   
 - **Enhanced Reporting** — Additional export formats and report types
   - Volunteer attendance reports

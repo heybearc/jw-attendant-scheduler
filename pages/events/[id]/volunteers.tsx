@@ -756,11 +756,18 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
         alert(detail || 'Failed to send email')
         return
       }
-      const extra =
-        Array.isArray(data.errors) && data.errors.length > 0
-          ? `\n\n${data.errors.slice(0, 5).join('\n')}${data.errors.length > 5 ? '\n…' : ''}`
-          : ''
-      alert((data.message || `Sent to ${data.sent || 0} recipient(s)`) + extra)
+      if (data.async) {
+        alert(
+          data.message ||
+            `Sending to ${data.recipientCount ?? ''} recipient(s) in the background. Large lists may take a minute.`
+        )
+      } else {
+        const extra =
+          Array.isArray(data.errors) && data.errors.length > 0
+            ? `\n\n${data.errors.slice(0, 5).join('\n')}${data.errors.length > 5 ? '\n…' : ''}`
+            : ''
+        alert((data.message || `Sent to ${data.sent || 0} recipient(s)`) + extra)
+      }
       setShowBroadcastEmailModal(false)
       setBroadcastSubject('')
       setBroadcastMessage('')

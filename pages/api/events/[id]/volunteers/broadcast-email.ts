@@ -158,53 +158,74 @@ async function handleBroadcastEmail(req: NextApiRequest, res: NextApiResponse) {
     })
   }
 
+  // Send in the background so HAProxy/nginx does not return 504 while SMTP delivers many messages.
+  const eventName = event.name
+  const recipientsSnapshot = uniqueRecipients.map((r) => ({ ...r }))
+  void runBroadcastEmailJob({
+    recipients: recipientsSnapshot,
+    subject: subjectSafe,
+    messageHtml,
+    eventName,
+    startDate,
+    endDate,
+    dashboardUrl,
+    eventId,
+  })
+
+  return res.status(202).json({
+    success: true,
+    async: true,
+    recipientCount: uniqueRecipients.length,
+    message: `Sending email to ${uniqueRecipients.length} recipient${uniqueRecipients.length === 1 ? '' : 's'} in the background. You can leave this page — delivery may take a minute for large lists.`,
+  })
+}
+
+async function runBroadcastEmailJob(params: {
+  recipients: { firstName: string; email: string }[]
+  subject: string
+  messageHtml: string
+  eventName: string
+  startDate?: string
+  endDate?: string
+  dashboardUrl: string
+  eventId: string
+}) {
+  const { recipients, subject, messageHtml, eventName, startDate, endDate, dashboardUrl, eventId } =
+    params
   let sent = 0
   let failed = 0
   const errors: string[] = []
 
-  for (const recipient of uniqueRecipients) {
-    try {
-      const html = generateVolunteerBroadcastEmail({
-        firstName: recipient.firstName,
-        eventName: event.name,
-        eventStartDate: startDate,
-        eventEndDate: endDate,
-        dashboardUrl,
-        messageHtml,
-      })
-      await sendEmail({
-        to: recipient.email,
-        subject: subjectSafe,
-        html,
-      })
-      sent++
-    } catch (err: unknown) {
-      failed++
-      const msg = err instanceof Error ? err.message : 'Unknown send error'
-      errors.push(`${recipient.email}: ${msg}`)
+  try {
+    for (const recipient of recipients) {
+      try {
+        const html = generateVolunteerBroadcastEmail({
+          firstName: recipient.firstName,
+          eventName,
+          eventStartDate: startDate,
+          eventEndDate: endDate,
+          dashboardUrl,
+          messageHtml,
+        })
+        await sendEmail({
+          to: recipient.email,
+          subject,
+          html,
+        })
+        sent++
+      } catch (err: unknown) {
+        failed++
+        const msg = err instanceof Error ? err.message : 'Unknown send error'
+        errors.push(`${recipient.email}: ${msg}`)
+      }
     }
+    console.log(
+      `[broadcast-email] event=${eventId} done sent=${sent} failed=${failed}${failed ? ` firstError=${errors[0]}` : ''}`
+    )
+    if (sent === 0 && failed > 0) {
+      console.error('[broadcast-email] all sends failed:', errors.slice(0, 10))
+    }
+  } catch (err: unknown) {
+    console.error('[broadcast-email] job crashed', err)
   }
-
-  if (sent === 0 && failed > 0) {
-    return res.status(502).json({
-      success: false,
-      sent: 0,
-      failed,
-      errors,
-      error:
-        errors[0] ||
-        'Could not send email. Check Admin → Email configuration and SMTP credentials.',
-    })
-  }
-
-  return res.status(200).json({
-    success: true,
-    sent,
-    failed,
-    errors: failed > 0 ? errors : undefined,
-    message:
-      sent === 0
-        ? 'No volunteers with an email address matched this send.'
-        : `Sent ${sent} email${sent === 1 ? '' : 's'}${failed ? ` (${failed} failed)` : ''}`,
-  })
 }

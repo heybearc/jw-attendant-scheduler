@@ -10,6 +10,16 @@ import {
 import { formatCalendarDateLabel } from '@/lib/calendarDate'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  try {
+    return await handleBroadcastEmail(req, res)
+  } catch (err: unknown) {
+    console.error('[broadcast-email]', err)
+    const msg = err instanceof Error ? err.message : 'Server error'
+    return res.status(500).json({ success: false, error: msg })
+  }
+}
+
+async function handleBroadcastEmail(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ success: false, error: 'Method not allowed' })
   }
@@ -96,34 +106,45 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         error: 'No volunteers selected',
       })
     }
+    // Client may send event_volunteers.id OR volunteers.id (SSR uses volunteer id when join row missing)
     memberships = await prisma.event_volunteers.findMany({
       where: {
         eventId,
-        id: { in: associationIds },
         volunteerId: { not: null },
+        OR: [{ id: { in: associationIds } }, { volunteerId: { in: associationIds } }],
       },
       select: {
+        id: true,
+        volunteerId: true,
         volunteer: { select: { firstName: true, email: true } },
       },
     })
 
-    if (memberships.length !== associationIds.length) {
+    const matchedKeys = new Set<string>()
+    for (const m of memberships) {
+      if (associationIds.includes(m.id)) matchedKeys.add(m.id)
+      if (m.volunteerId && associationIds.includes(m.volunteerId)) matchedKeys.add(m.volunteerId)
+    }
+    const unmatched = associationIds.filter((id) => !matchedKeys.has(id))
+    if (unmatched.length > 0) {
       return res.status(400).json({
         success: false,
-        error: 'Some selections are invalid for this event',
+        error:
+          'Some selected volunteers are not on this event roster. Refresh the page and try again.',
       })
     }
   }
 
   type Recipient = { firstName: string; email: string }
+  const volunteerKey = (v: { email: string } | null) => v?.email?.trim().toLowerCase() ?? ''
   const rawRecipients = memberships
     .map((m) => m.volunteer)
     .filter((v): v is Recipient => !!v?.email?.trim())
 
   const seen = new Set<string>()
   const uniqueRecipients = rawRecipients.filter((r) => {
-    const key = r.email.toLowerCase()
-    if (seen.has(key)) return false
+    const key = volunteerKey(r)
+    if (!key || seen.has(key)) return false
     seen.add(key)
     return true
   })
@@ -164,6 +185,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   }
 
+  if (sent === 0 && failed > 0) {
+    return res.status(502).json({
+      success: false,
+      sent: 0,
+      failed,
+      errors,
+      error:
+        errors[0] ||
+        'Could not send email. Check Admin → Email configuration and SMTP credentials.',
+    })
+  }
+
   return res.status(200).json({
     success: true,
     sent,
@@ -171,7 +204,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     errors: failed > 0 ? errors : undefined,
     message:
       sent === 0
-        ? 'No emails were sent'
+        ? 'No volunteers with an email address matched this send.'
         : `Sent ${sent} email${sent === 1 ? '' : 's'}${failed ? ` (${failed} failed)` : ''}`,
   })
 }

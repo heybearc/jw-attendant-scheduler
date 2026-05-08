@@ -735,6 +735,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
     try {
       const res = await fetch(`/api/events/${eventId}/volunteers/broadcast-email`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           scope: broadcastEmailScope,
@@ -746,10 +747,20 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        alert(data.error || 'Failed to send email')
+        const detail =
+          typeof data.error === 'string'
+            ? data.error
+            : Array.isArray(data.errors)
+              ? data.errors.slice(0, 5).join('\n')
+              : ''
+        alert(detail || 'Failed to send email')
         return
       }
-      alert(data.message || `Sent to ${data.sent || 0} recipient(s)`)
+      const extra =
+        Array.isArray(data.errors) && data.errors.length > 0
+          ? `\n\n${data.errors.slice(0, 5).join('\n')}${data.errors.length > 5 ? '\n…' : ''}`
+          : ''
+      alert((data.message || `Sent to ${data.sent || 0} recipient(s)`) + extra)
       setShowBroadcastEmailModal(false)
       setBroadcastSubject('')
       setBroadcastMessage('')

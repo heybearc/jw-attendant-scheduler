@@ -93,8 +93,14 @@ async function handleBroadcastEmail(req: NextApiRequest, res: NextApiResponse) {
   }[]
 
   if (scope === 'all_active') {
+    // Match Volunteers page: "active" = on roster for this event AND volunteer profile not deactivated
     memberships = await prisma.event_volunteers.findMany({
-      where: { eventId, isActive: true, volunteerId: { not: null } },
+      where: {
+        eventId,
+        isActive: true,
+        volunteerId: { not: null },
+        volunteer: { isActive: true },
+      },
       select: {
         volunteer: { select: { firstName: true, email: true } },
       },
@@ -172,11 +178,12 @@ async function handleBroadcastEmail(req: NextApiRequest, res: NextApiResponse) {
     eventId,
   })
 
+  const n = uniqueRecipients.length
   return res.status(202).json({
     success: true,
     async: true,
-    recipientCount: uniqueRecipients.length,
-    message: `Sending email to ${uniqueRecipients.length} recipient${uniqueRecipients.length === 1 ? '' : 's'} in the background. You can leave this page — delivery may take a minute for large lists.`,
+    recipientCount: n,
+    message: `Queued ${n} recipient${n === 1 ? '' : 's'}. Gmail accepts the send first; each recipient’s mail server may still reject later (disabled mailbox, full inbox, etc.) — watch your inbox for bounce notices. You can leave this page — large lists may take a minute.`,
   })
 }
 

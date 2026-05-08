@@ -47,7 +47,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const customMessage = typeof req.body?.message === 'string' ? req.body.message.trim() : ''
 
   const memberships = await prisma.event_volunteers.findMany({
-    where: { eventId, isActive: true, volunteerId: { not: null } },
+    where: {
+      eventId,
+      isActive: true,
+      volunteerId: { not: null },
+      volunteer: { isActive: true },
+    },
     select: {
       volunteer: {
         select: { id: true, firstName: true, email: true }

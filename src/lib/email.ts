@@ -106,10 +106,15 @@ export async function createEmailTransporter() {
 
 // Send email utility
 export async function sendEmail(options: EmailOptions): Promise<void> {
-  const transporter = await createEmailTransporter();
-  
+  const config = await getEmailConfig();
+  if (!config) {
+    throw new Error('Email configuration not available');
+  }
+  const transporter = nodemailer.createTransport(config);
+
   const fromName = process.env.EMAIL_FROM_NAME || 'TheoShift Team';
-  const fromEmail = process.env.EMAIL_FROM || process.env.SMTP_USER;
+  const fromEmail =
+    process.env.EMAIL_FROM || process.env.SMTP_USER || config.auth.user;
 
   const mailOptions = {
     from: `${fromName} <${fromEmail}>`,

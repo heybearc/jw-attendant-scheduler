@@ -2526,7 +2526,9 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Email volunteers</h3>
                 <p className="text-sm text-gray-600 mb-4">
                   Uses your TheoShift email configuration (same as other notifications). Volunteers
-                  without an email on file are skipped.
+                  without an email on file are skipped. “All active” matches this page: roster active
+                  and volunteer profile not deactivated. Sending runs in the background; some
+                  addresses may still bounce afterward if the recipient mailbox is disabled or full.
                 </p>
 
                 <div className="space-y-3 mb-4">

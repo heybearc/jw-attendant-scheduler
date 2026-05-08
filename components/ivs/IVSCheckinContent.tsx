@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/router'
+import { useScrollRestoration } from '../../hooks/useScrollRestoration'
 
 interface IVSVolunteer {
   id: string
@@ -14,6 +16,7 @@ interface IVSCheckinContentProps {
 }
 
 export default function IVSCheckinContent({ event }: IVSCheckinContentProps) {
+  const router = useRouter()
   const eventId = event.id
   const [volunteers, setVolunteers] = useState<IVSVolunteer[]>([])
   const [loading, setLoading] = useState(true)
@@ -22,6 +25,8 @@ export default function IVSCheckinContent({ event }: IVSCheckinContentProps) {
   const [exporting, setExporting] = useState(false)
   const [pendingCollapsed, setPendingCollapsed] = useState(false)
   const [checkedInCollapsed, setCheckedInCollapsed] = useState(false)
+
+  useScrollRestoration(`${router.asPath}:ivs-checkin`, !loading)
 
   useEffect(() => {
     fetchVolunteers()

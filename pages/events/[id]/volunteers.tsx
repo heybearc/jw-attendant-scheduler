@@ -5,8 +5,9 @@ import EventPageWrapper from '../../../components/EventPageWrapper'
 import FilterPresets from '../../../components/FilterPresets'
 import { VolunteerBadges } from '../../../components/VolunteerBadges'
 import VolunteerDetailsPopup from '../../../components/VolunteerDetailsPopup'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/router'
+import { useScrollRestoration } from '../../../hooks/useScrollRestoration'
 
 interface Event {
   id: string
@@ -78,6 +79,9 @@ interface EventVolunteersPageProps {
 
 export default function EventAttendantsPage({ eventId, event, attendants, canManageContent, canEdit, canDelete, canManagePermissions, stats, moduleConfig, terminology }: EventVolunteersPageProps) {
   const router = useRouter()
+  const selectionAnchorIndexRef = useRef<number | null>(null)
+
+  useScrollRestoration(router.asPath, true)
   const [showAddModal, setShowAddModal] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
   const [editingAttendant, setEditingAttendant] = useState<Attendant | null>(null)
@@ -254,9 +258,6 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
   // Helper function to preserve state and reload
   const preserveStateAndReload = () => {
     try {
-      // Save scroll position before reload
-      sessionStorage.setItem('scrollPosition', window.scrollY.toString())
-      
       const url = new URL(window.location.href)
       if (filters.search) url.searchParams.set('search', filters.search)
       if (filters.congregation) url.searchParams.set('congregation', filters.congregation)
@@ -266,21 +267,16 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
       if (filters.formsOfService.length > 0) url.searchParams.set('formsOfService', filters.formsOfService.join(','))
       url.searchParams.set('page', currentPage.toString())
       url.searchParams.set('perPage', itemsPerPage.toString())
+      sessionStorage.setItem(
+        `theoshift:scrollY:${url.pathname}${url.search}`,
+        window.scrollY.toString()
+      )
       window.location.href = url.toString()
     } catch (error) {
       console.error('Error preserving state:', error)
       router.reload()
     }
   }
-
-  // Restore scroll position after page load
-  useEffect(() => {
-    const savedScrollPosition = sessionStorage.getItem('scrollPosition')
-    if (savedScrollPosition) {
-      window.scrollTo(0, parseInt(savedScrollPosition))
-      sessionStorage.removeItem('scrollPosition')
-    }
-  }, [])
 
   // Filter and paginate attendants (using sorted data)
   const filteredAttendants = sortedAttendants.filter(attendant => {
@@ -705,11 +701,35 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
   }
 
   const handleSelectAll = () => {
+    selectionAnchorIndexRef.current = null
     if (selectedAttendants.size === filteredAttendants.length) {
       setSelectedAttendants(new Set())
     } else {
       setSelectedAttendants(new Set(filteredAttendants.map(a => a.associationId)))
     }
+  }
+
+  const handleAttendantCheckboxClick = (
+    e: React.MouseEvent,
+    associationId: string,
+    indexOnPage: number
+  ) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.shiftKey && selectionAnchorIndexRef.current !== null) {
+      const lo = Math.min(selectionAnchorIndexRef.current, indexOnPage)
+      const hi = Math.max(selectionAnchorIndexRef.current, indexOnPage)
+      const ids = paginatedAttendants.slice(lo, hi + 1).map((a) => a.associationId)
+      setSelectedAttendants((prev) => {
+        const next = new Set(prev)
+        ids.forEach((id) => next.add(id))
+        return next
+      })
+      selectionAnchorIndexRef.current = indexOnPage
+      return
+    }
+    selectionAnchorIndexRef.current = indexOnPage
+    handleSelectAttendant(associationId)
   }
 
   const handleBulkEdit = () => {
@@ -1361,7 +1381,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
               <>
                 {/* Mobile-first card list (no horizontal scroll) */}
                 <div className="lg:hidden space-y-3">
-                  {paginatedAttendants.map((attendant) => (
+                  {paginatedAttendants.map((attendant, index) => (
                     <div
                       key={attendant.id}
                       className="border border-gray-200 rounded-lg p-4 shadow-sm"
@@ -1371,7 +1391,9 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                           <input
                             type="checkbox"
                             checked={selectedAttendants.has(attendant.associationId)}
-                            onChange={() => handleSelectAttendant(attendant.associationId)}
+                            onClick={(e) =>
+                              handleAttendantCheckboxClick(e, attendant.associationId, index)
+                            }
                             className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                           />
                         </div>
@@ -1628,13 +1650,15 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200" style={{ position: 'relative' }}>
-                    {paginatedAttendants.map((attendant) => (
+                    {paginatedAttendants.map((attendant, index) => (
                       <tr key={attendant.id} className="hover:bg-gray-50" style={{ position: 'relative' }}>
                         <td className="px-3 py-3 whitespace-nowrap">
                           <input
                             type="checkbox"
                             checked={selectedAttendants.has(attendant.associationId)}
-                            onChange={() => handleSelectAttendant(attendant.associationId)}
+                            onClick={(e) =>
+                              handleAttendantCheckboxClick(e, attendant.associationId, index)
+                            }
                             className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                           />
                         </td>

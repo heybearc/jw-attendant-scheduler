@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/router'
+import { useScrollRestoration } from '../../hooks/useScrollRestoration'
 import EditVolunteerModal from '../EditVolunteerModal'
 import BulkActionModal from '../BulkActionModal'
 import ImportModal from '../ImportModal'
@@ -27,6 +29,8 @@ interface IVSApprovalsContentProps {
 }
 
 export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsContentProps) {
+  const router = useRouter()
+  const selectionAnchorIndexRef = useRef<number | null>(null)
   const eventId = event.id
   const [volunteers, setVolunteers] = useState<IVSVolunteer[]>([])
   const [loading, setLoading] = useState(true)
@@ -55,6 +59,8 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
   useEffect(() => {
     fetchVolunteers()
   }, [])
+
+  useScrollRestoration(`${router.asPath}:ivs-approvals`, !loading)
 
   const fetchVolunteers = async () => {
     try {
@@ -221,6 +227,7 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
   }
 
   const handleSelectAll = () => {
+    selectionAnchorIndexRef.current = null
     if (selectedVolunteers.length === filteredVolunteers.length) {
       setSelectedVolunteers([])
     } else {
@@ -334,6 +341,25 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
     itemsPerPage === -1
       ? sortedVolunteers
       : sortedVolunteers.slice(startIndex, endIndex)
+
+  const handleVolunteerCheckboxClick = (
+    e: React.MouseEvent,
+    volunteerId: string,
+    indexOnPage: number
+  ) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.shiftKey && selectionAnchorIndexRef.current !== null) {
+      const lo = Math.min(selectionAnchorIndexRef.current, indexOnPage)
+      const hi = Math.max(selectionAnchorIndexRef.current, indexOnPage)
+      const ids = paginatedVolunteers.slice(lo, hi + 1).map((v) => v.id)
+      setSelectedVolunteers((prev) => Array.from(new Set([...prev, ...ids])))
+      selectionAnchorIndexRef.current = indexOnPage
+      return
+    }
+    selectionAnchorIndexRef.current = indexOnPage
+    handleSelectVolunteer(volunteerId)
+  }
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
@@ -550,7 +576,7 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
               />
               <span>Select all on this page ({paginatedVolunteers.length})</span>
             </label>
-            {paginatedVolunteers.map((volunteer) => (
+            {paginatedVolunteers.map((volunteer, index) => (
               <div
                 key={volunteer.id}
                 className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm space-y-3"
@@ -559,7 +585,7 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
                   <input
                     type="checkbox"
                     checked={selectedVolunteers.includes(volunteer.id)}
-                    onChange={() => handleSelectVolunteer(volunteer.id)}
+                    onClick={(e) => handleVolunteerCheckboxClick(e, volunteer.id, index)}
                     className="mt-1 h-5 w-5 shrink-0 cursor-pointer"
                   />
                   <div className="min-w-0 flex-1 space-y-1">
@@ -685,13 +711,13 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
                 </tr>
               </thead>
               <tbody>
-                {paginatedVolunteers.map((volunteer) => (
+                {paginatedVolunteers.map((volunteer, index) => (
                   <tr key={volunteer.id} className="hover:bg-gray-50">
                     <td className="px-4 py-2 border">
                       <input
                         type="checkbox"
                         checked={selectedVolunteers.includes(volunteer.id)}
-                        onChange={() => handleSelectVolunteer(volunteer.id)}
+                        onClick={(e) => handleVolunteerCheckboxClick(e, volunteer.id, index)}
                         className="cursor-pointer"
                       />
                     </td>

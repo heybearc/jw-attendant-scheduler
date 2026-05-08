@@ -98,6 +98,9 @@ export default function EditEventPage({ event }: EditEventPageProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showCloneConfirm, setShowCloneConfirm] = useState(false)
   const [activeTab, setActiveTab] = useState<'basic' | 'modules' | 'oversight'>('basic')
+  const [showTabMoreMenu, setShowTabMoreMenu] = useState(false)
+  const [isSmallScreen, setIsSmallScreen] = useState(false)
+  const [tabUsesOverflowMenu, setTabUsesOverflowMenu] = useState(false)
   
   // Module and terminology state (with backward compatibility)
   const [modules, setModules] = useState({
@@ -137,6 +140,34 @@ export default function EditEventPage({ event }: EditEventPageProps) {
     departmentOverseerAssistants: JSON.stringify(event.departmentOverseerAssistants || []),
     keyman: JSON.stringify(event.keyman || [])
   })
+
+  const settingsTabs = [
+    { id: 'basic' as const, label: 'Basic Info' },
+    { id: 'modules' as const, label: 'Modules & Features' },
+    { id: 'oversight' as const, label: 'Oversight Settings' }
+  ]
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const mq = window.matchMedia('(max-width: 639px)') // < sm
+    const sync = () => setIsSmallScreen(mq.matches)
+    sync()
+    mq.addEventListener?.('change', sync)
+    return () => mq.removeEventListener?.('change', sync)
+  }, [])
+
+  useEffect(() => {
+    if (!isSmallScreen) {
+      setTabUsesOverflowMenu(false)
+      setShowTabMoreMenu(false)
+      return
+    }
+
+    // On small screens, avoid hidden horizontal scrolling by defaulting overflow into "More".
+    // With only a few tabs, this still keeps navigation discoverable and one-handed.
+    setTabUsesOverflowMenu(true)
+    setShowTabMoreMenu(false)
+  }, [isSmallScreen])
 
   const [errors, setErrors] = useState<Partial<EventFormData>>({})
   
@@ -614,44 +645,74 @@ export default function EditEventPage({ event }: EditEventPageProps) {
         {/* Tab Navigation */}
         <div className="bg-white shadow rounded-lg mb-6">
           <div className="border-b border-gray-200">
-            <nav
-              className="-mb-px flex gap-6 px-4 sm:px-6 overflow-x-auto min-w-0 theoshift-x-scroll"
-              aria-label="Tabs"
-            >
-              <button
-                type="button"
-                onClick={() => setActiveTab('basic')}
-                className={`${
-                  activeTab === 'basic'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm min-h-[44px] touch-manipulation flex-shrink-0`}
+            {!tabUsesOverflowMenu ? (
+              <nav
+                className="-mb-px flex gap-6 px-4 sm:px-6 overflow-x-auto min-w-0 theoshift-x-scroll"
+                aria-label="Tabs"
               >
-                Basic Info
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('modules')}
-                className={`${
-                  activeTab === 'modules'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm min-h-[44px] touch-manipulation flex-shrink-0`}
-              >
-                Modules & Features
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('oversight')}
-                className={`${
-                  activeTab === 'oversight'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm min-h-[44px] touch-manipulation flex-shrink-0`}
-              >
-                Oversight Settings
-              </button>
-            </nav>
+                {settingsTabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`${
+                      activeTab === tab.id
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm min-h-[44px] touch-manipulation flex-shrink-0`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </nav>
+            ) : (
+              <div className="px-4 sm:px-6 py-2 flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="text-xs text-gray-500">Section</div>
+                  <div className="text-sm font-semibold text-gray-900 truncate">
+                    {settingsTabs.find((t) => t.id === activeTab)?.label || 'Settings'}
+                  </div>
+                </div>
+
+                <div className="relative shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setShowTabMoreMenu((v) => !v)}
+                    className="inline-flex items-center justify-center gap-2 px-3 py-2 min-h-[44px] bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors touch-manipulation"
+                  >
+                    More
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  {showTabMoreMenu && (
+                    <div className="absolute right-0 mt-2 w-64 max-w-[calc(100vw-2rem)] bg-white rounded-lg shadow-lg border border-gray-200 z-20">
+                      {settingsTabs.map((tab) => (
+                        <button
+                          key={tab.id}
+                          type="button"
+                          onClick={() => {
+                            setActiveTab(tab.id)
+                            setShowTabMoreMenu(false)
+                          }}
+                          className={`w-full text-left px-4 py-3 min-h-[44px] text-sm hover:bg-gray-50 flex items-center justify-between touch-manipulation ${
+                            activeTab === tab.id ? 'text-blue-700 font-semibold' : 'text-gray-700'
+                          }`}
+                        >
+                          <span className="min-w-0 truncate">{tab.label}</span>
+                          {activeTab === tab.id && (
+                            <svg className="h-4 w-4 shrink-0 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

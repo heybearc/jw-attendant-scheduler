@@ -81,6 +81,13 @@ export default function MobileFeaturesHelp() {
           Admins and overseers also have a bottom navigation bar when managing events on mobile, with quick access to event sections.
         </p>
 
+        <h3>Event sections (Overview, Positions, Volunteers, …)</h3>
+        <p>
+          On a narrow screen, the row of event tabs is replaced by the current <strong>Section</strong> name and a <strong>More</strong> button.
+          Tap <strong>More</strong> to open a list of every section (Overview, Positions, Volunteers, IVS Module, and so on) and jump without swiping sideways.
+          Event <strong>Settings</strong> uses the same pattern for its own sub-sections.
+        </p>
+
         <h3>Hamburger Menu</h3>
         <p>
           Tap the menu icon (☰) in the top-left corner to access:

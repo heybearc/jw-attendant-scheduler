@@ -213,6 +213,13 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
     }
   }
   const [showBulkEditModal, setShowBulkEditModal] = useState(false)
+  const [showBroadcastEmailModal, setShowBroadcastEmailModal] = useState(false)
+  const [broadcastEmailScope, setBroadcastEmailScope] = useState<'selected' | 'all_active'>(
+    'all_active'
+  )
+  const [broadcastSubject, setBroadcastSubject] = useState('')
+  const [broadcastMessage, setBroadcastMessage] = useState('')
+  const [broadcastSending, setBroadcastSending] = useState(false)
   const [filters, setFilters] = useState<{
     search: string
     congregation: string
@@ -691,13 +698,67 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
 
   // Bulk Edit Functions
   const handleSelectAttendant = (associationId: string) => {
-    const newSelected = new Set(selectedAttendants)
-    if (newSelected.has(associationId)) {
-      newSelected.delete(associationId)
-    } else {
-      newSelected.add(associationId)
+    setSelectedAttendants((prev) => {
+      const next = new Set(prev)
+      if (next.has(associationId)) {
+        next.delete(associationId)
+      } else {
+        next.add(associationId)
+      }
+      return next
+    })
+  }
+
+  const activeVolunteersWithEmailCount = attendants.filter(
+    (a) => a.isActive && (a.email?.trim() ?? '') !== ''
+  ).length
+
+  const openBroadcastEmailModal = (scope: 'selected' | 'all_active') => {
+    setBroadcastEmailScope(scope)
+    setBroadcastSubject('')
+    setBroadcastMessage('')
+    setShowBroadcastEmailModal(true)
+  }
+
+  const handleSendBroadcastEmail = async () => {
+    const subject = broadcastSubject.trim()
+    const message = broadcastMessage.trim()
+    if (!subject || !message) {
+      alert('Please enter a subject and message.')
+      return
     }
-    setSelectedAttendants(newSelected)
+    if (broadcastEmailScope === 'selected' && selectedAttendants.size === 0) {
+      alert('Select at least one volunteer, or choose “All active volunteers”.')
+      return
+    }
+    setBroadcastSending(true)
+    try {
+      const res = await fetch(`/api/events/${eventId}/volunteers/broadcast-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          scope: broadcastEmailScope,
+          associationIds:
+            broadcastEmailScope === 'selected' ? Array.from(selectedAttendants) : [],
+          subject,
+          message,
+        }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        alert(data.error || 'Failed to send email')
+        return
+      }
+      alert(data.message || `Sent to ${data.sent || 0} recipient(s)`)
+      setShowBroadcastEmailModal(false)
+      setBroadcastSubject('')
+      setBroadcastMessage('')
+    } catch (e) {
+      console.error(e)
+      alert('Failed to send email')
+    } finally {
+      setBroadcastSending(false)
+    }
   }
 
   const handleSelectAll = () => {
@@ -1002,6 +1063,22 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                   </svg>
                   Import
                 </button>
+                <button
+                  type="button"
+                  onClick={() => openBroadcastEmailModal('all_active')}
+                  disabled={loading || activeVolunteersWithEmailCount === 0}
+                  title={
+                    activeVolunteersWithEmailCount === 0
+                      ? 'No active volunteers with an email address'
+                      : undefined
+                  }
+                  className="inline-flex items-center px-3 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white text-sm font-medium rounded-md transition-colors"
+                >
+                  <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  Email volunteers
+                </button>
               </div>
             )}
           </div>
@@ -1033,6 +1110,17 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
                     Request Availability
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => openBroadcastEmailModal('selected')}
+                    disabled={loading}
+                    className="inline-flex items-center px-3 py-1.5 bg-white hover:bg-gray-50 text-blue-700 text-sm font-medium rounded-md border border-blue-300 transition-colors"
+                  >
+                    <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    Email selected
                   </button>
                   <button 
                     onClick={() => setSelectedAttendants(new Set())}
@@ -2405,6 +2493,104 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                         📧 Send Requests
                       </>
                     )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Email volunteers (broadcast) */}
+        {showBroadcastEmailModal && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
+            <div className="relative bg-white rounded-lg shadow-xl max-w-lg w-full">
+              <div className="p-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Email volunteers</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Uses your TheoShift email configuration (same as other notifications). Volunteers
+                  without an email on file are skipped.
+                </p>
+
+                <div className="space-y-3 mb-4">
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="broadcast-scope"
+                      className="mt-1"
+                      checked={broadcastEmailScope === 'selected'}
+                      onChange={() => setBroadcastEmailScope('selected')}
+                      disabled={selectedAttendants.size === 0}
+                    />
+                    <span className={selectedAttendants.size === 0 ? 'text-gray-400' : ''}>
+                      Selected volunteers ({selectedAttendants.size} row
+                      {selectedAttendants.size !== 1 ? 's' : ''})
+                      {selectedAttendants.size === 0 && ' — select rows in the table first'}
+                    </span>
+                  </label>
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="broadcast-scope"
+                      className="mt-1"
+                      checked={broadcastEmailScope === 'all_active'}
+                      onChange={() => setBroadcastEmailScope('all_active')}
+                      disabled={activeVolunteersWithEmailCount === 0}
+                    />
+                    <span className={activeVolunteersWithEmailCount === 0 ? 'text-gray-400' : ''}>
+                      All active volunteers with an email ({activeVolunteersWithEmailCount})
+                    </span>
+                  </label>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                    <input
+                      type="text"
+                      value={broadcastSubject}
+                      onChange={(e) => setBroadcastSubject(e.target.value)}
+                      maxLength={200}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      placeholder="e.g. Update about convention assignments"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                    <textarea
+                      value={broadcastMessage}
+                      onChange={(e) => setBroadcastMessage(e.target.value)}
+                      rows={6}
+                      maxLength={15000}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      placeholder="Plain text — line breaks are preserved."
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowBroadcastEmailModal(false)
+                      setBroadcastSubject('')
+                      setBroadcastMessage('')
+                    }}
+                    disabled={broadcastSending}
+                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50 min-h-[44px]"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSendBroadcastEmail}
+                    disabled={
+                      broadcastSending ||
+                      (broadcastEmailScope === 'selected' && selectedAttendants.size === 0) ||
+                      (broadcastEmailScope === 'all_active' && activeVolunteersWithEmailCount === 0)
+                    }
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 min-h-[44px]"
+                  >
+                    {broadcastSending ? 'Sending…' : 'Send email'}
                   </button>
                 </div>
               </div>

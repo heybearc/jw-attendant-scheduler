@@ -326,10 +326,14 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
     }
   })
 
-  const totalPages = Math.ceil(sortedVolunteers.length / itemsPerPage)
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const endIndex = startIndex + itemsPerPage
-  const paginatedVolunteers = sortedVolunteers.slice(startIndex, endIndex)
+  const totalPages =
+    itemsPerPage === -1 ? 1 : Math.ceil(sortedVolunteers.length / itemsPerPage) || 1
+  const startIndex = itemsPerPage === -1 ? 0 : (currentPage - 1) * itemsPerPage
+  const endIndex = itemsPerPage === -1 ? sortedVolunteers.length : startIndex + itemsPerPage
+  const paginatedVolunteers =
+    itemsPerPage === -1
+      ? sortedVolunteers
+      : sortedVolunteers.slice(startIndex, endIndex)
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
@@ -480,11 +484,44 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
         )}
       </div>
 
-      {/* Results Summary */}
+      {/* Results Summary + page size (always visible when there are results) */}
       {!loading && sortedVolunteers.length > 0 && (
-        <div className="mb-4 text-sm text-gray-600">
-          Showing {startIndex + 1}-{Math.min(endIndex, sortedVolunteers.length)} of {sortedVolunteers.length} volunteer(s)
-          {sortedVolunteers.length !== volunteers.length && ` (filtered from ${volunteers.length} total)`}
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between text-sm text-gray-600">
+          <div>
+            Showing{' '}
+            {itemsPerPage === -1 ? (
+              <>
+                all {sortedVolunteers.length} volunteer{sortedVolunteers.length !== 1 ? 's' : ''}
+              </>
+            ) : (
+              <>
+                {startIndex + 1}-{Math.min(endIndex, sortedVolunteers.length)} of {sortedVolunteers.length}{' '}
+                volunteer{sortedVolunteers.length !== 1 ? 's' : ''}
+              </>
+            )}
+            {sortedVolunteers.length !== volunteers.length && ` (filtered from ${volunteers.length} total)`}
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <label htmlFor="ivs-approvals-page-size" className="text-gray-700 whitespace-nowrap">
+              Per page:
+            </label>
+            <select
+              id="ivs-approvals-page-size"
+              value={itemsPerPage}
+              onChange={(e) => {
+                setItemsPerPage(parseInt(e.target.value, 10))
+                setCurrentPage(1)
+              }}
+              className="min-h-[44px] sm:min-h-0 border border-gray-300 rounded-md px-2 py-2 sm:py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+              <option value={-1}>All</option>
+            </select>
+          </div>
         </div>
       )}
 
@@ -734,7 +771,7 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
             </table>
           </div>
 
-          {totalPages > 1 && (
+          {itemsPerPage !== -1 && totalPages > 1 && (
             <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
               <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
                 <button

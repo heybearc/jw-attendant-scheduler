@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { signIn, getSession, useSession, signOut, getCsrfToken } from 'next-auth/react'
 import { useRouter } from 'next/router'
 import { GetServerSideProps } from 'next'
-import Link from 'next/link'
 
 type UserRole = 'oversight' | 'volunteer'
 
@@ -44,11 +43,6 @@ export default function SignIn() {
   
   // Volunteer email form
   const [volunteerEmail, setVolunteerEmail] = useState('')
-  const [volunteerAuthMethod, setVolunteerAuthMethod] = useState<'email' | 'pin'>('email')
-  const [volunteerPinFirstName, setVolunteerPinFirstName] = useState('')
-  const [volunteerPinLastName, setVolunteerPinLastName] = useState('')
-  const [volunteerPinCongregation, setVolunteerPinCongregation] = useState('')
-  const [volunteerPinValue, setVolunteerPinValue] = useState('')
 
   // Load saved role preference and handle URL params
   useEffect(() => {
@@ -73,12 +67,6 @@ export default function SignIn() {
     localStorage.setItem('loginRole', newRole)
     setError('')
     setEmailSent(false)
-    setVolunteerAuthMethod('email')
-  }
-
-  const handleVolunteerAuthMethodChange = (method: 'email' | 'pin') => {
-    setVolunteerAuthMethod(method)
-    setError('')
   }
 
   const handleOversightSubmit = async (e: React.FormEvent) => {
@@ -130,36 +118,6 @@ export default function SignIn() {
         setLoading(false)
       }
     } catch (error) {
-      setError('An error occurred. Please try again.')
-      setLoading(false)
-    }
-  }
-
-  const handleVolunteerPinSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
-
-    try {
-      const result = await signIn('volunteer-pin', {
-        firstName: volunteerPinFirstName.trim(),
-        lastName: volunteerPinLastName.trim(),
-        congregation: volunteerPinCongregation.trim(),
-        pin: volunteerPinValue,
-        redirect: false,
-      })
-
-      if (result?.error) {
-        setError('Could not sign in. Check your name, congregation, and PIN.')
-        setLoading(false)
-        return
-      }
-
-      const callbackUrl = router.query.callbackUrl as string | undefined
-      const destination =
-        callbackUrl && callbackUrl.startsWith('/') ? callbackUrl : '/volunteer/select-event'
-      router.push(destination)
-    } catch {
       setError('An error occurred. Please try again.')
       setLoading(false)
     }
@@ -383,176 +341,56 @@ export default function SignIn() {
           {/* Volunteer Login Form */}
           {role === 'volunteer' && (
             <>
-              <div className="flex rounded-lg bg-gray-100 p-1 mb-4">
+              <form onSubmit={handleVolunteerEmailSubmit} className="space-y-4">
+                <div>
+                  <label htmlFor="volunteer-email" className="block text-sm font-semibold text-gray-700 mb-2">
+                    Email Address
+                  </label>
+                  <input
+                    id="volunteer-email"
+                    type="email"
+                    required
+                    value={volunteerEmail}
+                    onChange={(e) => setVolunteerEmail(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors duration-200 bg-gray-50 focus:bg-white text-base"
+                    placeholder="your.email@example.com"
+                  />
+                </div>
+
+                <div className="bg-blue-50 border-l-4 border-blue-400 p-4">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm text-blue-700">
+                        We&apos;ll send you a secure sign-in link. Click it to access your dashboard.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {error && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                    <div className="flex items-center">
+                      <svg className="h-5 w-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <p className="text-red-700 text-sm font-medium">{error}</p>
+                    </div>
+                  </div>
+                )}
+
                 <button
-                  type="button"
-                  onClick={() => handleVolunteerAuthMethodChange('email')}
-                  className={`flex-1 py-3 px-4 rounded-md text-sm font-medium transition-all ${
-                    volunteerAuthMethod === 'email'
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
+                  type="submit"
+                  disabled={loading}
+                  className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-base font-semibold text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                 >
-                  Email Link
+                  {loading ? 'Sending...' : 'Send Sign-In Link'}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => handleVolunteerAuthMethodChange('pin')}
-                  className={`flex-1 py-3 px-4 rounded-md text-sm font-medium transition-all ${
-                    volunteerAuthMethod === 'pin'
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  PIN Login
-                </button>
-              </div>
-
-              {volunteerAuthMethod === 'email' ? (
-                <form onSubmit={handleVolunteerEmailSubmit} className="space-y-4">
-                  <div>
-                    <label htmlFor="volunteer-email" className="block text-sm font-semibold text-gray-700 mb-2">
-                      Email Address
-                    </label>
-                    <input
-                      id="volunteer-email"
-                      type="email"
-                      required
-                      value={volunteerEmail}
-                      onChange={(e) => setVolunteerEmail(e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors duration-200 bg-gray-50 focus:bg-white text-base"
-                      placeholder="your.email@example.com"
-                    />
-                  </div>
-
-                  <div className="bg-blue-50 border-l-4 border-blue-400 p-4">
-                    <div className="flex">
-                      <div className="flex-shrink-0">
-                        <svg className="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                      <div className="ml-3 space-y-2">
-                        <p className="text-sm text-blue-700">
-                          We&apos;ll send you a secure sign-in link. Each link works once; after you sign out, use PIN
-                          Login or request a new email link.
-                        </p>
-                        <p className="text-xs text-blue-700">
-                          Tip: bookmark{' '}
-                          <Link href="/volunteer/login" className="font-medium underline">
-                            /volunteer/login
-                          </Link>{' '}
-                          and sign back in with your PIN anytime.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {error && (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                      <div className="flex items-center">
-                        <svg className="h-5 w-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <p className="text-red-700 text-sm font-medium">{error}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-base font-semibold text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-                  >
-                    {loading ? 'Sending...' : 'Send Sign-In Link'}
-                  </button>
-                </form>
-              ) : (
-                <form onSubmit={handleVolunteerPinSubmit} className="space-y-4">
-                  <div>
-                    <label htmlFor="firstName" className="block text-sm font-semibold text-gray-700 mb-2">
-                      First Name
-                    </label>
-                    <input
-                      id="firstName"
-                      type="text"
-                      required
-                      autoComplete="given-name"
-                      value={volunteerPinFirstName}
-                      onChange={(e) => setVolunteerPinFirstName(e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors duration-200 bg-gray-50 focus:bg-white text-base"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="lastName" className="block text-sm font-semibold text-gray-700 mb-2">
-                      Last Name
-                    </label>
-                    <input
-                      id="lastName"
-                      type="text"
-                      required
-                      autoComplete="family-name"
-                      value={volunteerPinLastName}
-                      onChange={(e) => setVolunteerPinLastName(e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors duration-200 bg-gray-50 focus:bg-white text-base"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="congregation" className="block text-sm font-semibold text-gray-700 mb-2">
-                      Congregation
-                    </label>
-                    <input
-                      id="congregation"
-                      type="text"
-                      required
-                      autoComplete="organization"
-                      value={volunteerPinCongregation}
-                      onChange={(e) => setVolunteerPinCongregation(e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors duration-200 bg-gray-50 focus:bg-white text-base"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="pin" className="block text-sm font-semibold text-gray-700 mb-2">
-                      PIN
-                    </label>
-                    <input
-                      id="pin"
-                      type="password"
-                      required
-                      autoComplete="current-password"
-                      value={volunteerPinValue}
-                      onChange={(e) => setVolunteerPinValue(e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors duration-200 bg-gray-50 focus:bg-white text-base"
-                    />
-                  </div>
-
-                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                    <p className="text-xs text-gray-600">
-                      Use the PIN your coordinator set for you. You can return here after signing out without waiting for
-                      another email.
-                    </p>
-                  </div>
-
-                  {error && (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                      <div className="flex items-center">
-                        <svg className="h-5 w-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <p className="text-red-700 text-sm font-medium">{error}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-base font-semibold text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-                  >
-                    {loading ? 'Signing in...' : 'Sign In'}
-                  </button>
-                </form>
-              )}
+              </form>
 
               {/* Support Contact */}
               <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg">

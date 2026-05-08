@@ -614,7 +614,10 @@ export default function EditEventPage({ event }: EditEventPageProps) {
         {/* Tab Navigation */}
         <div className="bg-white shadow rounded-lg mb-6">
           <div className="border-b border-gray-200">
-            <nav className="-mb-px flex space-x-8 px-6" aria-label="Tabs">
+            <nav
+              className="-mb-px flex gap-6 px-4 sm:px-6 overflow-x-auto min-w-0 theoshift-x-scroll"
+              aria-label="Tabs"
+            >
               <button
                 type="button"
                 onClick={() => setActiveTab('basic')}
@@ -622,7 +625,7 @@ export default function EditEventPage({ event }: EditEventPageProps) {
                   activeTab === 'basic'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm min-h-[44px] touch-manipulation flex-shrink-0`}
               >
                 Basic Info
               </button>
@@ -633,7 +636,7 @@ export default function EditEventPage({ event }: EditEventPageProps) {
                   activeTab === 'modules'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm min-h-[44px] touch-manipulation flex-shrink-0`}
               >
                 Modules & Features
               </button>
@@ -644,7 +647,7 @@ export default function EditEventPage({ event }: EditEventPageProps) {
                   activeTab === 'oversight'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm min-h-[44px] touch-manipulation flex-shrink-0`}
               >
                 Oversight Settings
               </button>

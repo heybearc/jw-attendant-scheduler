@@ -1050,33 +1050,53 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
               
               {/* Quick Filters */}
               <div className="flex flex-wrap items-center gap-2">
-                <select
-                  value={filters.overseerId}
-                  onChange={(e) => setFilters({ ...filters, overseerId: e.target.value })}
-                  className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                >
-                  <option value="">All Overseers</option>
-                  <option value="none">No Overseer</option>
-                  {attendants.filter(att => att.isActive && att.isOverseer).map(overseer => (
-                    <option key={overseer.id} value={overseer.id}>
-                      {overseer.firstName} {overseer.lastName}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative w-full sm:w-auto">
+                  <select
+                    value={filters.overseerId}
+                    onChange={(e) => setFilters({ ...filters, overseerId: e.target.value })}
+                    className="w-full px-3 py-2 pr-10 min-h-[44px] border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 appearance-none"
+                  >
+                    <option value="">All Overseers</option>
+                    <option value="none">No Overseer</option>
+                    {attendants.filter(att => att.isActive && att.isOverseer).map(overseer => (
+                      <option key={overseer.id} value={overseer.id}>
+                        {overseer.firstName} {overseer.lastName}
+                      </option>
+                    ))}
+                  </select>
+                  <svg
+                    className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
                 
-                <select
-                  value={filters.keymanId}
-                  onChange={(e) => setFilters({ ...filters, keymanId: e.target.value })}
-                  className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                >
-                  <option value="">All Keymen</option>
-                  <option value="none">No Keyman</option>
-                  {attendants.filter(att => att.isActive && att.isKeyman).map(keyman => (
-                    <option key={keyman.id} value={keyman.id}>
-                      {keyman.firstName} {keyman.lastName}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative w-full sm:w-auto">
+                  <select
+                    value={filters.keymanId}
+                    onChange={(e) => setFilters({ ...filters, keymanId: e.target.value })}
+                    className="w-full px-3 py-2 pr-10 min-h-[44px] border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 appearance-none"
+                  >
+                    <option value="">All Keymen</option>
+                    <option value="none">No Keyman</option>
+                    {attendants.filter(att => att.isActive && att.isKeyman).map(keyman => (
+                      <option key={keyman.id} value={keyman.id}>
+                        {keyman.firstName} {keyman.lastName}
+                      </option>
+                    ))}
+                  </select>
+                  <svg
+                    className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
                 
                 {/* Filter Presets Button */}
                 <FilterPresets

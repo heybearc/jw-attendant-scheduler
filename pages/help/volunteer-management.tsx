@@ -36,10 +36,13 @@ export default function VolunteerManagementHelp({ userRole }: VolunteerManagemen
             (near Add / Import) to message <strong>all active volunteers</strong> who have an email on file, or
             select rows and use <strong>Email selected</strong> in the blue toolbar.
           </p>
-          <p className="text-gray-700 mb-0">
+          <p className="text-gray-700 mb-4">
             Enter a subject and message; TheoShift sends through your organization&apos;s configured email
             settings. To select several rows at once on one page, click one checkbox, then hold{' '}
             <strong>Shift</strong> and click another to include everyone in between.
+          </p>
+          <p className="text-gray-700 mb-0">
+            &quot;All active&quot; matches volunteers who are marked active on the roster and have an email—same idea as the Active filter on the list. Large sends may take a little while; wait for the confirmation message when finished.
           </p>
         </section>
 

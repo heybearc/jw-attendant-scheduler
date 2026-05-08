@@ -119,6 +119,17 @@ export default function MobileFeaturesHelp() {
           A shadow indicator shows when there's more content to scroll.
         </p>
 
+        <h3>Selecting several volunteers at once</h3>
+        <p>
+          On the <strong>Volunteers</strong> list and <strong>IVS Approvals</strong>, click one checkbox, then hold <strong>Shift</strong> and click another checkbox to select everyone in between on the <strong>current page</strong>.
+          This works on both card view and the full table.
+        </p>
+
+        <h3>Staying in place after you refresh</h3>
+        <p>
+          When you use your browser&apos;s refresh, TheoShift remembers your scroll position on long lists (including Volunteers and IVS) so you land back where you were reading.
+        </p>
+
         <hr />
 
         <h2>👆 Touch Gestures</h2>

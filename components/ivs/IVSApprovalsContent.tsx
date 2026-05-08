@@ -31,6 +31,8 @@ interface IVSApprovalsContentProps {
 export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsContentProps) {
   const router = useRouter()
   const selectionAnchorIndexRef = useRef<number | null>(null)
+  /** Shift-range is handled on mousedown; skip the following click so we don't toggle the endpoint twice. */
+  const suppressCheckboxClickRef = useRef(false)
   const eventId = event.id
   const [volunteers, setVolunteers] = useState<IVSVolunteer[]>([])
   const [loading, setLoading] = useState(true)
@@ -342,21 +344,36 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
       ? sortedVolunteers
       : sortedVolunteers.slice(startIndex, endIndex)
 
+  const shiftModifier = (e: React.MouseEvent) =>
+    e.shiftKey || !!(e.nativeEvent as MouseEvent).shiftKey
+
+  const handleVolunteerCheckboxMouseDown = (
+    e: React.MouseEvent,
+    indexOnPage: number
+  ) => {
+    if (!shiftModifier(e) || selectionAnchorIndexRef.current === null) return
+    e.preventDefault()
+    suppressCheckboxClickRef.current = true
+    const lo = Math.min(selectionAnchorIndexRef.current, indexOnPage)
+    const hi = Math.max(selectionAnchorIndexRef.current, indexOnPage)
+    const ids = paginatedVolunteers.slice(lo, hi + 1).map((v) => v.id)
+    setSelectedVolunteers((prev) => Array.from(new Set([...prev, ...ids])))
+    selectionAnchorIndexRef.current = indexOnPage
+  }
+
   const handleVolunteerCheckboxClick = (
     e: React.MouseEvent,
     volunteerId: string,
     indexOnPage: number
   ) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (e.shiftKey && selectionAnchorIndexRef.current !== null) {
-      const lo = Math.min(selectionAnchorIndexRef.current, indexOnPage)
-      const hi = Math.max(selectionAnchorIndexRef.current, indexOnPage)
-      const ids = paginatedVolunteers.slice(lo, hi + 1).map((v) => v.id)
-      setSelectedVolunteers((prev) => Array.from(new Set([...prev, ...ids])))
-      selectionAnchorIndexRef.current = indexOnPage
+    if (suppressCheckboxClickRef.current) {
+      suppressCheckboxClickRef.current = false
+      e.preventDefault()
+      e.stopPropagation()
       return
     }
+    e.preventDefault()
+    e.stopPropagation()
     selectionAnchorIndexRef.current = indexOnPage
     handleSelectVolunteer(volunteerId)
   }
@@ -585,6 +602,7 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
                   <input
                     type="checkbox"
                     checked={selectedVolunteers.includes(volunteer.id)}
+                    onMouseDown={(e) => handleVolunteerCheckboxMouseDown(e, index)}
                     onClick={(e) => handleVolunteerCheckboxClick(e, volunteer.id, index)}
                     className="mt-1 h-5 w-5 shrink-0 cursor-pointer"
                   />
@@ -717,6 +735,7 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
                       <input
                         type="checkbox"
                         checked={selectedVolunteers.includes(volunteer.id)}
+                        onMouseDown={(e) => handleVolunteerCheckboxMouseDown(e, index)}
                         onClick={(e) => handleVolunteerCheckboxClick(e, volunteer.id, index)}
                         className="cursor-pointer"
                       />

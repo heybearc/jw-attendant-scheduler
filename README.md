@@ -276,6 +276,7 @@ For issues or questions:
 
 ## 📝 Version History
 
+- **v4.21.6** (2026-05-08) - Volunteer broadcast email: reliable delivery for selected rows; clearer errors when email cannot be sent
 - **v4.21.5** (2026-05-08) - Event volunteer email broadcast; checkbox multi-select fixes; IVS Approvals shift-click range selection reliability
 - **v4.21.4** (2026-05-08) - IVS Approvals per-page control; scroll position survives refresh on Volunteers and IVS; Shift+click range selection on Volunteers and IVS Approvals
 - **v4.21.3** (2026-05-08) - Mobile event navigation (Section + More for event tabs and settings); volunteers/positions pages tuned for small screens (cards, tap targets, filter controls)

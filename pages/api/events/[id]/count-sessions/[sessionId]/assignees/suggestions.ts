@@ -1,12 +1,11 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../../../../../src/lib/prisma'
 import { blockSimulatedMutation, getSessionUser, isPrivilegedCounterRole } from '@/lib/countAssignments'
-
-function toMinutesFromClock(clock: string | null | undefined): number {
-  if (!clock || !clock.includes(':')) return Number.POSITIVE_INFINITY
-  const [h, m] = clock.split(':').map(Number)
-  return (h * 60) + m
-}
+import {
+  compareSuggestionRank,
+  countSessionToTargetMinutes,
+  suggestionRankForAssignment,
+} from '@/lib/countTimeSuggestions'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -45,15 +44,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const assignments = await prisma.position_assignments.findMany({
-    where: { positionId: { in: positionIds } },
+    where: {
+      positionId: { in: positionIds },
+      role: { in: ['VOLUNTEER', 'ATTENDANT'] },
+    },
     include: {
       shift: { select: { startTime: true, endTime: true, isAllDay: true } }
     }
   })
 
-  const targetMinutes = countSession.countTime
-    ? countSession.countTime.getHours() * 60 + countSession.countTime.getMinutes()
-    : Number.POSITIVE_INFINITY
+  const targetMinutes = countSessionToTargetMinutes(countSession.countTime)
 
   const suggested: Array<{ positionId: string; volunteerId: string }> = []
   for (const position of positions) {
@@ -61,16 +61,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (candidates.length === 0) continue
 
     const ranked = candidates
-      .map((assignment) => {
-        if (assignment.shift?.isAllDay) {
-          return { assignment, score: 0 }
-        }
-        const start = toMinutesFromClock(assignment.shift?.startTime)
-        const end = toMinutesFromClock(assignment.shift?.endTime)
-        const center = Number.isFinite(start) && Number.isFinite(end) ? Math.floor((start + end) / 2) : start
-        return { assignment, score: Math.abs(center - targetMinutes) }
-      })
-      .sort((a, b) => a.score - b.score)
+      .map((assignment) => ({
+        assignment,
+        rank: suggestionRankForAssignment(targetMinutes, assignment.shift),
+      }))
+      .sort((a, b) => compareSuggestionRank(a.rank, b.rank))
 
     if (ranked[0]) {
       suggested.push({ positionId: position.id, volunteerId: ranked[0].assignment.volunteerId })

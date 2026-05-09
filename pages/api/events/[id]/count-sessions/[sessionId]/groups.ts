@@ -2,6 +2,11 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { z } from 'zod'
 import { prisma } from '../../../../../../src/lib/prisma'
 import { blockSimulatedMutation, getSessionUser, isPrivilegedCounterRole } from '@/lib/countAssignments'
+import {
+  compareSuggestionRank,
+  countSessionToTargetMinutes,
+  suggestionRankForAssignment,
+} from '@/lib/countTimeSuggestions'
 
 const putGroupsSchema = z.object({
   groups: z.array(z.object({
@@ -12,12 +17,6 @@ const putGroupsSchema = z.object({
     positionIds: z.array(z.string().uuid()).min(1)
   }))
 })
-
-function toMinutes(clock: string | null | undefined): number {
-  if (!clock || !clock.includes(':')) return Number.POSITIVE_INFINITY
-  const [h, m] = clock.split(':').map(Number)
-  return (h * 60) + m
-}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -55,7 +54,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         orderBy: { positionNumber: 'asc' }
       }),
       prisma.position_assignments.findMany({
-        where: { positions: { eventId } },
+        where: {
+          positions: { eventId },
+          role: { in: ['VOLUNTEER', 'ATTENDANT'] },
+        },
         include: {
           volunteer: { select: { id: true, firstName: true, lastName: true } },
           shift: { select: { startTime: true, endTime: true, isAllDay: true } }
@@ -63,21 +65,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
     ])
 
-    const targetMinutes = countSession.countTime
-      ? countSession.countTime.getHours() * 60 + countSession.countTime.getMinutes()
-      : Number.POSITIVE_INFINITY
+    const targetMinutes = countSessionToTargetMinutes(countSession.countTime)
 
     const suggestionsByPosition = new Map<string, Array<{ id: string; name: string }>>()
     positions.forEach((position) => {
       const ranked = assignments
         .filter((a) => a.positionId === position.id)
-        .map((a) => {
-          const score = a.shift?.isAllDay
-            ? 0
-            : Math.abs(((toMinutes(a.shift?.startTime) + toMinutes(a.shift?.endTime)) / 2) - targetMinutes)
-          return { a, score }
-        })
-        .sort((x, y) => x.score - y.score)
+        .map((a) => ({
+          a,
+          rank: suggestionRankForAssignment(targetMinutes, a.shift),
+        }))
+        .sort((x, y) => compareSuggestionRank(x.rank, y.rank))
       suggestionsByPosition.set(position.id, ranked.map((item) => ({
         id: item.a.volunteer.id,
         name: `${item.a.volunteer.firstName} ${item.a.volunteer.lastName}`

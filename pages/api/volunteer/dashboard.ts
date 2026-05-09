@@ -296,7 +296,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       sessionIds.length === 0
         ? []
         : await prisma.count_session_position_assignees.findMany({
-            where: { countSessionId: { in: sessionIds } },
+            // Suggested rows (from "Apply suggestions") are draft until overseer confirms.
+            where: { countSessionId: { in: sessionIds }, isSuggested: false },
             select: { countSessionId: true, positionId: true, volunteerId: true }
           })
 

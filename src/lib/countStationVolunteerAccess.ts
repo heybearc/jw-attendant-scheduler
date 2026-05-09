@@ -11,7 +11,7 @@ type ShiftLike = {
   isAllDay: boolean
 } | null
 
-type AssigneeRow = { volunteerId: string }
+type AssigneeRow = { volunteerId: string; isSuggested?: boolean }
 
 type CandidateAssignment = {
   volunteerId: string
@@ -31,11 +31,12 @@ export async function volunteerCanEnterStationCount(params: {
   const { eventId, countSessionId, positionId, volunteerId } = params
 
   const explicitMine = await prisma.count_session_position_assignees.findFirst({
-    where: { countSessionId, positionId, volunteerId },
+    where: { countSessionId, positionId, volunteerId, isSuggested: false },
     select: { id: true },
   })
   if (explicitMine) return true
 
+  // Any assignee row (including draft suggestions) blocks shift-based ranking for this station.
   const hasAnyForStation = await prisma.count_session_position_assignees.findFirst({
     where: { countSessionId, positionId },
     select: { id: true },
@@ -107,7 +108,8 @@ export function volunteerMayCountStationFromPreloaded(params: {
     volunteerHasLegacyAssignment,
   } = params
 
-  if (assigneesAtStation.some((a) => a.volunteerId === volunteerId)) return true
+  const confirmedAtStation = assigneesAtStation.filter((a) => !a.isSuggested)
+  if (confirmedAtStation.some((a) => a.volunteerId === volunteerId)) return true
   if (assigneesAtStation.length > 0) return false
   if (fallbackEnabled && volunteerHasLegacyAssignment) return true
 

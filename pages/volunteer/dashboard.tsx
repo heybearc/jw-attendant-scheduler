@@ -793,7 +793,7 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
   const handleSubmitCount = async (sessionId: string) => {
     const countValue = countValues.get(sessionId) || ''
     const sessionMeta = dashboardData?.activeCountSessions?.find((s) => s.id === sessionId)
-    const targetPositionId = sessionMeta?.positionIds?.[0] || dashboardData?.assignments?.[0]?.positionId
+    const targetPositionId = sessionMeta?.positionIds?.[0]
     if (!countValue || !targetPositionId) {
       return
     }

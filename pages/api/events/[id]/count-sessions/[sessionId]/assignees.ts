@@ -95,7 +95,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 congregation: item.candidate.volunteer.congregation
               })),
               assignees: (byPosition.get(position.id) || []).filter((entry) => (
-                privileged ? true : entry.volunteerId === ownVolunteerId
+                privileged
+                  ? true
+                  : entry.volunteerId === ownVolunteerId && !entry.isSuggested
               ))
             }
           }).filter((position) => privileged || position.assignees.length > 0)

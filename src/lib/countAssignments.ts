@@ -60,7 +60,8 @@ export async function isVolunteerAssignedToSessionPosition(
     where: {
       countSessionId,
       positionId,
-      volunteerId
+      volunteerId,
+      isSuggested: false
     },
     select: { id: true }
   })

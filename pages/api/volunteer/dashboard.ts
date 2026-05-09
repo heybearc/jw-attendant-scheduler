@@ -1,8 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../src/lib/prisma'
 import { toDateOnlyStringUTC } from '../../../src/lib/calendarDate'
-import { volunteerMayCountStationFromPreloaded } from '@/lib/countStationVolunteerAccess'
-
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ success: false, error: 'Method not allowed' })
@@ -272,9 +270,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
-    // Station-level counts: same rules as POST .../count-sessions/[sessionId]/counts (volunteerCanEnterStationCount).
-    const fallbackEnabled = process.env.COUNT_ASSIGNMENTS_FALLBACK === 'true'
-
+    // Station-level counts on the volunteer dashboard: only volunteers explicitly listed in
+    // count_session_position_assignees for that session/station. (Suggestion winners and legacy
+    // assignment fallback stay available on the dedicated enter-count page / POST handler.)
     const activeSessions = await prisma.count_sessions.findMany({
       where: {
         eventId: eventId as string,
@@ -294,62 +292,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const sessionIds = activeSessions.map((s) => s.id)
 
-    const activePositions = await prisma.positions.findMany({
-      where: { eventId: eventId as string, isActive: true },
-      select: { id: true },
-      orderBy: { positionNumber: 'asc' }
-    })
-    const activePositionIds = activePositions.map((p) => p.id)
-
-    const [assigneesForSessions, volunteerPositionRows, staffForSuggestions] = await Promise.all([
+    const assigneesForSessions =
       sessionIds.length === 0
-        ? Promise.resolve([] as Array<{ countSessionId: string; positionId: string; volunteerId: string }>)
-        : prisma.count_session_position_assignees.findMany({
+        ? []
+        : await prisma.count_session_position_assignees.findMany({
             where: { countSessionId: { in: sessionIds } },
             select: { countSessionId: true, positionId: true, volunteerId: true }
-          }),
-      prisma.position_assignments.findMany({
-        where: {
-          volunteerId: volunteerId as string,
-          positions: { eventId: eventId as string }
-        },
-        select: { positionId: true }
-      }),
-      activePositionIds.length === 0
-        ? Promise.resolve(
-            [] as Array<{
-              positionId: string
-              volunteerId: string
-              shift: { startTime: string | null; endTime: string | null; isAllDay: boolean } | null
-            }>
-          )
-        : prisma.position_assignments.findMany({
-            where: {
-              positionId: { in: activePositionIds },
-              role: { in: ['VOLUNTEER', 'ATTENDANT'] }
-            },
-            select: {
-              positionId: true,
-              volunteerId: true,
-              shift: { select: { startTime: true, endTime: true, isAllDay: true } }
-            }
           })
-    ])
-
-    const volunteerPositionSet = new Set(volunteerPositionRows.map((r) => r.positionId))
-
-    const suggestionCandidatesByPosition = new Map<
-      string,
-      Array<{
-        volunteerId: string
-        shift: { startTime: string | null; endTime: string | null; isAllDay: boolean } | null
-      }>
-    >()
-    for (const a of staffForSuggestions) {
-      const list = suggestionCandidatesByPosition.get(a.positionId) || []
-      list.push({ volunteerId: a.volunteerId, shift: a.shift })
-      suggestionCandidatesByPosition.set(a.positionId, list)
-    }
 
     const assigneesBySession = new Map<string, typeof assigneesForSessions>()
     for (const row of assigneesForSessions) {
@@ -360,35 +309,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const vid = volunteerId as string
 
-    // Drop station-level tasks for positions that are already covered by a count group for this volunteer.
     const activeCountSessions = activeSessions
       .map((session) => {
         const rows = assigneesBySession.get(session.id) || []
-
-        const positionIds: string[] = []
-        for (const p of activePositions) {
-          const assigneesAtStation = rows
-            .filter((r) => r.positionId === p.id)
-            .map((r) => ({ volunteerId: r.volunteerId }))
-
-          const ok = volunteerMayCountStationFromPreloaded({
-            sessionCountTime: session.countTime,
-            volunteerId: vid,
-            assigneesAtStation,
-            suggestionCandidates: suggestionCandidatesByPosition.get(p.id) ?? [],
-            fallbackEnabled,
-            volunteerHasLegacyAssignment: volunteerPositionSet.has(p.id)
-          })
-          if (ok) positionIds.push(p.id)
-        }
-
-        const filtered = positionIds.filter((pid) => !groupPositionKeys.has(`${session.id}:${pid}`))
+        const positionIds = [
+          ...new Set(
+            rows
+              .filter((r) => r.volunteerId === vid)
+              .map((r) => r.positionId)
+              .filter((pid) => !groupPositionKeys.has(`${session.id}:${pid}`))
+          )
+        ]
         return {
           id: session.id,
           sessionName: session.sessionName,
           countTime: session.countTime,
           status: session.status,
-          positionIds: filtered
+          positionIds
         }
       })
       .filter((session) => session.positionIds.length > 0)

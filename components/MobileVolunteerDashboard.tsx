@@ -45,7 +45,7 @@ interface OversightContact {
 interface CountSession {
   id: string
   sessionName: string
-  countTime: string
+  countTime: string | null
   status: string
 }
 
@@ -129,13 +129,21 @@ export default function MobileVolunteerDashboard({
     if (!time || time === 'All Day') return 'All Day'
     try {
       const [hours, minutes] = time.split(':')
-      const hour = parseInt(hours)
+      const hour = parseInt(hours, 10)
       const ampm = hour >= 12 ? 'PM' : 'AM'
       const displayHour = hour % 12 || 12
       return `${displayHour}:${minutes} ${ampm}`
     } catch {
       return time
     }
+  }
+
+  /** Count sessions send ISO datetimes from the API; shift strings use formatTime above. */
+  const formatCountDateTime = (iso: string | null | undefined) => {
+    if (!iso) return null
+    const d = new Date(iso)
+    if (Number.isNaN(d.getTime())) return null
+    return d.toLocaleString()
   }
 
   const formatDate = (dateString: string) =>
@@ -303,6 +311,81 @@ export default function MobileVolunteerDashboard({
                 </div>
               </Link>
             )}
+
+            {(activeCountGroups.length > 0 || activeCountSessions.length > 0) && (
+              <div className="mb-4">
+                <h3 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
+                  📊 Attendance counts
+                </h3>
+                {activeCountGroups.length > 0 && (
+                  <div className="space-y-3 mb-4">
+                    {activeCountGroups.map((group) => (
+                      <Link
+                        key={group.groupId}
+                        href={`/events/${event.id}/count-times/${group.sessionId}/enter-count`}
+                        className="block bg-gradient-to-r from-teal-50 to-cyan-50 border-2 border-teal-300 rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow touch-manipulation"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-xs font-medium text-teal-800 uppercase">Section / group</p>
+                            <h4 className="font-semibold text-gray-900">{group.groupName}</h4>
+                            <p className="text-sm text-gray-600 mt-1">
+                              {group.sessionName}
+                              {group.countTime && (
+                                <span> · {new Date(group.countTime).toLocaleString()}</span>
+                              )}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">One total for all stations in this group</p>
+                          </div>
+                          <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+                {activeCountSessions.length > 0 && (
+                  <div className="space-y-3">
+                    {activeCountSessions.map((session) => {
+                      const when = formatCountDateTime(session.countTime)
+                      return (
+                        <Link
+                          key={session.id}
+                          href={`/events/${event.id}/count-times/${session.id}/enter-count`}
+                          className="block bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-300 rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow touch-manipulation"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h4 className="font-semibold text-gray-900">{session.sessionName}</h4>
+                              <p className="text-sm text-gray-600 mt-1">
+                                {when ? (
+                                  <>
+                                    <span className="mr-1" aria-hidden>
+                                      🕐
+                                    </span>
+                                    {when}
+                                  </>
+                                ) : (
+                                  <span className="text-gray-500">Count time not set</span>
+                                )}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                Status: <span className="font-medium">{session.status}</span>
+                              </p>
+                            </div>
+                            <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </div>
+                        </Link>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
             {assignments.length === 0 ? (
               <div className="bg-white rounded-lg shadow-sm p-8 text-center">
                 <div className="text-5xl mb-3">📝</div>
@@ -538,69 +621,6 @@ export default function MobileVolunteerDashboard({
                   </div>
                 </div>
               ))
-            )}
-
-            {/* Count groups + sessions */}
-            {(activeCountGroups.length > 0 || activeCountSessions.length > 0) && (
-              <div className="mt-6">
-                <h3 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
-                  📊 Attendance counts
-                </h3>
-                {activeCountGroups.length > 0 && (
-                  <div className="space-y-3 mb-4">
-                    {activeCountGroups.map((group) => (
-                      <Link
-                        key={group.groupId}
-                        href={`/events/${event.id}/count-times/${group.sessionId}/enter-count`}
-                        className="block bg-gradient-to-r from-teal-50 to-cyan-50 border-2 border-teal-300 rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow touch-manipulation"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-xs font-medium text-teal-800 uppercase">Section / group</p>
-                            <h4 className="font-semibold text-gray-900">{group.groupName}</h4>
-                            <p className="text-sm text-gray-600 mt-1">
-                              {group.sessionName}
-                              {group.countTime && (
-                                <span> · {new Date(group.countTime).toLocaleString()}</span>
-                              )}
-                            </p>
-                            <p className="text-xs text-gray-500 mt-1">One total for all stations in this group</p>
-                          </div>
-                          <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                          </svg>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-                {activeCountSessions.length > 0 && (
-                  <div className="space-y-3">
-                    {activeCountSessions.map((session) => (
-                      <Link
-                        key={session.id}
-                        href={`/events/${event.id}/count-times/${session.id}/enter-count`}
-                        className="block bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-300 rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow touch-manipulation"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h4 className="font-semibold text-gray-900">{session.sessionName}</h4>
-                            <p className="text-sm text-gray-600 mt-1">
-                              🕐 {formatTime(session.countTime)}
-                            </p>
-                            <p className="text-xs text-gray-500 mt-1">
-                              Status: <span className="font-medium">{session.status}</span>
-                            </p>
-                          </div>
-                          <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                          </svg>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
             )}
           </div>
         )}

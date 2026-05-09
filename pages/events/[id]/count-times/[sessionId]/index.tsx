@@ -5,6 +5,11 @@ import EventLayout from '../../../../../components/EventLayout'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
+import CountSubmissionSummaries from '../../../../../components/CountSubmissionSummaries'
+import type {
+  GroupSubmissionSummary,
+  UngroupedPositionSubmission
+} from '@/lib/countSessionSubmissionSummaries'
 
 interface PositionCount {
   id: string
@@ -31,6 +36,8 @@ interface CountSession {
   /** Populated by GET count-session API — includes station-group totals */
   reportedAttendeeTotal?: number
   reportingSlots?: number
+  groupSubmissionSummaries?: GroupSubmissionSummary[]
+  ungroupedPositionSubmissions?: UngroupedPositionSubmission[]
 }
 
 interface Event {
@@ -260,8 +267,17 @@ export default function CountSessionDetailPage() {
           </div>
         </div>
 
+        <div className="mb-8">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Recorded submissions</h2>
+          <CountSubmissionSummaries
+            groups={countSession.groupSubmissionSummaries ?? []}
+            ungroupedPositions={countSession.ungroupedPositionSubmissions ?? []}
+          />
+        </div>
+
         {/* Counts by Department */}
         <div className="space-y-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-2">By department (per station)</h2>
           {Object.entries(departmentGroups).map(([department, positions]) => {
             const deptTotal = positions.reduce((sum, pc) => sum + (pc.attendeeCount || 0), 0)
             const deptCounted = positions.filter(pc => pc.attendeeCount !== null).length
@@ -376,28 +392,75 @@ export default function CountSessionDetailPage() {
 
   function generateCSV(): string {
     if (!countSession) return ''
-    
-    const headers = ['Position Number', 'Position Name', 'Department', 'Attendee Count', 'Notes', 'Counted At']
-    const rows = countSession.position_counts
+
+    const esc = (v: string | number | null | undefined) => `"${String(v ?? '').replace(/"/g, '""')}"`
+
+    const sections: string[] = []
+
+    const gs = countSession.groupSubmissionSummaries ?? []
+    if (gs.length > 0) {
+      sections.push(
+        ['Type', 'Name', 'Stations', 'Attendee Count', 'Notes', 'Submitted by', 'Submitted at'].join(',')
+      )
+      for (const g of gs) {
+        sections.push(
+          [
+            esc('Station group'),
+            esc(g.groupName),
+            esc(g.stationsLabel),
+            esc(g.attendeeCount ?? ''),
+            esc(g.notes ?? ''),
+            esc(g.submittedBy ?? ''),
+            esc(g.submittedAt ?? '')
+          ].join(',')
+        )
+      }
+      sections.push('')
+    }
+
+    const headers = [
+      'Type',
+      'Position Number',
+      'Position Name',
+      'Department',
+      'Attendee Count',
+      'Notes',
+      'Submitted by',
+      'Counted At'
+    ]
+    const ungrouped = countSession.ungroupedPositionSubmissions ?? []
+    const positionRowsFromSession = countSession.position_counts
       .sort((a, b) => a.position.positionNumber - b.position.positionNumber)
-      .map(pc => [
-        pc.position.positionNumber,
-        pc.position.name,
-        pc.position.area,
-        pc.attendeeCount ?? 'Not counted',
-        pc.notes || '',
-        pc.attendeeCount !== null ? (() => {
-          const date = new Date(pc.countedAt)
-          const year = date.getFullYear()
-          const month = String(date.getMonth() + 1).padStart(2, '0')
-          const day = String(date.getDate()).padStart(2, '0')
-          const hours = String(date.getHours()).padStart(2, '0')
-          const minutes = String(date.getMinutes()).padStart(2, '0')
-          return `${month}/${day}/${year} ${hours}:${minutes}`
-        })() : ''
+      .map((pc) => [
+        esc('Individual station'),
+        esc(pc.position.positionNumber),
+        esc(pc.position.name),
+        esc(pc.position.area),
+        esc(pc.attendeeCount ?? 'Not counted'),
+        esc(pc.notes || ''),
+        esc(
+          ungrouped.find((u) => u.positionId === pc.positionId)?.submittedBy ??
+            ''
+        ),
+        esc(
+          pc.attendeeCount !== null
+            ? (() => {
+                const date = new Date(pc.countedAt)
+                const year = date.getFullYear()
+                const month = String(date.getMonth() + 1).padStart(2, '0')
+                const day = String(date.getDate()).padStart(2, '0')
+                const hours = String(date.getHours()).padStart(2, '0')
+                const minutes = String(date.getMinutes()).padStart(2, '0')
+                return `${month}/${day}/${year} ${hours}:${minutes}`
+              })()
+            : ''
+        )
       ])
-    
-    return [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n')
+
+    sections.push(headers.join(','))
+    sections.push(...positionRowsFromSession.map((row) => row.join(',')))
+
+    return sections.join('\n')
   }
 
   function downloadCSV(csv: string, filename: string) {

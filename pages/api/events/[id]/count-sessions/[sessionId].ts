@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '../../../../../src/lib/prisma'
 import { computeSessionAttendanceBreakdown } from '@/lib/countSessionReporting'
+import { buildCountSubmissionSummaries } from '@/lib/countSessionSubmissionSummaries'
 import { z } from 'zod'
 import { handleApiError } from '@/lib/apiError'
 import { blockSimulatedMutation } from '@/lib/countAssignments'
@@ -68,7 +69,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 }
 
 async function handleGet(req: NextApiRequest, res: NextApiResponse, eventId: string, sessionId: string) {
-  // Fetch count session with position counts
   const countSession = await prisma.count_sessions.findUnique({
     where: { id: sessionId },
     include: {
@@ -88,6 +88,28 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse, eventId: str
             positionNumber: 'asc'
           }
         }
+      },
+      groups: {
+        orderBy: { name: 'asc' },
+        include: {
+          entry: {
+            include: {
+              enteredByUser: { select: { firstName: true, lastName: true } }
+            }
+          },
+          positions: {
+            include: {
+              position: {
+                select: {
+                  id: true,
+                  positionNumber: true,
+                  name: true,
+                  area: true
+                }
+              }
+            }
+          }
+        }
       }
     }
   })
@@ -96,19 +118,44 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse, eventId: str
     return res.status(404).json({ error: 'Count session not found' })
   }
 
-  // Verify the session belongs to the specified event
   if (countSession.eventId !== eventId) {
     return res.status(400).json({ error: 'Count session does not belong to this event' })
   }
 
   const breakdown = await computeSessionAttendanceBreakdown(sessionId)
 
+  const countedIds = [
+    ...new Set(countSession.position_counts.map((pc) => pc.countedBy).filter((x): x is string => !!x))
+  ]
+  const [usersRows, volunteerRows] = await Promise.all([
+    prisma.users.findMany({
+      where: { id: { in: countedIds } },
+      select: { id: true, firstName: true, lastName: true }
+    }),
+    prisma.volunteers.findMany({
+      where: { id: { in: countedIds } },
+      select: { id: true, firstName: true, lastName: true }
+    })
+  ])
+  const userLabel = new Map(usersRows.map((u) => [u.id, `${u.firstName} ${u.lastName}`.trim()]))
+  const volLabel = new Map(volunteerRows.map((v) => [v.id, `${v.firstName} ${v.lastName}`.trim()]))
+  const resolveActorName = (id: string | null | undefined) => {
+    if (!id) return null
+    return userLabel.get(id) ?? volLabel.get(id) ?? null
+  }
+
+  const { groups: sessionGroups, ...sessionRest } = countSession
+
+  const summaries = buildCountSubmissionSummaries(sessionGroups as any, countSession.position_counts as any, resolveActorName)
+
   return res.status(200).json({
     success: true,
     data: {
-      ...countSession,
+      ...sessionRest,
       reportedAttendeeTotal: breakdown.attendeeTotal,
-      reportingSlots: breakdown.reportingSlots
+      reportingSlots: breakdown.reportingSlots,
+      groupSubmissionSummaries: summaries.groupSubmissionSummaries,
+      ungroupedPositionSubmissions: summaries.ungroupedPositionSubmissions
     }
   })
 }

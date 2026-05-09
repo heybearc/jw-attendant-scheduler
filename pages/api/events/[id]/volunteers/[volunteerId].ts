@@ -218,7 +218,7 @@ async function handleUpdateVolunteer(req: NextApiRequest, res: NextApiResponse, 
 
           await tx.position_assignments.updateMany({
             where: {
-              position: { eventId: eventId },
+              positions: { eventId: eventId },
               overseerId: volunteerId
             },
             data: {
@@ -250,7 +250,7 @@ async function handleUpdateVolunteer(req: NextApiRequest, res: NextApiResponse, 
 
           await tx.position_assignments.updateMany({
             where: {
-              position: { eventId: eventId },
+              positions: { eventId: eventId },
               keymanId: volunteerId
             },
             data: {

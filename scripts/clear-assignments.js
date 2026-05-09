@@ -17,7 +17,7 @@ async function clearAssignments() {
     // Check position_assignments table
     const positionAssignments = await prisma.position_assignments.findMany({
       include: { position: true },
-      where: { position: { eventId: eventId } }
+      where: { positions: { eventId: eventId } }
     })
     console.log(`📊 position_assignments table: ${positionAssignments.length} records`)
     
@@ -35,7 +35,7 @@ async function clearAssignments() {
     // Delete from position_assignments table
     if (positionAssignments.length > 0) {
       const result2 = await prisma.position_assignments.deleteMany({
-        where: { position: { eventId: eventId } }
+        where: { positions: { eventId: eventId } }
       })
       console.log(`✅ Deleted ${result2.count} from position_assignments table`)
       totalDeleted += result2.count

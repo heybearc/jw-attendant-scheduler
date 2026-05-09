@@ -1,0 +1,76 @@
+import { prisma } from './prisma'
+
+export type SessionAttendanceBreakdown = {
+  attendeeTotal: number
+  /** For UI labels like “N stations” — groups count as one slot each plus ungrouped position rows */
+  reportingSlots: number
+}
+
+/**
+ * Session totals must combine:
+ * - Per-position `position_counts` (legacy / enter-count page)
+ * - Station groups (`count_group_entries`) where one number covers multiple positions
+ *
+ * For positions that belong to a group: use the group entry when set; otherwise sum that group's
+ * position_counts. Ungrouped positions add their own position_counts row.
+ */
+export async function computeSessionAttendanceBreakdown(
+  countSessionId: string
+): Promise<SessionAttendanceBreakdown> {
+  const [groups, positionRows] = await Promise.all([
+    prisma.count_session_groups.findMany({
+      where: { countSessionId },
+      include: {
+        entry: true,
+        positions: { select: { positionId: true } },
+      },
+    }),
+    prisma.position_counts.findMany({
+      where: { countSessionId },
+      select: { positionId: true, attendeeCount: true },
+    }),
+  ])
+
+  const pcByPosition = new Map(positionRows.map((pc) => [pc.positionId, pc]))
+
+  const groupedPositionIds = new Set<string>()
+  for (const g of groups) {
+    for (const row of g.positions) {
+      groupedPositionIds.add(row.positionId)
+    }
+  }
+
+  let attendeeTotal = 0
+
+  for (const g of groups) {
+    const posIds = g.positions.map((p) => p.positionId)
+    if (g.entry?.attendeeCount != null) {
+      attendeeTotal += g.entry.attendeeCount
+    } else {
+      for (const pid of posIds) {
+        attendeeTotal += pcByPosition.get(pid)?.attendeeCount ?? 0
+      }
+    }
+  }
+
+  for (const pc of positionRows) {
+    if (!groupedPositionIds.has(pc.positionId)) {
+      attendeeTotal += pc.attendeeCount ?? 0
+    }
+  }
+
+  let reportingSlots = 0
+  for (const g of groups) {
+    const posIds = g.positions.map((p) => p.positionId)
+    const hasEntry = g.entry?.attendeeCount != null
+    const hasPositionData = posIds.some(
+      (pid) => (pcByPosition.get(pid)?.attendeeCount ?? null) != null
+    )
+    if (hasEntry || hasPositionData) reportingSlots += 1
+  }
+
+  const ungroupedRows = positionRows.filter((pc) => !groupedPositionIds.has(pc.positionId))
+  reportingSlots += ungroupedRows.length
+
+  return { attendeeTotal, reportingSlots }
+}

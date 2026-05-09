@@ -28,6 +28,9 @@ interface CountSession {
   status: string
   isActive: boolean
   position_counts: PositionCount[]
+  /** Populated by GET count-session API — includes station-group totals */
+  reportedAttendeeTotal?: number
+  reportingSlots?: number
 }
 
 interface Event {
@@ -79,16 +82,31 @@ export default function CountSessionDetailPage() {
 
   const calculateStats = () => {
     if (!countSession) return { total: 0, counted: 0, pending: 0 }
-    
-    const counted = countSession.position_counts.filter(pc => pc.attendeeCount !== null).length
+
+    // Station-group counts may have no position_counts rows; use API-derived slots.
+    if (
+      countSession.position_counts.length === 0 &&
+      typeof countSession.reportingSlots === 'number'
+    ) {
+      const slots = countSession.reportingSlots
+      const hasTotal = (countSession.reportedAttendeeTotal ?? 0) > 0
+      const counted = hasTotal ? slots : 0
+      const total = Math.max(slots, 1)
+      return { total, counted, pending: total - counted }
+    }
+
+    const counted = countSession.position_counts.filter((pc) => pc.attendeeCount !== null).length
     const total = countSession.position_counts.length
     const pending = total - counted
-    
+
     return { total, counted, pending }
   }
 
   const calculateTotalAttendees = () => {
     if (!countSession) return 0
+    if (typeof countSession.reportedAttendeeTotal === 'number') {
+      return countSession.reportedAttendeeTotal
+    }
     return countSession.position_counts.reduce((sum, pc) => sum + (pc.attendeeCount || 0), 0)
   }
 

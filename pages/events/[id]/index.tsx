@@ -11,6 +11,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { format } from 'date-fns'
+import { computeSessionAttendanceBreakdown } from '@/lib/countSessionReporting'
 // Template types removed - using event.settings directly
 
 interface Event {
@@ -872,7 +873,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     // Calculate fill rate
     const fillRate = totalShiftsNeeded > 0 ? Math.round((totalAssignments / totalShiftsNeeded) * 100) : 0
 
-    // Get count statistics
+    // Get count statistics (includes station-group entries, not only position_counts rows)
     const countSessions = await prisma.count_sessions.findMany({
       where: { eventId: id as string },
       include: {
@@ -882,32 +883,32 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         countTime: 'asc'
       }
     })
-    
-    // Calculate session breakdown first
-    const sessionBreakdown = countSessions.map(session => ({
-      id: session.id,
-      sessionName: session.sessionName,
-      countTime: session.countTime?.toISOString() || new Date().toISOString(),
-      totalCount: session.position_counts.reduce((sum, count) => sum + (count.attendeeCount || 0), 0),
-      positionsReported: session.position_counts.length,
-      status: session.status
-    }))
-    
-    // Calculate count statistics - peak attendance is the highest session total
-    const sessionTotals = sessionBreakdown.map(s => s.totalCount)
+
+    const sessionBreakdown = await Promise.all(
+      countSessions.map(async (session) => {
+        const breakdown = await computeSessionAttendanceBreakdown(session.id)
+        return {
+          id: session.id,
+          sessionName: session.sessionName,
+          countTime: session.countTime?.toISOString() || new Date().toISOString(),
+          totalCount: breakdown.attendeeTotal,
+          positionsReported: breakdown.reportingSlots,
+          status: session.status
+        }
+      })
+    )
+
+    const sessionTotals = sessionBreakdown.map((s) => s.totalCount)
     const peakAttendance = sessionTotals.length > 0 ? Math.max(...sessionTotals) : null
-    const averageCount = sessionTotals.length > 0 
-      ? Math.round(sessionTotals.reduce((a, b) => a + b, 0) / sessionTotals.length)
-      : null
+    const averageCount =
+      sessionTotals.length > 0 ? Math.round(sessionTotals.reduce((a, b) => a + b, 0) / sessionTotals.length) : null
     const sessionsTracked = countSessions.length
-    
-    // Get current session tally (most recent active session)
-    const currentSession = countSessions.find(s => s.status === 'ACTIVE' && s.isActive)
+
+    const currentSession = countSessions.find((s) => s.status === 'ACTIVE' && s.isActive)
     const currentSessionTally = currentSession
-      ? currentSession.position_counts.reduce((sum, count) => sum + (count.attendeeCount || 0), 0)
+      ? sessionBreakdown.find((row) => row.id === currentSession.id)?.totalCount ?? null
       : null
-    
-    // Calculate event total (sum of all session totals)
+
     const eventTotal = sessionBreakdown.reduce((sum, session) => sum + session.totalCount, 0)
 
     // Transform event data for frontend compatibility

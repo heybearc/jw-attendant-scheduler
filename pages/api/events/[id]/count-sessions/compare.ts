@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '../../../../../src/lib/prisma'
+import { computeSessionAttendanceBreakdown } from '@/lib/countSessionReporting'
 import { handleApiError } from '@/lib/apiError'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -100,14 +101,21 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse, eventId: str
     })
   })
 
+  const sessionSummaries = await Promise.all(
+    countSessions.map(async (s) => {
+      const breakdown = await computeSessionAttendanceBreakdown(s.id)
+      return {
+        id: s.id,
+        sessionName: s.sessionName,
+        countTime: s.countTime,
+        totalCount: breakdown.attendeeTotal,
+        positionsCounted: breakdown.reportingSlots
+      }
+    })
+  )
+
   const comparisonData = {
-    sessions: countSessions.map(s => ({
-      id: s.id,
-      sessionName: s.sessionName,
-      countTime: s.countTime,
-      totalCount: s.position_counts.reduce((sum, pc) => sum + (pc.attendeeCount || 0), 0),
-      positionsCounted: s.position_counts.filter(pc => pc.attendeeCount !== null).length
-    })),
+    sessions: sessionSummaries,
     positions: Array.from(positionMap.values()).sort((a, b) => a.positionNumber - b.positionNumber)
   }
 

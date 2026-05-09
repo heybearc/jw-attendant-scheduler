@@ -34,6 +34,8 @@ interface CountSession {
   status: string
   isActive: boolean
   createdAt: string
+  /** Includes station-group totals (count_group_entries), not only position_counts */
+  reportedTotalAttendees: number
   position_counts: Array<{
     id: string
     positionId: string
@@ -406,13 +408,11 @@ export default function CountTimesPage({ eventId, event, countSessions, canManag
                       </Link>
                     </div>
                   </div>
-                  {session.position_counts.length > 0 && (
+                  {(session.reportedTotalAttendees > 0 || session.position_counts.length > 0) && (
                     <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-3">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-gray-700">Session Total:</span>
-                        <span className="text-2xl font-bold text-green-600">
-                          {session.position_counts.reduce((sum, count) => sum + (count.attendeeCount || 0), 0)}
-                        </span>
+                        <span className="text-2xl font-bold text-green-600">{session.reportedTotalAttendees}</span>
                       </div>
                     </div>
                   )}
@@ -776,30 +776,37 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       startDate: eventData.startDate?.toISOString() || new Date().toISOString()
     }
 
-    // Transform count sessions data
-    const countSessions = eventData.count_sessions.map(session => ({
-      id: session.id,
-      sessionName: session.sessionName,
-      countTime: session.countTime?.toISOString() || null,
-      notes: session.notes,
-      status: session.status,
-      isActive: session.isActive,
-      createdAt: session.createdAt?.toISOString() || null,
-      position_counts: session.position_counts.map(count => ({
-        id: count.id,
-        positionId: count.positionId,
-        attendeeCount: count.attendeeCount,
-        notes: count.notes,
-        countedBy: count.countedBy,
-        countedAt: count.countedAt?.toISOString() || null,
-        position: {
-          id: count.position.id,
-          positionNumber: count.position.positionNumber,
-          name: count.position.name,
-          area: count.position.area || ''
+    const { computeSessionAttendanceBreakdown } = await import('../../../src/lib/countSessionReporting')
+
+    const countSessions = await Promise.all(
+      eventData.count_sessions.map(async (session) => {
+        const breakdown = await computeSessionAttendanceBreakdown(session.id)
+        return {
+          id: session.id,
+          sessionName: session.sessionName,
+          countTime: session.countTime?.toISOString() || null,
+          notes: session.notes,
+          status: session.status,
+          isActive: session.isActive,
+          createdAt: session.createdAt?.toISOString() || null,
+          reportedTotalAttendees: breakdown.attendeeTotal,
+          position_counts: session.position_counts.map((count) => ({
+            id: count.id,
+            positionId: count.positionId,
+            attendeeCount: count.attendeeCount,
+            notes: count.notes,
+            countedBy: count.countedBy,
+            countedAt: count.countedAt?.toISOString() || null,
+            position: {
+              id: count.position.id,
+              positionNumber: count.position.positionNumber,
+              name: count.position.name,
+              area: count.position.area || ''
+            }
+          }))
         }
-      }))
-    }))
+      })
+    )
 
     // Check event-specific permissions
     const { canManageAttendants, canManageEvent, canDeleteEvent, canManagePermissions } = await import('../../../src/lib/eventAccess')

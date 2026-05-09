@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '@/lib/prisma'
+import { checkEventAccess } from '@/lib/eventAccess'
 
 export default async function handler(
   req: NextApiRequest,
@@ -19,15 +20,8 @@ export default async function handler(
 
     const { id: eventId } = req.query
 
-    // Verify user has access to this event
-    const eventPermission = await prisma.event_permissions.findFirst({
-      where: {
-        eventId: eventId as string,
-        userId: session.user.id,
-      },
-    })
-
-    if (!eventPermission) {
+    const access = await checkEventAccess(session.user.id, eventId as string, 'VIEWER')
+    if (!access) {
       return res.status(403).json({ success: false, message: 'Forbidden' })
     }
 

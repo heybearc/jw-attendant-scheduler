@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../../../../../auth/[...nextauth]'
 import { prisma } from '@/lib/prisma'
+import { canManageAttendants } from '@/lib/eventAccess'
 
 export default async function handler(
   req: NextApiRequest,
@@ -20,17 +21,11 @@ export default async function handler(
     const { id: eventId, volunteerId } = req.query
     const { earlyCheckinEligible } = req.body
 
-    // Verify user has admin access to this event
-    const eventPermission = await prisma.event_permissions.findFirst({
-      where: {
-        eventId: eventId as string,
-        userId: session.user.id,
-        role: 'ADMIN' as any,
-      },
-    })
-
-    if (!eventPermission) {
-      return res.status(403).json({ success: false, message: 'Forbidden - Admin access required' })
+    if (!(await canManageAttendants(session.user.id, eventId as string))) {
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden — you need permission to manage volunteers for this event',
+      })
     }
 
     // Check if volunteer is already checked in

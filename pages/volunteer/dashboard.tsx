@@ -12,6 +12,7 @@ import EarlyCheckinPanel from '../../components/EarlyCheckinPanel'
 import { getViewAsHeaders, getViewAsVolunteerId, setViewAsVolunteerId } from '@/lib/viewAsClient'
 import type { ChatPushSetupStatus } from '@/lib/chatPushClient'
 import {
+  disableChatPushSubscription,
   enableChatPushSubscription,
   fetchChatPushVapidConfigured,
   getChatPushSetupStatus,
@@ -398,6 +399,19 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
     setChatPushNudgeDismissed(true)
   }
 
+  const handleDisableChatPush = async () => {
+    setChatPushEnabling(true)
+    try {
+      await disableChatPushSubscription(getViewAsHeaders)
+      const st = await getChatPushSetupStatus(getViewAsHeaders)
+      setChatPushSetupStatus(st)
+    } catch {
+      alert('Could not turn off notifications. Try again.')
+    } finally {
+      setChatPushEnabling(false)
+    }
+  }
+
   const handleAvailabilityResponse = async (requestId: string, status: string, notes?: string) => {
     try {
       setRespondingToRequest(requestId)
@@ -706,6 +720,30 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
         </button>
       </div>
     ) : null
+
+  const showChatPushEnabledBar =
+    !!selectedEventId &&
+    chatChannels.length > 0 &&
+    chatPushEnabledForEvent &&
+    chatPushVapidOk &&
+    chatPushSetupStatus === 'enabled' &&
+    !effectiveViewAsVolunteerId
+
+  const chatPushEnabledBar = showChatPushEnabledBar ? (
+    <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-950 shadow-sm">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="font-medium">Chat notifications are on for this browser.</p>
+        <button
+          type="button"
+          onClick={() => void handleDisableChatPush()}
+          disabled={chatPushEnabling}
+          className="rounded-md border border-green-300 bg-white px-3 py-2 text-xs font-semibold text-green-900 hover:bg-green-100 disabled:opacity-50"
+        >
+          {chatPushEnabling ? 'Updating…' : 'Turn off notifications'}
+        </button>
+      </div>
+    </div>
+  ) : null
 
   const chatPushNudgeBanner = showChatPushNudge ? (
     <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 shadow-sm">
@@ -1021,6 +1059,11 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
           <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
         </Head>
         {chatNoticeToast}
+        {chatPushEnabledBar && (
+          <div className="bg-gray-50 px-4 pt-3 pb-1">
+            {chatPushEnabledBar}
+          </div>
+        )}
         {chatPushNudgeBanner && (
           <div className="bg-gray-50 px-4 pt-3 pb-1">
             {chatPushNudgeBanner}
@@ -1192,6 +1235,7 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
               </div>
             </div>
           )}
+          {chatPushEnabledBar && <div className="mb-6">{chatPushEnabledBar}</div>}
           {chatPushNudgeBanner && <div className="mb-6">{chatPushNudgeBanner}</div>}
           {chatLoading && (
             <p className="mb-6 text-sm text-gray-500">Loading chat availability...</p>

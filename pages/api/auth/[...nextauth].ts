@@ -114,14 +114,48 @@ export const authOptions: NextAuthOptions = {
         token.sub = user.id
         token.role = user.role
         token.congregation = (user as any).congregation
+        // Required for API routes that resolve the actor by email (chat push, etc.).
+        // Without this, volunteer PIN sessions could lose email after JWT refresh.
+        token.email = user.email ?? (token.email as string | undefined)
+        token.name = user.name ?? (token.name as string | undefined)
       }
+
+      // Older JWTs never stored email — resolve from DB so chat/push APIs keep working without forcing logout.
+      if (!token.email && typeof token.sub === 'string') {
+        try {
+          if (token.role === 'VOLUNTEER') {
+            const v = await prisma.volunteers.findUnique({
+              where: { id: token.sub },
+              select: { email: true, firstName: true, lastName: true },
+            })
+            if (v?.email) {
+              token.email = v.email
+              if (!token.name) token.name = `${v.firstName} ${v.lastName}`.trim()
+            }
+          } else {
+            const u = await prisma.users.findUnique({
+              where: { id: token.sub },
+              select: { email: true, firstName: true, lastName: true },
+            })
+            if (u?.email) {
+              token.email = u.email
+              if (!token.name) token.name = `${u.firstName} ${u.lastName}`.trim()
+            }
+          }
+        } catch {
+          // ignore
+        }
+      }
+
       return token
     },
     async session({ session, token }) {
-      if (token) {
+      if (token && session.user) {
         session.user.id = token.sub!
         session.user.role = token.role as string
         ;(session.user as any).congregation = token.congregation as string
+        if (token.email) session.user.email = token.email as string
+        if (token.name) session.user.name = token.name as string
       }
       return session
     },

@@ -40,11 +40,26 @@ export async function getChatPushSetupStatus(getViewAsHeaders: HeadersFn): Promi
       headers: { 'Content-Type': 'application/json', ...getViewAsHeaders() },
       body: JSON.stringify({ endpoint: sub.endpoint }),
     })
-    const j = await r.json()
+    const j = await r.json().catch(() => ({}))
+    if (!r.ok) return 'unsupported'
     return j?.data?.enabled ? 'enabled' : 'disabled'
   } catch {
     return 'unsupported'
   }
+}
+
+export async function disableChatPushSubscription(getViewAsHeaders: HeadersFn): Promise<void> {
+  if (typeof window === 'undefined') return
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
+  const reg = await navigator.serviceWorker.ready
+  const sub = await reg.pushManager.getSubscription()
+  if (!sub) return
+  await fetch('/api/chat/push/unsubscribe', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getViewAsHeaders() },
+    body: JSON.stringify({ endpoint: sub.endpoint }),
+  })
+  await sub.unsubscribe()
 }
 
 export async function enableChatPushSubscription(getViewAsHeaders: HeadersFn): Promise<void> {

@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import Head from 'next/head'
 import { getViewAsHeaders, getViewAsVolunteerId, setViewAsVolunteerId } from '@/lib/viewAsClient'
+import { disableChatPushSubscription, enableChatPushSubscription } from '@/lib/chatPushClient'
 
 interface ChatChannel {
   id: string
@@ -138,54 +139,18 @@ export default function VolunteerChatPage() {
   }
 
   const enablePush = async () => {
-    if (typeof window === 'undefined') return
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
-    const perm = await Notification.requestPermission()
-    if (perm !== 'granted') return
-
-    const cfgRes = await fetch('/api/chat/push/config')
-    const cfgJson = await cfgRes.json()
-    const vapidPublicKey: string | null = cfgJson?.data?.vapidPublicKey || null
-    if (!vapidPublicKey) throw new Error('Missing VAPID public key')
-
-    const toUint8 = (base64String: string) => {
-      const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
-      const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
-      const raw = atob(base64)
-      const output = new Uint8Array(raw.length)
-      for (let i = 0; i < raw.length; ++i) output[i] = raw.charCodeAt(i)
-      return output
+    try {
+      await enableChatPushSubscription(getViewAsHeaders)
+      await refreshPushStatus()
+    } catch (e: any) {
+      alert(e?.message || 'Could not enable notifications.')
+      await refreshPushStatus()
     }
-
-    const reg = await navigator.serviceWorker.ready
-    const sub = await reg.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: toUint8(vapidPublicKey)
-    })
-    await fetch('/api/chat/push/subscribe', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...getViewAsHeaders() },
-      body: JSON.stringify(sub)
-    })
-    await refreshPushStatus()
   }
 
   const disablePush = async () => {
     try {
-      if (typeof window === 'undefined') return
-      if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
-      const reg = await navigator.serviceWorker.ready
-      const sub = await reg.pushManager.getSubscription()
-      if (!sub) {
-        await refreshPushStatus()
-        return
-      }
-      await fetch('/api/chat/push/unsubscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getViewAsHeaders() },
-        body: JSON.stringify({ endpoint: sub.endpoint })
-      })
-      await sub.unsubscribe()
+      await disableChatPushSubscription(getViewAsHeaders)
     } finally {
       await refreshPushStatus()
     }
@@ -637,71 +602,78 @@ export default function VolunteerChatPage() {
       </Head>
       <div className="min-h-screen bg-gray-50">
         <div className="bg-white border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div className="min-w-0 flex-1">
-              <h1 className="text-xl font-semibold text-gray-900">💬 Event Chat</h1>
-              {effectiveViewAsVolunteerId ? (
-                <p className="text-sm text-amber-700">View-as volunteer simulation is active.</p>
-              ) : (
-                <p className="text-sm text-gray-600 break-words">
-                  Magic-link session active for{' '}
-                  <span className="break-all">{session?.user?.email}</span>
-                </p>
-              )}
-            </div>
-            <div className="flex flex-shrink-0 flex-wrap items-center gap-2 sm:justify-end">
-              {pushNotificationsEnabledForEvent && !isViewAsSimulationActive && pushStatus !== 'unsupported' && (
-                <button
-                  type="button"
-                  onClick={() => (pushStatus === 'enabled' ? disablePush() : enablePush())}
-                  className="text-sm px-3 py-2 min-h-[44px] rounded border border-gray-300 bg-white hover:bg-gray-50 touch-manipulation"
-                >
-                  {pushStatus === 'enabled' ? 'Disable notifications' : 'Enable notifications'}
-                </button>
-              )}
-              {pushNotificationsEnabledForEvent && isViewAsSimulationActive && (
-                <span className="text-xs text-gray-500 max-w-[220px] sm:max-w-none">
-                  Notifications are disabled during view-as simulation.
-                </span>
-              )}
-              {pushNotificationsEnabledForEvent &&
-                !isViewAsSimulationActive &&
-                pushStatus === 'unsupported' && (
-                  <span className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded px-2 py-1.5 max-w-full">
-                    This browser can&apos;t show push alerts. Try Chrome (Android) or updated Safari (iOS).
-                  </span>
+          <div className="max-w-7xl mx-auto px-4 py-4 space-y-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-xl font-semibold text-gray-900">💬 Event Chat</h1>
+                {effectiveViewAsVolunteerId ? (
+                  <p className="text-sm text-amber-700">View-as volunteer simulation is active.</p>
+                ) : (
+                  <p className="text-sm text-gray-600 break-words">
+                    Signed in as{' '}
+                    <span className="break-all">{session?.user?.email || 'your volunteer profile'}</span>
+                  </p>
                 )}
-              {effectiveViewAsVolunteerId && typeof router.query.eventId === 'string' && (
-                <button
-                  type="button"
-                  onClick={async () => {
-                    try {
-                      await fetch(`/api/admin/view-as?eventId=${router.query.eventId}`, { method: 'DELETE' })
-                    } catch {
-                      // ignore
-                    } finally {
-                      setViewAsVolunteerId(null)
-                      router.push(`/events/${router.query.eventId}/chat`)
-                    }
-                  }}
-                  className="text-sm px-3 py-2 min-h-[44px] rounded bg-amber-700 text-white hover:bg-amber-800 touch-manipulation"
+              </div>
+              <div className="flex flex-shrink-0 flex-wrap items-center justify-end gap-2">
+                {effectiveViewAsVolunteerId && typeof router.query.eventId === 'string' && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        await fetch(`/api/admin/view-as?eventId=${router.query.eventId}`, { method: 'DELETE' })
+                      } catch {
+                        // ignore
+                      } finally {
+                        setViewAsVolunteerId(null)
+                        router.push(`/events/${router.query.eventId}/chat`)
+                      }
+                    }}
+                    className="text-sm px-3 py-2 min-h-[44px] rounded bg-amber-700 text-white hover:bg-amber-800 touch-manipulation"
+                  >
+                    Exit Simulation
+                  </button>
+                )}
+                <Link
+                  href={
+                    typeof router.query.eventId === 'string'
+                      ? `/volunteer/dashboard?eventId=${router.query.eventId}${
+                          effectiveViewAsVolunteerId ? `&viewAsVolunteerId=${effectiveViewAsVolunteerId}` : ''
+                        }`
+                      : '/volunteer/dashboard'
+                  }
+                  className="text-sm px-3 py-2 min-h-[44px] inline-flex items-center rounded border border-gray-200 bg-white text-blue-600 hover:bg-gray-50 touch-manipulation"
                 >
-                  Exit Simulation
-                </button>
-              )}
-              <Link
-                href={
-                  typeof router.query.eventId === 'string'
-                    ? `/volunteer/dashboard?eventId=${router.query.eventId}${
-                        effectiveViewAsVolunteerId ? `&viewAsVolunteerId=${effectiveViewAsVolunteerId}` : ''
-                      }`
-                    : '/volunteer/dashboard'
-                }
-                className="text-sm px-2 py-2 min-h-[44px] inline-flex items-center text-blue-600 hover:text-blue-800 touch-manipulation"
-              >
-                Back to Dashboard
-              </Link>
+                  Back to Dashboard
+                </Link>
+              </div>
             </div>
+
+            {pushNotificationsEnabledForEvent && (
+              <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-600">Chat notifications</p>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  {isViewAsSimulationActive ? (
+                    <span className="text-xs text-gray-600">
+                      Notifications are disabled during view-as simulation.
+                    </span>
+                  ) : pushStatus === 'unsupported' ? (
+                    <span className="text-xs text-amber-900 bg-amber-50 border border-amber-200 rounded px-2 py-2">
+                      This browser can&apos;t show push alerts. On iPhone, add TheoShift to your Home Screen and use
+                      Safari 16.4+, or try Chrome on Android.
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => (pushStatus === 'enabled' ? disablePush() : enablePush())}
+                      className="text-sm px-4 py-2.5 min-h-[44px] rounded-md border border-gray-300 bg-white font-medium text-gray-900 shadow-sm hover:bg-gray-50 touch-manipulation w-full sm:w-auto"
+                    >
+                      {pushStatus === 'enabled' ? 'Disable notifications' : 'Enable notifications'}
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

@@ -35,6 +35,22 @@ export async function resolveVolunteerIdForSessionUser(userId: string, role: str
   return volunteer?.id || null
 }
 
+/**
+ * `count_group_entries.enteredBy` references users.id. Volunteer PIN sessions use volunteers.id as
+ * session.user.id — passing that into enteredBy violates FK and causes 500 on group count submit.
+ * Returns the linked account user id for volunteers, or null if they have no users row.
+ */
+export async function resolveUserIdForCountEnteredBy(sessionUserId: string, role: string): Promise<string | null> {
+  if (role !== 'VOLUNTEER' && role !== 'ATTENDANT') {
+    return sessionUserId
+  }
+  const volunteer = await prisma.volunteers.findUnique({
+    where: { id: sessionUserId },
+    select: { userId: true }
+  })
+  return volunteer?.userId ?? null
+}
+
 export async function isVolunteerAssignedToSessionPosition(
   countSessionId: string,
   positionId: string,

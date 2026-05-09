@@ -7,6 +7,7 @@ import {
   blockSimulatedMutation,
   getSessionUser,
   isPrivilegedCounterRole,
+  resolveUserIdForCountEnteredBy,
   resolveVolunteerIdForSessionUser
 } from '@/lib/countAssignments'
 import { volunteerCanEnterStationCount } from '@/lib/countStationVolunteerAccess'
@@ -127,19 +128,21 @@ async function handlePost(
       }
     }
 
+    const enteredByUserId = await resolveUserIdForCountEnteredBy(userId, role)
+
     const entry = await prisma.count_group_entries.upsert({
       where: { groupId: data.groupId },
       create: {
         groupId: data.groupId,
         attendeeCount: data.attendeeCount ?? null,
         notes: data.notes,
-        enteredBy: userId,
+        enteredBy: enteredByUserId,
         enteredAt: new Date()
       },
       update: {
         attendeeCount: data.attendeeCount ?? null,
         notes: data.notes,
-        enteredBy: userId,
+        enteredBy: enteredByUserId,
         enteredAt: new Date(),
         updatedAt: new Date()
       }

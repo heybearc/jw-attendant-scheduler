@@ -100,6 +100,8 @@ interface MobileVolunteerDashboardProps {
   chatChannelCount?: number
   chatUnreadCount?: number
   chatHref?: string
+  /** When staff simulates a volunteer, preserve view-as on links to Enter Count */
+  enterCountViewAsVolunteerId?: string | null
 }
 
 export default function MobileVolunteerDashboard({
@@ -117,8 +119,12 @@ export default function MobileVolunteerDashboard({
   chatEnabled = false,
   chatChannelCount = 0,
   chatUnreadCount = 0,
-  chatHref = '/volunteer/chat'
+  chatHref = '/volunteer/chat',
+  enterCountViewAsVolunteerId = null
 }: MobileVolunteerDashboardProps) {
+  const enterCountViewAsQuery = enterCountViewAsVolunteerId
+    ? `?viewAsVolunteerId=${enterCountViewAsVolunteerId}`
+    : ''
   const [activeTab, setActiveTab] = useState<'assignments' | 'availability' | 'contacts' | 'documents'>('assignments')
   const [expandedAssignment, setExpandedAssignment] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
@@ -322,7 +328,7 @@ export default function MobileVolunteerDashboard({
                     {activeCountGroups.map((group) => (
                       <Link
                         key={group.groupId}
-                        href={`/events/${event.id}/count-times/${group.sessionId}/enter-count`}
+                        href={`/events/${event.id}/count-times/${group.sessionId}/enter-count${enterCountViewAsQuery}`}
                         className="block bg-gradient-to-r from-teal-50 to-cyan-50 border-2 border-teal-300 rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow touch-manipulation"
                       >
                         <div className="flex items-center justify-between">
@@ -352,7 +358,7 @@ export default function MobileVolunteerDashboard({
                       return (
                         <Link
                           key={session.id}
-                          href={`/events/${event.id}/count-times/${session.id}/enter-count`}
+                          href={`/events/${event.id}/count-times/${session.id}/enter-count${enterCountViewAsQuery}`}
                           className="block bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-300 rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow touch-manipulation"
                         >
                           <div className="flex items-center justify-between">

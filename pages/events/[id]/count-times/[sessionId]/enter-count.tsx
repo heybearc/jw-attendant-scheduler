@@ -5,7 +5,12 @@ import EventLayout from '../../../../../components/EventLayout'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { useSession } from 'next-auth/react'
-import { getViewAsHeaders } from '@/lib/viewAsClient'
+import {
+  getViewAsHeaders,
+  getViewAsVolunteerId,
+  setViewAsVolunteerId,
+  VIEW_AS_SIMULATION_ROLES,
+} from '@/lib/viewAsClient'
 import CountSubmissionSummaries from '../../../../../components/CountSubmissionSummaries'
 import type {
   GroupSubmissionSummary,
@@ -50,6 +55,8 @@ export default function EnterCountPage() {
   const router = useRouter()
   const { data: session, status: sessionStatus } = useSession()
   const { id: eventId, sessionId } = router.query
+  const viewAsVolunteerIdFromQuery =
+    typeof router.query.viewAsVolunteerId === 'string' ? router.query.viewAsVolunteerId : null
   const [event, setEvent] = useState<Event | null>(null)
   const [countSession, setCountSession] = useState<CountSession | null>(null)
   const [positions, setPositions] = useState<Position[]>([])
@@ -64,18 +71,40 @@ export default function EnterCountPage() {
   const userRole = session?.user?.role || ''
   const isPrivilegedCounter = ['ADMIN', 'OVERSEER', 'KEYMAN'].includes(userRole)
 
+  const viewAsVid =
+    viewAsVolunteerIdFromQuery || (typeof window !== 'undefined' ? getViewAsVolunteerId() : null)
+  const privilegedCounterView = isPrivilegedCounter && !viewAsVid
+  const effectiveVolunteerIdForCounts = viewAsVid || session?.user?.id || ''
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (!(VIEW_AS_SIMULATION_ROLES as readonly string[]).includes(session?.user?.role || '')) {
+      return
+    }
+    if (viewAsVolunteerIdFromQuery) {
+      setViewAsVolunteerId(viewAsVolunteerIdFromQuery)
+    }
+  }, [session?.user?.role, viewAsVolunteerIdFromQuery])
+
   useEffect(() => {
     // Wait until auth state resolves so role-based filtering is correct for admins.
     if (sessionStatus === 'loading') return
     if (eventId && sessionId) {
       fetchData()
     }
-  }, [eventId, sessionId, sessionStatus, userRole, session?.user?.id])
+  }, [
+    eventId,
+    sessionId,
+    sessionStatus,
+    userRole,
+    session?.user?.id,
+    viewAsVolunteerIdFromQuery,
+  ])
 
   const fetchData = async () => {
     try {
       setLoading(true)
-      
+
       // Fetch event, count session, positions, and existing counts
       const viewAsHeaders = getViewAsHeaders()
       const [eventRes, sessionRes, positionsRes, countsRes, assigneesRes, groupsRes] = await Promise.all([
@@ -120,7 +149,7 @@ export default function EnterCountPage() {
           }
         })
         
-        if (isPrivilegedCounter) {
+        if (privilegedCounterView) {
           // Show all positions for admin roles
           setPositions(allPositions)
         } else {
@@ -134,7 +163,8 @@ export default function EnterCountPage() {
             ? userPositions
             : allPositions.filter((pos: any) =>
                 pos.assignments?.some((assignment: any) =>
-                  assignment.volunteerId === session?.user?.id || assignment.attendantId === session?.user?.id
+                  assignment.volunteerId === effectiveVolunteerIdForCounts ||
+                  assignment.attendantId === effectiveVolunteerIdForCounts
                 )
               )
           setPositions(fallbackPositions)
@@ -143,12 +173,16 @@ export default function EnterCountPage() {
 
       if (groupsData?.success && Array.isArray(groupsData?.data?.groups)) {
         const allGroups: CountGroup[] = groupsData.data.groups
-        if (isPrivilegedCounter) {
+        if (privilegedCounterView) {
           setGroups(allGroups)
         } else {
-          setGroups(allGroups.filter((group) =>
-            group.primaryVolunteerId === session?.user?.id || group.secondaryVolunteerId === session?.user?.id
-          ))
+          setGroups(
+            allGroups.filter(
+              (group) =>
+                group.primaryVolunteerId === effectiveVolunteerIdForCounts ||
+                group.secondaryVolunteerId === effectiveVolunteerIdForCounts
+            )
+          )
         }
       } else {
         setGroups([])
@@ -417,9 +451,9 @@ export default function EnterCountPage() {
             <div className="text-6xl mb-4">👤</div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">No Assigned Positions</h3>
             <p className="text-gray-600">
-              {isPrivilegedCounter
+              {privilegedCounterView
                 ? 'No positions are configured for this event yet.'
-                : 'You are not assigned to any positions for this event, so you cannot enter counts.'}
+                : 'You are not assigned to take counts for this session.'}
             </p>
           </div>
         ) : groups.length > 0 ? (

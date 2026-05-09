@@ -1,4 +1,4 @@
-import { ReactNode, useState } from 'react'
+import { ReactNode, useEffect, useState } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
@@ -9,6 +9,7 @@ import dynamic from 'next/dynamic'
 import FloatingActionButton from './FloatingActionButton'
 import QuickVolunteerLookup from './QuickVolunteerLookup'
 import QuickAssignmentForm from './QuickAssignmentForm'
+import { getViewAsVolunteerId } from '@/lib/viewAsClient'
 
 // Lazy load QR scanner (only loaded when needed)
 const QRScanner = dynamic(() => import('./QRScanner'), {
@@ -42,6 +43,17 @@ export default function EventLayout({
   const [showVolunteerLookup, setShowVolunteerLookup] = useState(false)
   const [showAssignmentForm, setShowAssignmentForm] = useState(false)
   const [showQRScanner, setShowQRScanner] = useState(false)
+  const [viewAsVolunteerActive, setViewAsVolunteerActive] = useState(false)
+
+  useEffect(() => {
+    const sync = () => setViewAsVolunteerActive(!!getViewAsVolunteerId())
+    sync()
+    window.addEventListener('theoshift-view-as-volunteer-changed', sync)
+    return () => window.removeEventListener('theoshift-view-as-volunteer-changed', sync)
+  }, [router.asPath])
+
+  const hideStaffQuickFab =
+    typeof router.query.viewAsVolunteerId === 'string' || viewAsVolunteerActive
 
   const handleSignOut = () => {
     // Don't specify callbackUrl - let next-auth use the current origin
@@ -219,7 +231,7 @@ export default function EventLayout({
       <BottomNav selectedEventId={selectedEvent?.id} />
 
       {/* Floating Action Button with Quick Actions */}
-      {selectedEvent && (
+      {selectedEvent && !hideStaffQuickFab && (
         <>
           <FloatingActionButton
             primaryAction={{

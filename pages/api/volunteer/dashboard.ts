@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../src/lib/prisma'
 import { toDateOnlyStringUTC } from '../../../src/lib/calendarDate'
+import { volunteerMayCountStationFromPreloaded } from '@/lib/countStationVolunteerAccess'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -271,40 +272,124 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
-    // Get active count sessions for this event where this volunteer is explicitly assigned to a station.
-    const activeCountSessionsRaw = await prisma.count_sessions.findMany({
+    // Station-level counts: same rules as POST .../count-sessions/[sessionId]/counts (volunteerCanEnterStationCount).
+    const fallbackEnabled = process.env.COUNT_ASSIGNMENTS_FALLBACK === 'true'
+
+    const activeSessions = await prisma.count_sessions.findMany({
       where: {
         eventId: eventId as string,
         status: 'ACTIVE',
-        isActive: true,
-        assignees: {
-          some: {
-            volunteerId: volunteerId as string
-          }
-        }
+        isActive: true
       },
       select: {
         id: true,
         sessionName: true,
         countTime: true,
-        status: true,
-        assignees: {
-          where: { volunteerId: volunteerId as string },
-          select: { positionId: true }
-        }
+        status: true
       },
       orderBy: {
         countTime: 'asc'
       }
     })
 
+    const sessionIds = activeSessions.map((s) => s.id)
+
+    const activePositions = await prisma.positions.findMany({
+      where: { eventId: eventId as string, isActive: true },
+      select: { id: true },
+      orderBy: { positionNumber: 'asc' }
+    })
+    const activePositionIds = activePositions.map((p) => p.id)
+
+    const [assigneesForSessions, volunteerPositionRows, staffForSuggestions] = await Promise.all([
+      sessionIds.length === 0
+        ? Promise.resolve([] as Array<{ countSessionId: string; positionId: string; volunteerId: string }>)
+        : prisma.count_session_position_assignees.findMany({
+            where: { countSessionId: { in: sessionIds } },
+            select: { countSessionId: true, positionId: true, volunteerId: true }
+          }),
+      prisma.position_assignments.findMany({
+        where: {
+          volunteerId: volunteerId as string,
+          positions: { eventId: eventId as string }
+        },
+        select: { positionId: true }
+      }),
+      activePositionIds.length === 0
+        ? Promise.resolve(
+            [] as Array<{
+              positionId: string
+              volunteerId: string
+              shift: { startTime: string | null; endTime: string | null; isAllDay: boolean } | null
+            }>
+          )
+        : prisma.position_assignments.findMany({
+            where: {
+              positionId: { in: activePositionIds },
+              role: { in: ['VOLUNTEER', 'ATTENDANT'] }
+            },
+            select: {
+              positionId: true,
+              volunteerId: true,
+              shift: { select: { startTime: true, endTime: true, isAllDay: true } }
+            }
+          })
+    ])
+
+    const volunteerPositionSet = new Set(volunteerPositionRows.map((r) => r.positionId))
+
+    const suggestionCandidatesByPosition = new Map<
+      string,
+      Array<{
+        volunteerId: string
+        shift: { startTime: string | null; endTime: string | null; isAllDay: boolean } | null
+      }>
+    >()
+    for (const a of staffForSuggestions) {
+      const list = suggestionCandidatesByPosition.get(a.positionId) || []
+      list.push({ volunteerId: a.volunteerId, shift: a.shift })
+      suggestionCandidatesByPosition.set(a.positionId, list)
+    }
+
+    const assigneesBySession = new Map<string, typeof assigneesForSessions>()
+    for (const row of assigneesForSessions) {
+      const list = assigneesBySession.get(row.countSessionId) || []
+      list.push(row)
+      assigneesBySession.set(row.countSessionId, list)
+    }
+
+    const vid = volunteerId as string
+
     // Drop station-level tasks for positions that are already covered by a count group for this volunteer.
-    const activeCountSessions = activeCountSessionsRaw
+    const activeCountSessions = activeSessions
       .map((session) => {
-        const positionIds = session.assignees
-          .map((a) => a.positionId)
-          .filter((pid) => !groupPositionKeys.has(`${session.id}:${pid}`))
-        return { ...session, positionIds }
+        const rows = assigneesBySession.get(session.id) || []
+
+        const positionIds: string[] = []
+        for (const p of activePositions) {
+          const assigneesAtStation = rows
+            .filter((r) => r.positionId === p.id)
+            .map((r) => ({ volunteerId: r.volunteerId }))
+
+          const ok = volunteerMayCountStationFromPreloaded({
+            sessionCountTime: session.countTime,
+            volunteerId: vid,
+            assigneesAtStation,
+            suggestionCandidates: suggestionCandidatesByPosition.get(p.id) ?? [],
+            fallbackEnabled,
+            volunteerHasLegacyAssignment: volunteerPositionSet.has(p.id)
+          })
+          if (ok) positionIds.push(p.id)
+        }
+
+        const filtered = positionIds.filter((pid) => !groupPositionKeys.has(`${session.id}:${pid}`))
+        return {
+          id: session.id,
+          sessionName: session.sessionName,
+          countTime: session.countTime,
+          status: session.status,
+          positionIds: filtered
+        }
       })
       .filter((session) => session.positionIds.length > 0)
 

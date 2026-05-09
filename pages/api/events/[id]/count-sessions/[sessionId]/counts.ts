@@ -6,11 +6,10 @@ import { handleApiError } from '@/lib/apiError'
 import {
   blockSimulatedMutation,
   getSessionUser,
-  hasSessionPositionAssignees,
   isPrivilegedCounterRole,
-  isVolunteerAssignedToSessionPosition,
   resolveVolunteerIdForSessionUser
 } from '@/lib/countAssignments'
+import { volunteerCanEnterStationCount } from '@/lib/countStationVolunteerAccess'
 
 // Validation schema for position count
 const positionCountSchema = z.object({
@@ -191,21 +190,12 @@ async function handlePost(
       return res.status(403).json({ error: 'No volunteer identity found for this user' })
     }
 
-    const hasExplicitAssignees = await hasSessionPositionAssignees(sessionId, data.positionId)
-    let canEnter = false
-
-    if (hasExplicitAssignees) {
-      canEnter = await isVolunteerAssignedToSessionPosition(sessionId, data.positionId, volunteerId)
-    } else if (process.env.COUNT_ASSIGNMENTS_FALLBACK === 'true') {
-      const legacyAssignment = await prisma.position_assignments.findFirst({
-        where: {
-          positionId: data.positionId,
-          volunteerId
-        },
-        select: { id: true }
-      })
-      canEnter = !!legacyAssignment
-    }
+    const canEnter = await volunteerCanEnterStationCount({
+      eventId,
+      countSessionId: sessionId,
+      positionId: data.positionId,
+      volunteerId,
+    })
 
     if (!canEnter) {
       return res.status(403).json({ error: 'You are not assigned to enter a count for this station/session' })

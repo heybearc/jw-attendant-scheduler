@@ -2,7 +2,7 @@ import { GetServerSideProps } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../../../api/auth/[...nextauth]'
 import EventLayout from '../../../../../components/EventLayout'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import CountSubmissionSummaries from '../../../../../components/CountSubmissionSummaries'
@@ -10,7 +10,6 @@ import type {
   GroupSubmissionSummary,
   UngroupedPositionSubmission
 } from '@/lib/countSessionSubmissionSummaries'
-
 interface PositionCount {
   id: string
   attendeeCount: number | null
@@ -52,12 +51,39 @@ export default function CountSessionDetailPage() {
   const [countSession, setCountSession] = useState<CountSession | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [submissionDetailsOpen, setSubmissionDetailsOpen] = useState(false)
+  const submissionSectionRef = useRef<HTMLDivElement>(null)
+
+  const toggleSubmissionDetails = () => {
+    setSubmissionDetailsOpen((open) => {
+      const next = !open
+      if (next) {
+        requestAnimationFrame(() => {
+          submissionSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        })
+      }
+      return next
+    })
+  }
+
+  const onStatCardKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      toggleSubmissionDetails()
+    }
+  }
 
   useEffect(() => {
     if (eventId && sessionId) {
       fetchData()
     }
   }, [eventId, sessionId])
+
+  useEffect(() => {
+    if (router.query.submissions === '1' || router.query.submissions === 'open') {
+      setSubmissionDetailsOpen(true)
+    }
+  }, [router.query.submissions])
 
   const fetchData = async () => {
     try {
@@ -222,9 +248,19 @@ export default function CountSessionDetailPage() {
           </div>
         </div>
 
-        {/* Stats Cards */}
+        {/* Stats Cards — click to expand/collapse recorded submissions */}
+        <p className="text-sm text-gray-500 mb-3">
+          Click any summary card to show or hide the submission breakdown (groups and individual stations).
+        </p>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white shadow rounded-lg p-6">
+          <button
+            type="button"
+            onClick={toggleSubmissionDetails}
+            onKeyDown={onStatCardKeyDown}
+            className={`bg-white shadow rounded-lg p-6 text-left w-full transition-all hover:shadow-md hover:ring-2 hover:ring-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+              submissionDetailsOpen ? 'ring-2 ring-blue-300' : ''
+            }`}
+          >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Attendees</p>
@@ -232,29 +268,51 @@ export default function CountSessionDetailPage() {
               </div>
               <div className="text-4xl">👥</div>
             </div>
-          </div>
-          
-          <div className="bg-white shadow rounded-lg p-6">
+          </button>
+
+          <button
+            type="button"
+            onClick={toggleSubmissionDetails}
+            onKeyDown={onStatCardKeyDown}
+            className={`bg-white shadow rounded-lg p-6 text-left w-full transition-all hover:shadow-md hover:ring-2 hover:ring-green-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-600 ${
+              submissionDetailsOpen ? 'ring-2 ring-green-300' : ''
+            }`}
+          >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Positions Counted</p>
+                <p className="text-sm text-gray-600">Positions / groups counted</p>
                 <p className="text-3xl font-bold text-green-600">{stats.counted}</p>
+                <p className="text-xs text-gray-400 mt-1">Each group counts as one slot</p>
               </div>
               <div className="text-4xl">✅</div>
             </div>
-          </div>
-          
-          <div className="bg-white shadow rounded-lg p-6">
+          </button>
+
+          <button
+            type="button"
+            onClick={toggleSubmissionDetails}
+            onKeyDown={onStatCardKeyDown}
+            className={`bg-white shadow rounded-lg p-6 text-left w-full transition-all hover:shadow-md hover:ring-2 hover:ring-yellow-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-600 ${
+              submissionDetailsOpen ? 'ring-2 ring-yellow-300' : ''
+            }`}
+          >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Pending Counts</p>
+                <p className="text-sm text-gray-600">Pending</p>
                 <p className="text-3xl font-bold text-yellow-600">{stats.pending}</p>
               </div>
               <div className="text-4xl">⏳</div>
             </div>
-          </div>
-          
-          <div className="bg-white shadow rounded-lg p-6">
+          </button>
+
+          <button
+            type="button"
+            onClick={toggleSubmissionDetails}
+            onKeyDown={onStatCardKeyDown}
+            className={`bg-white shadow rounded-lg p-6 text-left w-full transition-all hover:shadow-md hover:ring-2 hover:ring-purple-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 ${
+              submissionDetailsOpen ? 'ring-2 ring-purple-300' : ''
+            }`}
+          >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Completion</p>
@@ -264,15 +322,33 @@ export default function CountSessionDetailPage() {
               </div>
               <div className="text-4xl">📊</div>
             </div>
-          </div>
+          </button>
         </div>
 
-        <div className="mb-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Recorded submissions</h2>
-          <CountSubmissionSummaries
-            groups={countSession.groupSubmissionSummaries ?? []}
-            ungroupedPositions={countSession.ungroupedPositionSubmissions ?? []}
-          />
+        <div ref={submissionSectionRef} className="mb-8 rounded-xl border border-gray-200 bg-gray-50/80 overflow-hidden scroll-mt-4">
+          <button
+            type="button"
+            onClick={toggleSubmissionDetails}
+            className="w-full flex items-center justify-between gap-4 px-4 py-4 text-left bg-white border-b border-gray-200 hover:bg-gray-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500"
+          >
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">Recorded submissions</h2>
+              <p className="text-sm text-gray-500 mt-0.5">
+                {submissionDetailsOpen ? 'Hide tables' : 'Expand to see each group and station entry'}
+              </p>
+            </div>
+            <span className="text-gray-400 text-2xl shrink-0" aria-hidden>
+              {submissionDetailsOpen ? '▾' : '▸'}
+            </span>
+          </button>
+          {submissionDetailsOpen && (
+            <div className="p-4 md:p-6 bg-white">
+              <CountSubmissionSummaries
+                groups={countSession.groupSubmissionSummaries ?? []}
+                ungroupedPositions={countSession.ungroupedPositionSubmissions ?? []}
+              />
+            </div>
+          )}
         </div>
 
         {/* Counts by Department */}

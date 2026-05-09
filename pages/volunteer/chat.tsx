@@ -637,29 +637,43 @@ export default function VolunteerChatPage() {
       </Head>
       <div className="min-h-screen bg-gray-50">
         <div className="bg-white border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-            <div>
+          <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0 flex-1">
               <h1 className="text-xl font-semibold text-gray-900">💬 Event Chat</h1>
               {effectiveViewAsVolunteerId ? (
                 <p className="text-sm text-amber-700">View-as volunteer simulation is active.</p>
               ) : (
-                <p className="text-sm text-gray-600">Magic-link session active for {session?.user?.email}</p>
+                <p className="text-sm text-gray-600 break-words">
+                  Magic-link session active for{' '}
+                  <span className="break-all">{session?.user?.email}</span>
+                </p>
               )}
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-shrink-0 flex-wrap items-center gap-2 sm:justify-end">
               {pushNotificationsEnabledForEvent && !isViewAsSimulationActive && pushStatus !== 'unsupported' && (
                 <button
+                  type="button"
                   onClick={() => (pushStatus === 'enabled' ? disablePush() : enablePush())}
-                  className="text-sm px-3 py-1 rounded border border-gray-300 bg-white hover:bg-gray-50"
+                  className="text-sm px-3 py-2 min-h-[44px] rounded border border-gray-300 bg-white hover:bg-gray-50 touch-manipulation"
                 >
                   {pushStatus === 'enabled' ? 'Disable notifications' : 'Enable notifications'}
                 </button>
               )}
               {pushNotificationsEnabledForEvent && isViewAsSimulationActive && (
-                <span className="text-xs text-gray-500">Notifications are disabled during view-as simulation.</span>
+                <span className="text-xs text-gray-500 max-w-[220px] sm:max-w-none">
+                  Notifications are disabled during view-as simulation.
+                </span>
               )}
+              {pushNotificationsEnabledForEvent &&
+                !isViewAsSimulationActive &&
+                pushStatus === 'unsupported' && (
+                  <span className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded px-2 py-1.5 max-w-full">
+                    This browser can&apos;t show push alerts. Try Chrome (Android) or updated Safari (iOS).
+                  </span>
+                )}
               {effectiveViewAsVolunteerId && typeof router.query.eventId === 'string' && (
                 <button
+                  type="button"
                   onClick={async () => {
                     try {
                       await fetch(`/api/admin/view-as?eventId=${router.query.eventId}`, { method: 'DELETE' })
@@ -670,7 +684,7 @@ export default function VolunteerChatPage() {
                       router.push(`/events/${router.query.eventId}/chat`)
                     }
                   }}
-                  className="text-sm px-3 py-1 rounded bg-amber-700 text-white hover:bg-amber-800"
+                  className="text-sm px-3 py-2 min-h-[44px] rounded bg-amber-700 text-white hover:bg-amber-800 touch-manipulation"
                 >
                   Exit Simulation
                 </button>
@@ -683,7 +697,7 @@ export default function VolunteerChatPage() {
                       }`
                     : '/volunteer/dashboard'
                 }
-                className="text-sm text-blue-600 hover:text-blue-800"
+                className="text-sm px-2 py-2 min-h-[44px] inline-flex items-center text-blue-600 hover:text-blue-800 touch-manipulation"
               >
                 Back to Dashboard
               </Link>

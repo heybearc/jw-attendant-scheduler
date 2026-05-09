@@ -663,12 +663,12 @@ export default function EventStaffChatPage({
     >
       <div className="max-w-7xl mx-auto">
         <div className="mb-6">
-          <div className="flex items-start justify-between gap-4">
-            <div>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0 flex-1">
               <h1 className="text-2xl font-bold text-gray-900">Staff Chat</h1>
               <p className="text-gray-600">Moderate and coordinate event communication channels.</p>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-shrink-0 flex-wrap items-center gap-2">
               {canNotifyChatLaunch && (
                 <button
                   type="button"

@@ -8,6 +8,13 @@ export const VIEW_AS_SIMULATION_ROLES = [
   'KEYMAN',
 ] as const
 
+/** Session roles may not match enum casing; simulation must still apply. */
+export function canSimulateVolunteerRole(role: string | undefined): boolean {
+  if (!role) return false
+  const normalized = role.trim().toUpperCase()
+  return (VIEW_AS_SIMULATION_ROLES as readonly string[]).includes(normalized)
+}
+
 export function getViewAsVolunteerId(): string | null {
   if (typeof window === 'undefined') return null
   return window.localStorage.getItem(STORAGE_KEY)

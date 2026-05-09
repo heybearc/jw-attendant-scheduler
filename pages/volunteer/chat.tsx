@@ -3,7 +3,12 @@ import { useRouter } from 'next/router'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import Head from 'next/head'
-import { getViewAsHeaders, getViewAsVolunteerId, setViewAsVolunteerId } from '@/lib/viewAsClient'
+import {
+  canSimulateVolunteerRole,
+  getViewAsHeaders,
+  getViewAsVolunteerId,
+  setViewAsVolunteerId,
+} from '@/lib/viewAsClient'
 import { disableChatPushSubscription, enableChatPushSubscription } from '@/lib/chatPushClient'
 
 interface ChatChannel {
@@ -83,16 +88,15 @@ export default function VolunteerChatPage() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    if (!['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER'].includes(session?.user?.role || '')) return
+    if (!canSimulateVolunteerRole(session?.user?.role)) return
     if (viewAsVolunteerIdFromQuery) {
       setViewAsVolunteerId(viewAsVolunteerIdFromQuery)
     }
   }, [session?.user?.role, viewAsVolunteerIdFromQuery])
 
-  const effectiveViewAsVolunteerId =
-    ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER'].includes(session?.user?.role || '')
-      ? (viewAsVolunteerIdFromQuery || getViewAsVolunteerId())
-      : null
+  const effectiveViewAsVolunteerId = canSimulateVolunteerRole(session?.user?.role)
+    ? (viewAsVolunteerIdFromQuery || getViewAsVolunteerId())
+    : null
   const isViewAsSimulationActive = !!effectiveViewAsVolunteerId
 
   const eventIdForChat = typeof router.query.eventId === 'string' ? router.query.eventId : null
@@ -1056,11 +1060,12 @@ export default function VolunteerChatPage() {
 export async function getServerSideProps(context: any) {
   const { getServerSession } = await import('next-auth')
   const { authOptions } = await import('../api/auth/[...nextauth]')
+  const { canSimulateVolunteerRole } = await import('@/lib/viewAsClient')
 
   const session = await getServerSession(context.req, context.res, authOptions)
   const isVolunteer = session?.user?.role === 'VOLUNTEER'
   const isStaffViewAs =
-    ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER'].includes(session?.user?.role || '') &&
+    canSimulateVolunteerRole(session?.user?.role) &&
     typeof context.query.viewAsVolunteerId === 'string' &&
     context.query.viewAsVolunteerId.length > 0
 

@@ -10,10 +10,10 @@ import AnnouncementBanner from '../../components/AnnouncementBanner'
 import VolunteerPdfViewer from '../../components/VolunteerPdfViewer'
 import EarlyCheckinPanel from '../../components/EarlyCheckinPanel'
 import {
+  canSimulateVolunteerRole,
   getViewAsHeaders,
   getViewAsVolunteerId,
   setViewAsVolunteerId,
-  VIEW_AS_SIMULATION_ROLES,
 } from '@/lib/viewAsClient'
 import type { ChatPushSetupStatus } from '@/lib/chatPushClient'
 import {
@@ -203,7 +203,7 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    if (!(VIEW_AS_SIMULATION_ROLES as readonly string[]).includes(session?.user?.role || '')) return
+    if (!canSimulateVolunteerRole(session?.user?.role)) return
     if (simulatedVolunteerIdFromQuery) {
       setViewAsVolunteerId(simulatedVolunteerIdFromQuery)
     }
@@ -454,9 +454,7 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
         return
       }
       
-      const simulatedVolunteerId = (VIEW_AS_SIMULATION_ROLES as readonly string[]).includes(
-        session.user.role
-      )
+      const simulatedVolunteerId = canSimulateVolunteerRole(session.user.role)
         ? (simulatedVolunteerIdFromQuery || getViewAsVolunteerId())
         : null
       const effectiveVolunteerId = simulatedVolunteerId || session.user.id
@@ -677,9 +675,7 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
   }
 
   const totalUnreadChat = chatChannels.reduce((sum, c) => sum + (c.unreadCount || 0), 0)
-  const effectiveViewAsVolunteerId = (VIEW_AS_SIMULATION_ROLES as readonly string[]).includes(
-    session?.user?.role || ''
-  )
+  const effectiveViewAsVolunteerId = canSimulateVolunteerRole(session?.user?.role)
     ? (simulatedVolunteerIdFromQuery || getViewAsVolunteerId())
     : null
 
@@ -2012,7 +2008,7 @@ export async function getServerSideProps(context: any) {
   
   const isVolunteer = session?.user?.role === 'VOLUNTEER'
   const isStaffViewAs =
-    (VIEW_AS_SIMULATION_ROLES as readonly string[]).includes(session?.user?.role || '') &&
+    canSimulateVolunteerRole(session?.user?.role) &&
     typeof context.query.viewAsVolunteerId === 'string' &&
     context.query.viewAsVolunteerId.length > 0
 

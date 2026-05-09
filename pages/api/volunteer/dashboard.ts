@@ -12,10 +12,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ success: false, error: 'Missing volunteerId or eventId' })
   }
 
+  const vid = String(volunteerId).trim()
+
   try {
     // Get volunteer information using proper Prisma
     const volunteer = await prisma.volunteers.findUnique({
-      where: { id: volunteerId as string }
+      where: { id: vid }
     })
 
     if (!volunteer) {
@@ -25,7 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Get published documents for THIS EVENT ONLY
     const publishedDocs = await prisma.document_publications.findMany({
       where: {
-        volunteerId: volunteerId as string,
+        volunteerId: vid,
         event_documents: {
           eventId: eventId as string
         }
@@ -71,7 +73,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Get position assignments for this volunteer
     const positionAssignments = await prisma.position_assignments.findMany({
       where: {
-        volunteerId: volunteerId as string,
+        volunteerId: vid,
         positions: {
           eventId: eventId as string
         }
@@ -155,7 +157,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .filter(a => a.positionId === assignment.positions.id)
         .map(a => ({
           volunteerName: `${a.volunteer.firstName} ${a.volunteer.lastName}`,
-          isCurrentUser: a.volunteerId === volunteerId,
+          isCurrentUser: a.volunteerId === vid,
           shiftName: a.shift?.name || '',
           startTime: a.shift?.isAllDay ? 'All Day' : (a.shift?.startTime || ''),
           endTime: a.shift?.isAllDay ? '' : (a.shift?.endTime || ''),
@@ -179,7 +181,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Get oversight contacts from event_volunteers table (source of truth)
     const eventVolunteer = await prisma.event_volunteers.findFirst({
       where: {
-        volunteerId: volunteerId as string,
+        volunteerId: vid,
         eventId: eventId as string
       },
       select: {
@@ -241,8 +243,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           isActive: true
         },
         OR: [
-          { primaryVolunteerId: volunteerId as string },
-          { secondaryVolunteerId: volunteerId as string }
+          { primaryVolunteerId: vid },
+          { secondaryVolunteerId: vid }
         ]
       },
       include: {
@@ -262,13 +264,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       },
       orderBy: { countSession: { countTime: 'asc' } }
     })
-
-    const groupPositionKeys = new Set<string>()
-    for (const g of volunteerGroups) {
-      for (const row of g.positions) {
-        groupPositionKeys.add(`${g.countSessionId}:${row.positionId}`)
-      }
-    }
 
     // Station-level counts on the volunteer dashboard: only volunteers explicitly listed in
     // count_session_position_assignees for that session/station. (Suggestion winners and legacy
@@ -292,48 +287,59 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const sessionIds = activeSessions.map((s) => s.id)
 
-    const assigneesForSessions =
-      sessionIds.length === 0
-        ? []
-        : await prisma.count_session_position_assignees.findMany({
-            // Suggested rows (from "Apply suggestions") are draft until overseer confirms.
-            where: { countSessionId: { in: sessionIds }, isSuggested: false },
-            select: { countSessionId: true, positionId: true, volunteerId: true }
-          })
+    let assigneesForSessions: Array<{
+      countSessionId: string
+      positionId: string
+      volunteerId: string
+    }> = []
+
+    const groupPositionKeys = new Set<string>()
+    const stationPositionsInOthersGroups = new Set<string>()
+
+    if (sessionIds.length > 0) {
+      const [assigneeRows, groupsMeta, groupPositionRows] = await Promise.all([
+        prisma.count_session_position_assignees.findMany({
+          // Suggested rows (from "Apply suggestions") are draft until overseer confirms.
+          where: { countSessionId: { in: sessionIds }, isSuggested: false },
+          select: { countSessionId: true, positionId: true, volunteerId: true }
+        }),
+        prisma.count_session_groups.findMany({
+          where: { countSessionId: { in: sessionIds } },
+          select: {
+            id: true,
+            countSessionId: true,
+            primaryVolunteerId: true,
+            secondaryVolunteerId: true
+          }
+        }),
+        prisma.count_session_group_positions.findMany({
+          where: { countSessionId: { in: sessionIds } },
+          select: { countSessionId: true, groupId: true, positionId: true }
+        })
+      ])
+
+      assigneesForSessions = assigneeRows
+
+      const groupMetaById = new Map(groupsMeta.map((g) => [g.id, g]))
+      for (const row of groupPositionRows) {
+        const g = groupMetaById.get(row.groupId)
+        if (!g) continue
+        const key = `${row.countSessionId}:${row.positionId}`
+        const isThisVolunteer =
+          g.primaryVolunteerId === vid || g.secondaryVolunteerId === vid
+        if (isThisVolunteer) {
+          groupPositionKeys.add(key)
+        } else {
+          stationPositionsInOthersGroups.add(key)
+        }
+      }
+    }
 
     const assigneesBySession = new Map<string, typeof assigneesForSessions>()
     for (const row of assigneesForSessions) {
       const list = assigneesBySession.get(row.countSessionId) || []
       list.push(row)
       assigneesBySession.set(row.countSessionId, list)
-    }
-
-    const vid = volunteerId as string
-
-    // Stations that belong to another volunteer's count group should not offer station-level submit
-    // on the dashboard (counts go through the group's primary/secondary only). Explicit assignee
-    // rows can remain from earlier setup; they must not surface duplicate submit UI here.
-    const allGroupsForSessions =
-      sessionIds.length === 0
-        ? []
-        : await prisma.count_session_groups.findMany({
-            where: { countSessionId: { in: sessionIds } },
-            select: {
-              countSessionId: true,
-              primaryVolunteerId: true,
-              secondaryVolunteerId: true,
-              positions: { select: { positionId: true } }
-            }
-          })
-
-    const stationPositionsInOthersGroups = new Set<string>()
-    for (const g of allGroupsForSessions) {
-      const isThisVolunteer =
-        g.primaryVolunteerId === vid || g.secondaryVolunteerId === vid
-      if (isThisVolunteer) continue
-      for (const row of g.positions) {
-        stationPositionsInOthersGroups.add(`${g.countSessionId}:${row.positionId}`)
-      }
     }
 
     const activeCountSessions = activeSessions

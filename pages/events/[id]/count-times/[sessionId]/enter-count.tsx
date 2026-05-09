@@ -6,10 +6,10 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import { useSession } from 'next-auth/react'
 import {
+  canSimulateVolunteerRole,
   getViewAsHeaders,
   getViewAsVolunteerId,
   setViewAsVolunteerId,
-  VIEW_AS_SIMULATION_ROLES,
 } from '@/lib/viewAsClient'
 import CountSubmissionSummaries from '../../../../../components/CountSubmissionSummaries'
 import type {
@@ -78,7 +78,7 @@ export default function EnterCountPage() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    if (!(VIEW_AS_SIMULATION_ROLES as readonly string[]).includes(session?.user?.role || '')) {
+    if (!canSimulateVolunteerRole(session?.user?.role)) {
       return
     }
     if (viewAsVolunteerIdFromQuery) {

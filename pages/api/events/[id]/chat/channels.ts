@@ -184,21 +184,40 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         select: { lastReadAt: true }
       })
 
+      // Unread = messages after lastRead that are not "from this viewer".
+      // Using NOT { senderVolunteerId: id } is wrong for volunteers: staff messages have null
+      // senderVolunteerId, and in SQL NOT (NULL = id) is unknown, so those rows were excluded.
+      const actorUserId = chatAccess.actor.id
+      const unreadFromOthers =
+        chatAccess.actor.kind === 'user'
+          ? ({
+              OR: [
+                // Another staff member (senderUserId set)
+                {
+                  AND: [{ senderUserId: { not: null } }, { NOT: { senderUserId: actorUserId } }]
+                },
+                linkedVolunteerId
+                  ? {
+                      AND: [{ senderVolunteerId: { not: null } }, { NOT: { senderVolunteerId: linkedVolunteerId } }]
+                    }
+                  : { senderVolunteerId: { not: null } },
+                // System / unknown sender
+                { AND: [{ senderUserId: null }, { senderVolunteerId: null }] }
+              ]
+            } as const)
+          : ({
+              OR: [
+                { senderVolunteerId: null },
+                { NOT: { senderVolunteerId: actorUserId } }
+              ]
+            } as const)
+
       const unreadCount = await prisma.event_chat_messages.count({
         where: {
           channelId: channel.id,
           deletedAt: null,
           ...(readState?.lastReadAt ? { createdAt: { gt: readState.lastReadAt } } : {}),
-          ...(chatAccess.actor.kind === 'user'
-            ? {
-                NOT: {
-                  OR: [
-                    { senderUserId: chatAccess.actor.id },
-                    ...(linkedVolunteerId ? [{ senderVolunteerId: linkedVolunteerId }] : [])
-                  ]
-                }
-              }
-            : { NOT: { senderVolunteerId: chatAccess.actor.id } })
+          ...unreadFromOthers
         }
       })
 

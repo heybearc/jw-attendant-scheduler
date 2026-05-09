@@ -23,6 +23,8 @@ interface CountGroup {
   positionIds: string[]
   primaryVolunteerId?: string | null
   secondaryVolunteerId?: string | null
+  primaryName?: string | null
+  secondaryName?: string | null
 }
 
 interface CountSession {
@@ -407,7 +409,14 @@ export default function EnterCountPage() {
             {groups.map((group) => (
               <div key={group.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
                 <h4 className="font-medium text-gray-900">{group.name}</h4>
-                <p className="text-xs text-gray-500 mb-2">Stations in group: {group.positionIds.length}</p>
+                <p className="text-sm text-gray-700 mt-1">
+                  <span className="text-gray-500">Primary counter:</span>{' '}
+                  <span className="font-medium">{group.primaryName || '—'}</span>
+                  <span className="text-gray-400 mx-2">·</span>
+                  <span className="text-gray-500">Secondary:</span>{' '}
+                  <span className="font-medium">{group.secondaryName || '—'}</span>
+                </p>
+                <p className="text-xs text-gray-500 mb-2 mt-2">Stations in group: {group.positionIds.length}</p>
                 <div className="flex gap-2">
                   <input
                     type="number"

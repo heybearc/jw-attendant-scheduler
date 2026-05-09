@@ -91,6 +91,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           name: group.name,
           primaryVolunteerId: group.primaryVolunteerId,
           secondaryVolunteerId: group.secondaryVolunteerId,
+          primaryName: group.primaryVolunteer
+            ? `${group.primaryVolunteer.firstName} ${group.primaryVolunteer.lastName}`.trim()
+            : null,
+          secondaryName: group.secondaryVolunteer
+            ? `${group.secondaryVolunteer.firstName} ${group.secondaryVolunteer.lastName}`.trim()
+            : null,
           positionIds: group.positions.map((p) => p.positionId),
           entry: group.entry
         })),

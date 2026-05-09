@@ -586,7 +586,11 @@ export default function EventStaffChatPage({
   }
 
   const handleNotifyChatLaunch = async () => {
-    const note = typeof window !== 'undefined' ? window.prompt('Optional note for volunteers (leave blank to skip):') || '' : ''
+    if (typeof window === 'undefined') return
+    const promptResult = window.prompt('Optional note for volunteers (leave blank to skip):')
+    // Cancel returns null — do not send (|| '' would treat cancel like empty OK).
+    if (promptResult === null) return
+    const note = promptResult.trim()
     setNotifySending(true)
     try {
       const response = await fetch(`/api/events/${event.id}/chat/notify-volunteers`, {

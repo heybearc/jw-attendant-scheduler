@@ -3,6 +3,7 @@ import { format, parseISO } from 'date-fns'
 import { formatCalendarDateLabel } from '@/lib/calendarDate'
 import Link from 'next/link'
 import PWABottomNav from './PWABottomNav'
+import VolunteerPdfViewer from './VolunteerPdfViewer'
 
 interface Assignment {
   id: string
@@ -680,11 +681,10 @@ export default function MobileVolunteerDashboard({
             </a>
           </div>
           {/* Viewer Content */}
-          <div className="flex-1 min-h-0 overflow-hidden">
+          <div className="flex flex-1 min-h-0 flex-col overflow-hidden">
             {viewingDoc.fileType.includes('pdf') ? (
-              <iframe
-                src={`/api/events/${event.id}/documents/${viewingDoc.id}/file`}
-                className="w-full h-full min-h-0 border-0"
+              <VolunteerPdfViewer
+                apiPath={`/api/events/${event.id}/documents/${viewingDoc.id}/file`}
                 title={viewingDoc.title}
               />
             ) : viewingDoc.fileType.includes('image') ? (

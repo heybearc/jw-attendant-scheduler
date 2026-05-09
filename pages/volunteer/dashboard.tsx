@@ -7,6 +7,7 @@ import { format, parseISO } from 'date-fns'
 import { formatCalendarDateLabel } from '@/lib/calendarDate'
 import dynamic from 'next/dynamic'
 import AnnouncementBanner from '../../components/AnnouncementBanner'
+import VolunteerPdfViewer from '../../components/VolunteerPdfViewer'
 import EarlyCheckinPanel from '../../components/EarlyCheckinPanel'
 import { getViewAsHeaders, getViewAsVolunteerId, setViewAsVolunteerId } from '@/lib/viewAsClient'
 
@@ -1697,11 +1698,10 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
               ⬇️
             </a>
           </div>
-          <div className="flex-1 min-h-0 overflow-hidden">
+          <div className="flex flex-1 min-h-0 flex-col overflow-hidden">
             {viewingDocument.fileType.includes('pdf') ? (
-              <iframe
-                src={`/api/events/${dashboardData.event.id}/documents/${viewingDocument.id}/file`}
-                className="w-full h-full min-h-0 border-0"
+              <VolunteerPdfViewer
+                apiPath={`/api/events/${dashboardData.event.id}/documents/${viewingDocument.id}/file`}
                 title={viewingDocument.title}
               />
             ) : viewingDocument.fileType.includes('image') ? (

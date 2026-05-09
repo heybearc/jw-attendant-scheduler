@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/router'
 import { useSession, signOut } from 'next-auth/react'
 import Head from 'next/head'
@@ -10,6 +10,12 @@ import AnnouncementBanner from '../../components/AnnouncementBanner'
 import VolunteerPdfViewer from '../../components/VolunteerPdfViewer'
 import EarlyCheckinPanel from '../../components/EarlyCheckinPanel'
 import { getViewAsHeaders, getViewAsVolunteerId, setViewAsVolunteerId } from '@/lib/viewAsClient'
+import type { ChatPushSetupStatus } from '@/lib/chatPushClient'
+import {
+  enableChatPushSubscription,
+  fetchChatPushVapidConfigured,
+  getChatPushSetupStatus,
+} from '@/lib/chatPushClient'
 
 // Lazy load mobile dashboard (only loaded on mobile devices)
 const MobileVolunteerDashboard = dynamic(() => import('../../components/MobileVolunteerDashboard'), {
@@ -180,6 +186,13 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
   /** Shown when polling detects new unread while the dashboard tab is visible */
   const [chatNotice, setChatNotice] = useState<string | null>(null)
   const lastChatUnreadTotalRef = useRef<number | null>(null)
+
+  const [chatPushEnabledForEvent, setChatPushEnabledForEvent] = useState(false)
+  const [chatPushVapidOk, setChatPushVapidOk] = useState(false)
+  const [chatPushSetupStatus, setChatPushSetupStatus] = useState<ChatPushSetupStatus>('unknown')
+  const [chatPushNudgeDismissed, setChatPushNudgeDismissed] = useState(false)
+  const [chatPushEnabling, setChatPushEnabling] = useState(false)
+  const [notifPermissionDenied, setNotifPermissionDenied] = useState(false)
   const simulatedVolunteerIdFromQuery = typeof router.query.viewAsVolunteerId === 'string' ? router.query.viewAsVolunteerId : null
 
   useEffect(() => {
@@ -286,6 +299,20 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
         lastChatUnreadTotalRef.current = total
 
         setChatChannels(channels)
+        setChatPushEnabledForEvent(!!data.data?.pushNotificationsEnabled)
+
+        if (!opts?.silent) {
+          void (async () => {
+            const vapidOk = await fetchChatPushVapidConfigured()
+            setChatPushVapidOk(vapidOk)
+            if (!vapidOk) {
+              setChatPushSetupStatus('unsupported')
+              return
+            }
+            const st = await getChatPushSetupStatus(getViewAsHeaders)
+            setChatPushSetupStatus(st)
+          })()
+        }
 
         if (!opts?.silent && channels.length > 0 && volunteer?.id) {
           const onboardingKey = `chatOnboardingSeen:${eventId}:${volunteer.id}`
@@ -326,6 +353,50 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
       document.removeEventListener('visibilitychange', onVisibility)
     }
   }, [selectedEventId, status, fetchChatChannels])
+
+  useEffect(() => {
+    setChatPushEnabledForEvent(false)
+    setChatPushVapidOk(false)
+    setChatPushSetupStatus('unknown')
+    if (!selectedEventId || typeof window === 'undefined') {
+      setChatPushNudgeDismissed(false)
+      return
+    }
+    setChatPushNudgeDismissed(
+      !!localStorage.getItem(`chatPushDashboardNudgeDismissed:${selectedEventId}`)
+    )
+  }, [selectedEventId])
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof Notification === 'undefined') return
+    setNotifPermissionDenied(Notification.permission === 'denied')
+  }, [])
+
+  const handleEnableChatPushNudge = async () => {
+    setChatPushEnabling(true)
+    try {
+      await enableChatPushSubscription(getViewAsHeaders)
+      const st = await getChatPushSetupStatus(getViewAsHeaders)
+      setChatPushSetupStatus(st)
+      if (typeof Notification !== 'undefined') {
+        setNotifPermissionDenied(Notification.permission === 'denied')
+      }
+    } catch (e: any) {
+      alert(e?.message || 'Could not enable notifications.')
+      if (typeof Notification !== 'undefined') {
+        setNotifPermissionDenied(Notification.permission === 'denied')
+      }
+    } finally {
+      setChatPushEnabling(false)
+    }
+  }
+
+  const handleDismissChatPushNudge = () => {
+    if (selectedEventId && typeof window !== 'undefined') {
+      localStorage.setItem(`chatPushDashboardNudgeDismissed:${selectedEventId}`, '1')
+    }
+    setChatPushNudgeDismissed(true)
+  }
 
   const handleAvailabilityResponse = async (requestId: string, status: string, notes?: string) => {
     try {
@@ -590,6 +661,26 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
       ? (simulatedVolunteerIdFromQuery || getViewAsVolunteerId())
       : null
 
+  const showChatPushNudge = useMemo(
+    () =>
+      !!selectedEventId &&
+      chatChannels.length > 0 &&
+      chatPushEnabledForEvent &&
+      chatPushVapidOk &&
+      chatPushSetupStatus === 'disabled' &&
+      !effectiveViewAsVolunteerId &&
+      !chatPushNudgeDismissed,
+    [
+      selectedEventId,
+      chatChannels.length,
+      chatPushEnabledForEvent,
+      chatPushVapidOk,
+      chatPushSetupStatus,
+      effectiveViewAsVolunteerId,
+      chatPushNudgeDismissed,
+    ]
+  )
+
   const chatNoticeToast =
     chatNotice && selectedEventId ? (
       <div
@@ -615,6 +706,43 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
         </button>
       </div>
     ) : null
+
+  const chatPushNudgeBanner = showChatPushNudge ? (
+    <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 shadow-sm">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <p className="font-semibold text-amber-950">Get notified for event chat</p>
+          <p className="mt-1 text-xs text-amber-900/90">
+            Receive browser alerts when someone posts while this tab is in the background. Push uses your server&apos;s
+            VAPID keys — they are configured when the enable button is available.
+          </p>
+          {notifPermissionDenied && (
+            <p className="mt-2 text-xs font-medium text-amber-900">
+              Notifications are blocked for this site. Open your browser&apos;s site settings for TheoShift and allow
+              notifications, then try again.
+            </p>
+          )}
+        </div>
+        <div className="flex flex-shrink-0 flex-wrap gap-2 sm:pt-0.5">
+          <button
+            type="button"
+            onClick={() => void handleEnableChatPushNudge()}
+            disabled={chatPushEnabling || notifPermissionDenied}
+            className="rounded-md bg-amber-700 px-3 py-2 text-xs font-semibold text-white hover:bg-amber-800 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {chatPushEnabling ? 'Enabling…' : 'Turn on notifications'}
+          </button>
+          <button
+            type="button"
+            onClick={handleDismissChatPushNudge}
+            className="rounded-md px-3 py-2 text-xs font-medium text-amber-900 underline hover:text-amber-950"
+          >
+            Not now
+          </button>
+        </div>
+      </div>
+    </div>
+  ) : null
 
   const handleSubmitCount = async (sessionId: string) => {
     const countValue = countValues.get(sessionId) || ''
@@ -893,6 +1021,11 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
           <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
         </Head>
         {chatNoticeToast}
+        {chatPushNudgeBanner && (
+          <div className="bg-gray-50 px-4 pt-3 pb-1">
+            {chatPushNudgeBanner}
+          </div>
+        )}
         {profileVerificationModal}
         {chatOnboardingModal}
         <MobileVolunteerDashboard
@@ -1059,6 +1192,7 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
               </div>
             </div>
           )}
+          {chatPushNudgeBanner && <div className="mb-6">{chatPushNudgeBanner}</div>}
           {chatLoading && (
             <p className="mb-6 text-sm text-gray-500">Loading chat availability...</p>
           )}

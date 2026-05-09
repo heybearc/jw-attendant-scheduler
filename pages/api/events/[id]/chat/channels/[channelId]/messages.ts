@@ -218,10 +218,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         })
         if (!channel) return
 
-        const senderKey =
-          channel.type === 'VOLUNTEER_DM' && dmVolunteerSenderId
-            ? `volunteer:${dmVolunteerSenderId}`
-            : `${access.actor.kind}:${access.actor.id}`
+        // Same person may have both a users subscription and a volunteers subscription (different sessions).
+        // Skip notify if EITHER identity matches the subscription row — not only user:userId vs user:userId.
+        const senderUserIds = new Set<string>()
+        const senderVolunteerIds = new Set<string>()
+        if (channel.type === 'VOLUNTEER_DM' && dmVolunteerSenderId) {
+          senderVolunteerIds.add(dmVolunteerSenderId)
+          const vol = await prisma.volunteers.findUnique({
+            where: { id: dmVolunteerSenderId },
+            select: { userId: true },
+          })
+          if (vol?.userId) senderUserIds.add(vol.userId)
+        } else if (access.actor.kind === 'user') {
+          senderUserIds.add(access.actor.id)
+          const linkedVol = await getActiveLinkedVolunteerId(access.actor.id, eventId)
+          if (linkedVol) senderVolunteerIds.add(linkedVol)
+        } else {
+          senderVolunteerIds.add(access.actor.id)
+          const vol = await prisma.volunteers.findUnique({
+            where: { id: access.actor.id },
+            select: { userId: true },
+          })
+          if (vol?.userId) senderUserIds.add(vol.userId)
+        }
 
         const staffUserIds = (
           await prisma.event_permissions.findMany({
@@ -289,8 +308,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         await Promise.all(
           subs.map(async (s) => {
-            const recipientKey = s.userId ? `user:${s.userId}` : s.volunteerId ? `volunteer:${s.volunteerId}` : 'unknown'
-            if (recipientKey === senderKey) return
+            const skipSelf =
+              (s.userId != null && senderUserIds.has(s.userId)) ||
+              (s.volunteerId != null && senderVolunteerIds.has(s.volunteerId))
+            if (skipSelf) return
 
             const url =
               s.userId

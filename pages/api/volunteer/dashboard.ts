@@ -309,6 +309,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const vid = volunteerId as string
 
+    // Stations that belong to another volunteer's count group should not offer station-level submit
+    // on the dashboard (counts go through the group's primary/secondary only). Explicit assignee
+    // rows can remain from earlier setup; they must not surface duplicate submit UI here.
+    const allGroupsForSessions =
+      sessionIds.length === 0
+        ? []
+        : await prisma.count_session_groups.findMany({
+            where: { countSessionId: { in: sessionIds } },
+            select: {
+              countSessionId: true,
+              primaryVolunteerId: true,
+              secondaryVolunteerId: true,
+              positions: { select: { positionId: true } }
+            }
+          })
+
+    const stationPositionsInOthersGroups = new Set<string>()
+    for (const g of allGroupsForSessions) {
+      const isThisVolunteer =
+        g.primaryVolunteerId === vid || g.secondaryVolunteerId === vid
+      if (isThisVolunteer) continue
+      for (const row of g.positions) {
+        stationPositionsInOthersGroups.add(`${g.countSessionId}:${row.positionId}`)
+      }
+    }
+
     const activeCountSessions = activeSessions
       .map((session) => {
         const rows = assigneesBySession.get(session.id) || []
@@ -318,6 +344,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               .filter((r) => r.volunteerId === vid)
               .map((r) => r.positionId)
               .filter((pid) => !groupPositionKeys.has(`${session.id}:${pid}`))
+              .filter((pid) => !stationPositionsInOthersGroups.has(`${session.id}:${pid}`))
           )
         ]
         return {

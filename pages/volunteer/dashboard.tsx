@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/router'
 import { useSession, signOut } from 'next-auth/react'
 import Head from 'next/head'
@@ -177,6 +177,9 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
   const [chatChannels, setChatChannels] = useState<ChatChannel[]>([])
   const [chatLoading, setChatLoading] = useState(false)
   const [showChatOnboarding, setShowChatOnboarding] = useState(false)
+  /** Shown when polling detects new unread while the dashboard tab is visible */
+  const [chatNotice, setChatNotice] = useState<string | null>(null)
+  const lastChatUnreadTotalRef = useRef<number | null>(null)
   const simulatedVolunteerIdFromQuery = typeof router.query.viewAsVolunteerId === 'string' ? router.query.viewAsVolunteerId : null
 
   useEffect(() => {
@@ -241,9 +244,9 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
     }
   }
 
-  const fetchChatChannels = async (eventId: string) => {
+  const fetchChatChannels = useCallback(async (eventId: string, opts?: { silent?: boolean }) => {
     try {
-      setChatLoading(true)
+      if (!opts?.silent) setChatLoading(true)
       const response = await fetch(`/api/events/${eventId}/chat/channels`, {
         headers: { ...getViewAsHeaders() }
       })
@@ -251,25 +254,78 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
 
       if (response.ok && data.success) {
         const channels: ChatChannel[] = data.data?.channels || []
+        const total = channels.reduce((sum, c) => sum + (c.unreadCount || 0), 0)
+
+        if (
+          opts?.silent &&
+          lastChatUnreadTotalRef.current !== null &&
+          total > lastChatUnreadTotalRef.current
+        ) {
+          const delta = total - lastChatUnreadTotalRef.current
+          if (typeof document !== 'undefined') {
+            if (
+              document.visibilityState === 'hidden' &&
+              typeof Notification !== 'undefined' &&
+              Notification.permission === 'granted'
+            ) {
+              try {
+                new Notification('TheoShift — Event chat', {
+                  body: delta === 1 ? '1 new unread message' : `${delta} new unread messages`,
+                  icon: '/logo-192.png',
+                  tag: `theoshift-chat-${eventId}`,
+                })
+              } catch {
+                // ignore
+              }
+            } else if (document.visibilityState === 'visible') {
+              setChatNotice(delta === 1 ? 'New chat message' : `${delta} new chat messages`)
+              window.setTimeout(() => setChatNotice(null), 6000)
+            }
+          }
+        }
+        lastChatUnreadTotalRef.current = total
+
         setChatChannels(channels)
 
-        if (channels.length > 0 && volunteer?.id) {
+        if (!opts?.silent && channels.length > 0 && volunteer?.id) {
           const onboardingKey = `chatOnboardingSeen:${eventId}:${volunteer.id}`
           const seen = localStorage.getItem(onboardingKey)
           if (!seen) {
             setShowChatOnboarding(true)
           }
         }
-      } else {
+      } else if (!opts?.silent) {
         setChatChannels([])
       }
     } catch (error) {
       console.error('Failed to fetch chat channels:', error)
-      setChatChannels([])
+      if (!opts?.silent) setChatChannels([])
     } finally {
-      setChatLoading(false)
+      if (!opts?.silent) setChatLoading(false)
     }
-  }
+  }, [volunteer?.id])
+
+  useEffect(() => {
+    lastChatUnreadTotalRef.current = null
+  }, [selectedEventId])
+
+  useEffect(() => {
+    if (!selectedEventId || status !== 'authenticated') return
+    const eventId = selectedEventId
+    const intervalId = window.setInterval(() => {
+      fetchChatChannels(eventId, { silent: true })
+    }, 20000)
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        fetchChatChannels(eventId, { silent: true })
+      }
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      window.clearInterval(intervalId)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }, [selectedEventId, status, fetchChatChannels])
 
   const handleAvailabilityResponse = async (requestId: string, status: string, notes?: string) => {
     try {
@@ -533,6 +589,32 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
     ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER'].includes(session?.user?.role || '')
       ? (simulatedVolunteerIdFromQuery || getViewAsVolunteerId())
       : null
+
+  const chatNoticeToast =
+    chatNotice && selectedEventId ? (
+      <div
+        className="fixed z-[60] left-3 right-3 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] sm:bottom-6 sm:left-auto sm:right-6 sm:max-w-md rounded-lg bg-blue-600 text-white text-sm shadow-lg px-4 py-3 flex flex-wrap items-center gap-2 sm:gap-3"
+        role="status"
+      >
+        <span className="font-medium flex-1 min-w-0">💬 {chatNotice}</span>
+        <Link
+          href={`/volunteer/chat?eventId=${selectedEventId}${
+            effectiveViewAsVolunteerId ? `&viewAsVolunteerId=${effectiveViewAsVolunteerId}` : ''
+          }`}
+          className="shrink-0 underline font-semibold text-white"
+        >
+          Open chat
+        </Link>
+        <button
+          type="button"
+          className="shrink-0 ml-auto text-white/90 hover:text-white px-2 py-1"
+          onClick={() => setChatNotice(null)}
+          aria-label="Dismiss chat notice"
+        >
+          ✕
+        </button>
+      </div>
+    ) : null
 
   const handleSubmitCount = async (sessionId: string) => {
     const countValue = countValues.get(sessionId) || ''
@@ -810,6 +892,7 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
           <title>My Dashboard - {dashboardData.event.name}</title>
           <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
         </Head>
+        {chatNoticeToast}
         {profileVerificationModal}
         {chatOnboardingModal}
         <MobileVolunteerDashboard
@@ -846,6 +929,7 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
         <title>Volunteer Dashboard | TheoShift</title>
       </Head>
 
+      {chatNoticeToast}
       {profileVerificationModal}
       {chatOnboardingModal}
 

@@ -5,6 +5,7 @@ import { prisma } from '../../../../src/lib/prisma'
 import { z } from 'zod'
 import crypto from 'crypto'
 import { handleApiError } from '@/lib/apiError'
+import { canManageAssignments } from '../../../../src/lib/eventAccess'
 
 // Validation schema for assignment creation
 const assignmentSchema = z.object({
@@ -28,12 +29,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'Event ID is required' })
     }
 
-    // Check user permissions
     const user = await prisma.users.findUnique({
       where: { email: session.user?.email || '' }
     })
 
-    if (!user || !['ADMIN', 'OVERSEER', 'admin', 'overseer'].includes(user.role)) {
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' })
+    }
+
+    const canManage = await canManageAssignments(user.id, eventId)
+    if (!canManage) {
       return res.status(403).json({ error: 'Insufficient permissions' })
     }
 

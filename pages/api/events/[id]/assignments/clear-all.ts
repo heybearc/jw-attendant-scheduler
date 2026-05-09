@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '../../../../../src/lib/prisma'
 import { handleApiError } from '@/lib/apiError'
+import { canManageAssignments } from '../../../../../src/lib/eventAccess'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'DELETE') {
@@ -15,13 +16,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ error: 'Unauthorized' })
     }
 
-    // Check user permissions
     const user = await prisma.users.findUnique({
       where: { email: session.user?.email || '' }
     })
 
-    if (!user || !['ADMIN', 'OVERSEER', 'admin', 'overseer'].includes(user.role)) {
-      return res.status(403).json({ error: 'Insufficient permissions' })
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' })
     }
 
     const { id } = req.query
@@ -29,6 +29,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (!eventId || typeof eventId !== 'string') {
       return res.status(400).json({ error: 'Event ID is required' })
+    }
+
+    if (!(await canManageAssignments(user.id, eventId))) {
+      return res.status(403).json({ error: 'Insufficient permissions' })
     }
 
 

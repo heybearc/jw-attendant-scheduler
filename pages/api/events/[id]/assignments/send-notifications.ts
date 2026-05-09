@@ -5,6 +5,7 @@ import { prisma } from '../../../../../src/lib/prisma'
 import nodemailer from 'nodemailer'
 import { generateAssignmentCreatedEmail } from '../../../../../src/lib/assignmentEmails'
 import { handleApiError } from '@/lib/apiError'
+import { canManageAssignments } from '../../../../../src/lib/eventAccess'
 
 // Send email using database configuration (same pattern as availability-request)
 async function sendAssignmentEmail(to: string, subject: string, html: string) {
@@ -71,12 +72,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'Event ID is required' })
     }
 
-    // Check user permissions
     const user = await prisma.users.findUnique({
       where: { email: session.user?.email || '' }
     })
 
-    if (!user || !['ADMIN', 'OVERSEER', 'admin', 'overseer'].includes(user.role)) {
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' })
+    }
+
+    if (!(await canManageAssignments(user.id, eventId))) {
       return res.status(403).json({ error: 'Insufficient permissions' })
     }
 

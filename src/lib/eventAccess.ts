@@ -88,6 +88,20 @@ export async function canManagePosition(
 }
 
 /**
+ * Whether the user can manage position assignments and shifts for this event (list/create/delete
+ * assignments, manage shifts). Uses event COORDINATOR+ or platform ADMIN — same bar as
+ * {@link canManagePosition}.
+ */
+export async function canManageAssignments(
+  userId: string,
+  eventId: string
+): Promise<boolean> {
+  const permission = await checkEventAccess(userId, eventId, 'COORDINATOR')
+  if (!permission) return false
+  return ['ADMIN', 'COORDINATOR'].includes(permission.role)
+}
+
+/**
  * Check if user can edit a specific assignment
  * ADMIN and COORDINATOR can edit all assignments
  */

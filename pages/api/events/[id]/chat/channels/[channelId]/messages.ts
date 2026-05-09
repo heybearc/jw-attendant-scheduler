@@ -286,13 +286,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           volunteerIds = []
         }
 
+        // Web push targets: DMs must only notify the two participants. The prior logic OR'd
+        // all event staff (event_permissions) with volunteerIds, so every staff user received
+        // volunteer DM push notifications.
+        let pushUserIds: string[] = staffUserIds
+        let pushVolunteerIds: string[] = volunteerIds
+        if (channel.type === 'VOLUNTEER_DM' && channel.dmVolunteerAId && channel.dmVolunteerBId) {
+          pushVolunteerIds = [channel.dmVolunteerAId, channel.dmVolunteerBId]
+          const linkedUsers = await prisma.volunteers.findMany({
+            where: { id: { in: pushVolunteerIds } },
+            select: { userId: true }
+          })
+          pushUserIds = [...new Set(linkedUsers.map((v) => v.userId).filter((id): id is string => !!id))]
+        }
+
+        const orFilters: Array<{ userId: { in: string[] } } | { volunteerId: { in: string[] } }> = []
+        if (pushUserIds.length) orFilters.push({ userId: { in: pushUserIds } })
+        if (pushVolunteerIds.length) orFilters.push({ volunteerId: { in: pushVolunteerIds } })
+        if (orFilters.length === 0) return
+
         const subs = await prisma.event_chat_push_subscriptions.findMany({
-          where: {
-            OR: [
-              ...(staffUserIds.length ? [{ userId: { in: staffUserIds } }] : []),
-              ...(volunteerIds.length ? [{ volunteerId: { in: volunteerIds } }] : [])
-            ]
-          },
+          where: { OR: orFilters },
           select: { endpoint: true, p256dh: true, auth: true, userId: true, volunteerId: true }
         })
 

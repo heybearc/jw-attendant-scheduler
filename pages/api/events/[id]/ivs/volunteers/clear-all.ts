@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../../../../auth/[...nextauth]'
 import { prisma } from '@/lib/prisma'
 import { handleApiError } from '@/lib/apiError'
-import { canManageAttendants } from '@/lib/eventAccess'
+import { canManageIvsVolunteers } from '@/lib/eventAccess'
 
 export default async function handler(
   req: NextApiRequest,
@@ -21,7 +21,7 @@ export default async function handler(
 
     const { id: eventId } = req.query
 
-    if (!(await canManageAttendants(session.user.id, eventId as string))) {
+    if (!(await canManageIvsVolunteers(session.user.id, eventId as string))) {
       return res.status(403).json({
         success: false,
         message: 'Forbidden — you need permission to manage volunteers for this event',

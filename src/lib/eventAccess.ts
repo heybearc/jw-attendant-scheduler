@@ -71,6 +71,46 @@ export async function canManageAttendants(
   return ['ADMIN', 'COORDINATOR'].includes(permission.role)
 }
 
+/** Platform roles that may use IVS Approvals without an event COORDINATOR row (overseer/keyman parity with export). */
+const IVS_MANAGEMENT_PLATFORM_ROLES = ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN'] as const
+
+/**
+ * View IVS Approvals data (GET list, etc.): event VIEWER+ or platform IVS management roles.
+ */
+export async function canViewIvsVolunteers(userId: string, eventId: string): Promise<boolean> {
+  if (await checkEventAccess(userId, eventId, 'VIEWER')) return true
+
+  const user = await prisma.users.findUnique({
+    where: { id: userId },
+    select: { role: true },
+  })
+  return !!(
+    user?.role && (IVS_MANAGEMENT_PLATFORM_ROLES as readonly string[]).includes(user.role)
+  )
+}
+
+/**
+ * Import/export/add/edit IVS volunteers, bulk/clear, early entry, staff check-in from IVS tab.
+ * Extends {@link canManageAttendants} with platform OVERSEER/KEYMAN and event creator.
+ */
+export async function canManageIvsVolunteers(userId: string, eventId: string): Promise<boolean> {
+  if (await canManageAttendants(userId, eventId)) return true
+
+  const user = await prisma.users.findUnique({
+    where: { id: userId },
+    select: { role: true },
+  })
+  if (user?.role && (IVS_MANAGEMENT_PLATFORM_ROLES as readonly string[]).includes(user.role)) {
+    return true
+  }
+
+  const event = await prisma.events.findUnique({
+    where: { id: eventId },
+    select: { createdBy: true },
+  })
+  return event?.createdBy === userId
+}
+
 /**
  * Check if user can manage a specific position
  * ADMIN and COORDINATOR can manage all positions

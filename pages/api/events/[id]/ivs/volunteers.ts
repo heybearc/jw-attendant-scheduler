@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '@/lib/prisma'
-import { checkEventAccess, canManageAttendants } from '@/lib/eventAccess'
+import { canViewIvsVolunteers, canManageIvsVolunteers } from '@/lib/eventAccess'
 import { v4 as uuidv4 } from 'uuid'
 
 export default async function handler(
@@ -25,8 +25,7 @@ export default async function handler(
 
     const { id: eventId } = req.query
 
-    const access = await checkEventAccess(session.user.id, eventId as string, 'VIEWER')
-    if (!access) {
+    if (!(await canViewIvsVolunteers(session.user.id, eventId as string))) {
       return res.status(403).json({ success: false, message: 'Forbidden' })
     }
 
@@ -93,10 +92,10 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
       return res.status(400).json({ success: false, message: 'Event ID required' })
     }
 
-    if (!(await canManageAttendants(session.user.id, eventId))) {
+    if (!(await canManageIvsVolunteers(session.user.id, eventId))) {
       return res.status(403).json({
         success: false,
-        message: 'Forbidden — you need permission to manage volunteers for this event',
+        message: 'Forbidden — you need permission to manage IVS volunteers for this event',
       })
     }
 

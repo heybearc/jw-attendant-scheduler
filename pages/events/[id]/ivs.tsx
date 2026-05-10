@@ -3,6 +3,7 @@ import { GetServerSideProps } from 'next'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../../api/auth/[...nextauth]'
 import { prisma } from '../../../src/lib/prisma'
+import { canManageIvsVolunteers } from '../../../src/lib/eventAccess'
 import EventPageLayout from '../../../components/EventPageLayout'
 import { TemplateProvider } from '../../../contexts/TemplateContext'
 import IVSApprovalsContent from '../../../components/ivs/IVSApprovalsContent'
@@ -103,7 +104,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       return { notFound: true }
     }
 
-    const canEdit = event.createdBy === session.user.id
+    const canEdit = await canManageIvsVolunteers(session.user.id, id)
 
     return {
       props: {

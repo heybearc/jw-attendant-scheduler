@@ -4,6 +4,7 @@ import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '@/lib/prisma'
 import ExcelJS from 'exceljs'
 import { handleApiError } from '@/lib/apiError'
+import { canManageIvsVolunteers } from '@/lib/eventAccess'
 
 export default async function handler(
   req: NextApiRequest,
@@ -22,30 +23,11 @@ export default async function handler(
     const { id: eventId } = req.query
     const { departmentName, requestRound, format = 'xlsx' } = req.body
 
-    const user = await prisma.users.findUnique({
-      where: { email: session.user.email! },
-      select: { id: true, role: true },
-    })
-
-    if (!user) {
-      return res.status(401).json({ success: false, message: 'User not found' })
-    }
-
-    const globalExportRoles = ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER'] as const
-    const hasGlobalRole = (globalExportRoles as readonly string[]).includes(user.role)
-
-    const eventScopedPermission = await prisma.event_permissions.findFirst({
-      where: {
-        eventId: eventId as string,
-        userId: user.id,
-        role: { in: ['ADMIN', 'COORDINATOR'] },
-      },
-    })
-
-    if (!hasGlobalRole && !eventScopedPermission) {
+    if (!(await canManageIvsVolunteers(session.user.id, eventId as string))) {
       return res.status(403).json({
         success: false,
-        message: 'Forbidden — export requires admin/overseer role or event admin/coordinator access',
+        message:
+          'Forbidden — export requires event volunteer-management access, platform overseer/keyman, or event creator',
       })
     }
 

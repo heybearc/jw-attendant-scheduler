@@ -6,7 +6,7 @@ import formidable, { File } from 'formidable'
 import ExcelJS from 'exceljs'
 import { v4 as uuidv4 } from 'uuid'
 import { handleApiError } from '@/lib/apiError'
-import { canManageAttendants } from '@/lib/eventAccess'
+import { canManageIvsVolunteers } from '@/lib/eventAccess'
 
 export const config = {
   api: {
@@ -47,10 +47,10 @@ export default async function handler(
 
     const { id: eventId } = req.query
 
-    if (!(await canManageAttendants(session.user.id, eventId as string))) {
+    if (!(await canManageIvsVolunteers(session.user.id, eventId as string))) {
       return res.status(403).json({
         success: false,
-        message: 'Forbidden — you need permission to manage volunteers for this event',
+        message: 'Forbidden — you need permission to manage IVS volunteers for this event',
       })
     }
 

@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '@/lib/prisma'
+import { canViewIvsVolunteers } from '@/lib/eventAccess'
 import ExcelJS from 'exceljs'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -17,15 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const { id: eventId } = req.query
 
-    // Verify user has access to this event
-    const eventPermission = await prisma.event_permissions.findFirst({
-      where: {
-        eventId: eventId as string,
-        userId: session.user.id,
-      },
-    })
-
-    if (!eventPermission) {
+    if (!(await canViewIvsVolunteers(session.user.id, eventId as string))) {
       return res.status(403).json({ error: 'Forbidden' })
     }
 

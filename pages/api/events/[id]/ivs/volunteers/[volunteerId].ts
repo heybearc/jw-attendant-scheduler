@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../../../../auth/[...nextauth]'
 import { prisma } from '@/lib/prisma'
-import { canManageAttendants } from '@/lib/eventAccess'
+import { canManageIvsVolunteers } from '@/lib/eventAccess'
 
 export default async function handler(
   req: NextApiRequest,
@@ -20,10 +20,10 @@ export default async function handler(
 
     const { id: eventId, volunteerId } = req.query
 
-    if (!(await canManageAttendants(session.user.id, eventId as string))) {
+    if (!(await canManageIvsVolunteers(session.user.id, eventId as string))) {
       return res.status(403).json({
         success: false,
-        message: 'Forbidden — you need permission to manage volunteers for this event',
+        message: 'Forbidden — you need permission to manage IVS volunteers for this event',
       })
     }
 

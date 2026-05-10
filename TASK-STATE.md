@@ -1,35 +1,37 @@
 # TheoShift Task State
 
-**Last updated:** 2026-05-08  
+**Last updated:** 2026-05-10  
 **Branch:** `main`  
-**Production:** LIVE = **GREEN** `10.92.3.22` (CT 132) · STANDBY = **BLUE** `10.92.3.24` (CT 134) · App **v4.21.2**
+**Production:** **Verify** with homelab `get_deployment_status` (app: theoshift) — after last release **LIVE** was **BLUE** `10.92.3.24` · **STANDBY** **GREEN** `10.92.3.22` (HAProxy flips on `/release`).
 
 ---
 
 ## Current Task
 
-**Mobile readiness audit + optimization** — IN PROGRESS 🚧
+**Mobile readiness (Positions / Volunteers) + spot-check volunteer count simulation** — IN PROGRESS 🚧
 
 ### What I'm doing right now
 
-Focused on making the app reliably mobile-friendly across Safari/Chrome/Edge/Firefox, starting with the event shell and IVS module. Released v4.21.2, then improved the event shell + overview pages and deployed those changes to STANDBY for verification.
+Primary roadmap: continue **mobile audit** for `/events/[id]/positions` and `/events/[id]/volunteers` (card layouts under `md`, 44px targets). Secondary: after prod picks up **`4935b31f`** and related commits, **smoke-test** volunteer dashboard **view-as** simulation (Afternoon Count / station tasks should match confirmed assignees + group rules only).
 
-### Recent completions (2026-05-08)
+### Recent completions (2026-05-09 / 2026-05-10)
 
-- ✅ **IVS Module mobile UX** — Approvals uses cards on small screens; Early Check-In uses full-width actions + stacked rows; keeps the full table on larger screens (`v4.21.2`)
-- ✅ **Event shell mobile-first** — safer viewport (`viewport-fit=cover`), iOS momentum scrolling helper, tighter header/breadcrumbs, stacked toolbar + 44px tab targets, event overview wrapping fixes
-- ✅ **Release pipeline** — qa-01 `/test-release` (4 passed, 1 skipped) → bump to `v4.21.2` → GitHub release → deploy STANDBY → traffic switch → sync (both nodes built from the same `main`)
+- ✅ **Volunteer count assignments — dashboard truth** — Station-level tasks use **confirmed** assignees only (`isSuggested: false`); **Apply suggestions** rows are **draft** until overseer saves real assignees (`bef4f7dd`).
+- ✅ **Grouped vs station exclusion** — Stations in another volunteer’s **count group** don’t show duplicate station-level submit; exclusions rebuilt from **`count_session_group_positions`** (`4935b31f`, earlier `d9fd40b3`).
+- ✅ **View-as simulation** — Enter Count respects simulation like assignees API; **KEYMAN** + **case-normalized** staff roles use simulated volunteer id (`canSimulateVolunteerRole`, `8e937f66`, `4935b31f`); EventLayout hides staff FAB during simulation; mobile dashboard links preserve `viewAsVolunteerId`.
+- ✅ **Volunteer dashboard submit** — Removed fallback that posted counts against **`assignments[0]`** (wrong station risk).
+- ✅ **Release / sync** — Multiple **`/release`** + **`/sync`** cycles with migrations when requested; both nodes rebuilt from `main`.
 
 ### Next steps
 
-1. Mobile audit next: `/events/[id]/positions` and `/events/[id]/volunteers` (tables/filters/bulk actions) — convert the worst offenders to card layouts under `md`, ensure 44px controls, and avoid horizontal scroll where possible.
-2. Run `/test-release theoshift standby` after any large UI changes (qa-01 smoke + release-gate).
-3. Smoke test on **Safari iOS** + **Chrome Android** (event overview, tabs scroll, IVS module, positions/volunteers core actions).
-4. Review **`/admin/feedback`**; promote anything urgent into planning docs.
+1. Smoke **volunteer dashboard** + **Enter Count** as a simulated volunteer on **production** after confirming HAProxy points at the node that built **`main`** with **`4935b31f`** (use `/api/version` if needed).
+2. Continue **mobile audit**: Positions + Volunteers pages — cards under `md`, filters/actions usable on phones (matches PLAN backlog).
+3. Run **`/test-release theoshift standby`** after large UI changes (qa-01 smoke + release-gate).
+4. Review **`/admin/feedback`** for anything urgent.
 
 ## Exact next command
 
-`/start-day`
+`/start-day` — then optionally verify prod: open volunteer dashboard with `viewAsVolunteerId`, confirm Network tab shows `/api/volunteer/dashboard?volunteerId=<volunteer uuid>`.
 
 ---
 
@@ -37,29 +39,29 @@ Focused on making the app reliably mobile-friendly across Safari/Chrome/Edge/Fir
 
 **Current**
 
-- **PIN column** — Still in DB; magic links are primary UI. Planned cleanup per `BACKLOG.md` (legacy note May 19, 2026).
+- **PIN column** — Still in DB; magic links are primary UI. Planned cleanup per backlog (legacy note).
 
 **Recently addressed (don’t regress)**
 
-- ~~PWA “disabled everywhere”~~ — **Superseded:** `public/sw.js` **v2.0.3** re-enables safe caching for volunteer offline routes while **bypassing** staff `/api/events/*` and `/_next/*` so bogus **503** offline responses don’t break Volunteers/Documents loads. Full navigations still bypass SW (magic links).
+- ~~Phantom count assignments~~ — **Suggested** assignee rows no longer surface as real duties on volunteer dashboard / Enter Count lists for volunteers; POST permission aligns.
 
 **Infrastructure**
 
-- **`/release` does not deploy** — Only HAProxy. LIVE must already have been built on former STANDBY via **`deploy_to_standby`** after `/bump` (see MC workflows, D-TS-040).
-- **PM2 names:** BLUE → `theoshift-blue`, GREEN → `theoshift-green` (see Known Issues — Infrastructure Notes in prior revisions or HAProxy config).
+- **`/release` does not deploy** — Only HAProxy. LIVE must already have been built via **`deploy_to_standby`** after changes land on `main`.
+- **PM2 names:** BLUE → `theoshift-blue`, GREEN → `theoshift-green`.
 
 ---
 
 ## Session snapshot — recent `main` commits
 
-- `c82541fb` — Mobile-first event shell, overview, and events list (STANDBY deploy for verification)
-- `070a756e` — Release v4.21.2 (mobile IVS layouts + notes/help + submodule update)
-- `116a3641` — IVS: mobile-friendly approvals and early check-in layouts
-- `3d471fce` — Release v4.21.1 (positions filters)
-- `f6088d79` — Release v4.21.0 (Documents, volunteer saves, PWA reliability)
+- `4935b31f` — Volunteer dashboard: reliable group exclusions + `canSimulateVolunteerRole`
+- `bef4f7dd` — Suggested count assignees treated as draft for volunteer UI
+- `8e937f66` — Enter Count view-as + simulation roles + FAB / mobile links
+- `d9fd40b3` — Hide station submit when positions belong to another volunteer group
+- `dd8986fd` — Dashboard count tasks from explicit session assignees only
 
 ---
 
 ## Historical note
 
-Long-form day-by-day completions lived in this file through 2026-05-05 and were **rotated out on 2026-05-06** to reduce duplication and drift. Older milestones: **`git log --oneline`**, GitHub **Releases**, and dated commits.
+Long-form day-by-day completions lived in this file through 2026-05-05 and were **rotated out on 2026-05-06**. Older milestones: **`git log --oneline`**, GitHub **Releases**.

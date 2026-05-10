@@ -1,8 +1,8 @@
 # TheoShift Plan
 
-**Last updated:** 2026-05-08  
+**Last updated:** 2026-05-10  
 **Current phase:** Feature Development + Platform Infrastructure  
-**Status:** v4.21.2 released. IVS Module and event shell have mobile-first improvements; continued work needed to make Positions/Volunteers/Admin consistently usable on phones.
+**Status:** v4.21.2 remains latest tagged mobile IVS/shell work; **volunteer attendance counts + view-as simulation** hardened on `main` (deploy via blue-green). Continued work: Positions/Volunteers mobile audit.
 
 ---
 
@@ -26,6 +26,7 @@ This follows the usual small-team pattern: **one system of record in the app**, 
 - **Mobile readiness across TheoShift** — eliminate horizontal-scroll-only workflows, ensure 44px tap targets, improve responsive layouts on event and admin pages, verify on Safari/Chrome/Edge/Firefox.
 
 ### Completed This Phase
+- ✅ **Volunteer count assignments & simulation (2026-05)** — Dashboard shows station counts only for **confirmed** assignees (`isSuggested: false`); suggestions from Apply Suggestions are draft until saved. Grouped stations exclude duplicate station-level UI; exclusions use `count_session_group_positions`. View-as uses **normalized staff roles** + Enter Count / mobile links / KEYMAN parity. See commits `bef4f7dd`, `4935b31f`, `8e937f66`, `d9fd40b3`.
 - ✅ v4.21.2: IVS Module mobile layouts (Approvals cards on small screens; Early Check-In full-width actions + stacked rows)
 - ✅ v4.21.2: Event shell + overview mobile-first tweaks (viewport-fit=cover; momentum scroll utility; stacked toolbar; 44px tab targets; overflow/wrapping fixes)
 - ✅ v4.20.1: Chat navigation UX (New message + searchable position channels) for staff + volunteers

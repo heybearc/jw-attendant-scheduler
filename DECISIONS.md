@@ -600,6 +600,14 @@ This document tracks significant technical decisions made during development.
 2) Fall back to `volunteers.userId` when that volunteer has an active `event_volunteers` row for the event.  
 **Consequences:** Staff DM eligibility reflects the admin linking mechanism and stays event-scoped (no volunteer-on-other-event leakage). No schema migration required; identity remains derived server-side.
 
+### D-TS-043: Volunteer-facing count assignments — confirmed vs suggested
+**Date:** 2026-05-10  
+**Context:** “Apply suggestions” creates `count_session_position_assignees` with `isSuggested: true`. Volunteers were seeing count duties they had not been confirmed for; simulation sometimes failed when session role casing did not match strict enums.  
+**Decision:**  
+1. **Volunteer dashboard, volunteer-filtered assignees API, and POST permission** treat **`isSuggested: false`** as the only “official” assignment for that volunteer on that station/session; suggested rows remain in DB for staff workflows but do not imply duty on volunteer surfaces.  
+2. **Staff simulation** uses **`canSimulateVolunteerRole()`** (case-insensitive) so `volunteerId` in API calls always refers to the **simulated volunteer**, not the staff user id.  
+**Consequences:** Overseers must **save** counter assignments after suggestions if volunteers should see tasks; rank-based fallback on POST still applies when **no** assignee rows exist for that station (unchanged).
+
 ---
 
 ## Shared Decisions

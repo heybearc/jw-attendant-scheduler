@@ -5,6 +5,7 @@ import EditVolunteerModal from '../EditVolunteerModal'
 import BulkActionModal from '../BulkActionModal'
 import ImportModal from '../ImportModal'
 import ExportModal from '../ExportModal'
+import AddIvsVolunteerModal from '../AddIvsVolunteerModal'
 
 interface IVSVolunteer {
   id: string
@@ -37,6 +38,7 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
   const [volunteers, setVolunteers] = useState<IVSVolunteer[]>([])
   const [loading, setLoading] = useState(true)
   const [showImportModal, setShowImportModal] = useState(false)
+  const [showAddModal, setShowAddModal] = useState(false)
   const [showExportModal, setShowExportModal] = useState(false)
   const [filterDepartment, setFilterDepartment] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
@@ -83,6 +85,34 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
       console.error('Error fetching volunteers:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleAddVolunteer = async (payload: {
+    firstName: string
+    lastName: string
+    congregation: string
+    requestRound: number
+    departmentName?: string
+  }) => {
+    try {
+      const response = await fetch(`/api/events/${eventId}/ivs/volunteers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const result = await response.json().catch(() => ({}))
+      if (response.ok) {
+        setShowAddModal(false)
+        fetchVolunteers()
+      } else if (response.status === 409) {
+        alert(result.message || 'This volunteer is already on the event roster.')
+      } else {
+        alert(result.message || 'Failed to add volunteer')
+      }
+    } catch (error) {
+      console.error('Error adding volunteer:', error)
+      alert('Error adding volunteer')
     }
   }
 
@@ -406,6 +436,16 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
       {/* Action Buttons */}
       <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:flex-wrap sm:items-center">
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+          {canEdit && (
+            <button
+              type="button"
+              onClick={() => setShowAddModal(true)}
+              className="w-full sm:w-auto min-h-[44px] px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-base font-medium"
+            >
+              Add volunteer
+            </button>
+          )}
+          {canEdit && (
           <button
             type="button"
             onClick={() => setShowImportModal(true)}
@@ -413,6 +453,7 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
           >
             Import Volunteers
           </button>
+          )}
           <button
             type="button"
             onClick={() => setShowExportModal(true)}
@@ -420,7 +461,7 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
           >
             Export List
           </button>
-          {volunteers.length > 0 && (
+          {canEdit && volunteers.length > 0 && (
             <button
               type="button"
               onClick={handleClearAll}
@@ -574,7 +615,7 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
       ) : sortedVolunteers.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
           {volunteers.length === 0 
-            ? 'No volunteers found. Click "Import Volunteers" to get started.'
+            ? 'No volunteers yet. Use Add volunteer or Import Volunteers to get started.'
             : 'No volunteers match your search or filters.'}
         </div>
       ) : (
@@ -859,6 +900,14 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
             </div>
           )}
         </>
+      )}
+
+      {/* Add single volunteer */}
+      {showAddModal && (
+        <AddIvsVolunteerModal
+          onClose={() => setShowAddModal(false)}
+          onAdd={handleAddVolunteer}
+        />
       )}
 
       {/* Import Modal */}

@@ -2,12 +2,17 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '@/lib/prisma'
-import { checkEventAccess } from '@/lib/eventAccess'
+import { checkEventAccess, canManageAttendants } from '@/lib/eventAccess'
+import { v4 as uuidv4 } from 'uuid'
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  if (req.method === 'POST') {
+    return handlePost(req, res)
+  }
+
   if (req.method !== 'GET') {
     return res.status(405).json({ success: false, message: 'Method not allowed' })
   }
@@ -74,4 +79,138 @@ function formatDate(date: Date): string {
   const day = String(d.getDate()).padStart(2, '0')
   const year = d.getFullYear()
   return `${month}/${day}/${year}`
+}
+
+async function handlePost(req: NextApiRequest, res: NextApiResponse) {
+  try {
+    const session = await getServerSession(req, res, authOptions)
+    if (!session?.user?.id) {
+      return res.status(401).json({ success: false, message: 'Unauthorized' })
+    }
+
+    const { id: eventId } = req.query
+    if (!eventId || typeof eventId !== 'string') {
+      return res.status(400).json({ success: false, message: 'Event ID required' })
+    }
+
+    if (!(await canManageAttendants(session.user.id, eventId))) {
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden — you need permission to manage volunteers for this event',
+      })
+    }
+
+    const b =
+      req.body && typeof req.body === 'object' && !Array.isArray(req.body)
+        ? (req.body as Record<string, unknown>)
+        : {}
+    const firstName = String(b.firstName ?? '').trim()
+    const lastName = String(b.lastName ?? '').trim()
+    const congregation = String(b.congregation ?? '').trim()
+    const requestRound = Math.max(1, parseInt(String(b.requestRound ?? '1'), 10) || 1)
+    const departmentName =
+      b.departmentName != null && String(b.departmentName).trim() !== ''
+        ? String(b.departmentName).trim()
+        : undefined
+
+    if (!firstName || !congregation) {
+      return res.status(400).json({
+        success: false,
+        message: 'First name and congregation are required',
+      })
+    }
+
+    const existing = await prisma.event_volunteers.findFirst({
+      where: {
+        eventId,
+        volunteer: {
+          firstName,
+          lastName,
+          congregation,
+        },
+      },
+    })
+
+    if (existing) {
+      return res.status(409).json({
+        success: false,
+        message:
+          'A volunteer with this name and congregation is already on this event roster.',
+      })
+    }
+
+    let globalVolunteer = await prisma.volunteers.findFirst({
+      where: {
+        firstName,
+        lastName,
+        congregation,
+      },
+    })
+
+    if (!globalVolunteer) {
+      globalVolunteer = await prisma.volunteers.create({
+        data: {
+          id: uuidv4(),
+          firstName,
+          lastName,
+          email: `${firstName.toLowerCase()}.${lastName.toLowerCase() || 'volunteer'}@temp.local`,
+          congregation,
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      })
+    }
+
+    const fos = globalVolunteer.formsOfService
+    const formsOfService = Array.isArray(fos) ? fos : typeof fos === 'string' ? [fos] : []
+    const isElder = formsOfService.includes('Elder')
+    const approvalStatus = isElder ? 'Approved' : 'Pending'
+    const approvedAt = isElder ? new Date() : undefined
+    const approvedBy = isElder ? 'Auto-approved (Elder)' : undefined
+
+    const batchId = uuidv4()
+    await prisma.ivs_import_batches.create({
+      data: {
+        id: batchId,
+        eventId,
+        requestRound,
+        importedBy: session.user.id,
+        fileName: 'Manual entry',
+        departmentName,
+        volunteerCount: 1,
+        notes: 'Added manually (single volunteer)',
+      },
+    })
+
+    const ev = await prisma.event_volunteers.create({
+      data: {
+        id: uuidv4(),
+        eventId,
+        volunteerId: globalVolunteer.id,
+        userId: null,
+        role: 'VOLUNTEER' as any,
+        isActive: true,
+        ivsApprovalStatus: approvalStatus,
+        ivsSubmittedBy: departmentName,
+        ivsRequestRound: requestRound,
+        ivsImportBatchId: batchId,
+        ivsApprovedAt: approvedAt,
+        ivsApprovedBy: approvedBy,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    })
+
+    return res.status(201).json({
+      success: true,
+      id: ev.id,
+      message: 'Volunteer added',
+    })
+  } catch (error: any) {
+    return res.status(500).json({
+      success: false,
+      message: error?.message || 'Internal server error',
+    })
+  }
 }

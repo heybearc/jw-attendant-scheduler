@@ -6,6 +6,7 @@ import BulkActionModal from '../BulkActionModal'
 import ImportModal from '../ImportModal'
 import ExportModal from '../ExportModal'
 import AddIvsVolunteerModal from '../AddIvsVolunteerModal'
+import { IVS_APPROVAL_STATUSES } from '@/lib/ivs'
 
 interface IVSVolunteer {
   id: string
@@ -487,12 +488,12 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
               }}
               className="w-full sm:w-auto min-h-[44px] px-3 py-2 border rounded-md bg-purple-600 text-white hover:bg-purple-700 text-base"
             >
-              <option value="">Bulk Actions</option>
-              <option value="approve">Approve Selected</option>
-              <option value="deny">Deny Selected</option>
-              <option value="setEarlyEntry">Set Early Entry</option>
-              <option value="changeRound">Change Round</option>
-              <option value="changeDepartment">Change Department</option>
+              <option value="">Bulk actions</option>
+              <option value="setStatus">Set status…</option>
+              <option value="setEarlyEntry">Set early entry…</option>
+              <option value="changeRound">Change round…</option>
+              <option value="changeDepartment">Change department name…</option>
+              <option value="changeCongregation">Change congregation name…</option>
             </select>
           </div>
         )}
@@ -529,10 +530,11 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
           className="w-full min-w-0 min-h-[44px] px-3 py-2 border rounded-md text-base"
         >
           <option value="">All Statuses</option>
-          <option value="Pending">Pending</option>
-          <option value="Requested">Requested</option>
-          <option value="Approved">Approved</option>
-          <option value="Not Approved">Not Approved</option>
+          {IVS_APPROVAL_STATUSES.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
         </select>
 
         <select
@@ -666,10 +668,11 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
                     onChange={(e) => handleQuickStatusUpdate(volunteer.id, e.target.value)}
                     className={`mt-1 w-full min-h-[44px] rounded border px-2 py-2 text-sm font-semibold ${getStatusBadgeColor(volunteer.approvalStatus)}`}
                   >
-                    <option value="Pending">Pending</option>
-                    <option value="Requested">Requested</option>
-                    <option value="Approved">Approved</option>
-                    <option value="Not Approved">Not Approved</option>
+                    {IVS_APPROVAL_STATUSES.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
                   </select>
                   {updatingStatusId === volunteer.id && (
                     <span className="mt-1 block text-xs text-gray-500">Saving...</span>
@@ -795,10 +798,11 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
                           onChange={(e) => handleQuickStatusUpdate(volunteer.id, e.target.value)}
                           className={`px-2 py-1 rounded text-xs font-semibold border ${getStatusBadgeColor(volunteer.approvalStatus)}`}
                         >
-                          <option value="Pending">Pending</option>
-                          <option value="Requested">Requested</option>
-                          <option value="Approved">Approved</option>
-                          <option value="Not Approved">Not Approved</option>
+                          {IVS_APPROVAL_STATUSES.map((s) => (
+                            <option key={s} value={s}>
+                              {s}
+                            </option>
+                          ))}
                         </select>
                         {updatingStatusId === volunteer.id && (
                           <span className="text-xs text-gray-500">Saving...</span>

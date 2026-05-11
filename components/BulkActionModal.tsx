@@ -1,34 +1,41 @@
 import { useState } from 'react'
+import { IVS_APPROVAL_STATUSES } from '@/lib/ivs'
 
 interface BulkActionModalProps {
   action: string
   selectedCount: number
   onClose: () => void
-  onConfirm: (data: any) => void
+  onConfirm: (data: Record<string, unknown>) => void
 }
 
-export default function BulkActionModal({ action, selectedCount, onClose, onConfirm }: BulkActionModalProps) {
+export default function BulkActionModal({
+  action,
+  selectedCount,
+  onClose,
+  onConfirm,
+}: BulkActionModalProps) {
+  const [status, setStatus] = useState<(typeof IVS_APPROVAL_STATUSES)[number]>('Pending')
   const [denialReason, setDenialReason] = useState('')
   const [earlyEntry, setEarlyEntry] = useState(true)
   const [requestRound, setRequestRound] = useState(1)
   const [department, setDepartment] = useState('')
+  const [congregation, setCongregation] = useState('')
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    
-    const data: any = {}
-    
+
     switch (action) {
-      case 'approve':
-        onConfirm({ action: 'approve' })
-        break
-      case 'deny':
-        if (!denialReason) {
-          alert('Please provide a reason for denial')
-          return
+      case 'setStatus': {
+        const payload: Record<string, unknown> = {
+          action: 'setStatus',
+          ivsApprovalStatus: status,
         }
-        onConfirm({ action: 'deny', ivsDeniedReason: denialReason })
+        if (status === 'Not Approved' && denialReason.trim()) {
+          payload.ivsDeniedReason = denialReason.trim()
+        }
+        onConfirm(payload)
         break
+      }
       case 'setEarlyEntry':
         onConfirm({ action: 'setEarlyEntry', earlyCheckinEligible: earlyEntry })
         break
@@ -36,23 +43,36 @@ export default function BulkActionModal({ action, selectedCount, onClose, onConf
         onConfirm({ action: 'changeRound', ivsRequestRound: requestRound })
         break
       case 'changeDepartment':
-        if (!department) {
+        if (!department.trim()) {
           alert('Please provide a department name')
           return
         }
-        onConfirm({ action: 'changeDepartment', ivsSubmittedBy: department })
+        onConfirm({ action: 'changeDepartment', ivsSubmittedBy: department.trim() })
+        break
+      case 'changeCongregation':
+        if (!congregation.trim()) {
+          alert('Please provide a congregation name')
+          return
+        }
+        onConfirm({ action: 'changeCongregation', congregation: congregation.trim() })
         break
     }
   }
 
   const getTitle = () => {
     switch (action) {
-      case 'approve': return 'Bulk Approve Volunteers'
-      case 'deny': return 'Bulk Deny Volunteers'
-      case 'setEarlyEntry': return 'Set Early Entry'
-      case 'changeRound': return 'Change Request Round'
-      case 'changeDepartment': return 'Change Department'
-      default: return 'Bulk Action'
+      case 'setStatus':
+        return 'Set approval status'
+      case 'setEarlyEntry':
+        return 'Set early entry'
+      case 'changeRound':
+        return 'Change request round'
+      case 'changeDepartment':
+        return 'Change department name'
+      case 'changeCongregation':
+        return 'Change congregation name'
+      default:
+        return 'Bulk action'
     }
   }
 
@@ -63,27 +83,36 @@ export default function BulkActionModal({ action, selectedCount, onClose, onConf
         <p className="text-sm text-gray-600 mb-4">
           This will affect {selectedCount} selected volunteer{selectedCount !== 1 ? 's' : ''}.
         </p>
-        
-        <form onSubmit={handleSubmit}>
-          {action === 'approve' && (
-            <div className="mb-4 p-3 bg-green-50 rounded-md">
-              <p className="text-sm text-green-800">
-                All selected volunteers will be marked as "Approved" with the current timestamp and your user ID.
-              </p>
-            </div>
-          )}
 
-          {action === 'deny' && (
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">Reason for Denial *</label>
-              <textarea
-                value={denialReason}
-                onChange={(e) => setDenialReason(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md"
-                rows={3}
-                placeholder="Provide a reason for denial..."
-                required
-              />
+        <form onSubmit={handleSubmit}>
+          {action === 'setStatus' && (
+            <div className="mb-4 space-y-3">
+              <label className="block text-sm font-medium text-gray-700">Status</label>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value as (typeof IVS_APPROVAL_STATUSES)[number])}
+                className="w-full min-h-[44px] px-3 py-2 border rounded-md text-base"
+              >
+                {IVS_APPROVAL_STATUSES.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+              {status === 'Not Approved' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Denial reason (optional)
+                  </label>
+                  <textarea
+                    value={denialReason}
+                    onChange={(e) => setDenialReason(e.target.value)}
+                    className="w-full px-3 py-2 border rounded-md text-sm"
+                    rows={3}
+                    placeholder="Leave blank to keep existing reasons, or enter a note for all selected rows…"
+                  />
+                </div>
+              )}
             </div>
           )}
 
@@ -96,22 +125,24 @@ export default function BulkActionModal({ action, selectedCount, onClose, onConf
                   onChange={(e) => setEarlyEntry(e.target.checked)}
                   className="w-4 h-4"
                 />
-                <span className="text-sm font-medium">Enable Early Check-In</span>
+                <span className="text-sm font-medium">Enable early check-in</span>
               </label>
               <p className="text-xs text-gray-500 mt-1">
-                {earlyEntry ? 'Volunteers will be eligible for early check-in' : 'Early check-in will be disabled'}
+                {earlyEntry
+                  ? 'Volunteers will be eligible for early check-in'
+                  : 'Early check-in will be disabled'}
               </p>
             </div>
           )}
 
           {action === 'changeRound' && (
             <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">Request Round *</label>
+              <label className="block text-sm font-medium mb-2">Request round *</label>
               <input
                 type="number"
-                min="1"
+                min={1}
                 value={requestRound}
-                onChange={(e) => setRequestRound(parseInt(e.target.value))}
+                onChange={(e) => setRequestRound(parseInt(e.target.value, 10) || 1)}
                 className="w-full px-3 py-2 border rounded-md"
                 required
               />
@@ -120,13 +151,27 @@ export default function BulkActionModal({ action, selectedCount, onClose, onConf
 
           {action === 'changeDepartment' && (
             <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">Department Name *</label>
+              <label className="block text-sm font-medium mb-2">Department name *</label>
               <input
                 type="text"
                 value={department}
                 onChange={(e) => setDepartment(e.target.value)}
                 className="w-full px-3 py-2 border rounded-md"
-                placeholder="e.g., Parking, Security"
+                placeholder="e.g. Parking, Security"
+                required
+              />
+            </div>
+          )}
+
+          {action === 'changeCongregation' && (
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">Congregation name *</label>
+              <input
+                type="text"
+                value={congregation}
+                onChange={(e) => setCongregation(e.target.value)}
+                className="w-full px-3 py-2 border rounded-md"
+                placeholder="Applied to each selected person’s congregation"
                 required
               />
             </div>

@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../../../../auth/[...nextauth]'
 import { prisma } from '@/lib/prisma'
 import { canManageIvsVolunteers } from '@/lib/eventAccess'
+import { isValidIvsApprovalStatus } from '@/lib/ivs'
 
 export default async function handler(
   req: NextApiRequest,
@@ -34,7 +35,8 @@ export default async function handler(
       earlyCheckinEligible,
       ivsRequestRound,
       ivsSubmittedBy,
-      ivsDeniedReason
+      ivsDeniedReason,
+      congregation,
     } = req.body
 
     if (!volunteerIds || !Array.isArray(volunteerIds) || volunteerIds.length === 0) {
@@ -66,35 +68,72 @@ export default async function handler(
         }
 
         switch (action) {
-          case 'approve':
-            updateData.ivsApprovalStatus = 'Approved'
-            updateData.ivsApprovedAt = new Date()
-            updateData.ivsApprovedBy = session.user.email || session.user.id
-            break
-          
-          case 'deny':
-            updateData.ivsApprovalStatus = 'Not Approved'
-            if (ivsDeniedReason) {
-              updateData.ivsDeniedReason = ivsDeniedReason
+          case 'setStatus': {
+            if (typeof ivsApprovalStatus !== 'string' || !isValidIvsApprovalStatus(ivsApprovalStatus)) {
+              errors.push(`Invalid status for volunteer ${volunteerId}`)
+              continue
+            }
+            updateData.ivsApprovalStatus = ivsApprovalStatus
+            if (ivsApprovalStatus === 'Approved') {
+              updateData.ivsApprovedAt = new Date()
+              updateData.ivsApprovedBy = session.user.email || session.user.id
+              updateData.ivsDeniedReason = null
+            } else if (ivsApprovalStatus === 'Not Approved') {
+              updateData.ivsApprovedAt = null
+              updateData.ivsApprovedBy = null
+              if (ivsDeniedReason !== undefined) {
+                const reason =
+                  typeof ivsDeniedReason === 'string' ? ivsDeniedReason.trim() : ''
+                updateData.ivsDeniedReason = reason === '' ? null : reason
+              }
+            } else {
+              updateData.ivsApprovedAt = null
+              updateData.ivsApprovedBy = null
+              updateData.ivsDeniedReason = null
             }
             break
-          
+          }
+
           case 'setEarlyEntry':
             updateData.earlyCheckinEligible = earlyCheckinEligible
             break
-          
+
           case 'changeRound':
             if (ivsRequestRound !== undefined) {
               updateData.ivsRequestRound = ivsRequestRound
             }
             break
-          
+
           case 'changeDepartment':
             if (ivsSubmittedBy !== undefined) {
-              updateData.ivsSubmittedBy = ivsSubmittedBy
+              updateData.ivsSubmittedBy =
+                typeof ivsSubmittedBy === 'string' ? ivsSubmittedBy.trim() : ivsSubmittedBy
             }
             break
-          
+
+          case 'changeCongregation': {
+            const cong =
+              typeof congregation === 'string' ? congregation.trim() : ''
+            if (!cong) {
+              errors.push(`Congregation required for volunteer ${volunteerId}`)
+              continue
+            }
+            if (!eventVolunteer.volunteerId) {
+              errors.push(`Volunteer ${volunteerId} has no linked volunteer record`)
+              continue
+            }
+            await prisma.volunteers.update({
+              where: { id: eventVolunteer.volunteerId },
+              data: { congregation: cong, updatedAt: new Date() },
+            })
+            await prisma.event_volunteers.update({
+              where: { id: eventVolunteer.id },
+              data: { updatedAt: new Date() },
+            })
+            updated++
+            continue
+          }
+
           default:
             errors.push(`Unknown action: ${action}`)
             continue
@@ -107,8 +146,9 @@ export default async function handler(
 
         updated++
       } catch (error) {
-        // Error logged by handleApiError
-        errors.push(`Error updating volunteer ${volunteerId}: ${error.message}`)
+        errors.push(
+          `Error updating volunteer ${volunteerId}: ${error instanceof Error ? error.message : String(error)}`
+        )
       }
     }
 

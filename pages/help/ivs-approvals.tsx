@@ -98,9 +98,8 @@ export default function IVSApprovalsHelp() {
             <h3 className="text-xl font-semibold text-gray-700 mb-3">Individual Actions</h3>
             <p className="text-gray-700 mb-4">For each volunteer, you can:</p>
             <ul className="list-disc list-inside space-y-2 text-gray-700 mb-6 ml-4">
-              <li><strong>Edit</strong> - Update any volunteer information (name, congregation, department, round, notes)</li>
-              <li><strong>Approve</strong> - Approve the volunteer request (changes status to "Approved")</li>
-              <li><strong>Deny</strong> - Deny the request with a reason (changes status to "Denied")</li>
+              <li><strong>Edit</strong> - Update volunteer information (name, congregation, department, round, notes)</li>
+              <li><strong>Status</strong> - Use the status menu to set Pending, Requested, Approved, or Not Approved (same choices everywhere on the page)</li>
               <li><strong>Delete</strong> - Permanently remove the volunteer from the list</li>
             </ul>
 
@@ -110,17 +109,17 @@ export default function IVSApprovalsHelp() {
             </p>
             <ol className="list-decimal list-inside space-y-2 text-gray-700 mb-6 ml-4">
               <li>Check the boxes next to the volunteers you want to update</li>
-              <li>Click the <strong>Bulk Actions</strong> dropdown</li>
+              <li>Open the purple <strong>Bulk actions</strong> menu</li>
               <li>Choose an action:
                 <ul className="list-disc list-inside ml-6 mt-2 space-y-1">
-                  <li><strong>Bulk Approve</strong> - Approve all selected volunteers</li>
-                  <li><strong>Bulk Deny</strong> - Deny all selected (you'll be asked for a reason)</li>
-                  <li><strong>Set Early Entry</strong> - Enable or disable early check-in eligibility</li>
-                  <li><strong>Change Round</strong> - Move volunteers to a different request round</li>
-                  <li><strong>Change Department</strong> - Reassign to a different department</li>
+                  <li><strong>Set status</strong> - Pick any status (Pending, Requested, Approved, Not Approved); optional shared note for Not Approved</li>
+                  <li><strong>Set early entry</strong> - Turn early check-in eligibility on or off for all selected</li>
+                  <li><strong>Change round</strong> - Move everyone to the same request round number</li>
+                  <li><strong>Change department name</strong> - Set the same department label for all selected</li>
+                  <li><strong>Change congregation name</strong> - Set the same congregation for all selected (fixes names after import)</li>
                 </ul>
               </li>
-              <li>Confirm the action</li>
+              <li>Confirm in the dialog</li>
             </ol>
           </section>
 

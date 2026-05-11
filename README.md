@@ -276,6 +276,7 @@ For issues or questions:
 
 ## 📝 Version History
 
+- **v4.21.9** (2026-05-08) - IVS: overseer/keyman can import/export/add; bulk set status (matches row menu), bulk congregation and department; add-single volunteer on IVS
 - **v4.21.8** (2026-05-08) - Volunteer broadcast: “all active” aligned with active roster; email sender fallback; clearer send feedback for large lists and chat notify parity
 - **v4.21.7** (2026-05-08) - Volunteer broadcast email: large sends no longer hit gateway timeouts; improved feedback while sending
 - **v4.21.6** (2026-05-08) - Volunteer broadcast email: reliable delivery for selected rows; clearer errors when email cannot be sent

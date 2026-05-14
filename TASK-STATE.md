@@ -1,37 +1,35 @@
 # TheoShift Task State
 
-**Last updated:** 2026-05-10  
+**Last updated:** 2026-05-14  
 **Branch:** `main`  
-**Production:** **Verify** with homelab `get_deployment_status` (app: theoshift) — after last release **LIVE** was **BLUE** `10.92.3.24` · **STANDBY** **GREEN** `10.92.3.22` (HAProxy flips on `/release`).
+**Production:** **Verify** with homelab `get_deployment_status` (app: theoshift) — HAProxy is runtime truth (see D-008 / D-TS-040). After last doc snapshot: **LIVE** **BLUE** `10.92.3.24` · **STANDBY** **GREEN** `10.92.3.22` (HAProxy flips on `/release`).
 
 ---
 
 ## Current Task
 
-**Mobile readiness (Positions / Volunteers) + spot-check volunteer count simulation** — IN PROGRESS 🚧
+**Mobile readiness (Positions / Volunteers) + production smoke (counts / IVS)** — IN PROGRESS 🚧
 
 ### What I'm doing right now
 
-Primary roadmap: continue **mobile audit** for `/events/[id]/positions` and `/events/[id]/volunteers` (card layouts under `md`, 44px targets). Secondary: after prod picks up **`4935b31f`** and related commits, **smoke-test** volunteer dashboard **view-as** simulation (Afternoon Count / station tasks should match confirmed assignees + group rules only).
+Continue the **mobile audit** for `/events/[id]/positions` and `/events/[id]/volunteers` (card layouts under `md`, 44px targets, filters usable on phones). When convenient on **production**, smoke **volunteer dashboard** + **Enter Count** with `viewAsVolunteerId` (Network: `/api/volunteer/dashboard?volunteerId=<uuid>`) and spot-check **IVS** after **v4.21.9** (overseer/keyman IVS access, bulk actions).
 
-### Recent completions (2026-05-09 / 2026-05-10)
+### Recent completions
 
-- ✅ **Volunteer count assignments — dashboard truth** — Station-level tasks use **confirmed** assignees only (`isSuggested: false`); **Apply suggestions** rows are **draft** until overseer saves real assignees (`bef4f7dd`).
-- ✅ **Grouped vs station exclusion** — Stations in another volunteer’s **count group** don’t show duplicate station-level submit; exclusions rebuilt from **`count_session_group_positions`** (`4935b31f`, earlier `d9fd40b3`).
-- ✅ **View-as simulation** — Enter Count respects simulation like assignees API; **KEYMAN** + **case-normalized** staff roles use simulated volunteer id (`canSimulateVolunteerRole`, `8e937f66`, `4935b31f`); EventLayout hides staff FAB during simulation; mobile dashboard links preserve `viewAsVolunteerId`.
-- ✅ **Volunteer dashboard submit** — Removed fallback that posted counts against **`assignments[0]`** (wrong station risk).
-- ✅ **Release / sync** — Multiple **`/release`** + **`/sync`** cycles with migrations when requested; both nodes rebuilt from `main`.
+- ✅ **v4.21.9 — IVS** — Overseers and keymen can manage IVS volunteers (import/export/add); Approvals bulk status including congregation/department; manual add single volunteer (`509dbe92`, `31c709e1`, `872996b1`, `c7e8b224`).
+- ✅ **Volunteer count assignments + view-as** — Confirmed assignees only for volunteer surfaces; group exclusions; simulation roles aligned (`4935b31f`, `bef4f7dd`, `8e937f66`, `d9fd40b3`); decision **D-TS-043** in `DECISIONS.md`.
+- ✅ **Notify chat UX** — Cancel on launch prompt must not send emails (`44d9efdb`).
 
 ### Next steps
 
-1. Smoke **volunteer dashboard** + **Enter Count** as a simulated volunteer on **production** after confirming HAProxy points at the node that built **`main`** with **`4935b31f`** (use `/api/version` if needed).
-2. Continue **mobile audit**: Positions + Volunteers pages — cards under `md`, filters/actions usable on phones (matches PLAN backlog).
+1. Continue **mobile audit**: Positions + Volunteers — cards under `md`, no horizontal-scroll-only workflows, 44px actions.
+2. **Production smoke** (when on domain/LIVE): volunteer dashboard + Enter Count with simulation; IVS bulk / access paths for overseer or keyman.
 3. Run **`/test-release theoshift standby`** after large UI changes (qa-01 smoke + release-gate).
-4. Review **`/admin/feedback`** for anything urgent.
+4. Triage **`/admin/feedback`** for anything urgent (not run this end-day).
 
 ## Exact next command
 
-`/start-day` — then optionally verify prod: open volunteer dashboard with `viewAsVolunteerId`, confirm Network tab shows `/api/volunteer/dashboard?volunteerId=<volunteer uuid>`.
+`/start-day` — then open Positions or Volunteers on a narrow viewport and continue the mobile audit; optionally prod-smoke volunteer simulation + IVS per above.
 
 ---
 
@@ -54,11 +52,17 @@ Primary roadmap: continue **mobile audit** for `/events/[id]/positions` and `/ev
 
 ## Session snapshot — recent `main` commits
 
-- `4935b31f` — Volunteer dashboard: reliable group exclusions + `canSimulateVolunteerRole`
-- `bef4f7dd` — Suggested count assignees treated as draft for volunteer UI
-- `8e937f66` — Enter Count view-as + simulation roles + FAB / mobile links
-- `d9fd40b3` — Hide station submit when positions belong to another volunteer group
-- `dd8986fd` — Dashboard count tasks from explicit session assignees only
+- `c7e8b224` — Release v4.21.9 — IVS access and bulk actions  
+- `31c709e1` — IVS bulk actions: full status set, congregation and department  
+- `509dbe92` — Allow overseers and keymen to manage IVS volunteers (import/export/add)  
+- `872996b1` — IVS Approvals: add single volunteer (manual entry)  
+- `4935b31f` — Volunteer dashboard: group exclusions + `canSimulateVolunteerRole`  
+
+---
+
+## Feedback triage (this session)
+
+- **Resolved / promoted / triaged:** not executed this end-day (no DB/SSH triage from here). Use `/admin/feedback` when online.
 
 ---
 

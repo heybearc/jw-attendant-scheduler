@@ -1,8 +1,8 @@
 # TheoShift Plan
 
-**Last updated:** 2026-05-10  
+**Last updated:** 2026-05-14  
 **Current phase:** Feature Development + Platform Infrastructure  
-**Status:** v4.21.2 remains latest tagged mobile IVS/shell work; **volunteer attendance counts + view-as simulation** hardened on `main` (deploy via blue-green). Continued work: Positions/Volunteers mobile audit.
+**Status:** **v4.21.9** on `main` — IVS overseer/keyman management, bulk status actions, manual volunteer add; volunteer count/view-as behavior per **D-TS-043**. Continued work: Positions/Volunteers **mobile audit**; prod smoke when convenient.
 
 ---
 
@@ -26,7 +26,8 @@ This follows the usual small-team pattern: **one system of record in the app**, 
 - **Mobile readiness across TheoShift** — eliminate horizontal-scroll-only workflows, ensure 44px tap targets, improve responsive layouts on event and admin pages, verify on Safari/Chrome/Edge/Firefox.
 
 ### Completed This Phase
-- ✅ **Volunteer count assignments & simulation (2026-05)** — Dashboard shows station counts only for **confirmed** assignees (`isSuggested: false`); suggestions from Apply Suggestions are draft until saved. Grouped stations exclude duplicate station-level UI; exclusions use `count_session_group_positions`. View-as uses **normalized staff roles** + Enter Count / mobile links / KEYMAN parity. See commits `bef4f7dd`, `4935b31f`, `8e937f66`, `d9fd40b3`.
+- ✅ **v4.21.9 — IVS access & bulk (2026-05)** — Overseers and keymen can import/export/add IVS volunteers; Approvals bulk status (incl. congregation/department); manual add single volunteer. Commits `509dbe92`, `31c709e1`, `872996b1`, tag/release `c7e8b224`.
+- ✅ **Volunteer count assignments & simulation (2026-05)** — Dashboard shows station counts only for **confirmed** assignees (`isSuggested: false`); suggestions from Apply Suggestions are draft until saved. Grouped stations exclude duplicate station-level UI; exclusions use `count_session_group_positions`. View-as uses **normalized staff roles** + Enter Count / mobile links / KEYMAN parity. Decision **D-TS-043**. Commits `bef4f7dd`, `4935b31f`, `8e937f66`, `d9fd40b3`.
 - ✅ v4.21.2: IVS Module mobile layouts (Approvals cards on small screens; Early Check-In full-width actions + stacked rows)
 - ✅ v4.21.2: Event shell + overview mobile-first tweaks (viewport-fit=cover; momentum scroll utility; stacked toolbar; 44px tab targets; overflow/wrapping fixes)
 - ✅ v4.20.1: Chat navigation UX (New message + searchable position channels) for staff + volunteers
@@ -334,8 +335,8 @@ Feedback **FB-036** closed as deferred; all scope lives in this section until an
 
 ## Version History
 
-**Current:** v4.15.8 (bug fixes, stable)  
-**Previous:** v4.15.5 (security sprint)  
+**Current:** v4.21.9 (IVS access/bulk; counts/view-as per D-TS-043 on `main`)  
+**Previous:** v4.21.2 (IVS mobile + event shell)  
 **Baseline:** v4.0.0 (production-ready platform)
 
 ---
@@ -343,10 +344,8 @@ Feedback **FB-036** closed as deferred; all scope lives in this section until an
 ## Notes
 
 - **Test Suite:** 131 passed, 25 skipped (intentional), 0 failed
-- **Deployment:** Blue-green via MCP tools
-- **Environments:** 
-  - LIVE: GREEN (10.92.3.22)
-  - STANDBY: BLUE (10.92.3.24)
+- **Deployment:** Blue-green via MCP tools (`deploy_to_standby`, `/release`, `/sync`).
+- **Environments:** Do not trust static LIVE/STANDBY labels in git — verify with **`get_deployment_status`** (app: `theoshift`) or HAProxy (D-008). Example snapshot from TASK-STATE: LIVE BLUE `10.92.3.24`, STANDBY GREEN `10.92.3.22` (may differ after a release).
 - **Database:** PostgreSQL on CT131 (10.92.3.21)
 - **Monitoring:** Prometheus + Grafana
 - **Backups:** Automated daily backups

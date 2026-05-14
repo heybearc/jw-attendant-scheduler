@@ -1,5 +1,5 @@
 ---
-date: 2026-05-10
+date: 2026-05-14
 purpose: Scratchpad for today's discoveries (promote on /end-day)
 ---
 

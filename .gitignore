@@ -90,3 +90,11 @@ scripts/*-internal.sh
 scripts/post-deploy-health-check.sh
 mcp-blue-green/config.json
 mcp-blue-green/*-internal.*
+
+# Control plane Cursor symlinks
+.cursor/commands/*.md
+.cursor/rules/*
+.cursor/skills/*/
+
+# MCP is global only (~/.cursor/mcp.json) — do not commit project mcp.json (D-053)
+.cursor/mcp.json

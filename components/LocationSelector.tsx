@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useLoadScript, Autocomplete } from '@react-google-maps/api'
 import MapPreview from './MapPreview'
+import { notifyAlert, toast } from '../lib/ui/toast'
 
 const libraries: ("places")[] = ["places"]
 
@@ -320,11 +321,11 @@ function CreateLocationModal({ initialName, onClose, onSave }: CreateLocationMod
       if (data.success) {
         onSave(data.data)
       } else {
-        alert('Failed to create location: ' + data.error)
+        notifyAlert('Failed to create location: ' + data.error)
       }
     } catch (error) {
       console.error('Error creating location:', error)
-      alert('Error creating location')
+      notifyAlert('Error creating location')
     } finally {
       setSaving(false)
     }

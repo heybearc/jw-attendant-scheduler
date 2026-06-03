@@ -18,6 +18,7 @@ import ActionButton from './atoms/ActionButton'
 
 // Types
 import { Attendant, AttendantCreateInput, AttendantBulkImport } from '../types'
+import { appConfirm, appConfirmMessage } from '../../../lib/ui/confirm'
 
 interface EventAttendantManagementPageProps {
   eventId: string
@@ -105,7 +106,7 @@ export default function EventAttendantManagementPage({
   }
 
   const handleDeleteAttendant = async (attendantId: string) => {
-    if (confirm('Are you sure you want to delete this attendant?')) {
+    if (await appConfirmMessage('Are you sure you want to delete this attendant?')) {
       try {
         await deleteAttendant(attendantId)
       } catch (error) {
@@ -126,7 +127,7 @@ export default function EventAttendantManagementPage({
   }
 
   const handleBulkDelete = async (attendantIds: string[]) => {
-    if (confirm(`Are you sure you want to delete ${attendantIds.length} attendant(s)?`)) {
+    if (await appConfirmMessage(`Are you sure you want to delete ${attendantIds.length} attendant(s)?`)) {
       try {
         await bulkDelete(attendantIds)
         setSelectedAttendantIds([])

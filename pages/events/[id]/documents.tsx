@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
+import { appConfirm, appConfirmMessage } from '../../../lib/ui/confirm'
 
 interface Document {
   id: string
@@ -153,7 +154,7 @@ export default function EventDocumentsPage({ eventId, event, documents, canEdit,
   }
 
   const handleUnpublishDocument = async (documentId: string) => {
-    if (!confirm('Are you sure you want to unpublish this document? It will be removed from all volunteer dashboards.')) {
+    if (!(await appConfirmMessage('Are you sure you want to unpublish this document? It will be removed from all volunteer dashboards.'))) {
       return
     }
 
@@ -180,7 +181,7 @@ export default function EventDocumentsPage({ eventId, event, documents, canEdit,
   }
 
   const handleDeleteDocument = async (documentId: string) => {
-    if (!confirm('Are you sure you want to delete this document? This action cannot be undone.')) {
+    if (!(await appConfirmMessage('Are you sure you want to delete this document? This action cannot be undone.'))) {
       return
     }
 

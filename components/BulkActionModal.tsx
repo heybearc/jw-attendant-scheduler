@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { IVS_APPROVAL_STATUSES } from '@/lib/ivs'
+import { notifyAlert, toast } from '../lib/ui/toast'
 
 interface BulkActionModalProps {
   action: string
@@ -44,14 +45,14 @@ export default function BulkActionModal({
         break
       case 'changeDepartment':
         if (!department.trim()) {
-          alert('Please provide a department name')
+          notifyAlert('Please provide a department name')
           return
         }
         onConfirm({ action: 'changeDepartment', ivsSubmittedBy: department.trim() })
         break
       case 'changeCongregation':
         if (!congregation.trim()) {
-          alert('Please provide a congregation name')
+          notifyAlert('Please provide a congregation name')
           return
         }
         onConfirm({ action: 'changeCongregation', congregation: congregation.trim() })

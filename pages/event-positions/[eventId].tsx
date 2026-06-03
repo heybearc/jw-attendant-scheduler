@@ -5,6 +5,7 @@ import AdminLayout from '../../components/AdminLayout'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
+import { appConfirm, appConfirmMessage } from '../../lib/ui/confirm'
 
 interface Position {
   id: string
@@ -167,7 +168,7 @@ export default function EventPositionsPage() {
   }
 
   const handleDeletePosition = async (positionId: string) => {
-    if (!confirm('Are you sure you want to delete this position? This will also remove all related shifts and assignments.')) {
+    if (!(await appConfirmMessage('Are you sure you want to delete this position? This will also remove all related shifts and assignments.'))) {
       return
     }
 

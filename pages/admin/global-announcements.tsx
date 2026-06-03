@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../api/auth/[...nextauth]'
 import AdminLayout from '../../components/AdminLayout'
 import { format, parseISO } from 'date-fns'
+import { appConfirm, appConfirmMessage } from '../../lib/ui/confirm'
 
 interface GlobalAnnouncement {
   id: string
@@ -115,7 +116,7 @@ export default function GlobalAnnouncementsPage({ userLastSeenVersion }: Props) 
   }
 
   const handleDelete = async (id: string, title: string) => {
-    if (!confirm(`Delete "${title}"? This cannot be undone.`)) return
+    if (!(await appConfirmMessage(`Delete "${title}"? This cannot be undone.`))) return
     await fetch(`/api/admin/global-announcements/${id}`, { method: 'DELETE' })
     await load()
   }

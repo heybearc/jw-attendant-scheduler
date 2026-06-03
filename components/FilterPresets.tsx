@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { notifyAlert, toast } from '../lib/ui/toast'
+import { appConfirm, appConfirmMessage } from '../lib/ui/confirm'
 
 interface FilterPreset {
   id: string
@@ -45,7 +47,7 @@ export default function FilterPresets({ currentFilters, onApplyPreset, eventId }
 
   const handleSavePreset = () => {
     if (!presetName.trim()) {
-      alert('Please enter a preset name')
+      notifyAlert('Please enter a preset name')
       return
     }
 
@@ -60,8 +62,8 @@ export default function FilterPresets({ currentFilters, onApplyPreset, eventId }
     setShowSaveModal(false)
   }
 
-  const handleDeletePreset = (id: string) => {
-    if (confirm('Delete this filter preset?')) {
+  const handleDeletePreset = async (id: string) => {
+    if (await appConfirmMessage('Delete this filter preset?')) {
       savePresets(presets.filter(p => p.id !== id))
     }
   }

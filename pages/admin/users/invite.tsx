@@ -4,6 +4,7 @@ import { authOptions } from '../../api/auth/[...nextauth]'
 import AdminLayout from '../../../components/AdminLayout'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
+import { appConfirm, appConfirmMessage } from '../../../lib/ui/confirm'
 
 interface Invitation {
   id: string
@@ -93,7 +94,7 @@ export default function InviteUsersPage() {
   }
 
   const handleCancelInvitation = async (invitationId: string) => {
-    if (!confirm('Are you sure you want to cancel this invitation?')) {
+    if (!(await appConfirmMessage('Are you sure you want to cancel this invitation?'))) {
       return
     }
 

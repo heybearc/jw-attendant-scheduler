@@ -12,6 +12,9 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { format } from 'date-fns'
 import { computeSessionAttendanceBreakdown } from '@/lib/countSessionReporting'
+import { notifyAlert, toast } from '../../../lib/ui/toast'
+import { appConfirm, appConfirmMessage } from '../../../lib/ui/confirm'
+import { appPrompt } from '../../../lib/ui/prompt'
 // Template types removed - using event.settings directly
 
 interface Event {
@@ -227,7 +230,7 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
     if (!event) return
     
     const confirmMessage = `Are you sure you want to change the event status to ${newStatus}?`
-    if (!confirm(confirmMessage)) return
+    if (!(await appConfirmMessage(confirmMessage))) return
 
     try {
       const response = await fetch(`/api/events/${event.id}`, {
@@ -239,25 +242,31 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
 
       if (response.ok) {
         router.reload() // Refresh page data
-        alert(`Event status updated to ${newStatus}`)
+        notifyAlert(`Event status updated to ${newStatus}`)
       } else {
-        alert('Failed to update event status')
+        notifyAlert('Failed to update event status')
       }
     } catch (error) {
       console.error('Error updating status:', error)
-      alert('Error updating event status')
+      notifyAlert('Error updating event status')
     }
   }
 
   const handleDeleteEvent = async () => {
     if (!event) return
-    
-    const confirmMessage = `⚠️ WARNING: This will PERMANENTLY DELETE the event "${event.name}" and all related data.\n\nThis action CANNOT be undone!\n\nType "DELETE" to confirm:`
-    const userInput = prompt(confirmMessage)
-    
+
+    const userInput = await appPrompt({
+      title: 'Delete event permanently?',
+      message: `This will permanently delete "${event.name}" and all related data. This action cannot be undone.`,
+      requiredValue: 'DELETE',
+      inputLabel: 'Type DELETE to confirm',
+      confirmLabel: 'Delete event',
+      tone: 'danger',
+    })
+
     if (userInput !== 'DELETE') {
       if (userInput !== null) {
-        alert('Deletion cancelled. You must type "DELETE" exactly to confirm.')
+        toast.info('Deletion cancelled. Type DELETE exactly to confirm.')
       }
       return
     }
@@ -271,14 +280,14 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
       const data = await response.json()
 
       if (response.ok && data.success) {
-        alert('Event deleted successfully')
+        notifyAlert('Event deleted successfully')
         router.push('/events')
       } else {
-        alert(data.error || 'Failed to delete event')
+        notifyAlert(data.error || 'Failed to delete event')
       }
     } catch (error) {
       console.error('Error deleting event:', error)
-      alert('Error deleting event')
+      notifyAlert('Error deleting event')
     }
   }
 
@@ -297,15 +306,15 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
 
       if (response.ok && data.success) {
         setShowCloneModal(false)
-        alert(data.data.message || 'Event cloned successfully!')
+        notifyAlert(data.data.message || 'Event cloned successfully!')
         router.push(`/events/${data.data.id}`)
       } else {
         console.error('Clone event error:', data)
-        alert(`Failed to clone event: ${data.error || 'Unknown error'}`)
+        notifyAlert(`Failed to clone event: ${data.error || 'Unknown error'}`)
       }
     } catch (error) {
       console.error('Error cloning event:', error)
-      alert('Error cloning event')
+      notifyAlert('Error cloning event')
     }
   }
 

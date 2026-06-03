@@ -4,6 +4,7 @@ import { authOptions } from '../api/auth/[...nextauth]'
 import AdminLayout from '../../components/AdminLayout'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { notifyAlert, toast } from '../../lib/ui/toast'
 
 interface FeedbackItem {
   id: string
@@ -146,11 +147,11 @@ export default function FeedbackManagementPage() {
         setNewComment('')
         setShowCommentModal(false)
       } else {
-        alert('Failed to add comment')
+        notifyAlert('Failed to add comment')
       }
     } catch (error) {
       console.error('Error adding comment:', error)
-      alert('Error adding comment')
+      notifyAlert('Error adding comment')
     } finally {
       setSubmittingComment(false)
     }
@@ -161,7 +162,7 @@ export default function FeedbackManagementPage() {
     
     // Require resolution comment when marking as RESOLVED
     if (newStatus === 'resolved' && !resolutionComment.trim()) {
-      alert('Please provide a resolution comment explaining how this was resolved for end users.')
+      notifyAlert('Please provide a resolution comment explaining how this was resolved for end users.')
       return
     }
     
@@ -186,11 +187,11 @@ export default function FeedbackManagementPage() {
         }
         setShowStatusModal(false)
       } else {
-        alert('Failed to update status')
+        notifyAlert('Failed to update status')
       }
     } catch (error) {
       console.error('Error updating status:', error)
-      alert('Error updating status')
+      notifyAlert('Error updating status')
     } finally {
       setUpdatingStatus(false)
     }

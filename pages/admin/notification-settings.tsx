@@ -4,6 +4,7 @@ import { authOptions } from '../api/auth/[...nextauth]'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
+import { notifyAlert, toast } from '../../lib/ui/toast'
 
 /**
  * Phase 4C Feature #1: Assignment Notification Settings
@@ -75,13 +76,13 @@ export default function NotificationSettingsPage() {
       const data = await response.json()
       
       if (data.success) {
-        alert('✅ Notification settings saved successfully!')
+        notifyAlert('✅ Notification settings saved successfully!')
       } else {
-        alert('❌ Failed to save settings: ' + (data.error || 'Unknown error'))
+        notifyAlert('❌ Failed to save settings: ' + (data.error || 'Unknown error'))
       }
     } catch (error) {
       console.error('Save error:', error)
-      alert('❌ Failed to save settings')
+      notifyAlert('❌ Failed to save settings')
     } finally {
       setSaving(false)
     }

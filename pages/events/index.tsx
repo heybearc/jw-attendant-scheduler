@@ -7,6 +7,8 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { format, parseISO } from 'date-fns'
+import { notifyAlert, toast } from '../../lib/ui/toast'
+import { appConfirm, appConfirmMessage } from '../../lib/ui/confirm'
 
 interface Event {
   id: string
@@ -136,7 +138,7 @@ export default function EventsPage() {
   }
 
   const handleDeleteEvent = async (eventId: string, eventName: string) => {
-    if (!confirm(`Are you sure you want to delete "${eventName}"? This action cannot be undone.`)) {
+    if (!(await appConfirmMessage(`Are you sure you want to delete "${eventName}"? This action cannot be undone.`))) {
       return
     }
 
@@ -148,14 +150,14 @@ export default function EventsPage() {
       if (response.ok) {
         // Refresh the events list
         fetchEvents()
-        alert('Event deleted successfully')
+        notifyAlert('Event deleted successfully')
       } else {
         const error = await response.json()
-        alert(`Failed to delete event: ${error.error}`)
+        notifyAlert(`Failed to delete event: ${error.error}`)
       }
     } catch (error) {
       console.error('Delete error:', error)
-      alert('Failed to delete event')
+      notifyAlert('Failed to delete event')
     }
   }
 

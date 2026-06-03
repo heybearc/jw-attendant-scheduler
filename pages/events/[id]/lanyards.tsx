@@ -6,6 +6,8 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
+import { notifyAlert, toast } from '../../../lib/ui/toast'
+import { appConfirm, appConfirmMessage } from '../../../lib/ui/confirm'
 
 interface Lanyard {
   id: string
@@ -164,7 +166,7 @@ export default function EventLanyardsPage({ eventId, event, lanyards, attendants
   }
 
   const handleDeleteLanyard = async (lanyardId: string) => {
-    if (!confirm('Are you sure you want to delete this lanyard?')) return
+    if (!(await appConfirmMessage('Are you sure you want to delete this lanyard?'))) return
     
     try {
       const response = await fetch(`/api/event-lanyards/${eventId}/${lanyardId}`, {
@@ -306,7 +308,7 @@ export default function EventLanyardsPage({ eventId, event, lanyards, attendants
             message += `\n- ${result.badgeNumber}: ${result.error}`
           })
         }
-        alert(message)
+        notifyAlert(message)
       } else {
         setError('Failed to create any lanyards')
         console.error('All lanyard creation failed:', results)

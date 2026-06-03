@@ -10,6 +10,7 @@ import {
   setViewAsVolunteerId,
 } from '@/lib/viewAsClient'
 import { disableChatPushSubscription, enableChatPushSubscription } from '@/lib/chatPushClient'
+import { notifyAlert, toast } from '../../lib/ui/toast'
 
 interface ChatChannel {
   id: string
@@ -147,7 +148,7 @@ export default function VolunteerChatPage() {
       await enableChatPushSubscription(getViewAsHeaders)
       await refreshPushStatus()
     } catch (e: any) {
-      alert(e?.message || 'Could not enable notifications.')
+      notifyAlert(e?.message || 'Could not enable notifications.')
       await refreshPushStatus()
     }
   }

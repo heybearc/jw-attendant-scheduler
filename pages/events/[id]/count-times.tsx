@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import { getViewAsHeaders } from '@/lib/viewAsClient'
+import { appConfirm, appConfirmMessage } from '../../../lib/ui/confirm'
 
 // Client-side only date formatter to avoid hydration errors
 function ClientDate({ isoString }: { isoString: string }) {
@@ -145,7 +146,7 @@ export default function CountTimesPage({ eventId, event, countSessions, canManag
   }
 
   const deleteCountSession = async (sessionId: string, sessionName: string) => {
-    if (!confirm(`Are you sure you want to delete "${sessionName}"? This action cannot be undone.`)) {
+    if (!(await appConfirmMessage(`Are you sure you want to delete "${sessionName}"? This action cannot be undone.`))) {
       return
     }
 

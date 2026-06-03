@@ -8,6 +8,8 @@ import VolunteerDetailsPopup from '../../../components/VolunteerDetailsPopup'
 import React, { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/router'
 import { useScrollRestoration } from '../../../hooks/useScrollRestoration'
+import { notifyAlert, toast } from '../../../lib/ui/toast'
+import { appConfirm, appConfirmMessage } from '../../../lib/ui/confirm'
 
 interface Event {
   id: string
@@ -384,7 +386,7 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
 
   // Force Profile Verification Handler
   const handleForceVerification = async (attendant: Attendant) => {
-    if (!confirm(`Force profile verification for ${attendant.firstName} ${attendant.lastName}?\n\nThis will require them to verify their contact information on next login.`)) {
+    if (!(await appConfirmMessage(`Force profile verification for ${attendant.firstName} ${attendant.lastName}?\n\nThis will require them to verify their contact information on next login.`))) {
       return
     }
 
@@ -399,12 +401,12 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
 
       const result = await response.json()
       if (result.success) {
-        alert(`Profile verification required for ${attendant.firstName} ${attendant.lastName}.\n\nThey will see a verification popup on their next login.`)
+        notifyAlert(`Profile verification required for ${attendant.firstName} ${attendant.lastName}.\n\nThey will see a verification popup on their next login.`)
       } else {
-        alert(`Failed to set verification requirement: ${result.error}`)
+        notifyAlert(`Failed to set verification requirement: ${result.error}`)
       }
     } catch (error) {
-      alert('Failed to set verification requirement. Please try again.')
+      notifyAlert('Failed to set verification requirement. Please try again.')
     }
   }
 
@@ -423,7 +425,7 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
     if (!availabilityModalAttendant) return
 
     if (availabilityStatus === 'PARTIAL' && !availabilityNotes.trim()) {
-      alert('Please provide notes for partial availability')
+      notifyAlert('Please provide notes for partial availability')
       return
     }
 
@@ -444,18 +446,18 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
         preserveStateAndReload()
       } else {
         const error = await response.json()
-        alert(error.error || 'Failed to update availability')
+        notifyAlert(error.error || 'Failed to update availability')
       }
     } catch (error) {
       console.error('Error updating availability:', error)
-      alert('Failed to update availability')
+      notifyAlert('Failed to update availability')
     }
   }
 
   // Bulk Availability Request Handler
   const handleBulkAvailabilityRequest = () => {
     if (selectedAttendants.size === 0) {
-      alert('Please select volunteers to request availability from')
+      notifyAlert('Please select volunteers to request availability from')
       return
     }
     setShowBulkRequestModal(true)
@@ -484,18 +486,18 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
       const result = await response.json()
 
       if (response.ok) {
-        alert(`✅ Availability requests sent to ${result.sent} attendants${result.failed > 0 ? `\n⚠️ ${result.failed} failed` : ''}`)
+        notifyAlert(`✅ Availability requests sent to ${result.sent} attendants${result.failed > 0 ? `\n⚠️ ${result.failed} failed` : ''}`)
         setShowBulkRequestModal(false)
         setSelectedAttendants(new Set())
         setBulkRequestDeadline('')
         setBulkRequestMessage('')
         preserveStateAndReload()
       } else {
-        alert(result.error || 'Failed to send availability requests')
+        notifyAlert(result.error || 'Failed to send availability requests')
       }
     } catch (error) {
       console.error('Error sending bulk availability request:', error)
-      alert('Failed to send availability requests')
+      notifyAlert('Failed to send availability requests')
     } finally {
       setSendingBulkRequest(false)
     }
@@ -524,7 +526,7 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
       try {
         if (raw) payload = JSON.parse(raw)
       } catch {
-        alert(
+        notifyAlert(
           response.ok
             ? 'Changes may have saved, but the server returned an unexpected response. Refresh the page to confirm.'
             : 'Failed to save attendant (invalid server response).'
@@ -536,11 +538,11 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
         setShowAddModal(false)
         preserveStateAndReload()
       } else {
-        alert(payload.error || 'Failed to save attendant')
+        notifyAlert(payload.error || 'Failed to save attendant')
       }
     } catch (error) {
       console.error('Error saving attendant:', error)
-      alert('Failed to save attendant')
+      notifyAlert('Failed to save attendant')
     } finally {
       setLoading(false)
     }
@@ -548,7 +550,7 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
 
   // Remove Attendant Handler
   const handleRemoveAttendant = async (attendant: Attendant) => {
-    if (!confirm(`Are you sure you want to remove ${attendant.firstName} ${attendant.lastName}?`)) {
+    if (!(await appConfirmMessage(`Are you sure you want to remove ${attendant.firstName} ${attendant.lastName}?`))) {
       return
     }
 
@@ -563,11 +565,11 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
         preserveStateAndReload()
       } else {
         const error = await response.json()
-        alert(error.error || 'Failed to remove attendant')
+        notifyAlert(error.error || 'Failed to remove attendant')
       }
     } catch (error) {
       console.error('Error removing attendant:', error)
-      alert('Failed to remove attendant')
+      notifyAlert('Failed to remove attendant')
     } finally {
       setLoading(false)
     }
@@ -586,7 +588,7 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
     if (file && file.type === 'text/csv') {
       setImportFile(file)
     } else {
-      alert('Please select a valid CSV file')
+      notifyAlert('Please select a valid CSV file')
     }
   }
 
@@ -602,7 +604,7 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
       const lines = text.split('\n').filter(line => line.trim())
       
       if (lines.length < 2) {
-        alert('CSV file must have at least a header row and one data row')
+        notifyAlert('CSV file must have at least a header row and one data row')
         return
       }
 
@@ -651,7 +653,7 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
       }
 
       if (attendants.length === 0) {
-        alert('No valid attendant records found in CSV')
+        notifyAlert('No valid attendant records found in CSV')
         return
       }
 
@@ -668,13 +670,13 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
         setImportResults(result.data)
         setShowImportModal(false)
         preserveStateAndReload()
-        alert(`Successfully imported ${attendants.length} attendants`)
+        notifyAlert(`Successfully imported ${attendants.length} attendants`)
       } else {
-        alert(`Import failed: ${result.error}`)
+        notifyAlert(`Import failed: ${result.error}`)
       }
     } catch (error) {
       console.error('Import error:', error)
-      alert('Failed to parse CSV file. Please check the format.')
+      notifyAlert('Failed to parse CSV file. Please check the format.')
     } finally {
       setLoading(false)
     }
@@ -731,11 +733,11 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
     const subject = broadcastSubject.trim()
     const message = broadcastMessage.trim()
     if (!subject || !message) {
-      alert('Please enter a subject and message.')
+      notifyAlert('Please enter a subject and message.')
       return
     }
     if (broadcastEmailScope === 'selected' && broadcastPinnedSelection.length === 0) {
-      alert('Select at least one volunteer, or choose “All active volunteers”.')
+      notifyAlert('Select at least one volunteer, or choose “All active volunteers”.')
       return
     }
     setBroadcastSending(true)
@@ -760,11 +762,11 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
             : Array.isArray(data.errors)
               ? data.errors.slice(0, 5).join('\n')
               : ''
-        alert(detail || 'Failed to send email')
+        notifyAlert(detail || 'Failed to send email')
         return
       }
       if (data.async) {
-        alert(
+        notifyAlert(
           data.message ||
             `Sending to ${data.recipientCount ?? ''} recipient(s) in the background. Large lists may take a minute.`
         )
@@ -773,7 +775,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
           Array.isArray(data.errors) && data.errors.length > 0
             ? `\n\n${data.errors.slice(0, 5).join('\n')}${data.errors.length > 5 ? '\n…' : ''}`
             : ''
-        alert((data.message || `Sent to ${data.sent || 0} recipient(s)`) + extra)
+        notifyAlert((data.message || `Sent to ${data.sent || 0} recipient(s)`) + extra)
       }
       setShowBroadcastEmailModal(false)
       setBroadcastSubject('')
@@ -781,7 +783,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
       setBroadcastPinnedSelection([])
     } catch (e) {
       console.error(e)
-      alert('Failed to send email')
+      notifyAlert('Failed to send email')
     } finally {
       setBroadcastSending(false)
     }
@@ -833,7 +835,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
 
   const handleBulkEdit = () => {
     if (selectedAttendants.size === 0) {
-      alert('Please select volunteers to edit')
+      notifyAlert('Please select volunteers to edit')
       return
     }
     setShowBulkEditModal(true)
@@ -963,7 +965,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
       
       if (failed.length > 0) {
         console.error('Some updates failed:', failed)
-        alert(`Bulk edit completed with ${successful.length} successful and ${failed.length} failed updates. Check console for details.`)
+        notifyAlert(`Bulk edit completed with ${successful.length} successful and ${failed.length} failed updates. Check console for details.`)
       } else {
       }
       
@@ -985,7 +987,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
       }
     } catch (error) {
       console.error('Bulk edit error:', error)
-      alert('Failed to update attendants')
+      notifyAlert('Failed to update attendants')
     } finally {
       setLoading(false)
     }
@@ -1574,11 +1576,11 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                                           preserveStateAndReload()
                                         } else {
                                           const error = await response.json().catch(() => null)
-                                          alert(error?.error || 'Failed to update overseer')
+                                          notifyAlert(error?.error || 'Failed to update overseer')
                                         }
                                       } catch (error) {
                                         console.error('Error updating overseer:', error)
-                                        alert('Failed to update overseer')
+                                        notifyAlert('Failed to update overseer')
                                       }
                                     }}
                                     className="w-full text-sm border border-gray-300 rounded-md px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px] touch-manipulation"
@@ -1610,11 +1612,11 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                                           preserveStateAndReload()
                                         } else {
                                           const error = await response.json().catch(() => null)
-                                          alert(error?.error || 'Failed to update keyman')
+                                          notifyAlert(error?.error || 'Failed to update keyman')
                                         }
                                       } catch (error) {
                                         console.error('Error updating keyman:', error)
-                                        alert('Failed to update keyman')
+                                        notifyAlert('Failed to update keyman')
                                       }
                                     }}
                                     className="w-full text-sm border border-gray-300 rounded-md px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px] touch-manipulation"
@@ -1832,11 +1834,11 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                                   preserveStateAndReload()
                                 } else {
                                   const error = await response.json().catch(() => null)
-                                  alert(error?.error || 'Failed to update overseer')
+                                  notifyAlert(error?.error || 'Failed to update overseer')
                                 }
                               } catch (error) {
                                 console.error('Error updating overseer:', error)
-                                alert('Failed to update overseer')
+                                notifyAlert('Failed to update overseer')
                               }
                             }}
                             className="text-xs border border-gray-300 rounded px-1 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
@@ -1864,11 +1866,11 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                                   preserveStateAndReload()
                                 } else {
                                   const error = await response.json().catch(() => null)
-                                  alert(error?.error || 'Failed to update keyman')
+                                  notifyAlert(error?.error || 'Failed to update keyman')
                                 }
                               } catch (error) {
                                 console.error('Error updating keyman:', error)
-                                alert('Failed to update keyman')
+                                notifyAlert('Failed to update keyman')
                               }
                             }}
                             className="text-xs border border-gray-300 rounded px-1 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"

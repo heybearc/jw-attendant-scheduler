@@ -4,6 +4,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../api/auth/[...nextauth]'
 import AdminLayout from '../../components/AdminLayout'
 import MapPreview from '../../components/MapPreview'
+import { notifyAlert, toast } from '../../lib/ui/toast'
+import { appConfirm, appConfirmMessage } from '../../lib/ui/confirm'
 
 interface Location {
   id: string
@@ -54,7 +56,7 @@ export default function AdminLocationsPage() {
   }
 
   const handleDelete = async (locationId: string) => {
-    if (!confirm('Are you sure you want to deactivate this location?')) return
+    if (!(await appConfirmMessage('Are you sure you want to deactivate this location?'))) return
 
     try {
       const response = await fetch(`/api/locations/${locationId}`, {
@@ -66,11 +68,11 @@ export default function AdminLocationsPage() {
       if (data.success) {
         fetchLocations()
       } else {
-        alert('Failed to delete location: ' + data.error)
+        notifyAlert('Failed to delete location: ' + data.error)
       }
     } catch (error) {
       console.error('Error deleting location:', error)
-      alert('Error deleting location')
+      notifyAlert('Error deleting location')
     }
   }
 
@@ -87,11 +89,11 @@ export default function AdminLocationsPage() {
       if (data.success) {
         fetchLocations()
       } else {
-        alert('Failed to reactivate location: ' + data.error)
+        notifyAlert('Failed to reactivate location: ' + data.error)
       }
     } catch (error) {
       console.error('Error reactivating location:', error)
-      alert('Error reactivating location')
+      notifyAlert('Error reactivating location')
     }
   }
 

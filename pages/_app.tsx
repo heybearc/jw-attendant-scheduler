@@ -3,6 +3,7 @@ import type { AppProps } from 'next/app'
 import Head from 'next/head'
 import { useEffect } from 'react'
 import ErrorBoundary from '../components/ErrorBoundary'
+import { AppUiProvider } from '../components/ui/app-ui-provider'
 import { useActivityTracking } from '../src/hooks/useActivityTracking'
 import '../styles/globals.css'
 
@@ -62,7 +63,9 @@ export default function App({
   return (
     <ErrorBoundary>
       <SessionProvider session={session}>
-        <AppContent Component={Component} pageProps={pageProps} />
+        <AppUiProvider>
+          <AppContent Component={Component} pageProps={pageProps} />
+        </AppUiProvider>
       </SessionProvider>
     </ErrorBoundary>
   )

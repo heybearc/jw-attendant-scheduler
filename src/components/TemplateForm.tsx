@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { notifyAlert, toast } from '../../lib/ui/toast'
 
 /**
  * Phase 4C: Assignment Template Form Component
@@ -71,12 +72,12 @@ export default function TemplateForm({
     e.preventDefault()
     
     if (!formData.name.trim()) {
-      alert('Template name is required')
+      notifyAlert('Template name is required')
       return
     }
 
     if (formData.template_assignments.length === 0) {
-      alert('At least one position assignment is required')
+      notifyAlert('At least one position assignment is required')
       return
     }
 
@@ -85,7 +86,7 @@ export default function TemplateForm({
       await onSubmit(formData)
     } catch (error) {
       console.error('Form submission error:', error)
-      alert('Failed to save template')
+      notifyAlert('Failed to save template')
     } finally {
       setSubmitting(false)
     }
@@ -93,7 +94,7 @@ export default function TemplateForm({
 
   const addAssignment = () => {
     if (!newAssignment.positionName.trim()) {
-      alert('Position name is required')
+      notifyAlert('Position name is required')
       return
     }
 

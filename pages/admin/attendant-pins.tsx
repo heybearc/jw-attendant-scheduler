@@ -5,6 +5,9 @@ import { prisma } from '../../src/lib/prisma'
 import { useState } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
+import { notifyAlert, toast } from '../../lib/ui/toast'
+import { appConfirm, appConfirmMessage } from '../../lib/ui/confirm'
+import { appPrompt } from '../../lib/ui/prompt'
 
 interface Volunteer {
   id: string
@@ -61,7 +64,7 @@ export default function VolunteerPINManagement({ attendants }: Props) {
   const handleBulkAutoGenerate = async () => {
     const attendantsWithPhone = attendants.filter(a => a.phone && !a.hasPin)
     
-    if (!confirm(`Generate PINs for ${attendantsWithPhone.length} attendants with phone numbers?`)) {
+    if (!(await appConfirmMessage(`Generate PINs for ${attendantsWithPhone.length} attendants with phone numbers?`))) {
       return
     }
 
@@ -166,12 +169,18 @@ export default function VolunteerPINManagement({ attendants }: Props) {
                         </button>
                       )}
                       <button
-                        onClick={() => {
-                          const pin = prompt('Enter 4-digit PIN:')
+                        onClick={async () => {
+                          const pin = await appPrompt({
+                            title: 'Set custom PIN',
+                            message: 'Enter a 4-digit PIN for this volunteer.',
+                            placeholder: '0000',
+                            inputLabel: '4-digit PIN',
+                            confirmLabel: 'Set PIN',
+                          })
                           if (pin && /^\d{4}$/.test(pin)) {
                             handleSetPIN(attendant.id, false, pin)
                           } else if (pin) {
-                            alert('PIN must be exactly 4 digits')
+                            toast.error('PIN must be exactly 4 digits')
                           }
                         }}
                         disabled={loading === attendant.id}

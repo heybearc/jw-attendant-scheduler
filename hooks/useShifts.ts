@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/router'
 import { createPositionService } from '../lib/positionService'
+import { notifyAlert, toast } from '../lib/ui/toast'
+import { appConfirm, appConfirmMessage } from '../lib/ui/confirm'
 
 interface Position {
   id: string
@@ -55,7 +57,7 @@ export function useShifts({ eventId }: UseShiftsProps): UseShiftsReturn {
     if (shiftFormData.isAllDay && position.shifts && position.shifts.length > 0) {
       const hasPartialShifts = position.shifts.some(shift => !shift.isAllDay)
       if (hasPartialShifts) {
-        alert(
+        notifyAlert(
           '❌ Cannot add All Day shift\n\n' +
           'This position already has partial shifts. An All Day shift covers the entire 24-hour period and conflicts with existing partial shifts.\n\n' +
           'Please delete existing partial shifts first, then add the All Day shift.'
@@ -73,21 +75,21 @@ export function useShifts({ eventId }: UseShiftsProps): UseShiftsReturn {
       })
 
       if (success) {
-        alert('✅ Shift added successfully')
+        notifyAlert('✅ Shift added successfully')
         setShowShiftModal(false)
         setShiftFormData({ name: '', startTime: '', endTime: '', isAllDay: false })
         router.reload()
       } else {
-        alert('Failed to add shift')
+        notifyAlert('Failed to add shift')
       }
     } catch (error) {
       console.error('Error adding shift:', error)
-      alert('Failed to add shift')
+      notifyAlert('Failed to add shift')
     }
   }
 
   const handleDeleteShift = async (positionId: string, shiftId: string, shiftName: string) => {
-    if (!confirm(`Delete "${shiftName}" shift? This will also remove any attendant assignments to this shift.`)) {
+    if (!(await appConfirmMessage(`Delete "${shiftName}" shift? This will also remove any attendant assignments to this shift.`))) {
       return
     }
 
@@ -97,11 +99,11 @@ export function useShifts({ eventId }: UseShiftsProps): UseShiftsReturn {
       if (success) {
         router.reload()
       } else {
-        alert('Failed to delete shift')
+        notifyAlert('Failed to delete shift')
       }
     } catch (error) {
       console.error('Delete shift error:', error)
-      alert('Failed to delete shift')
+      notifyAlert('Failed to delete shift')
     }
   }
 

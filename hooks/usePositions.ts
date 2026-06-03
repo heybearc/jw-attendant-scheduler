@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { Position } from '../types'
 import { createPositionService } from '../lib/positionService'
+import { notifyAlert, toast } from '../lib/ui/toast'
+import { appConfirm, appConfirmMessage } from '../lib/ui/confirm'
 
 interface UsePositionsProps {
   eventId: string
@@ -66,7 +68,7 @@ export function usePositions({ eventId, initialPositions }: UsePositionsProps): 
   }, [showInactive, eventId])
 
   const handleDelete = async (positionId: string) => {
-    if (!confirm('Are you sure you want to deactivate this position? It can be reactivated later.')) {
+    if (!(await appConfirmMessage('Are you sure you want to deactivate this position? It can be reactivated later.'))) {
       return
     }
 
@@ -77,10 +79,10 @@ export function usePositions({ eventId, initialPositions }: UsePositionsProps): 
       if (success) {
         router.reload()
       } else {
-        alert('Failed to delete position')
+        notifyAlert('Failed to delete position')
       }
     } catch (error) {
-      alert('Failed to deactivate position')
+      notifyAlert('Failed to deactivate position')
     } finally {
       setIsSubmitting(false)
     }
@@ -92,10 +94,10 @@ export function usePositions({ eventId, initialPositions }: UsePositionsProps): 
       if (success) {
         router.reload()
       } else {
-        alert('Failed to activate position')
+        notifyAlert('Failed to activate position')
       }
     } catch (error) {
-      alert('Failed to activate position')
+      notifyAlert('Failed to activate position')
     }
   }
 
@@ -105,15 +107,15 @@ export function usePositions({ eventId, initialPositions }: UsePositionsProps): 
       if (success) {
         router.reload()
       } else {
-        alert('Failed to deactivate position')
+        notifyAlert('Failed to deactivate position')
       }
     } catch (error) {
-      alert('Failed to deactivate position')
+      notifyAlert('Failed to deactivate position')
     }
   }
 
   const handleHardDelete = async (positionId: string, positionName: string) => {
-    const confirmed = confirm(
+    const confirmed = await appConfirmMessage(
       `⚠️ PERMANENT DELETION ⚠️\n\n` +
       `This will permanently delete "${positionName}" from the database.\n` +
       `This action CANNOT be undone.\n\n` +
@@ -125,22 +127,22 @@ export function usePositions({ eventId, initialPositions }: UsePositionsProps): 
       const result = await positionService.hardDeletePosition(positionId)
       
       if (result.success) {
-        alert(`Position "${positionName}" permanently deleted.`)
+        notifyAlert(`Position "${positionName}" permanently deleted.`)
         router.reload()
       } else {
         if (result.error) {
-          alert(`Cannot delete position:\n${result.error}`)
+          notifyAlert(`Cannot delete position:\n${result.error}`)
         } else {
-          alert(`Failed: ${result.error}`)
+          notifyAlert(`Failed: ${result.error}`)
         }
       }
     } catch (error) {
-      alert('Failed to permanently delete position')
+      notifyAlert('Failed to permanently delete position')
     }
   }
 
   const handleBulkDelete = async () => {
-    if (!confirm(`Delete ${selectedPositions.size} selected positions? This action cannot be undone.`)) {
+    if (!(await appConfirmMessage(`Delete ${selectedPositions.size} selected positions? This action cannot be undone.`))) {
       return
     }
 
@@ -166,14 +168,14 @@ export function usePositions({ eventId, initialPositions }: UsePositionsProps): 
       }
 
       if (successCount > 0) {
-        alert(`✅ Successfully deleted ${successCount} positions${errorCount > 0 ? ` (${errorCount} failed)` : ''}`)
+        notifyAlert(`✅ Successfully deleted ${successCount} positions${errorCount > 0 ? ` (${errorCount} failed)` : ''}`)
         router.reload()
       } else {
-        alert('❌ Failed to delete any positions')
+        notifyAlert('❌ Failed to delete any positions')
       }
     } catch (error) {
       console.error('Bulk delete error:', error)
-      alert('Failed to delete positions')
+      notifyAlert('Failed to delete positions')
     } finally {
       setIsSubmitting(false)
     }

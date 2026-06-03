@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { notifyAlert, toast } from '../lib/ui/toast'
 
 interface BulkPositionCreatorProps {
   eventId: string
@@ -15,7 +16,7 @@ export default function BulkPositionCreator({ eventId, onClose, onSuccess }: Bul
     e.preventDefault()
     
     if (!positionsText.trim()) {
-      alert('Please enter position names')
+      notifyAlert('Please enter position names')
       return
     }
 
@@ -29,7 +30,7 @@ export default function BulkPositionCreator({ eventId, onClose, onSuccess }: Bul
         .filter(line => line.length > 0)
 
       if (positionNames.length === 0) {
-        alert('Please enter at least one position name')
+        notifyAlert('Please enter at least one position name')
         return
       }
 
@@ -169,11 +170,11 @@ export default function BulkPositionCreator({ eventId, onClose, onSuccess }: Bul
         }
         onSuccess(result)
       } else {
-        alert('Failed to process positions')
+        notifyAlert('Failed to process positions')
       }
     } catch (error) {
       console.error('Bulk create error:', error)
-      alert('Failed to create positions')
+      notifyAlert('Failed to create positions')
     } finally {
       setIsSubmitting(false)
     }

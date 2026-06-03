@@ -7,6 +7,8 @@ import { GetServerSideProps } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../api/auth/[...nextauth]'
 import BulkPositionCreator from '../../../components/positions/BulkPositionCreator'
+import { notifyAlert, toast } from '../../../lib/ui/toast'
+import { appConfirm, appConfirmMessage } from '../../../lib/ui/confirm'
 
 // APEX GUARDIAN: Event Positions Management Page
 // Manages positions for specific events with bulk creation capabilities
@@ -95,7 +97,7 @@ export default function EventPositions({ eventId }: EventPositionsProps) {
       }
     } catch (error) {
       console.error('Error fetching event:', error)
-      alert('Failed to load event data')
+      notifyAlert('Failed to load event data')
     }
   }
 
@@ -108,7 +110,7 @@ export default function EventPositions({ eventId }: EventPositionsProps) {
       }
     } catch (error) {
       console.error('Error fetching positions:', error)
-      alert('Failed to load positions')
+      notifyAlert('Failed to load positions')
     } finally {
       setLoading(false)
     }
@@ -118,7 +120,7 @@ export default function EventPositions({ eventId }: EventPositionsProps) {
     e.preventDefault()
     
     if (!formData.positionName.trim() || !formData.department) {
-      alert('Position name and department are required')
+      notifyAlert('Position name and department are required')
       return
     }
 
@@ -138,18 +140,18 @@ export default function EventPositions({ eventId }: EventPositionsProps) {
       })
 
       if (response.ok) {
-        alert(editingPosition ? 'Position updated successfully' : 'Position created successfully')
+        notifyAlert(editingPosition ? 'Position updated successfully' : 'Position created successfully')
         setShowCreateModal(false)
         setEditingPosition(null)
         setFormData({ positionName: '', department: '', description: '', requirements: '' })
         fetchPositions()
       } else {
         const error = await response.json()
-        alert(error.error || 'Failed to save position')
+        notifyAlert(error.error || 'Failed to save position')
       }
     } catch (error) {
       console.error('Error saving position:', error)
-      alert('Failed to save position')
+      notifyAlert('Failed to save position')
     }
   }
 
@@ -165,7 +167,7 @@ export default function EventPositions({ eventId }: EventPositionsProps) {
   }
 
   const handleDelete = async (positionId: string) => {
-    if (!confirm('Are you sure you want to delete this position? This action cannot be undone.')) {
+    if (!(await appConfirmMessage('Are you sure you want to delete this position? This action cannot be undone.'))) {
       return
     }
 
@@ -175,15 +177,15 @@ export default function EventPositions({ eventId }: EventPositionsProps) {
       })
 
       if (response.ok) {
-        alert('Position deleted successfully')
+        notifyAlert('Position deleted successfully')
         fetchPositions()
       } else {
         const error = await response.json()
-        alert(error.error || 'Failed to delete position')
+        notifyAlert(error.error || 'Failed to delete position')
       }
     } catch (error) {
       console.error('Error deleting position:', error)
-      alert('Failed to delete position')
+      notifyAlert('Failed to delete position')
     }
   }
 

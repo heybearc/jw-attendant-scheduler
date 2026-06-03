@@ -1,3 +1,5 @@
+import { notifyAlert, toast } from '../lib/ui/toast'
+
 /**
  * Export Service for Theoshift
  * Centralized export operations for PDF and Excel
@@ -132,7 +134,7 @@ export class ExportService {
     const result = await this.exportToPDF(options)
     
     if (!result.success || !result.blob) {
-      alert(result.error || 'Failed to export PDF')
+      notifyAlert(result.error || 'Failed to export PDF')
       return false
     }
 
@@ -148,7 +150,7 @@ export class ExportService {
     const result = await this.exportToExcel(options)
     
     if (!result.success || !result.blob) {
-      alert(result.error || 'Failed to export Excel')
+      notifyAlert(result.error || 'Failed to export Excel')
       return false
     }
 

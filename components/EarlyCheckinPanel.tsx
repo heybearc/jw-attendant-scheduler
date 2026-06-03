@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { notifyAlert, toast } from '../lib/ui/toast'
+import { appConfirm, appConfirmMessage } from '../lib/ui/confirm'
 
 interface Volunteer {
   id: string
@@ -86,16 +88,16 @@ export default function EarlyCheckinPanel({ eventId, eventName, showHeader = tru
         fetchVolunteers()
       } else {
         const data = await response.json()
-        alert(data.message || 'Failed to check in volunteer')
+        notifyAlert(data.message || 'Failed to check in volunteer')
       }
     } catch (error) {
       console.error('Error checking in:', error)
-      alert('Error checking in volunteer')
+      notifyAlert('Error checking in volunteer')
     }
   }
 
   const handleUndoCheckIn = async (volunteerId: string) => {
-    if (!confirm('Undo check-in for this volunteer?')) return
+    if (!(await appConfirmMessage('Undo check-in for this volunteer?'))) return
 
     try {
       const response = await fetch(`/api/volunteer/early-checkin/undo`, {
@@ -110,11 +112,11 @@ export default function EarlyCheckinPanel({ eventId, eventName, showHeader = tru
       if (response.ok) {
         fetchVolunteers()
       } else {
-        alert('Failed to undo check-in')
+        notifyAlert('Failed to undo check-in')
       }
     } catch (error) {
       console.error('Error undoing check-in:', error)
-      alert('Error undoing check-in')
+      notifyAlert('Error undoing check-in')
     }
   }
 
@@ -137,11 +139,11 @@ export default function EarlyCheckinPanel({ eventId, eventName, showHeader = tru
         window.URL.revokeObjectURL(url)
         document.body.removeChild(a)
       } else {
-        alert('Failed to export check-in report')
+        notifyAlert('Failed to export check-in report')
       }
     } catch (error) {
       console.error('Error exporting:', error)
-      alert('Error exporting check-in report')
+      notifyAlert('Error exporting check-in report')
     } finally {
       setExporting(false)
     }

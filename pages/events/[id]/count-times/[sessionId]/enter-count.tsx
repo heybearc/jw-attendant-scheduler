@@ -12,6 +12,7 @@ import {
   setViewAsVolunteerId,
 } from '@/lib/viewAsClient'
 import CountSubmissionSummaries from '../../../../../components/CountSubmissionSummaries'
+import { appConfirm, appConfirmMessage } from '../../../../../lib/ui/confirm'
 import type {
   GroupSubmissionSummary,
   UngroupedPositionSubmission
@@ -313,7 +314,7 @@ export default function EnterCountPage() {
   }
 
   const deleteCount = async (position: Position) => {
-    if (!confirm(`Are you sure you want to delete the count for ${position.name}? This will reset it to blank.`)) {
+    if (!(await appConfirmMessage(`Are you sure you want to delete the count for ${position.name}? This will reset it to blank.`))) {
       return
     }
 

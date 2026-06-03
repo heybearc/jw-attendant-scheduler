@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/router'
 import { createPositionService } from '../lib/positionService'
+import { notifyAlert, toast } from '../lib/ui/toast'
 
 interface Position {
   id: string
@@ -49,16 +50,16 @@ export function useOversight({ eventId }: UseOversightProps): UseOversightReturn
       })
 
       if (success) {
-        alert('✅ Overseer assigned successfully')
+        notifyAlert('✅ Overseer assigned successfully')
         setShowOverseerModal(false)
         setOverseerFormData({ overseerId: '', keymanId: '', responsibilities: '' })
         router.reload()
       } else {
-        alert('Failed to assign overseer')
+        notifyAlert('Failed to assign overseer')
       }
     } catch (error) {
       console.error('Error assigning overseer:', error)
-      alert('Failed to assign overseer')
+      notifyAlert('Failed to assign overseer')
     }
   }
 

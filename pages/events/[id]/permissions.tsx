@@ -3,6 +3,7 @@ import { useRouter } from 'next/router'
 import { useSession } from 'next-auth/react'
 import EventPageLayout from '../../../components/EventPageLayout'
 import { TemplateProvider } from '../../../contexts/TemplateContext'
+import { appConfirm, appConfirmMessage } from '../../../lib/ui/confirm'
 
 interface EventPermission {
   id: string
@@ -150,7 +151,7 @@ export default function EventPermissionsPage() {
   }
 
   const handleRemovePermission = async (userId: string) => {
-    if (!confirm('Are you sure you want to remove this user\'s access?')) return
+    if (!(await appConfirmMessage('Are you sure you want to remove this user\'s access?'))) return
 
     try {
       const response = await fetch(`/api/events/${eventId}/permissions`, {

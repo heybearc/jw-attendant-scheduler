@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { useScrollRestoration } from '../../hooks/useScrollRestoration'
+import { notifyAlert, toast } from '../../lib/ui/toast'
+import { appConfirm, appConfirmMessage } from '../../lib/ui/confirm'
 
 interface IVSVolunteer {
   id: string
@@ -77,16 +79,16 @@ export default function IVSCheckinContent({ event }: IVSCheckinContentProps) {
       if (response.ok) {
         fetchVolunteers()
       } else {
-        alert('Failed to check in volunteer')
+        notifyAlert('Failed to check in volunteer')
       }
     } catch (error) {
       console.error('Error checking in:', error)
-      alert('Error checking in volunteer')
+      notifyAlert('Error checking in volunteer')
     }
   }
 
   const handleUndoCheckIn = async (volunteerId: string) => {
-    if (!confirm('Undo check-in for this volunteer?')) return
+    if (!(await appConfirmMessage('Undo check-in for this volunteer?'))) return
 
     try {
       const response = await fetch(`/api/events/${eventId}/ivs/volunteers/${volunteerId}`, {
@@ -102,11 +104,11 @@ export default function IVSCheckinContent({ event }: IVSCheckinContentProps) {
       if (response.ok) {
         fetchVolunteers()
       } else {
-        alert('Failed to undo check-in')
+        notifyAlert('Failed to undo check-in')
       }
     } catch (error) {
       console.error('Error undoing check-in:', error)
-      alert('Error undoing check-in')
+      notifyAlert('Error undoing check-in')
     }
   }
 
@@ -129,11 +131,11 @@ export default function IVSCheckinContent({ event }: IVSCheckinContentProps) {
         window.URL.revokeObjectURL(url)
         document.body.removeChild(a)
       } else {
-        alert('Failed to export check-in report')
+        notifyAlert('Failed to export check-in report')
       }
     } catch (error) {
       console.error('Error exporting:', error)
-      alert('Error exporting check-in report')
+      notifyAlert('Error exporting check-in report')
     } finally {
       setExporting(false)
     }

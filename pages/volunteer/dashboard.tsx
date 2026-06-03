@@ -22,6 +22,7 @@ import {
   fetchChatPushVapidConfigured,
   getChatPushSetupStatus,
 } from '@/lib/chatPushClient'
+import { notifyAlert, toast } from '../../lib/ui/toast'
 
 // Lazy load mobile dashboard (only loaded on mobile devices)
 const MobileVolunteerDashboard = dynamic(() => import('../../components/MobileVolunteerDashboard'), {
@@ -388,7 +389,7 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
         setNotifPermissionDenied(Notification.permission === 'denied')
       }
     } catch (e: any) {
-      alert(e?.message || 'Could not enable notifications.')
+      notifyAlert(e?.message || 'Could not enable notifications.')
       if (typeof Notification !== 'undefined') {
         setNotifPermissionDenied(Notification.permission === 'denied')
       }
@@ -411,7 +412,7 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
       const st = await getChatPushSetupStatus(getViewAsHeaders)
       setChatPushSetupStatus(st)
     } catch {
-      alert('Could not turn off notifications. Try again.')
+      notifyAlert('Could not turn off notifications. Try again.')
     } finally {
       setChatPushEnabling(false)
     }
@@ -435,11 +436,11 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
           await fetchAvailabilityRequests(selectedEventId)
         }
       } else {
-        alert('Failed to submit response')
+        notifyAlert('Failed to submit response')
       }
     } catch (error) {
       console.error('Failed to submit availability response:', error)
-      alert('Failed to submit response')
+      notifyAlert('Failed to submit response')
     } finally {
       setRespondingToRequest(null)
     }
@@ -575,7 +576,7 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
       // Validate phone number (must be 10 digits)
       const cleaned = profileData.phone.replace(/\D/g, '')
       if (cleaned.length !== 10) {
-        alert('Please enter a valid 10-digit phone number')
+        notifyAlert('Please enter a valid 10-digit phone number')
         return
       }
 
@@ -637,11 +638,11 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
         // Reload dashboard to get updated data
         loadDashboard()
       } else {
-        alert('Failed to update profile')
+        notifyAlert('Failed to update profile')
       }
     } catch (error) {
       console.error('Profile update failed:', error)
-      alert('Failed to update profile')
+      notifyAlert('Failed to update profile')
     }
   }
 
@@ -820,11 +821,11 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
         }))
         setTimeout(() => setCountSuccess(''), 3000)
       } else {
-        alert(result.error || 'Failed to submit count')
+        notifyAlert(result.error || 'Failed to submit count')
       }
     } catch (error) {
       console.error('Count submission error:', error)
-      alert('An error occurred while submitting the count')
+      notifyAlert('An error occurred while submitting the count')
     } finally {
       setSubmittingCount(false)
     }
@@ -867,11 +868,11 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
         )
         setTimeout(() => setCountSuccess(''), 3000)
       } else {
-        alert(result.error || 'Failed to submit count')
+        notifyAlert(result.error || 'Failed to submit count')
       }
     } catch (error) {
       console.error('Group count submission error:', error)
-      alert('An error occurred while submitting the count')
+      notifyAlert('An error occurred while submitting the count')
     } finally {
       setSubmittingCount(false)
     }

@@ -6,6 +6,8 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { prisma } from '../../../src/lib/prisma'
 import { format, parseISO } from 'date-fns'
+import { notifyAlert, toast } from '../../../lib/ui/toast'
+import { appConfirm, appConfirmMessage } from '../../../lib/ui/confirm'
 
 interface User {
   id: string
@@ -89,7 +91,7 @@ export default function UsersPage({ users: initialUsers, pagination: initialPagi
   }
 
   const resendInvitation = async (userId: string, email: string) => {
-    if (!confirm(`Resend invitation to ${email}?`)) return
+    if (!(await appConfirmMessage(`Resend invitation to ${email}?`))) return
     
     try {
       const response = await fetch(`/api/admin/users/${userId}/resend-invitation`, {
@@ -98,7 +100,7 @@ export default function UsersPage({ users: initialUsers, pagination: initialPagi
       const data = await response.json()
       
       if (data.success) {
-        alert('✅ Invitation resent successfully!')
+        notifyAlert('✅ Invitation resent successfully!')
         window.location.reload()
       } else {
         setError(data.error || 'Failed to resend invitation')
@@ -110,7 +112,7 @@ export default function UsersPage({ users: initialUsers, pagination: initialPagi
   }
 
   const cancelInvitation = async (userId: string, email: string) => {
-    if (!confirm(`Cancel invitation for ${email}? This will delete the user account.`)) return
+    if (!(await appConfirmMessage(`Cancel invitation for ${email}? This will delete the user account.`))) return
     
     try {
       const response = await fetch(`/api/admin/users/${userId}`, {
@@ -119,7 +121,7 @@ export default function UsersPage({ users: initialUsers, pagination: initialPagi
       const data = await response.json()
       
       if (data.success) {
-        alert('✅ Invitation cancelled successfully!')
+        notifyAlert('✅ Invitation cancelled successfully!')
         window.location.reload()
       } else {
         setError(data.error || 'Failed to cancel invitation')

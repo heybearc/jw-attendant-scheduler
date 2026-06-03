@@ -23,6 +23,8 @@ import { GetServerSideProps, GetServerSidePropsContext } from 'next'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../../api/auth/[...nextauth]'
 import crypto from 'crypto'
+import { notifyAlert, toast } from '../../../lib/ui/toast'
+import { appConfirm, appConfirmMessage } from '../../../lib/ui/confirm'
 
 // Utility function to convert 24-hour time to 12-hour format
 function formatTime12Hour(time24: string): string {
@@ -701,7 +703,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
     e.preventDefault()
     
     if (!formData.name.trim()) {
-      alert('Position name is required')
+      notifyAlert('Position name is required')
       return
     }
 
@@ -721,18 +723,18 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
       })
 
       if (response.ok) {
-        alert(editingPosition ? 'Position updated successfully' : 'Position created successfully')
+        notifyAlert(editingPosition ? 'Position updated successfully' : 'Position created successfully')
         setShowCreateModal(false)
         setEditingPosition(null)
         setFormData({ positionNumber: 1, name: '', area: '', description: '' })
         router.reload() // Refresh data without page reload
       } else {
         const error = await response.json()
-        alert(error.error || 'Failed to save position')
+        notifyAlert(error.error || 'Failed to save position')
       }
     } catch (error) {
       console.error('Error saving position:', error)
-      alert('Failed to save position')
+      notifyAlert('Failed to save position')
     }
   }
 
@@ -762,7 +764,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
   const handleOverseerSubmit = (e: React.FormEvent) => handleOverseerSubmitHook(e, selectedPosition)
 
   const handleBulkCreateSuccess = async (result: any) => {
-    alert(`Successfully created ${result.created} positions`)
+    notifyAlert(`Successfully created ${result.created} positions`)
     setShowBulkCreator(false)
     router.reload() // Refresh page to show updated data
   }
@@ -776,7 +778,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
       const isActive = (document.getElementById('bulk-status') as HTMLSelectElement)?.value
       
       if (!area && isActive === '') {
-        alert('Please specify at least one field to update')
+        notifyAlert('Please specify at least one field to update')
         return
       }
       
@@ -795,11 +797,11 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
         }
       }
       
-      alert(`✅ Successfully updated ${successCount} of ${selectedPositions.size} positions`)
+      notifyAlert(`✅ Successfully updated ${successCount} of ${selectedPositions.size} positions`)
       router.reload()
     } catch (error) {
       console.error('Bulk position update error:', error)
-      alert('Failed to update positions')
+      notifyAlert('Failed to update positions')
     }
   }
 
@@ -809,7 +811,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
       const templateType = (document.getElementById('bulk-template') as HTMLSelectElement)?.value
       
       if (!templateType) {
-        alert('Please select a template')
+        notifyAlert('Please select a template')
         return
       }
       
@@ -822,7 +824,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
         
         if (positionsWithPartialShifts.length > 0) {
           const positionNames = positionsWithPartialShifts.map(p => p.name).join(', ')
-          alert(
+          notifyAlert(
             '❌ Cannot apply All Day template to some positions\n\n' +
             `The following positions have partial shifts that conflict with All Day shifts:\n${positionNames}\n\n` +
             'Please delete existing partial shifts from these positions first, then apply the All Day template.'
@@ -837,14 +839,14 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
       })
       
       if (success) {
-        alert(`✅ Template Applied Successfully!`)
+        notifyAlert(`✅ Template Applied Successfully!`)
         router.reload()
       } else {
-        alert('Failed to apply template')
+        notifyAlert('Failed to apply template')
       }
     } catch (error) {
       console.error('Template application error:', error)
-      alert('Failed to apply template')
+      notifyAlert('Failed to apply template')
     }
   }
 
@@ -857,12 +859,12 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
       const isAllDay = (document.getElementById('bulk-shift-allday') as HTMLInputElement)?.checked
       
       if (!isAllDay && (!shiftStart || !shiftEnd)) {
-        alert('Please specify start and end times, or check "All Day"')
+        notifyAlert('Please specify start and end times, or check "All Day"')
         return
       }
       
       if (!shiftName) {
-        alert('Please specify a shift name')
+        notifyAlert('Please specify a shift name')
         return
       }
       
@@ -875,7 +877,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
         
         if (positionsWithPartialShifts.length > 0) {
           const positionNames = positionsWithPartialShifts.map(p => p.name).join(', ')
-          alert(
+          notifyAlert(
             '❌ Cannot add All Day shift to some positions\n\n' +
             `The following positions have partial shifts that conflict with All Day shifts:\n${positionNames}\n\n` +
             'Please delete existing partial shifts from these positions first, then add the All Day shift.'
@@ -900,11 +902,11 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
         }
       }
       
-      alert(`✅ Successfully created "${shiftName}" shift for ${successCount} of ${selectedPositions.size} positions`)
+      notifyAlert(`✅ Successfully created "${shiftName}" shift for ${successCount} of ${selectedPositions.size} positions`)
       router.reload()
     } catch (error) {
       console.error('Custom shift creation error:', error)
-      alert('Failed to create shifts')
+      notifyAlert('Failed to create shifts')
     }
   }
 
@@ -919,12 +921,12 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
       const keymanId = (document.getElementById('combined-keyman') as HTMLSelectElement)?.value
       
       if (!shiftName) {
-        alert('Please specify a shift name')
+        notifyAlert('Please specify a shift name')
         return
       }
       
       if (!isAllDay && (!shiftStart || !shiftEnd)) {
-        alert('Please specify start and end times, or check "All Day"')
+        notifyAlert('Please specify start and end times, or check "All Day"')
         return
       }
       
@@ -973,15 +975,15 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
       }
       
       if (messages.length > 0) {
-        alert(messages.join('\n'))
+        notifyAlert(messages.join('\n'))
         // Keep modal open and selection preserved (FB-012 requirement)
         router.reload()
       } else {
-        alert('No changes were made')
+        notifyAlert('No changes were made')
       }
     } catch (error) {
       console.error('Combined operation error:', error)
-      alert('Failed to complete combined operation')
+      notifyAlert('Failed to complete combined operation')
     } finally {
       setIsSubmitting(false)
     }
@@ -994,7 +996,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
       const keymanId = (document.getElementById('bulk-keyman') as HTMLSelectElement)?.value
       
       if (!overseerId && !keymanId) {
-        alert('Please select at least one oversight role to assign')
+        notifyAlert('Please select at least one oversight role to assign')
         return
       }
       
@@ -1005,14 +1007,14 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
       })
       
       if (success) {
-        alert(`✅ Oversight Assigned Successfully!`)
+        notifyAlert(`✅ Oversight Assigned Successfully!`)
         router.reload()
       } else {
-        alert('Failed to assign oversight')
+        notifyAlert('Failed to assign oversight')
       }
     } catch (error) {
       console.error('Bulk oversight assignment error:', error)
-      alert('Failed to assign oversight')
+      notifyAlert('Failed to assign oversight')
     }
   }
 
@@ -1027,7 +1029,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
   // Auto-assign algorithm - APEX GUARDIAN OVERSIGHT-AWARE VERSION v3.0
   // Refactored to use extracted AutoAssignmentEngine (Week 1, Step 2)
   const handleAutoAssignOversightAware = async () => {
-    if (!confirm('Auto-assign available volunteers to unfilled positions?')) return
+    if (!(await appConfirmMessage('Auto-assign available volunteers to unfilled positions?'))) return
     
     try {
       setIsSubmitting(true)
@@ -1061,7 +1063,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
       const result = await engine.execute()
 
       // Show success message with results
-      alert(result.message)
+      notifyAlert(result.message)
 
       // Show completion status
       setAssignmentProgress({
@@ -1081,7 +1083,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
       return // Don't close modal immediately
     } catch (error) {
       console.error('Auto-assign error:', error)
-      alert('Failed to auto-assign volunteers')
+      notifyAlert('Failed to auto-assign volunteers')
     } finally {
       setIsSubmitting(false)
       setShowProgressModal(false)
@@ -1448,7 +1450,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                           <button
                             onClick={async () => {
                               setShowActionsMenu(false)
-                              if (!confirm('📧 Send assignment notifications to all volunteers?\n\nThis will send an email to each volunteer with their current assignments.\n\nContinue?')) return
+                              if (!(await appConfirmMessage('📧 Send assignment notifications to all volunteers?\n\nThis will send an email to each volunteer with their current assignments.\n\nContinue?'))) return
                               try {
                                 const response = await fetch(`/api/events/${eventId}/assignments/send-notifications`, {
                                   method: 'POST',
@@ -1456,12 +1458,12 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                                 })
                                 const data = await response.json()
                                 if (response.ok && data.success) {
-                                  alert(data.failed > 0 ? `⚠️ ${data.message}\n\nErrors:\n${data.errors?.join('\n') || 'Unknown errors'}` : `✅ ${data.message}`)
+                                  notifyAlert(data.failed > 0 ? `⚠️ ${data.message}\n\nErrors:\n${data.errors?.join('\n') || 'Unknown errors'}` : `✅ ${data.message}`)
                                 } else {
-                                  alert(`❌ ${data.error || data.message || 'Failed to send notifications'}`)
+                                  notifyAlert(`❌ ${data.error || data.message || 'Failed to send notifications'}`)
                                 }
                               } catch (error) {
-                                alert(`❌ Failed to send notifications: ${error.message}`)
+                                notifyAlert(`❌ Failed to send notifications: ${error.message}`)
                               }
                             }}
                             className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
@@ -1475,18 +1477,18 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                           <button
                             onClick={async () => {
                               setShowActionsMenu(false)
-                              if (!confirm('⚠️ Clear ALL shifts from ALL positions?\n\nThis will remove all shifts AND their assignments.\n\nThis action cannot be undone.')) return
+                              if (!(await appConfirmMessage('⚠️ Clear ALL shifts from ALL positions?\n\nThis will remove all shifts AND their assignments.\n\nThis action cannot be undone.'))) return
                               try {
                                 const success = await positionService.clearAllShifts()
                                 if (success) {
-                                  alert('✅ Cleared all shifts and assignments')
+                                  notifyAlert('✅ Cleared all shifts and assignments')
                                   router.reload()
                                 } else {
-                                  alert('Failed to clear shifts')
+                                  notifyAlert('Failed to clear shifts')
                                 }
                               } catch (error) {
                                 console.error('Clear shifts error:', error)
-                                alert('Failed to clear shifts')
+                                notifyAlert('Failed to clear shifts')
                               }
                             }}
                             className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
@@ -1499,17 +1501,17 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                           <button
                             onClick={async () => {
                               setShowActionsMenu(false)
-                              if (!confirm('⚠️ Clear ALL assignments?\n\nThis cannot be undone.')) return
+                              if (!(await appConfirmMessage('⚠️ Clear ALL assignments?\n\nThis cannot be undone.'))) return
                               try {
                                 const success = await positionService.clearAllAssignments()
                                 if (success) {
-                                  alert('✅ Cleared all assignments')
+                                  notifyAlert('✅ Cleared all assignments')
                                   router.reload()
                                 } else {
-                                  alert('Failed to clear assignments')
+                                  notifyAlert('Failed to clear assignments')
                                 }
                               } catch (error) {
-                                alert('Failed to clear assignments')
+                                notifyAlert('Failed to clear assignments')
                               }
                             }}
                             className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
@@ -1706,11 +1708,11 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                     if (success) {
                       router.reload()
                     } else {
-                      alert('Failed to create assignment')
+                      notifyAlert('Failed to create assignment')
                     }
                   } catch (error) {
                     console.error('Assignment error:', error)
-                    alert('Failed to create assignment')
+                    notifyAlert('Failed to create assignment')
                   }
                 }}
                 onUnassign={async (assignmentId) => {
@@ -1719,11 +1721,11 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                     if (success) {
                       router.reload()
                     } else {
-                      alert('Failed to remove assignment')
+                      notifyAlert('Failed to remove assignment')
                     }
                   } catch (error) {
                     console.error('Error removing assignment:', error)
-                    alert('Failed to remove assignment')
+                    notifyAlert('Failed to remove assignment')
                   }
                 }}
               />
@@ -2147,7 +2149,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                       {position.isActive ? (
                         <button
                           onClick={async () => {
-                            if (!confirm(`Mark "${position.name}" as inactive? This will hide it from active view but preserve all data.`)) {
+                            if (!(await appConfirmMessage(`Mark "${position.name}" as inactive? This will hide it from active view but preserve all data.`))) {
                               return
                             }
                             try {
@@ -2155,10 +2157,10 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                               if (success) {
                                 router.reload()
                               } else {
-                                alert('Failed to deactivate position')
+                                notifyAlert('Failed to deactivate position')
                               }
                             } catch (error) {
-                              alert('Failed to deactivate position')
+                              notifyAlert('Failed to deactivate position')
                             }
                           }}
                           className="text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-2 py-1 rounded transition-colors"
@@ -2173,10 +2175,10 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                               if (success) {
                                 router.reload()
                               } else {
-                                alert('Failed to activate position')
+                                notifyAlert('Failed to activate position')
                               }
                             } catch (error) {
-                              alert('Failed to activate position')
+                              notifyAlert('Failed to activate position')
                             }
                           }}
                           className="text-xs bg-green-100 hover:bg-green-200 text-green-800 px-2 py-1 rounded transition-colors"
@@ -2228,10 +2230,10 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                               if (response.ok) {
                                 router.reload()
                               } else {
-                                alert('Failed to activate position')
+                                notifyAlert('Failed to activate position')
                               }
                             } catch (error) {
-                              alert('Failed to activate position')
+                              notifyAlert('Failed to activate position')
                             }
                           }}
                           className="flex-1 bg-green-100 hover:bg-green-200 text-green-700 px-3 py-2 rounded text-sm font-medium transition-colors"
@@ -2241,7 +2243,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                         {isAdmin && (
                           <button
                             onClick={async () => {
-                              const confirmed = confirm(
+                              const confirmed = await appConfirmMessage(
                                 `⚠️ PERMANENT DELETION ⚠️\n\n` +
                                 `This will permanently delete "${position.name}" from the database.\n` +
                                 `This action CANNOT be undone.\n\n` +
@@ -2253,19 +2255,19 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                                 const result = await positionService.hardDeletePosition(position.id)
                                 
                                 if (result.success) {
-                                  alert(`Position "${position.name}" permanently deleted.`)
+                                  notifyAlert(`Position "${position.name}" permanently deleted.`)
                                   router.reload()
                                 } else {
                                   if (result.error) {
-                                    alert(
+                                    notifyAlert(
                                       `Cannot delete position:\n${result.error}`
                                     )
                                   } else {
-                                    alert(`Failed: ${result.error}`)
+                                    notifyAlert(`Failed: ${result.error}`)
                                   }
                                 }
                               } catch (error) {
-                                alert('Failed to permanently delete position')
+                                notifyAlert('Failed to permanently delete position')
                               }
                             }}
                             className="flex-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-sm font-medium transition-colors"
@@ -2691,7 +2693,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                   const templateType = formData.get('templateType') as string
                   
                   if (!templateType) {
-                    alert('Please select a template')
+                    notifyAlert('Please select a template')
                     return
                   }
                   
@@ -2708,11 +2710,11 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                       setSelectedPositions(new Set())
                       router.reload()
                     } else {
-                      alert('Failed to apply template')
+                      notifyAlert('Failed to apply template')
                     }
                   } catch (error) {
                     console.error('Error applying template:', error)
-                    alert('Failed to apply template')
+                    notifyAlert('Failed to apply template')
                   } finally {
                     setIsSubmitting(false)
                   }

@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../../api/auth/[...nextauth]'
 import AdminLayout from '../../../components/AdminLayout'
 import { useState, useEffect } from 'react'
+import { notifyAlert, toast } from '../../../lib/ui/toast'
 
 export default function EmailConfigPage() {
   const [authType, setAuthType] = useState<'smtp' | 'gmail'>('gmail')
@@ -103,13 +104,13 @@ export default function EmailConfigPage() {
       const data = await response.json()
       
       if (data.success) {
-        alert('✅ Test email sent successfully!')
+        notifyAlert('✅ Test email sent successfully!')
       } else {
         throw new Error(data.error || 'Failed to send test email')
       }
     } catch (error) {
       console.error('Error sending test email:', error)
-      alert('❌ Failed to send test email. Please check your configuration.')
+      notifyAlert('❌ Failed to send test email. Please check your configuration.')
     } finally {
       setTesting(false)
     }

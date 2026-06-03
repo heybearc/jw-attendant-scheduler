@@ -5,6 +5,7 @@ import AdminLayout from '../../../../components/AdminLayout'
 import PhoneInput from '../../../../components/PhoneInput'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
+import { appConfirm, appConfirmMessage } from '../../../../lib/ui/confirm'
 
 interface User {
   id: string
@@ -140,7 +141,7 @@ export default function EditUserPage() {
   }
 
   const handleDeleteUser = async () => {
-    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+    if (!(await appConfirmMessage('Are you sure you want to delete this user? This action cannot be undone.'))) {
       return
     }
 
@@ -437,7 +438,7 @@ export default function EditUserPage() {
                     <button
                       type="button"
                       onClick={async () => {
-                        if (!confirm('Send password reset email to this user?')) return
+                        if (!(await appConfirmMessage('Send password reset email to this user?'))) return
                         try {
                           const res = await fetch(`/api/admin/users/${id}`, {
                             method: 'PUT',

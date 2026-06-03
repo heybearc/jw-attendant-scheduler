@@ -6,6 +6,9 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { format, parseISO } from 'date-fns'
+import { notifyAlert, toast } from '../lib/ui/toast'
+import { appConfirm, appConfirmMessage } from '../lib/ui/confirm'
+import { appPrompt } from '../lib/ui/prompt'
 
 interface Event {
   id: string
@@ -174,7 +177,7 @@ export default function EventDetailsPage({ event }: EventDetailsPageProps) {
     if (!event) return
     
     const confirmMessage = `Are you sure you want to change the event status to ${newStatus}?`
-    if (!confirm(confirmMessage)) return
+    if (!(await appConfirmMessage(confirmMessage))) return
 
     try {
       const response = await fetch(`/api/events/${event.id}`, {
@@ -186,21 +189,27 @@ export default function EventDetailsPage({ event }: EventDetailsPageProps) {
 
       if (response.ok) {
         router.reload() // Refresh page data
-        alert(`Event status updated to ${newStatus}`)
+        notifyAlert(`Event status updated to ${newStatus}`)
       } else {
-        alert('Failed to update event status')
+        notifyAlert('Failed to update event status')
       }
     } catch (error) {
       console.error('Error updating status:', error)
-      alert('Error updating event status')
+      notifyAlert('Error updating event status')
     }
   }
 
   const handleCloneEvent = async () => {
     if (!event) return
     
-    const eventName = prompt('Enter name for the cloned event:', `${event.name} (Copy)`)
-    if (!eventName) return
+    const eventName = await appPrompt({
+      title: 'Clone event',
+      message: 'Enter a name for the cloned event.',
+      defaultValue: `${event.name} (Copy)`,
+      inputLabel: 'Event name',
+      confirmLabel: 'Clone',
+    })
+    if (!eventName?.trim()) return
 
     try {
       // Format dates properly for the API
@@ -232,16 +241,16 @@ export default function EventDetailsPage({ event }: EventDetailsPageProps) {
 
       if (response.ok) {
         const data = await response.json()
-        alert('Event cloned successfully!')
+        notifyAlert('Event cloned successfully!')
         router.push(`/events/${data.data.id}`)
       } else {
         const errorData = await response.json()
         console.error('Clone event error:', errorData)
-        alert(`Failed to clone event: ${errorData.error || 'Unknown error'}`)
+        notifyAlert(`Failed to clone event: ${errorData.error || 'Unknown error'}`)
       }
     } catch (error) {
       console.error('Error cloning event:', error)
-      alert('Error cloning event. Please try again.')
+      notifyAlert('Error cloning event. Please try again.')
     }
   }
 

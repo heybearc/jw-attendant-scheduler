@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/router'
 import { createPositionService } from '../lib/positionService'
+import { notifyAlert, toast } from '../lib/ui/toast'
+import { appConfirm, appConfirmMessage } from '../lib/ui/confirm'
 
 interface UseAssignmentsProps {
   eventId: string
@@ -37,16 +39,16 @@ export function useAssignments({ eventId }: UseAssignmentsProps): UseAssignments
       if (success) {
         router.reload()
       } else {
-        alert('Failed to create assignment')
+        notifyAlert('Failed to create assignment')
       }
     } catch (error) {
       console.error('Assignment error:', error)
-      alert('Failed to create assignment')
+      notifyAlert('Failed to create assignment')
     }
   }
 
   const handleRemoveAssignment = async (assignmentId: string) => {
-    if (!confirm('Are you sure you want to remove this assignment?')) return
+    if (!(await appConfirmMessage('Are you sure you want to remove this assignment?'))) return
     
     try {
       const success = await positionService.deleteAssignment(assignmentId)
@@ -54,16 +56,16 @@ export function useAssignments({ eventId }: UseAssignmentsProps): UseAssignments
       if (success) {
         router.reload()
       } else {
-        alert('Failed to remove assignment')
+        notifyAlert('Failed to remove assignment')
       }
     } catch (error) {
       console.error('Error removing assignment:', error)
-      alert('Failed to remove assignment')
+      notifyAlert('Failed to remove assignment')
     }
   }
 
   const handleClearAllAssignments = async () => {
-    if (!confirm('⚠️ Clear ALL assignments from ALL positions?\n\nThis will remove all attendant assignments but keep positions and shifts intact.\n\nThis action cannot be undone.')) {
+    if (!(await appConfirmMessage('⚠️ Clear ALL assignments from ALL positions?\n\nThis will remove all attendant assignments but keep positions and shifts intact.\n\nThis action cannot be undone.'))) {
       return
     }
     
@@ -71,14 +73,14 @@ export function useAssignments({ eventId }: UseAssignmentsProps): UseAssignments
       const success = await positionService.clearAllAssignments()
       
       if (success) {
-        alert('✅ Cleared all assignments')
+        notifyAlert('✅ Cleared all assignments')
         router.reload()
       } else {
-        alert('Failed to clear assignments')
+        notifyAlert('Failed to clear assignments')
       }
     } catch (error) {
       console.error('Clear assignments error:', error)
-      alert('Failed to clear assignments')
+      notifyAlert('Failed to clear assignments')
     }
   }
 

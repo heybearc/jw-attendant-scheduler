@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../api/auth/[...nextauth]'
 import HelpLayout from '../../components/HelpLayout'
 import { useState, useEffect } from 'react'
+import { notifyAlert, toast } from '../../lib/ui/toast'
 
 interface FeedbackPageProps {
   userRole: string
@@ -60,7 +61,7 @@ export default function FeedbackPage({ userRole, userName, userEmail }: Feedback
           if (file) {
             // Validate file size (10MB limit)
             if (file.size > 10 * 1024 * 1024) {
-              alert('Pasted image is too large. Maximum size is 10MB.')
+              notifyAlert('Pasted image is too large. Maximum size is 10MB.')
               return
             }
             
@@ -91,13 +92,13 @@ export default function FeedbackPage({ userRole, userName, userEmail }: Feedback
     const validFiles = files.filter(file => {
       // Limit file size to 10MB
       if (file.size > 10 * 1024 * 1024) {
-        alert(`File ${file.name} is too large. Maximum size is 10MB.`)
+        notifyAlert(`File ${file.name} is too large. Maximum size is 10MB.`)
         return false
       }
       // Allow common file types
       const allowedTypes = ['image/', 'text/', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument']
       if (!allowedTypes.some(type => file.type.startsWith(type))) {
-        alert(`File ${file.name} is not a supported file type.`)
+        notifyAlert(`File ${file.name} is not a supported file type.`)
         return false
       }
       return true

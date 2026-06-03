@@ -7,6 +7,8 @@ import ImportModal from '../ImportModal'
 import ExportModal from '../ExportModal'
 import AddIvsVolunteerModal from '../AddIvsVolunteerModal'
 import { IVS_APPROVAL_STATUSES } from '@/lib/ivs'
+import { notifyAlert, toast } from '../../lib/ui/toast'
+import { appConfirm, appConfirmMessage } from '../../lib/ui/confirm'
 
 interface IVSVolunteer {
   id: string
@@ -107,13 +109,13 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
         setShowAddModal(false)
         fetchVolunteers()
       } else if (response.status === 409) {
-        alert(result.message || 'This volunteer is already on the event roster.')
+        notifyAlert(result.message || 'This volunteer is already on the event roster.')
       } else {
-        alert(result.message || 'Failed to add volunteer')
+        notifyAlert(result.message || 'Failed to add volunteer')
       }
     } catch (error) {
       console.error('Error adding volunteer:', error)
-      alert('Error adding volunteer')
+      notifyAlert('Error adding volunteer')
     }
   }
 
@@ -133,16 +135,16 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
 
       if (response.ok) {
         const result = await response.json()
-        alert(`Successfully imported ${result.imported} volunteer(s)`)
+        notifyAlert(`Successfully imported ${result.imported} volunteer(s)`)
         setShowImportModal(false)
         fetchVolunteers()
       } else {
         const error = await response.json()
-        alert(`Import failed: ${error.message}`)
+        notifyAlert(`Import failed: ${error.message}`)
       }
     } catch (error) {
       console.error('Error importing:', error)
-      alert('Error importing volunteers')
+      notifyAlert('Error importing volunteers')
     }
   }
 
@@ -177,16 +179,16 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
         } catch {
           /* ignore */
         }
-        alert(msg)
+        notifyAlert(msg)
       }
     } catch (error) {
       console.error('Error exporting:', error)
-      alert('Error exporting volunteers')
+      notifyAlert('Error exporting volunteers')
     }
   }
 
   const handleClearAll = async () => {
-    if (!confirm('Are you sure you want to clear all IVS volunteers? This cannot be undone.')) return
+    if (!(await appConfirmMessage('Are you sure you want to clear all IVS volunteers? This cannot be undone.'))) return
 
     try {
       const response = await fetch(`/api/events/${eventId}/ivs/volunteers`, {
@@ -194,14 +196,14 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
       })
 
       if (response.ok) {
-        alert('All volunteers cleared successfully')
+        notifyAlert('All volunteers cleared successfully')
         fetchVolunteers()
       } else {
-        alert('Failed to clear volunteers')
+        notifyAlert('Failed to clear volunteers')
       }
     } catch (error) {
       console.error('Error clearing volunteers:', error)
-      alert('Error clearing volunteers')
+      notifyAlert('Error clearing volunteers')
     }
   }
 
@@ -218,11 +220,11 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
         fetchVolunteers()
       } else {
         const data = await response.json()
-        alert(data.message || 'Failed to update early entry status')
+        notifyAlert(data.message || 'Failed to update early entry status')
       }
     } catch (error) {
       console.error('Error toggling early entry:', error)
-      alert('Error updating early entry status')
+      notifyAlert('Error updating early entry status')
     } finally {
       setUpdatingEarlyEntryId(null)
     }
@@ -241,11 +243,11 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
         fetchVolunteers()
       } else {
         const data = await response.json()
-        alert(data.message || 'Failed to update status')
+        notifyAlert(data.message || 'Failed to update status')
       }
     } catch (error) {
       console.error('Error updating status:', error)
-      alert('Error updating status')
+      notifyAlert('Error updating status')
     } finally {
       setUpdatingStatusId(null)
     }
@@ -270,7 +272,7 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
 
   const handleBulkAction = (action: string) => {
     if (selectedVolunteers.length === 0) {
-      alert('Please select at least one volunteer')
+      notifyAlert('Please select at least one volunteer')
       return
     }
     setBulkAction(action)
@@ -290,23 +292,23 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
 
       if (response.ok) {
         const result = await response.json()
-        alert(`Successfully updated ${result.updated} volunteer(s)`)
+        notifyAlert(`Successfully updated ${result.updated} volunteer(s)`)
         setShowBulkModal(false)
         setBulkAction('')
         setSelectedVolunteers([])
         fetchVolunteers()
       } else {
         const error = await response.json()
-        alert(`Failed to update volunteers: ${error.message}`)
+        notifyAlert(`Failed to update volunteers: ${error.message}`)
       }
     } catch (error) {
       console.error('Error with bulk action:', error)
-      alert('Error performing bulk action')
+      notifyAlert('Error performing bulk action')
     }
   }
 
   const handleDeleteVolunteer = async (volunteerId: string, name: string) => {
-    if (!confirm(`Delete ${name} from IVS Approvals? This cannot be undone.`)) return
+    if (!(await appConfirmMessage(`Delete ${name} from IVS Approvals? This cannot be undone.`))) return
 
     try {
       const response = await fetch(`/api/events/${eventId}/ivs/volunteers/${volunteerId}`, {
@@ -314,14 +316,14 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
       })
 
       if (response.ok) {
-        alert('Volunteer deleted successfully')
+        notifyAlert('Volunteer deleted successfully')
         fetchVolunteers()
       } else {
-        alert('Failed to delete volunteer')
+        notifyAlert('Failed to delete volunteer')
       }
     } catch (error) {
       console.error('Error deleting volunteer:', error)
-      alert('Error deleting volunteer')
+      notifyAlert('Error deleting volunteer')
     }
   }
 
@@ -949,16 +951,16 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
               })
 
               if (response.ok) {
-                alert('Volunteer updated successfully!')
+                notifyAlert('Volunteer updated successfully!')
                 setShowEditModal(false)
                 setEditingVolunteer(null)
                 fetchVolunteers()
               } else {
-                alert('Failed to update volunteer')
+                notifyAlert('Failed to update volunteer')
               }
             } catch (error) {
               console.error('Error updating volunteer:', error)
-              alert('Error updating volunteer')
+              notifyAlert('Error updating volunteer')
             }
           }}
         />

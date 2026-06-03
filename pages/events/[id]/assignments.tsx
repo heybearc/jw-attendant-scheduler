@@ -6,6 +6,8 @@ import Link from 'next/link'
 import { GetServerSideProps } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../api/auth/[...nextauth]'
+import { notifyAlert, toast } from '../../../lib/ui/toast'
+import { appConfirm, appConfirmMessage } from '../../../lib/ui/confirm'
 // Using basic alerts for notifications
 
 interface Assignment {
@@ -91,7 +93,7 @@ export default function EventAssignments({ eventId, event, assignments, attendan
     e.preventDefault()
     
     if (!formData.userId || !formData.positionId || !formData.shiftStart || !formData.shiftEnd) {
-      alert('Please fill in all required fields')
+      notifyAlert('Please fill in all required fields')
       return
     }
 
@@ -100,7 +102,7 @@ export default function EventAssignments({ eventId, event, assignments, attendan
     const endTime = new Date(formData.shiftEnd)
     
     if (endTime <= startTime) {
-      alert('End time must be after start time')
+      notifyAlert('End time must be after start time')
       return
     }
 
@@ -128,17 +130,17 @@ export default function EventAssignments({ eventId, event, assignments, attendan
       })
 
       if (response.ok) {
-        alert(editingAssignment ? 'Assignment updated successfully' : 'Assignment created successfully')
+        notifyAlert(editingAssignment ? 'Assignment updated successfully' : 'Assignment created successfully')
         closeModal()
         router.reload() // Refresh page to show updated data
       } else {
         const error = await response.json()
         console.error('Assignment creation error:', error)
-        alert(`Failed to save assignment: ${error.error || 'Unknown error'}`)
+        notifyAlert(`Failed to save assignment: ${error.error || 'Unknown error'}`)
       }
     } catch (error) {
       console.error('Error saving assignment:', error)
-      alert('Failed to save assignment')
+      notifyAlert('Failed to save assignment')
     }
   }
 
@@ -155,7 +157,7 @@ export default function EventAssignments({ eventId, event, assignments, attendan
   }
 
   const handleDelete = async (assignmentId: string) => {
-    if (!confirm('Are you sure you want to delete this assignment?')) {
+    if (!(await appConfirmMessage('Are you sure you want to delete this assignment?'))) {
       return
     }
 
@@ -165,15 +167,15 @@ export default function EventAssignments({ eventId, event, assignments, attendan
       })
 
       if (response.ok) {
-        alert('Assignment deleted successfully')
+        notifyAlert('Assignment deleted successfully')
         router.reload() // Refresh page to show updated data
       } else {
         const error = await response.json()
-        alert(error.error || 'Failed to delete assignment')
+        notifyAlert(error.error || 'Failed to delete assignment')
       }
     } catch (error) {
       console.error('Error deleting assignment:', error)
-      alert('Failed to delete assignment')
+      notifyAlert('Failed to delete assignment')
     }
   }
 
@@ -188,15 +190,15 @@ export default function EventAssignments({ eventId, event, assignments, attendan
       })
 
       if (response.ok) {
-        alert('Assignment status updated')
+        notifyAlert('Assignment status updated')
         router.reload() // Refresh page to show updated data
       } else {
         const error = await response.json()
-        alert(error.error || 'Failed to update status')
+        notifyAlert(error.error || 'Failed to update status')
       }
     } catch (error) {
       console.error('Error updating status:', error)
-      alert('Failed to update status')
+      notifyAlert('Failed to update status')
     }
   }
 
@@ -432,7 +434,7 @@ export default function EventAssignments({ eventId, event, assignments, attendan
                           <button
                             onClick={() => {
                               if (!assignment?.id) {
-                                alert('Cannot delete: Assignment ID not found')
+                                notifyAlert('Cannot delete: Assignment ID not found')
                                 console.error('Assignment missing ID:', assignment)
                                 return
                               }

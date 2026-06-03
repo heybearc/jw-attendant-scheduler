@@ -3,6 +3,9 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../../api/auth/[...nextauth]'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import EventPageWrapper from '../../../components/EventPageWrapper'
+import { notifyAlert, toast } from '../../../lib/ui/toast'
+import { appConfirm, appConfirmMessage } from '../../../lib/ui/confirm'
+import { appPrompt } from '../../../lib/ui/prompt'
 
 interface EventData {
   id: string
@@ -504,7 +507,7 @@ export default function EventStaffChatPage({
 
   const deleteMessage = async (messageId: string) => {
     if (!selectedChannelId) return
-    const ok = confirm('Delete this message for all participants?')
+    const ok = await appConfirmMessage('Delete this message for all participants?')
     if (!ok) return
 
     const res = await fetch(
@@ -521,7 +524,7 @@ export default function EventStaffChatPage({
 
   const pinMessage = async (messageId: string) => {
     if (!selectedChannelId) return
-    const ok = confirm('Pin this message to the top of the channel?')
+    const ok = await appConfirmMessage('Pin this message to the top of the channel?')
     if (!ok) return
 
     const res = await fetch(`/api/events/${event.id}/chat/channels/${selectedChannelId}/pin`, {
@@ -539,7 +542,7 @@ export default function EventStaffChatPage({
 
   const unpinChannel = async () => {
     if (!selectedChannelId || !pinnedMessageId) return
-    const ok = confirm('Unpin the current pinned message for this channel?')
+    const ok = await appConfirmMessage('Unpin the current pinned message for this channel?')
     if (!ok) return
 
     const res = await fetch(`/api/events/${event.id}/chat/channels/${selectedChannelId}/pin`, {
@@ -569,7 +572,7 @@ export default function EventStaffChatPage({
     const targetId = message.senderUser?.id || message.senderVolunteer?.id
     if (!targetKind || !targetId) return
 
-    const confirmed = confirm(`Mute ${senderName(message)} for ${minutes} minutes in this channel?`)
+    const confirmed = await appConfirmMessage(`Mute ${senderName(message)} for ${minutes} minutes in this channel?`)
     if (!confirmed) return
 
     const res = await fetch(`/api/events/${event.id}/chat/channels/${selectedChannelId}/mute`, {
@@ -582,12 +585,16 @@ export default function EventStaffChatPage({
       setError(data.error || 'Failed to mute sender')
       return
     }
-    alert(`Muted ${senderName(message)} for ${minutes} minutes.`)
+    notifyAlert(`Muted ${senderName(message)} for ${minutes} minutes.`)
   }
 
   const handleNotifyChatLaunch = async () => {
-    if (typeof window === 'undefined') return
-    const promptResult = window.prompt('Optional note for volunteers (leave blank to skip):')
+    const promptResult = await appPrompt({
+      title: 'Notify volunteers about chat',
+      message: 'Optional note for volunteers (leave blank to skip):',
+      placeholder: 'Optional note…',
+      confirmLabel: 'Send emails',
+    })
     // Cancel returns null — do not send (|| '' would treat cancel like empty OK).
     if (promptResult === null) return
     const note = promptResult.trim()
@@ -602,9 +609,9 @@ export default function EventStaffChatPage({
       if (!response.ok || !data.success) {
         throw new Error(data.error || 'Failed to send chat rollout emails')
       }
-      alert(data.message || `Sent ${data.sent} email(s).`)
+      notifyAlert(data.message || `Sent ${data.sent} email(s).`)
     } catch (err: any) {
-      alert(err?.message || 'Failed to send chat rollout emails')
+      notifyAlert(err?.message || 'Failed to send chat rollout emails')
     } finally {
       setNotifySending(false)
     }

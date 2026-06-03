@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { exportService } from '../lib/exportService'
+import { notifyAlert, toast } from '../lib/ui/toast'
 
 interface Position {
   id: string
@@ -45,7 +46,7 @@ export function useExport({
       })
     } catch (error) {
       console.error('Export error:', error)
-      alert('Failed to export PDF')
+      notifyAlert('Failed to export PDF')
     } finally {
       setIsExporting(false)
     }
@@ -62,7 +63,7 @@ export function useExport({
       })
     } catch (error) {
       console.error('Export error:', error)
-      alert('Failed to export Excel')
+      notifyAlert('Failed to export Excel')
     } finally {
       setIsExporting(false)
     }

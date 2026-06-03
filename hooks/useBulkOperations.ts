@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/router'
 import { Position } from '../types'
 import { createPositionService } from '../lib/positionService'
+import { notifyAlert, toast } from '../lib/ui/toast'
+import { appConfirm, appConfirmMessage } from '../lib/ui/confirm'
 
 interface UseBulkOperationsProps {
   eventId: string
@@ -34,7 +36,7 @@ export function useBulkOperations({ eventId, selectedPositions, positions }: Use
 
   const handleBulkEdit = async (area: string, isActive: string) => {
     if (!area && isActive === '') {
-      alert('Please specify at least one field to update')
+      notifyAlert('Please specify at least one field to update')
       return
     }
     
@@ -56,11 +58,11 @@ export function useBulkOperations({ eventId, selectedPositions, positions }: Use
         }
       }
       
-      alert(`✅ Successfully updated ${successCount} of ${selectedPositions.size} positions`)
+      notifyAlert(`✅ Successfully updated ${successCount} of ${selectedPositions.size} positions`)
       router.reload()
     } catch (error) {
       console.error('Bulk position update error:', error)
-      alert('Failed to update positions')
+      notifyAlert('Failed to update positions')
     } finally {
       setIsSubmitting(false)
     }
@@ -68,7 +70,7 @@ export function useBulkOperations({ eventId, selectedPositions, positions }: Use
 
   const handleApplyTemplate = async (templateType: string) => {
     if (!templateType) {
-      alert('Please select a template')
+      notifyAlert('Please select a template')
       return
     }
     
@@ -85,7 +87,7 @@ export function useBulkOperations({ eventId, selectedPositions, positions }: Use
         
         if (positionsWithPartialShifts.length > 0) {
           const positionNames = positionsWithPartialShifts.map(p => p.name).join(', ')
-          alert(
+          notifyAlert(
             '❌ Cannot apply All Day template to some positions\n\n' +
             `The following positions have partial shifts that conflict with All Day shifts:\n${positionNames}\n\n` +
             'Please delete existing partial shifts from these positions first, then apply the All Day template.'
@@ -100,14 +102,14 @@ export function useBulkOperations({ eventId, selectedPositions, positions }: Use
       })
       
       if (success) {
-        alert('✅ Template Applied Successfully!')
+        notifyAlert('✅ Template Applied Successfully!')
         router.reload()
       } else {
-        alert('Failed to apply template')
+        notifyAlert('Failed to apply template')
       }
     } catch (error) {
       console.error('Template application error:', error)
-      alert('Failed to apply template')
+      notifyAlert('Failed to apply template')
     } finally {
       setIsSubmitting(false)
     }
@@ -115,12 +117,12 @@ export function useBulkOperations({ eventId, selectedPositions, positions }: Use
 
   const handleBulkShiftCreate = async (shiftName: string, shiftStart: string, shiftEnd: string, isAllDay: boolean) => {
     if (!shiftName) {
-      alert('Please enter a shift name')
+      notifyAlert('Please enter a shift name')
       return
     }
     
     if (!isAllDay && (!shiftStart || !shiftEnd)) {
-      alert('Please enter start and end times for partial shifts')
+      notifyAlert('Please enter start and end times for partial shifts')
       return
     }
     
@@ -137,7 +139,7 @@ export function useBulkOperations({ eventId, selectedPositions, positions }: Use
         
         if (positionsWithPartialShifts.length > 0) {
           const positionNames = positionsWithPartialShifts.map(p => p.name).join(', ')
-          alert(
+          notifyAlert(
             '❌ Cannot add All Day shift to some positions\n\n' +
             `The following positions have partial shifts that conflict with All Day shifts:\n${positionNames}\n\n` +
             'Please delete existing partial shifts from these positions first, then add the All Day shift.'
@@ -162,11 +164,11 @@ export function useBulkOperations({ eventId, selectedPositions, positions }: Use
         }
       }
       
-      alert(`✅ Successfully created "${shiftName}" shift for ${successCount} of ${selectedPositions.size} positions`)
+      notifyAlert(`✅ Successfully created "${shiftName}" shift for ${successCount} of ${selectedPositions.size} positions`)
       router.reload()
     } catch (error) {
       console.error('Custom shift creation error:', error)
-      alert('Failed to create shifts')
+      notifyAlert('Failed to create shifts')
     } finally {
       setIsSubmitting(false)
     }
@@ -174,7 +176,7 @@ export function useBulkOperations({ eventId, selectedPositions, positions }: Use
 
   const handleBulkOversight = async (overseerId: string, keymanId: string) => {
     if (!overseerId && !keymanId) {
-      alert('Please select at least one oversight role to assign')
+      notifyAlert('Please select at least one oversight role to assign')
       return
     }
     
@@ -188,21 +190,21 @@ export function useBulkOperations({ eventId, selectedPositions, positions }: Use
       })
       
       if (success) {
-        alert('✅ Oversight Assigned Successfully!')
+        notifyAlert('✅ Oversight Assigned Successfully!')
         router.reload()
       } else {
-        alert('Failed to assign oversight')
+        notifyAlert('Failed to assign oversight')
       }
     } catch (error) {
       console.error('Bulk oversight assignment error:', error)
-      alert('Failed to assign oversight')
+      notifyAlert('Failed to assign oversight')
     } finally {
       setIsSubmitting(false)
     }
   }
 
   const handleClearAllShifts = async () => {
-    if (!confirm('⚠️ Clear ALL shifts from ALL positions?\n\nThis will remove all shifts AND their assignments.\n\nThis action cannot be undone.')) {
+    if (!(await appConfirmMessage('⚠️ Clear ALL shifts from ALL positions?\n\nThis will remove all shifts AND their assignments.\n\nThis action cannot be undone.'))) {
       return
     }
     
@@ -210,14 +212,14 @@ export function useBulkOperations({ eventId, selectedPositions, positions }: Use
       const success = await positionService.clearAllShifts()
       
       if (success) {
-        alert('✅ Cleared all shifts and assignments')
+        notifyAlert('✅ Cleared all shifts and assignments')
         router.reload()
       } else {
-        alert('Failed to clear shifts')
+        notifyAlert('Failed to clear shifts')
       }
     } catch (error) {
       console.error('Clear shifts error:', error)
-      alert('Failed to clear shifts')
+      notifyAlert('Failed to clear shifts')
     }
   }
 

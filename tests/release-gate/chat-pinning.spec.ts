@@ -23,10 +23,11 @@ test.describe('Chat pinning (release gate)', () => {
     await page.click('button:has-text("Send")')
     await expect(page.locator(`text=${msg}`)).toBeVisible({ timeout: 15000 })
 
-    // Pin the message we just sent
-    page.once('dialog', (d) => d.accept())
+    // Pin the message we just sent (inline confirm dialog, not window.confirm)
     const messageCard = page.locator('div.bg-white.border.border-gray-200.rounded-md.p-2', { hasText: msg }).first()
     await messageCard.locator('button:has-text("Pin")').click()
+    await expect(page.getByRole('dialog')).toBeVisible({ timeout: 5000 })
+    await page.getByRole('dialog').getByRole('button', { name: 'Confirm' }).click()
 
     await expect(page.getByText('Pinned message', { exact: true })).toBeVisible({ timeout: 15000 })
     await expect(page.locator('div.bg-amber-50').locator(`text=${msg}`)).toBeVisible({ timeout: 15000 })

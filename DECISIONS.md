@@ -608,6 +608,15 @@ This document tracks significant technical decisions made during development.
 2. **Staff simulation** uses **`canSimulateVolunteerRole()`** (case-insensitive) so `volunteerId` in API calls always refers to the **simulated volunteer**, not the staff user id.  
 **Consequences:** Overseers must **save** counter assignments after suggestions if volunteers should see tasks; rank-based fallback on POST still applies when **no** assignee rows exist for that station (unchanged).
 
+### D-TS-044: In-app toasts and inline dialogs (no browser alert/confirm)
+**Date:** 2026-06-08  
+**Context:** Browser `alert`/`confirm`/`prompt` block mobile UX, look inconsistent, and break Playwright tests that listen for `dialog` events. Chapter Hub already uses custom toasts + `ConfirmDialog`.  
+**Decision:**  
+1. **`AppUiProvider`** in `pages/_app.tsx` wraps the app with **`ToastProvider`**, imperative **`toast`** / **`appConfirm`** / **`appPrompt`** APIs (`lib/ui/*`, `components/ui/*`).  
+2. **No new** `alert()`, `confirm()`, or `prompt()` in app code; use **`notifyAlert`** / **`toast`** for feedback and **`appConfirm`** / **`appPrompt`** for user gates.  
+3. **E2E tests** must click inline dialog buttons, not `page.once('dialog')`.  
+**Consequences:** Consistent UX with Chapter Hub; release-gate specs must be updated when adding confirm flows. Shipped **v4.22.0**.
+
 ---
 
 ## Shared Decisions

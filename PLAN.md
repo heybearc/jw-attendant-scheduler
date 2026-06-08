@@ -1,8 +1,8 @@
 # TheoShift Plan
 
-**Last updated:** 2026-05-14  
+**Last updated:** 2026-06-08  
 **Current phase:** Feature Development + Platform Infrastructure  
-**Status:** **v4.21.9** on `main` — IVS overseer/keyman management, bulk status actions, manual volunteer add; volunteer count/view-as behavior per **D-TS-043**. Continued work: Positions/Volunteers **mobile audit**; prod smoke when convenient.
+**Status:** **v4.22.0 LIVE** (toasts + inline confirm/prompt, Chapter Hub pattern). Both nodes synced. Continued work: Positions/Volunteers **mobile audit**.
 
 ---
 
@@ -26,6 +26,7 @@ This follows the usual small-team pattern: **one system of record in the app**, 
 - **Mobile readiness across TheoShift** — eliminate horizontal-scroll-only workflows, ensure 44px tap targets, improve responsive layouts on event and admin pages, verify on Safari/Chrome/Edge/Firefox.
 
 ### Completed This Phase
+- ✅ **v4.22.0 — In-app notifications UX (2026-06)** — Toast notifications and inline confirm/prompt dialogs replace browser `alert`/`confirm`/`prompt` app-wide; `AppUiProvider` in `_app`; release-gate test updated. Shipped `/ship` + `/sync`. Tag `v4.22.0` (`fe17b1d6`, `9c04d150`).
 - ✅ **v4.21.9 — IVS access & bulk (2026-05)** — Overseers and keymen can import/export/add IVS volunteers; Approvals bulk status (incl. congregation/department); manual add single volunteer. Commits `509dbe92`, `31c709e1`, `872996b1`, tag/release `c7e8b224`.
 - ✅ **Volunteer count assignments & simulation (2026-05)** — Dashboard shows station counts only for **confirmed** assignees (`isSuggested: false`); suggestions from Apply Suggestions are draft until saved. Grouped stations exclude duplicate station-level UI; exclusions use `count_session_group_positions`. View-as uses **normalized staff roles** + Enter Count / mobile links / KEYMAN parity. Decision **D-TS-043**. Commits `bef4f7dd`, `4935b31f`, `8e937f66`, `d9fd40b3`.
 - ✅ v4.21.2: IVS Module mobile layouts (Approvals cards on small screens; Early Check-In full-width actions + stacked rows)
@@ -335,8 +336,8 @@ Feedback **FB-036** closed as deferred; all scope lives in this section until an
 
 ## Version History
 
-**Current:** v4.21.9 (IVS access/bulk; counts/view-as per D-TS-043 on `main`)  
-**Previous:** v4.21.2 (IVS mobile + event shell)  
+**Current:** v4.22.0 (toasts + inline dialogs; LIVE + STANDBY synced)  
+**Previous:** v4.21.9 (IVS access/bulk)  
 **Baseline:** v4.0.0 (production-ready platform)
 
 ---

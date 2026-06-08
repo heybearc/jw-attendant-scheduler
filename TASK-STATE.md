@@ -1,35 +1,35 @@
 # TheoShift Task State
 
-**Last updated:** 2026-05-14  
+**Last updated:** 2026-06-08  
 **Branch:** `main`  
-**Production:** **Verify** with homelab `get_deployment_status` (app: theoshift) — HAProxy is runtime truth (see D-008 / D-TS-040). After last doc snapshot: **LIVE** **BLUE** `10.92.3.24` · **STANDBY** **GREEN** `10.92.3.22` (HAProxy flips on `/release`).
+**Production:** **LIVE** **BLUE** `10.92.3.24` · **STANDBY** **GREEN** `10.92.3.22` (HAProxy verified 2026-06-08; both nodes on **v4.22.0**).
 
 ---
 
 ## Current Task
 
-**Mobile readiness (Positions / Volunteers) + production smoke (counts / IVS)** — IN PROGRESS 🚧
+**Mobile readiness (Positions / Volunteers)** — IN PROGRESS 🚧
 
 ### What I'm doing right now
 
-Continue the **mobile audit** for `/events/[id]/positions` and `/events/[id]/volunteers` (card layouts under `md`, 44px targets, filters usable on phones). When convenient on **production**, smoke **volunteer dashboard** + **Enter Count** with `viewAsVolunteerId` (Network: `/api/volunteer/dashboard?volunteerId=<uuid>`) and spot-check **IVS** after **v4.21.9** (overseer/keyman IVS access, bulk actions).
+Resume the **mobile audit** for `/events/[id]/positions` and `/events/[id]/volunteers` (card layouts under `md`, 44px targets, filters usable on phones). **v4.22.0** (toasts + inline dialogs) is **LIVE** — spot-check confirmations on mobile while auditing.
 
 ### Recent completions
 
-- ✅ **v4.21.9 — IVS** — Overseers and keymen can manage IVS volunteers (import/export/add); Approvals bulk status including congregation/department; manual add single volunteer (`509dbe92`, `31c709e1`, `872996b1`, `c7e8b224`).
-- ✅ **Volunteer count assignments + view-as** — Confirmed assignees only for volunteer surfaces; group exclusions; simulation roles aligned (`4935b31f`, `bef4f7dd`, `8e937f66`, `d9fd40b3`); decision **D-TS-043** in `DECISIONS.md`.
-- ✅ **Notify chat UX** — Cancel on launch prompt must not send emails (`44d9efdb`).
+- ✅ **v4.22.0 shipped** — Replaced browser `alert`/`confirm`/`prompt` with Chapter Hub-style **toasts** + **inline confirm/prompt** (`AppUiProvider`, ~45 files); **`/ship`** + **`/sync`**; qa-01 **4 passed / 1 skipped**; GitHub release [v4.22.0](https://github.com/heybearc/theoshift/releases/tag/v4.22.0) (`fe17b1d6`, `9c04d150`, `04287a63`).
+- ✅ **Release-gate** — Chat pin test updated for inline confirm dialog (`04287a63`).
+- ✅ **v4.21.9 — IVS** — Overseer/keyman IVS management + bulk actions (prior release).
 
 ### Next steps
 
 1. Continue **mobile audit**: Positions + Volunteers — cards under `md`, no horizontal-scroll-only workflows, 44px actions.
-2. **Production smoke** (when on domain/LIVE): volunteer dashboard + Enter Count with simulation; IVS bulk / access paths for overseer or keyman.
-3. Run **`/test-release theoshift standby`** after large UI changes (qa-01 smoke + release-gate).
-4. Triage **`/admin/feedback`** for anything urgent (not run this end-day).
+2. Quick **prod smoke** on phone: delete/cancel flows use new dialogs (not browser popups).
+3. Triage **`/admin/feedback`** when online (0 new as of end-day).
+4. Run **`/test-release theoshift standby`** after large mobile UI changes.
 
 ## Exact next command
 
-`/start-day` — then open Positions or Volunteers on a narrow viewport and continue the mobile audit; optionally prod-smoke volunteer simulation + IVS per above.
+`/start-day` — then open Positions or Volunteers on a narrow viewport and continue the mobile audit.
 
 ---
 
@@ -41,28 +41,27 @@ Continue the **mobile audit** for `/events/[id]/positions` and `/events/[id]/vol
 
 **Recently addressed (don’t regress)**
 
-- ~~Phantom count assignments~~ — **Suggested** assignee rows no longer surface as real duties on volunteer dashboard / Enter Count lists for volunteers; POST permission aligns.
+- ~~Browser alert/confirm popups~~ — **v4.22.0** uses in-app toasts and dialogs app-wide.
+- ~~Phantom count assignments~~ — **D-TS-043**; suggested rows are draft for volunteer surfaces.
 
 **Infrastructure**
 
-- **`/release` does not deploy** — Only HAProxy. LIVE must already have been built via **`deploy_to_standby`** after changes land on `main`.
+- **`/release` does not deploy** — Only HAProxy. Build on STANDBY before `/release`.
 - **PM2 names:** BLUE → `theoshift-blue`, GREEN → `theoshift-green`.
 
 ---
 
 ## Session snapshot — recent `main` commits
 
-- `c7e8b224` — Release v4.21.9 — IVS access and bulk actions  
-- `31c709e1` — IVS bulk actions: full status set, congregation and department  
-- `509dbe92` — Allow overseers and keymen to manage IVS volunteers (import/export/add)  
-- `872996b1` — IVS Approvals: add single volunteer (manual entry)  
-- `4935b31f` — Volunteer dashboard: group exclusions + `canSimulateVolunteerRole`  
+- `fe17b1d6` — Release v4.22.0 — toasts and confirmation dialogs  
+- `04287a63` — test: release-gate chat pin inline confirm  
+- `9c04d150` — feat: replace alert/confirm with toasts and dialogs  
 
 ---
 
 ## Feedback triage (this session)
 
-- **Resolved / promoted / triaged:** not executed this end-day (no DB/SSH triage from here). Use `/admin/feedback` when online.
+- **Resolved:** 0 · **Promoted:** 0 · **Triaged:** 0 new (`scripts/ssh-query-feedback.sh new`).
 
 ---
 

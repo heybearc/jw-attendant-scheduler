@@ -3,6 +3,17 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '@/lib/prisma'
 import { canViewIvsVolunteers } from '@/lib/eventAccess'
+import {
+  CONVENTION_DAYS,
+  conventionDayLabel,
+  earlyCheckinInclude,
+  earlyEligibilityWhere,
+  formatEarlyEntrySummary,
+  isCheckedInForDay,
+  isEligibleForDay,
+  scheduleFromRecord,
+  shortDayLabel,
+} from '@/lib/ivsEarlyCheckin'
 import ExcelJS from 'exceljs'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -32,60 +43,57 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ error: 'Event not found' })
     }
 
-    // Fetch all volunteers with early check-in eligibility
     const volunteers = await prisma.event_volunteers.findMany({
       where: {
         eventId: eventId as string,
-        earlyCheckinEligible: true,
+        ...earlyEligibilityWhere(),
       },
-      include: {
-        volunteer: {
-          select: {
-            firstName: true,
-            lastName: true,
-            congregation: true,
-          },
-        },
-      },
-      orderBy: [
-        { checkedInAt: 'asc' },
-      ],
+      include: earlyCheckinInclude,
+      orderBy: [{ volunteer: { lastName: 'asc' } }],
     })
 
-    // Prepare data for Excel
-    const data = volunteers.map(v => ({
-      'Name': `${v.volunteer?.firstName || ''} ${v.volunteer?.lastName || ''}`.trim(),
-      'Congregation': v.volunteer?.congregation || '',
-      'Check-In Status': v.checkedInAt ? 'Checked In' : 'Pending',
-      'Check-In Time': v.checkedInAt 
-        ? new Date(v.checkedInAt).toLocaleString('en-US', {
-            month: '2-digit',
-            day: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true,
-          })
-        : '',
-      'Checked In By': v.checkedInBy || '',
-    }))
+    const data = volunteers.map((v) => {
+      const schedule = scheduleFromRecord(v)
+      const checkIns = Object.fromEntries(
+        v.earlyCheckins.map((c) => [c.conventionDay, c]),
+      )
+      const dayStatus = (day: (typeof CONVENTION_DAYS)[number]) => {
+        if (!isEligibleForDay(schedule, day)) return '—'
+        const row = checkIns[day]
+        return row
+          ? `Checked in ${new Date(row.checkedInAt).toLocaleString('en-US', {
+              month: '2-digit',
+              day: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: true,
+            })}`
+          : 'Pending'
+      }
 
-    // Add summary stats at the top
-    const checkedInCount = volunteers.filter(v => v.checkedInAt).length
-    const pendingCount = volunteers.filter(v => !v.checkedInAt).length
+      return {
+        Name: `${v.volunteer?.firstName || ''} ${v.volunteer?.lastName || ''}`.trim(),
+        Congregation: v.volunteer?.congregation || '',
+        'Early entry days': formatEarlyEntrySummary(schedule),
+        Friday: dayStatus(CONVENTION_DAYS[0]),
+        Saturday: dayStatus(CONVENTION_DAYS[1]),
+        Sunday: dayStatus(CONVENTION_DAYS[2]),
+      }
+    })
+
+    const checkedInAny = volunteers.filter((v) => v.earlyCheckins.length > 0).length
     const totalCount = volunteers.length
 
     const summaryData = [
-      { 'Name': 'IVS EARLY CHECK-IN REPORT', 'Congregation': '', 'Check-In Status': '', 'Check-In Time': '', 'Checked In By': '' },
-      { 'Name': `Event: ${event.name}`, 'Congregation': '', 'Check-In Status': '', 'Check-In Time': '', 'Checked In By': '' },
-      { 'Name': `Generated: ${new Date().toLocaleString()}`, 'Congregation': '', 'Check-In Status': '', 'Check-In Time': '', 'Checked In By': '' },
-      { 'Name': '', 'Congregation': '', 'Check-In Status': '', 'Check-In Time': '', 'Checked In By': '' },
-      { 'Name': 'SUMMARY', 'Congregation': '', 'Check-In Status': '', 'Check-In Time': '', 'Checked In By': '' },
-      { 'Name': 'Total Eligible:', 'Congregation': totalCount.toString(), 'Check-In Status': '', 'Check-In Time': '', 'Checked In By': '' },
-      { 'Name': 'Checked In:', 'Congregation': checkedInCount.toString(), 'Check-In Status': '', 'Check-In Time': '', 'Checked In By': '' },
-      { 'Name': 'Pending:', 'Congregation': pendingCount.toString(), 'Check-In Status': '', 'Check-In Time': '', 'Checked In By': '' },
-      { 'Name': '', 'Congregation': '', 'Check-In Status': '', 'Check-In Time': '', 'Checked In By': '' },
-      { 'Name': 'VOLUNTEER LIST', 'Congregation': '', 'Check-In Status': '', 'Check-In Time': '', 'Checked In By': '' },
+      { Name: 'IVS EARLY CHECK-IN REPORT', Congregation: '', 'Early entry days': '', Friday: '', Saturday: '', Sunday: '' },
+      { Name: `Event: ${event.name}`, Congregation: '', 'Early entry days': '', Friday: '', Saturday: '', Sunday: '' },
+      { Name: `Generated: ${new Date().toLocaleString()}`, Congregation: '', 'Early entry days': '', Friday: '', Saturday: '', Sunday: '' },
+      { Name: '', Congregation: '', 'Early entry days': '', Friday: '', Saturday: '', Sunday: '' },
+      { Name: 'SUMMARY', Congregation: '', 'Early entry days': '', Friday: '', Saturday: '', Sunday: '' },
+      { Name: 'Total with early entry:', Congregation: totalCount.toString(), 'Early entry days': '', Friday: '', Saturday: '', Sunday: '' },
+      { Name: 'Checked in (any day):', Congregation: checkedInAny.toString(), 'Early entry days': '', Friday: '', Saturday: '', Sunday: '' },
+      { Name: '', Congregation: '', 'Early entry days': '', Friday: '', Saturday: '', Sunday: '' },
+      { Name: 'VOLUNTEER LIST', Congregation: '', 'Early entry days': '', Friday: '', Saturday: '', Sunday: '' },
     ]
 
     const fullData = [...summaryData, ...data]
@@ -96,9 +104,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     worksheet.columns = [
       { header: 'Name', key: 'Name', width: 25 },
       { header: 'Congregation', key: 'Congregation', width: 30 },
-      { header: 'Check-In Status', key: 'Check-In Status', width: 15 },
-      { header: 'Check-In Time', key: 'Check-In Time', width: 20 },
-      { header: 'Checked In By', key: 'Checked In By', width: 20 },
+      { header: 'Early entry days', key: 'Early entry days', width: 18 },
+      { header: 'Friday', key: 'Friday', width: 22 },
+      { header: 'Saturday', key: 'Saturday', width: 22 },
+      { header: 'Sunday', key: 'Sunday', width: 22 },
     ]
     fullData.forEach(row => worksheet.addRow(row))
 

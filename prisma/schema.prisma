@@ -264,8 +264,11 @@ model event_volunteers {
   ivsDeniedReason         String?                @map("ivs_denied_reason")
   ivsImportBatchId        String?                @map("ivs_import_batch_id")
   
-  // Early Check-In Fields (future phase)
+  // Early Check-In — per convention day (Fri/Sat/Sun)
   earlyCheckinEligible    Boolean?               @default(false) @map("early_checkin_eligible")
+  earlyCheckinFriday      Boolean                @default(false) @map("early_checkin_friday")
+  earlyCheckinSaturday    Boolean                @default(false) @map("early_checkin_saturday")
+  earlyCheckinSunday      Boolean                @default(false) @map("early_checkin_sunday")
   checkedInAt             DateTime?              @map("checked_in_at")
   checkedInBy             String?                @map("checked_in_by")
   checkinNotes            String?                @map("checkin_notes")
@@ -277,6 +280,7 @@ model event_volunteers {
   overseer                volunteers?            @relation("event_volunteers_overseerIdTovolunteers", fields: [overseerId], references: [id])
   users                   users?                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   importBatch             ivs_import_batches?    @relation(fields: [ivsImportBatchId], references: [id], onDelete: SetNull)
+  earlyCheckins           event_volunteer_early_checkins[]
 
   @@unique([eventId, volunteerId])
   @@unique([eventId, userId])
@@ -284,6 +288,28 @@ model event_volunteers {
   @@index([ivsRequestRound])
   @@index([ivsImportBatchId])
   @@index([earlyCheckinEligible])
+}
+
+enum ConventionDay {
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+model event_volunteer_early_checkins {
+  id               String         @id
+  eventVolunteerId String         @map("event_volunteer_id")
+  conventionDay    ConventionDay  @map("convention_day")
+  checkedInAt      DateTime       @default(now()) @map("checked_in_at")
+  checkedInBy      String?        @map("checked_in_by")
+  checkinNotes     String?        @map("checkin_notes")
+  createdAt        DateTime       @default(now()) @map("created_at")
+
+  eventVolunteer event_volunteers @relation(fields: [eventVolunteerId], references: [id], onDelete: Cascade)
+
+  @@unique([eventVolunteerId, conventionDay])
+  @@index([eventVolunteerId])
+  @@map("event_volunteer_early_checkins")
 }
 
 model event_documents {

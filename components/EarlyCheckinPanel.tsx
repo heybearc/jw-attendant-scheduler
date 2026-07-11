@@ -1,16 +1,23 @@
-import { useState, useEffect } from 'react'
-import { notifyAlert, toast } from '../lib/ui/toast'
-import { appConfirm, appConfirmMessage } from '../lib/ui/confirm'
+import { useState, useEffect, useMemo } from 'react'
+import { ConventionDay } from '@prisma/client'
+import {
+  conventionDayLabel,
+  EarlyCheckinVolunteerPayload,
+  getCurrentConventionDay,
+  isCheckedInForDay,
+  isEligibleForDay,
+} from '@/lib/ivsEarlyCheckin'
+import { notifyAlert } from '../lib/ui/toast'
+import { appConfirmMessage } from '../lib/ui/confirm'
 
-interface Volunteer {
-  id: string
-  firstName: string
-  lastName: string
-  congregation: string
-  earlyCheckinEligible: boolean
-  checkedInAt: string | null
-  checkedInBy: string | null
-}
+type ViewDay = ConventionDay | 'TODAY'
+
+const DAY_TABS: Array<{ id: ViewDay; label: string }> = [
+  { id: 'TODAY', label: 'Today' },
+  { id: ConventionDay.FRIDAY, label: 'Fri' },
+  { id: ConventionDay.SATURDAY, label: 'Sat' },
+  { id: ConventionDay.SUNDAY, label: 'Sun' },
+]
 
 interface EarlyCheckinPanelProps {
   eventId: string
@@ -19,51 +26,55 @@ interface EarlyCheckinPanelProps {
   onBack?: () => void
 }
 
-export default function EarlyCheckinPanel({ eventId, eventName, showHeader = true, onBack }: EarlyCheckinPanelProps) {
-  const [volunteers, setVolunteers] = useState<Volunteer[]>([])
+function resolveActiveDay(viewDay: ViewDay): ConventionDay | null {
+  if (viewDay !== 'TODAY') return viewDay
+  return getCurrentConventionDay()
+}
+
+export default function EarlyCheckinPanel({
+  eventId,
+  eventName,
+  showHeader = true,
+  onBack,
+}: EarlyCheckinPanelProps) {
+  const [volunteers, setVolunteers] = useState<EarlyCheckinVolunteerPayload[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [exporting, setExporting] = useState(false)
   const [pendingCollapsed, setPendingCollapsed] = useState(false)
   const [checkedInCollapsed, setCheckedInCollapsed] = useState(false)
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
+  const [viewDay, setViewDay] = useState<ViewDay>('TODAY')
+  const [apiToday, setApiToday] = useState<ConventionDay | null>(getCurrentConventionDay())
+
+  const activeDay = resolveActiveDay(viewDay)
 
   useEffect(() => {
     fetchVolunteers()
-    
-    // Auto-polling every 5 seconds
-    const interval = setInterval(() => {
-      fetchVolunteers(true)
-    }, 5000)
 
-    // Pause polling when page is hidden
+    const interval = setInterval(() => fetchVolunteers(true), 5000)
     const handleVisibilityChange = () => {
-      if (document.hidden) {
-        clearInterval(interval)
-      } else {
-        fetchVolunteers(true)
-        const newInterval = setInterval(() => {
-          fetchVolunteers(true)
-        }, 5000)
-        return () => clearInterval(newInterval)
-      }
+      if (!document.hidden) fetchVolunteers(true)
     }
-
     document.addEventListener('visibilitychange', handleVisibilityChange)
 
     return () => {
       clearInterval(interval)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
-  }, [eventId])
+  }, [eventId, viewDay])
 
   const fetchVolunteers = async (silent = false) => {
     try {
       if (!silent) setLoading(true)
-      const response = await fetch(`/api/volunteer/early-checkin?eventId=${eventId}`)
+      const dayQuery = viewDay === 'TODAY' ? 'TODAY' : viewDay
+      const response = await fetch(
+        `/api/volunteer/early-checkin?eventId=${eventId}&day=${dayQuery}`,
+      )
       if (response.ok) {
         const data = await response.json()
         setVolunteers(data.volunteers || [])
+        if (data.today) setApiToday(data.today)
         setLastUpdated(new Date())
       }
     } catch (error) {
@@ -73,19 +84,16 @@ export default function EarlyCheckinPanel({ eventId, eventName, showHeader = tru
     }
   }
 
-  const handleCheckIn = async (volunteerId: string) => {
+  const handleCheckIn = async (volunteerId: string, day: ConventionDay) => {
     try {
       const response = await fetch(`/api/volunteer/early-checkin/check-in`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          eventId,
-          volunteerId 
-        }),
+        body: JSON.stringify({ eventId, volunteerId, conventionDay: day }),
       })
 
       if (response.ok) {
-        fetchVolunteers()
+        fetchVolunteers(true)
       } else {
         const data = await response.json()
         notifyAlert(data.message || 'Failed to check in volunteer')
@@ -96,23 +104,27 @@ export default function EarlyCheckinPanel({ eventId, eventName, showHeader = tru
     }
   }
 
-  const handleUndoCheckIn = async (volunteerId: string) => {
-    if (!(await appConfirmMessage('Undo check-in for this volunteer?'))) return
+  const handleUndoCheckIn = async (volunteerId: string, day: ConventionDay) => {
+    if (
+      !(await appConfirmMessage(
+        `Undo ${conventionDayLabel(day)} check-in for this volunteer?`,
+      ))
+    ) {
+      return
+    }
 
     try {
       const response = await fetch(`/api/volunteer/early-checkin/undo`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          eventId,
-          volunteerId 
-        }),
+        body: JSON.stringify({ eventId, volunteerId, conventionDay: day }),
       })
 
       if (response.ok) {
-        fetchVolunteers()
+        fetchVolunteers(true)
       } else {
-        notifyAlert('Failed to undo check-in')
+        const data = await response.json()
+        notifyAlert(data.message || 'Failed to undo check-in')
       }
     } catch (error) {
       console.error('Error undoing check-in:', error)
@@ -150,35 +162,44 @@ export default function EarlyCheckinPanel({ eventId, eventName, showHeader = tru
   }
 
   const searchLower = searchTerm.toLowerCase()
+  const matchesSearch = (v: EarlyCheckinVolunteerPayload) => {
+    const fullName = `${v.firstName} ${v.lastName}`.toLowerCase()
+    const congregation = v.congregation.toLowerCase()
+    return fullName.includes(searchLower) || congregation.includes(searchLower)
+  }
 
-  const pendingVolunteers = volunteers
-    .filter(v => {
-      if (!v.earlyCheckinEligible) return false
-      if (v.checkedInAt) return false
-      
-      const fullName = `${v.firstName} ${v.lastName}`.toLowerCase()
-      const congregation = v.congregation.toLowerCase()
-      
-      return fullName.includes(searchLower) || congregation.includes(searchLower)
-    })
-    .sort((a, b) => {
-      return `${a.lastName} ${a.firstName}`.localeCompare(`${b.lastName} ${b.firstName}`)
-    })
+  const { pendingVolunteers, checkedInVolunteers } = useMemo(() => {
+    if (!activeDay) {
+      return { pendingVolunteers: [], checkedInVolunteers: [] }
+    }
 
-  const checkedInVolunteers = volunteers
-    .filter(v => {
-      if (!v.checkedInAt) return false
-      
-      const fullName = `${v.firstName} ${v.lastName}`.toLowerCase()
-      const congregation = v.congregation.toLowerCase()
-      
-      return fullName.includes(searchLower) || congregation.includes(searchLower)
-    })
-    .sort((a, b) => {
-      const aTime = new Date(a.checkedInAt!).getTime()
-      const bTime = new Date(b.checkedInAt!).getTime()
-      return bTime - aTime
-    })
+    const pending = volunteers
+      .filter((v) => {
+        if (!isEligibleForDay(v.earlyEntry, activeDay)) return false
+        if (isCheckedInForDay(v.checkIns, activeDay)) return false
+        return matchesSearch(v)
+      })
+      .sort((a, b) =>
+        `${a.lastName} ${a.firstName}`.localeCompare(`${b.lastName} ${b.firstName}`),
+      )
+
+    const checkedIn = volunteers
+      .filter((v) => {
+        if (!isCheckedInForDay(v.checkIns, activeDay)) return false
+        return matchesSearch(v)
+      })
+      .sort((a, b) => {
+        const aTime = new Date(a.checkIns[activeDay]!.checkedInAt).getTime()
+        const bTime = new Date(b.checkIns[activeDay]!.checkedInAt).getTime()
+        return bTime - aTime
+      })
+
+    return { pendingVolunteers: pending, checkedInVolunteers: checkedIn }
+  }, [volunteers, activeDay, searchLower])
+
+  const dayHeading = activeDay
+    ? conventionDayLabel(activeDay)
+    : 'Today (not a convention day)'
 
   return (
     <div className="h-full flex flex-col">
@@ -186,10 +207,7 @@ export default function EarlyCheckinPanel({ eventId, eventName, showHeader = tru
         <div className="bg-blue-600 text-white p-4 sticky top-0 z-10 shadow-lg">
           <div className="flex items-center justify-between mb-3">
             {onBack && (
-              <button
-                onClick={onBack}
-                className="text-white hover:text-gray-200"
-              >
+              <button onClick={onBack} className="text-white hover:text-gray-200">
                 ← Back
               </button>
             )}
@@ -202,7 +220,7 @@ export default function EarlyCheckinPanel({ eventId, eventName, showHeader = tru
               {exporting ? '...' : '📊 Export'}
             </button>
           </div>
-          
+
           <input
             type="text"
             value={searchTerm}
@@ -234,26 +252,34 @@ export default function EarlyCheckinPanel({ eventId, eventName, showHeader = tru
         </div>
       )}
 
-      {/* Stats */}
+      <div className="p-3 bg-white border-b flex flex-wrap gap-2">
+        {DAY_TABS.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setViewDay(tab.id)}
+            className={`min-h-[40px] rounded-lg px-4 py-2 text-sm font-semibold ${
+              viewDay === tab.id
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            {tab.label}
+            {tab.id === 'TODAY' && apiToday ? ` (${conventionDayLabel(apiToday).slice(0, 3)})` : ''}
+          </button>
+        ))}
+      </div>
+
       <div className="p-4 bg-white border-b">
+        <p className="text-sm font-medium text-gray-700 mb-2">Viewing: {dayHeading}</p>
         <div className="flex justify-around text-center">
           <div>
-            <div className="text-2xl font-bold text-orange-600">
-              {pendingVolunteers.length}
-            </div>
+            <div className="text-2xl font-bold text-orange-600">{pendingVolunteers.length}</div>
             <div className="text-xs text-gray-600">Pending</div>
           </div>
           <div>
-            <div className="text-2xl font-bold text-green-600">
-              {checkedInVolunteers.length}
-            </div>
+            <div className="text-2xl font-bold text-green-600">{checkedInVolunteers.length}</div>
             <div className="text-xs text-gray-600">Checked In</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-gray-600">
-              {volunteers.filter(v => v.earlyCheckinEligible).length}
-            </div>
-            <div className="text-xs text-gray-600">Total Eligible</div>
           </div>
         </div>
         <div className="mt-2 text-center text-xs text-gray-500">
@@ -265,48 +291,44 @@ export default function EarlyCheckinPanel({ eventId, eventName, showHeader = tru
       <div className="flex-1 overflow-auto p-4">
         {loading ? (
           <div className="text-center py-8 text-gray-500">Loading...</div>
+        ) : !activeDay ? (
+          <div className="text-center py-8 text-gray-500">
+            Early check-in is only available on Friday, Saturday, or Sunday (event local time).
+          </div>
         ) : (
           <>
-            {/* Pending Section */}
             <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
               <button
                 onClick={() => setPendingCollapsed(!pendingCollapsed)}
-                className="w-full px-4 py-3 bg-orange-50 border-l-4 border-orange-500 flex items-center justify-between hover:bg-orange-100 transition-colors"
+                className="w-full px-4 py-3 bg-orange-50 border-l-4 border-orange-500 flex items-center justify-between hover:bg-orange-100"
               >
                 <div className="flex items-center gap-2">
                   <span className="text-lg">{pendingCollapsed ? '▶' : '▼'}</span>
-                  <h2 className="font-bold text-lg text-orange-900">PENDING CHECK-IN</h2>
+                  <h2 className="font-bold text-lg text-orange-900">PENDING — {dayHeading}</h2>
                   <span className="px-2 py-1 bg-orange-200 text-orange-900 rounded-full text-sm font-semibold">
                     {pendingVolunteers.length}
                   </span>
                 </div>
               </button>
-              
+
               {!pendingCollapsed && (
                 <div className="p-4">
                   {pendingVolunteers.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      {searchTerm ? 'No pending volunteers found matching your search' : 'No volunteers pending check-in'}
-                    </div>
+                    <div className="text-center py-8 text-gray-500">No pending check-ins</div>
                   ) : (
                     <div className="space-y-3">
-                      {pendingVolunteers.map(volunteer => (
-                        <div
-                          key={volunteer.id}
-                          className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
-                        >
+                      {pendingVolunteers.map((volunteer) => (
+                        <div key={volunteer.id} className="border rounded-lg p-4">
                           <div className="flex items-center justify-between gap-4">
-                            <div className="flex-1">
+                            <div>
                               <div className="font-semibold text-lg">
                                 {volunteer.firstName} {volunteer.lastName}
                               </div>
-                              <div className="text-sm text-gray-600">
-                                {volunteer.congregation}
-                              </div>
+                              <div className="text-sm text-gray-600">{volunteer.congregation}</div>
                             </div>
                             <button
-                              onClick={() => handleCheckIn(volunteer.id)}
-                              className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold text-lg hover:bg-green-700 active:bg-green-800 shadow-lg whitespace-nowrap"
+                              onClick={() => handleCheckIn(volunteer.id, activeDay)}
+                              className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700"
                             >
                               Check In
                             </button>
@@ -319,64 +341,58 @@ export default function EarlyCheckinPanel({ eventId, eventName, showHeader = tru
               )}
             </div>
 
-            {/* Checked In Section */}
             <div className="bg-white rounded-lg shadow overflow-hidden">
               <button
                 onClick={() => setCheckedInCollapsed(!checkedInCollapsed)}
-                className="w-full px-4 py-3 bg-green-50 border-l-4 border-green-500 flex items-center justify-between hover:bg-green-100 transition-colors"
+                className="w-full px-4 py-3 bg-green-50 border-l-4 border-green-500 flex items-center justify-between hover:bg-green-100"
               >
                 <div className="flex items-center gap-2">
                   <span className="text-lg">{checkedInCollapsed ? '▶' : '▼'}</span>
-                  <h2 className="font-bold text-lg text-green-900">CHECKED IN</h2>
+                  <h2 className="font-bold text-lg text-green-900">CHECKED IN — {dayHeading}</h2>
                   <span className="px-2 py-1 bg-green-200 text-green-900 rounded-full text-sm font-semibold">
                     {checkedInVolunteers.length}
                   </span>
                 </div>
               </button>
-              
+
               {!checkedInCollapsed && (
                 <div className="p-4">
                   {checkedInVolunteers.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      {searchTerm ? 'No checked-in volunteers found matching your search' : 'No volunteers checked in yet'}
-                    </div>
+                    <div className="text-center py-8 text-gray-500">No check-ins yet</div>
                   ) : (
                     <div className="space-y-3">
-                      {checkedInVolunteers.map(volunteer => (
-                        <div
-                          key={volunteer.id}
-                          className="border rounded-lg p-4 bg-gray-50"
-                        >
-                          <div className="flex items-center justify-between gap-3">
-                            <div className="flex-1">
-                              <div className="font-semibold text-lg">
-                                {volunteer.firstName} {volunteer.lastName}
+                      {checkedInVolunteers.map((volunteer) => {
+                        const record = volunteer.checkIns[activeDay]!
+                        return (
+                          <div key={volunteer.id} className="border rounded-lg p-4 bg-gray-50">
+                            <div className="flex items-center justify-between gap-3">
+                              <div>
+                                <div className="font-semibold text-lg">
+                                  {volunteer.firstName} {volunteer.lastName}
+                                </div>
+                                <div className="text-sm text-gray-600">{volunteer.congregation}</div>
+                                <div className="text-xs text-gray-500 mt-1">
+                                  Checked in:{' '}
+                                  {new Date(record.checkedInAt).toLocaleString('en-US', {
+                                    month: 'short',
+                                    day: 'numeric',
+                                    hour: 'numeric',
+                                    minute: '2-digit',
+                                    hour12: true,
+                                  })}
+                                  {record.checkedInBy ? ` · ${record.checkedInBy}` : ''}
+                                </div>
                               </div>
-                              <div className="text-sm text-gray-600">
-                                {volunteer.congregation}
-                              </div>
-                              <div className="text-xs text-gray-500 mt-1">
-                                Checked in: {new Date(volunteer.checkedInAt!).toLocaleString('en-US', {
-                                  month: 'short',
-                                  day: 'numeric',
-                                  hour: 'numeric',
-                                  minute: '2-digit',
-                                  hour12: true
-                                })}
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              <div className="text-green-600 text-2xl">✓</div>
                               <button
-                                onClick={() => handleUndoCheckIn(volunteer.id)}
-                                className="px-4 py-2 bg-red-100 text-red-700 rounded-md text-sm font-medium hover:bg-red-200 active:bg-red-300 whitespace-nowrap"
+                                onClick={() => handleUndoCheckIn(volunteer.id, activeDay)}
+                                className="px-4 py-2 bg-red-100 text-red-700 rounded-md text-sm font-medium hover:bg-red-200"
                               >
                                 Undo
                               </button>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   )}
                 </div>

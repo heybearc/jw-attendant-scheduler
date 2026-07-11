@@ -2,12 +2,19 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../../auth/[...nextauth]'
 import { prisma } from '@/lib/prisma'
+import {
+  CONVENTION_DAYS,
+  conventionDayLabel,
+  earlyCheckinInclude,
+  earlyEligibilityWhere,
+  formatEarlyEntrySummary,
+  isCheckedInForDay,
+  isEligibleForDay,
+  scheduleFromRecord,
+} from '@/lib/ivsEarlyCheckin'
 import ExcelJS from 'exceljs'
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ success: false, message: 'Method not allowed' })
   }
@@ -24,10 +31,9 @@ export default async function handler(
       return res.status(400).json({ success: false, message: 'Event ID required' })
     }
 
-    // Verify user is an IVS volunteer for this event
     const ivsVolunteer = await prisma.event_volunteers.findFirst({
       where: {
-        eventId: eventId,
+        eventId,
         userId: session.user.id,
         ivsSubmittedBy: 'IVS',
         ivsApprovalStatus: 'Approved',
@@ -35,7 +41,9 @@ export default async function handler(
     })
 
     if (!ivsVolunteer) {
-      return res.status(403).json({ success: false, message: 'Access denied - IVS volunteer access required' })
+      return res
+        .status(403)
+        .json({ success: false, message: 'Access denied - IVS volunteer access required' })
     }
 
     const event = await prisma.events.findUnique({
@@ -43,86 +51,96 @@ export default async function handler(
       select: { name: true },
     })
 
-    // Fetch all volunteers eligible for early check-in
     const eventVolunteers = await prisma.event_volunteers.findMany({
       where: {
-        eventId: eventId,
-        earlyCheckinEligible: true,
+        eventId,
+        ...earlyEligibilityWhere(),
       },
-      include: {
-        volunteer: true,
+      include: earlyCheckinInclude,
+      orderBy: [{ volunteer: { lastName: 'asc' } }],
+    })
+
+    let totalCheckedIn = 0
+    let totalPending = 0
+
+    const data = eventVolunteers.map((ev) => {
+      const schedule = scheduleFromRecord(ev)
+      const checkIns = Object.fromEntries(ev.earlyCheckins.map((c) => [c.conventionDay, c]))
+
+      const dayColumns: Record<string, string> = {}
+      for (const day of CONVENTION_DAYS) {
+        const label = conventionDayLabel(day)
+        if (!isEligibleForDay(schedule, day)) {
+          dayColumns[`${label} status`] = '—'
+          dayColumns[`${label} time`] = ''
+          dayColumns[`${label} by`] = ''
+          continue
+        }
+        const row = checkIns[day]
+        if (row) {
+          totalCheckedIn += 1
+          dayColumns[`${label} status`] = 'Checked In'
+          dayColumns[`${label} time`] = formatDateTime(row.checkedInAt)
+          dayColumns[`${label} by`] = row.checkedInBy || ''
+        } else {
+          totalPending += 1
+          dayColumns[`${label} status`] = 'Pending'
+          dayColumns[`${label} time`] = ''
+          dayColumns[`${label} by`] = ''
+        }
+      }
+
+      return {
+        NAME: `${ev.volunteer?.firstName || ''} ${ev.volunteer?.lastName || ''}`.trim(),
+        CONGREGATION: ev.volunteer?.congregation || '',
+        'EARLY ENTRY DAYS': formatEarlyEntrySummary(schedule),
+        ...dayColumns,
+      }
+    })
+
+    const summaryRows = [
+      {
+        NAME: `IVS Early Check-In Report - ${event?.name || 'Event'}`,
+        CONGREGATION: '',
+        'EARLY ENTRY DAYS': '',
       },
-      orderBy: [
-        { checkedInAt: 'desc' },
-        { volunteer: { lastName: 'asc' } },
-      ],
-    })
-
-    const checkedInCount = eventVolunteers.filter(v => v.checkedInAt).length
-    const pendingCount = eventVolunteers.filter(v => !v.checkedInAt).length
-
-    const data = eventVolunteers.map(ev => ({
-      'NAME': `${ev.volunteer?.firstName || ''} ${ev.volunteer?.lastName || ''}`.trim(),
-      'CONGREGATION': ev.volunteer?.congregation || '',
-      'STATUS': ev.checkedInAt ? 'Checked In' : 'Pending',
-      'CHECK-IN TIME': ev.checkedInAt ? formatDateTime(ev.checkedInAt) : '',
-      'CHECKED IN BY': ev.checkedInBy || '',
-    }))
-
-    // Add summary rows
-    data.unshift({
-      'NAME': '',
-      'CONGREGATION': '',
-      'STATUS': '',
-      'CHECK-IN TIME': '',
-      'CHECKED IN BY': '',
-    })
-    data.unshift({
-      'NAME': 'Pending Check-In',
-      'CONGREGATION': pendingCount.toString(),
-      'STATUS': '',
-      'CHECK-IN TIME': '',
-      'CHECKED IN BY': '',
-    })
-    data.unshift({
-      'NAME': 'Checked In',
-      'CONGREGATION': checkedInCount.toString(),
-      'STATUS': '',
-      'CHECK-IN TIME': '',
-      'CHECKED IN BY': '',
-    })
-    data.unshift({
-      'NAME': 'Total Early Entry Eligible',
-      'CONGREGATION': eventVolunteers.length.toString(),
-      'STATUS': '',
-      'CHECK-IN TIME': '',
-      'CHECKED IN BY': '',
-    })
-    data.unshift({
-      'NAME': `IVS Early Check-In Report - ${event?.name || 'Event'}`,
-      'CONGREGATION': '',
-      'STATUS': '',
-      'CHECK-IN TIME': '',
-      'CHECKED IN BY': '',
-    })
+      {
+        NAME: 'Total Early Entry Eligible',
+        CONGREGATION: eventVolunteers.length.toString(),
+        'EARLY ENTRY DAYS': '',
+      },
+      {
+        NAME: 'Day check-ins (eligible rows)',
+        CONGREGATION: totalCheckedIn.toString(),
+        'EARLY ENTRY DAYS': '',
+      },
+      {
+        NAME: 'Day pending (eligible rows)',
+        CONGREGATION: totalPending.toString(),
+        'EARLY ENTRY DAYS': '',
+      },
+      { NAME: '', CONGREGATION: '', 'EARLY ENTRY DAYS': '' },
+    ]
 
     const workbook = new ExcelJS.Workbook()
     const worksheet = workbook.addWorksheet('Early Check-In')
-    if (data.length > 0) {
-      worksheet.columns = Object.keys(data[0]).map(key => ({ header: key, key }))
-      data.forEach(row => worksheet.addRow(row))
+    const allRows = [...summaryRows, ...data]
+    if (allRows.length > 0) {
+      worksheet.columns = Object.keys(allRows[0]).map((key) => ({ header: key, key }))
+      allRows.forEach((row) => worksheet.addRow(row))
     }
     const buffer = await workbook.xlsx.writeBuffer()
 
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    res.setHeader('Content-Disposition', `attachment; filename="IVS_Early_CheckIn_Report.xlsx"`)
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
+    res.setHeader('Content-Disposition', 'attachment; filename="IVS_Early_CheckIn_Report.xlsx"')
     res.send(buffer)
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error exporting check-in report:', error)
-    return res.status(500).json({
-      success: false,
-      message: error.message || 'Internal server error',
-    })
+    const message = error instanceof Error ? error.message : 'Internal server error'
+    return res.status(500).json({ success: false, message })
   }
 }
 

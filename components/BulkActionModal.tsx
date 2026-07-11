@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { IVS_APPROVAL_STATUSES } from '@/lib/ivs'
-import { notifyAlert, toast } from '../lib/ui/toast'
+import { EarlyEntrySchedule } from '@/lib/ivsEarlyCheckin'
+import { EarlyEntryDayControls } from './ivs/EarlyEntryDayControls'
+import { notifyAlert } from '../lib/ui/toast'
 
 interface BulkActionModalProps {
   action: string
@@ -17,7 +19,11 @@ export default function BulkActionModal({
 }: BulkActionModalProps) {
   const [status, setStatus] = useState<(typeof IVS_APPROVAL_STATUSES)[number]>('Pending')
   const [denialReason, setDenialReason] = useState('')
-  const [earlyEntry, setEarlyEntry] = useState(true)
+  const [earlyEntry, setEarlyEntry] = useState<EarlyEntrySchedule>({
+    friday: false,
+    saturday: false,
+    sunday: false,
+  })
   const [requestRound, setRequestRound] = useState(1)
   const [department, setDepartment] = useState('')
   const [congregation, setCongregation] = useState('')
@@ -38,7 +44,7 @@ export default function BulkActionModal({
         break
       }
       case 'setEarlyEntry':
-        onConfirm({ action: 'setEarlyEntry', earlyCheckinEligible: earlyEntry })
+        onConfirm({ action: 'setEarlyEntry', earlyEntry })
         break
       case 'changeRound':
         onConfirm({ action: 'changeRound', ivsRequestRound: requestRound })
@@ -65,7 +71,7 @@ export default function BulkActionModal({
       case 'setStatus':
         return 'Set approval status'
       case 'setEarlyEntry':
-        return 'Set early entry'
+        return 'Set early entry days'
       case 'changeRound':
         return 'Change request round'
       case 'changeDepartment':
@@ -119,20 +125,7 @@ export default function BulkActionModal({
 
           {action === 'setEarlyEntry' && (
             <div className="mb-4">
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={earlyEntry}
-                  onChange={(e) => setEarlyEntry(e.target.checked)}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm font-medium">Enable early check-in</span>
-              </label>
-              <p className="text-xs text-gray-500 mt-1">
-                {earlyEntry
-                  ? 'Volunteers will be eligible for early check-in'
-                  : 'Early check-in will be disabled'}
-              </p>
+              <EarlyEntryDayControls schedule={earlyEntry} onChange={setEarlyEntry} />
             </div>
           )}
 

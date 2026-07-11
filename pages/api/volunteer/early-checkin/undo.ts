@@ -1,12 +1,22 @@
 import { NextApiRequest, NextApiResponse } from 'next'
+import { ConventionDay } from '@prisma/client'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../../auth/[...nextauth]'
 import { prisma } from '@/lib/prisma'
+import { deleteDayCheckIn, getCurrentConventionDay } from '@/lib/ivsEarlyCheckin'
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+function parseDay(body: Record<string, unknown>): ConventionDay | null {
+  const raw = body.conventionDay
+  if (typeof raw === 'string') {
+    const upper = raw.toUpperCase()
+    if (Object.values(ConventionDay).includes(upper as ConventionDay)) {
+      return upper as ConventionDay
+    }
+  }
+  return getCurrentConventionDay()
+}
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ success: false, message: 'Method not allowed' })
   }
@@ -17,54 +27,57 @@ export default async function handler(
       return res.status(401).json({ success: false, message: 'Unauthorized' })
     }
 
-    const { eventId, volunteerId } = req.body
+    const body =
+      req.body && typeof req.body === 'object' && !Array.isArray(req.body)
+        ? (req.body as Record<string, unknown>)
+        : {}
+    const { eventId, volunteerId } = body
 
-    if (!eventId || !volunteerId) {
+    if (!eventId || !volunteerId || typeof eventId !== 'string' || typeof volunteerId !== 'string') {
       return res.status(400).json({ success: false, message: 'Event ID and Volunteer ID required' })
     }
 
-    // Verify user is an IVS team member (has position assignment) for this event
     const event = await prisma.events.findUnique({
       where: { id: eventId },
-      select: { eventType: true }
+      select: { eventType: true },
     })
 
-    const isIVSEvent = event?.eventType === 'REGIONAL_CONVENTION'
-    
-    if (!isIVSEvent) {
+    if (event?.eventType !== 'REGIONAL_CONVENTION') {
       return res.status(403).json({ success: false, message: 'This is not an IVS event' })
     }
 
     const ivsTeamMember = await prisma.position_assignments.findFirst({
       where: {
         volunteerId: session.user.id,
-        positions: {
-          eventId: eventId
-        }
-      }
-    })
-
-    if (!ivsTeamMember) {
-      return res.status(403).json({ success: false, message: 'Access denied - IVS team member access required' })
-    }
-
-    // Undo check-in by clearing the fields
-    await prisma.event_volunteers.update({
-      where: { id: volunteerId },
-      data: {
-        checkedInAt: null,
-        checkedInBy: null,
-        checkinNotes: null,
-        updatedAt: new Date(),
+        positions: { eventId },
       },
     })
 
-    return res.status(200).json({ success: true })
+    if (!ivsTeamMember) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied - IVS team member access required',
+      })
+    }
+
+    const day = parseDay(body)
+    if (!day) {
+      return res.status(400).json({
+        success: false,
+        message: 'Specify convention day (Friday, Saturday, or Sunday).',
+      })
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await deleteDayCheckIn(tx, volunteerId, day)
+    })
+
+    return res.status(200).json({ success: true, conventionDay: day })
   } catch (error) {
     console.error('Error undoing check-in:', error)
     return res.status(500).json({
       success: false,
-      message: error.message || 'Internal server error',
+      message: error instanceof Error ? error.message : 'Internal server error',
     })
   }
 }

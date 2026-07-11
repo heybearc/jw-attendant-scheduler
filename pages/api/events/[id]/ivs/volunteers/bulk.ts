@@ -4,6 +4,10 @@ import { authOptions } from '../../../../auth/[...nextauth]'
 import { prisma } from '@/lib/prisma'
 import { canManageIvsVolunteers } from '@/lib/eventAccess'
 import { isValidIvsApprovalStatus } from '@/lib/ivs'
+import {
+  EarlyEntrySchedule,
+  scheduleToPrismaUpdate,
+} from '@/lib/ivsEarlyCheckin'
 
 export default async function handler(
   req: NextApiRequest,
@@ -33,6 +37,10 @@ export default async function handler(
       action,
       ivsApprovalStatus,
       earlyCheckinEligible,
+      earlyCheckinFriday,
+      earlyCheckinSaturday,
+      earlyCheckinSunday,
+      earlyEntry,
       ivsRequestRound,
       ivsSubmittedBy,
       ivsDeniedReason,
@@ -94,9 +102,36 @@ export default async function handler(
             break
           }
 
-          case 'setEarlyEntry':
-            updateData.earlyCheckinEligible = earlyCheckinEligible
+          case 'setEarlyEntry': {
+            let schedule: EarlyEntrySchedule | null = null
+            if (earlyEntry && typeof earlyEntry === 'object' && !Array.isArray(earlyEntry)) {
+              const e = earlyEntry as Record<string, unknown>
+              schedule = {
+                friday: e.friday === true,
+                saturday: e.saturday === true,
+                sunday: e.sunday === true,
+              }
+            } else if (
+              earlyCheckinFriday !== undefined ||
+              earlyCheckinSaturday !== undefined ||
+              earlyCheckinSunday !== undefined
+            ) {
+              schedule = {
+                friday: earlyCheckinFriday === true,
+                saturday: earlyCheckinSaturday === true,
+                sunday: earlyCheckinSunday === true,
+              }
+            } else if (earlyCheckinEligible !== undefined) {
+              const all = earlyCheckinEligible === true
+              schedule = { friday: all, saturday: all, sunday: all }
+            }
+            if (!schedule) {
+              errors.push(`Early entry schedule required for volunteer ${volunteerId}`)
+              continue
+            }
+            Object.assign(updateData, scheduleToPrismaUpdate(schedule))
             break
+          }
 
           case 'changeRound':
             if (ivsRequestRound !== undefined) {

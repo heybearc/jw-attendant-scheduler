@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../../../../auth/[...nextauth]'
 import { prisma } from '@/lib/prisma'
 import { canManageIvsVolunteers } from '@/lib/eventAccess'
+import { EarlyEntrySchedule, scheduleToPrismaUpdate } from '@/lib/ivsEarlyCheckin'
 
 export default async function handler(
   req: NextApiRequest,
@@ -57,9 +58,7 @@ export default async function handler(
       ivsApprovalNotes,
       ivsDeniedReason,
       earlyCheckinEligible,
-      checkedInAt,
-      checkedInBy,
-      checkinNotes,
+      earlyEntry,
       ivsRequestRound,
       ivsSubmittedBy
     } = req.body
@@ -118,20 +117,19 @@ export default async function handler(
       updateData.ivsDeniedReason = ivsDeniedReason
     }
 
-    if (earlyCheckinEligible !== undefined) {
-      updateData.earlyCheckinEligible = earlyCheckinEligible
-    }
-
-    if (checkedInAt !== undefined) {
-      updateData.checkedInAt = checkedInAt
-    }
-
-    if (checkedInBy !== undefined) {
-      updateData.checkedInBy = checkedInBy
-    }
-
-    if (checkinNotes !== undefined) {
-      updateData.checkinNotes = checkinNotes
+    if (earlyEntry && typeof earlyEntry === 'object') {
+      Object.assign(updateData, scheduleToPrismaUpdate({
+        friday: earlyEntry.friday === true,
+        saturday: earlyEntry.saturday === true,
+        sunday: earlyEntry.sunday === true,
+      }))
+    } else if (earlyCheckinEligible !== undefined) {
+      const all = earlyCheckinEligible === true
+      Object.assign(updateData, scheduleToPrismaUpdate({
+        friday: all,
+        saturday: all,
+        sunday: all,
+      }))
     }
 
     if (ivsRequestRound !== undefined) {

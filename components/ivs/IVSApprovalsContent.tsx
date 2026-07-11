@@ -6,7 +6,14 @@ import BulkActionModal from '../BulkActionModal'
 import ImportModal from '../ImportModal'
 import ExportModal from '../ExportModal'
 import AddIvsVolunteerModal from '../AddIvsVolunteerModal'
+import { ConventionDay } from '@prisma/client'
 import { IVS_APPROVAL_STATUSES } from '@/lib/ivs'
+import {
+  CONVENTION_DAYS,
+  EarlyEntrySchedule,
+  isCheckedInForDay,
+} from '@/lib/ivsEarlyCheckin'
+import { EarlyEntryDayControls } from './EarlyEntryDayControls'
 import { notifyAlert, toast } from '../../lib/ui/toast'
 import { appConfirm, appConfirmMessage } from '../../lib/ui/confirm'
 
@@ -21,10 +28,9 @@ interface IVSVolunteer {
   approvedAt?: string
   approvedBy?: string
   notes?: string
+  earlyEntry: EarlyEntrySchedule
+  checkIns: Partial<Record<ConventionDay, { checkedInAt: string; checkedInBy: string | null }>>
   earlyCheckinEligible?: boolean
-  checkedInAt?: string
-  checkedInBy?: string
-  checkinNotes?: string
 }
 
 interface IVSApprovalsContentProps {
@@ -207,24 +213,44 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
     }
   }
 
-  const handleToggleEarlyEntry = async (volunteerId: string, currentValue: boolean) => {
+  const handleUpdateEarlyEntry = async (
+    volunteerId: string,
+    schedule: EarlyEntrySchedule,
+    previous: EarlyEntrySchedule,
+    checkIns: IVSVolunteer['checkIns'],
+  ) => {
+    const removedWithCheckIn = CONVENTION_DAYS.filter((day) => {
+      const key = day === ConventionDay.FRIDAY ? 'friday' : day === ConventionDay.SATURDAY ? 'saturday' : 'sunday'
+      return previous[key] && !schedule[key] && isCheckedInForDay(checkIns, day)
+    })
+
+    if (removedWithCheckIn.length > 0) {
+      const ok = await appConfirmMessage(
+        `Removing early entry for ${removedWithCheckIn.join(', ')} will also clear check-in record(s) for those day(s). Continue?`,
+      )
+      if (!ok) return
+    }
+
     try {
       setUpdatingEarlyEntryId(volunteerId)
       const response = await fetch(`/api/events/${eventId}/ivs/volunteers/${volunteerId}/early-entry`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ earlyCheckinEligible: !currentValue }),
+        body: JSON.stringify({
+          earlyEntry: schedule,
+          clearCheckInsWhenRemovingEligibility: true,
+        }),
       })
 
       if (response.ok) {
         fetchVolunteers()
       } else {
         const data = await response.json()
-        notifyAlert(data.message || 'Failed to update early entry status')
+        notifyAlert(data.message || 'Failed to update early entry')
       }
     } catch (error) {
-      console.error('Error toggling early entry:', error)
-      notifyAlert('Error updating early entry status')
+      console.error('Error updating early entry:', error)
+      notifyAlert('Error updating early entry')
     } finally {
       setUpdatingEarlyEntryId(null)
     }
@@ -681,23 +707,33 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
                   )}
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => handleToggleEarlyEntry(volunteer.id, volunteer.earlyCheckinEligible || false)}
-                  disabled={updatingEarlyEntryId === volunteer.id}
-                  className={`w-full min-h-[44px] rounded px-3 py-2 text-sm font-medium ${
-                    volunteer.earlyCheckinEligible
-                      ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  } ${updatingEarlyEntryId === volunteer.id ? 'opacity-60 cursor-not-allowed' : ''}`}
-                >
-                  Early entry:{' '}
-                  {updatingEarlyEntryId === volunteer.id
-                    ? 'Saving...'
-                    : volunteer.earlyCheckinEligible
-                      ? 'Yes'
-                      : 'No'}
-                </button>
+                <div className={updatingEarlyEntryId === volunteer.id ? 'opacity-60 pointer-events-none' : ''}>
+                  <p className="text-xs font-medium text-gray-600 mb-1">Early entry</p>
+                  <EarlyEntryDayControls
+                    compact
+                    schedule={
+                      volunteer.earlyEntry ?? {
+                        friday: false,
+                        saturday: false,
+                        sunday: false,
+                      }
+                    }
+                    checkIns={volunteer.checkIns}
+                    disabled={!canEdit || updatingEarlyEntryId === volunteer.id}
+                    onChange={(schedule) =>
+                      handleUpdateEarlyEntry(
+                        volunteer.id,
+                        schedule,
+                        volunteer.earlyEntry ?? {
+                          friday: false,
+                          saturday: false,
+                          sunday: false,
+                        },
+                        volunteer.checkIns ?? {},
+                      )
+                    }
+                  />
+                </div>
 
                 <div className="grid grid-cols-2 gap-2">
                   <button
@@ -811,25 +847,31 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-2 border text-center">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleToggleEarlyEntry(volunteer.id, volunteer.earlyCheckinEligible || false)
+                    <td className="px-4 py-2 border text-center min-w-[200px]">
+                      <EarlyEntryDayControls
+                        compact
+                        schedule={
+                          volunteer.earlyEntry ?? {
+                            friday: false,
+                            saturday: false,
+                            sunday: false,
+                          }
                         }
-                        disabled={updatingEarlyEntryId === volunteer.id}
-                        className={`px-3 py-1 rounded text-sm font-medium ${
-                          volunteer.earlyCheckinEligible
-                            ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                        } ${updatingEarlyEntryId === volunteer.id ? 'opacity-60 cursor-not-allowed' : ''}`}
-                      >
-                        {updatingEarlyEntryId === volunteer.id
-                          ? 'Saving...'
-                          : volunteer.earlyCheckinEligible
-                            ? 'Yes'
-                            : 'No'}
-                      </button>
+                        checkIns={volunteer.checkIns}
+                        disabled={!canEdit || updatingEarlyEntryId === volunteer.id}
+                        onChange={(schedule) =>
+                          handleUpdateEarlyEntry(
+                            volunteer.id,
+                            schedule,
+                            volunteer.earlyEntry ?? {
+                              friday: false,
+                              saturday: false,
+                              sunday: false,
+                            },
+                            volunteer.checkIns ?? {},
+                          )
+                        }
+                      />
                     </td>
                     <td className="px-4 py-2 border">
                       <div className="flex gap-2">

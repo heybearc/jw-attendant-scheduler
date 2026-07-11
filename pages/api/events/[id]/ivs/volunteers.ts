@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '@/lib/prisma'
 import { canViewIvsVolunteers, canManageIvsVolunteers } from '@/lib/eventAccess'
+import { earlyCheckinInclude, mapVolunteerEarlyCheckinPayload } from '@/lib/ivsEarlyCheckin'
 import { v4 as uuidv4 } from 'uuid'
 
 export default async function handler(
@@ -35,9 +36,7 @@ export default async function handler(
         eventId: eventId as string,
         ivsImportBatchId: { not: null },
       },
-      include: {
-        volunteer: true,
-      },
+      include: earlyCheckinInclude,
       orderBy: [
         { ivsRequestRound: 'asc' },
         { ivsSubmittedBy: 'asc' },
@@ -45,22 +44,24 @@ export default async function handler(
       ],
     })
 
-    const volunteers = eventVolunteers.map(ev => ({
-      id: ev.id, // Use event_volunteers primary key
-      firstName: ev.volunteer?.firstName || '',
-      lastName: ev.volunteer?.lastName || '',
-      congregation: ev.volunteer?.congregation || '',
-      approvalStatus: ev.ivsApprovalStatus || 'Pending',
-      submittedBy: ev.ivsSubmittedBy || '',
-      requestRound: ev.ivsRequestRound || 1,
-      approvedAt: ev.ivsApprovedAt ? formatDate(ev.ivsApprovedAt) : undefined,
-      approvedBy: ev.ivsApprovedBy || undefined,
-      notes: ev.ivsApprovalNotes || undefined,
-      earlyCheckinEligible: ev.earlyCheckinEligible || false,
-      checkedInAt: ev.checkedInAt ? formatDate(ev.checkedInAt) : undefined,
-      checkedInBy: ev.checkedInBy || undefined,
-      checkinNotes: ev.checkinNotes || undefined,
-    }))
+    const volunteers = eventVolunteers.map((ev) => {
+      const base = mapVolunteerEarlyCheckinPayload(ev)
+      return {
+        id: ev.id,
+        firstName: base.firstName,
+        lastName: base.lastName,
+        congregation: base.congregation,
+        approvalStatus: ev.ivsApprovalStatus || 'Pending',
+        submittedBy: ev.ivsSubmittedBy || '',
+        requestRound: ev.ivsRequestRound || 1,
+        approvedAt: ev.ivsApprovedAt ? formatDate(ev.ivsApprovedAt) : undefined,
+        approvedBy: ev.ivsApprovedBy || undefined,
+        notes: ev.ivsApprovalNotes || undefined,
+        earlyEntry: base.earlyEntry,
+        checkIns: base.checkIns,
+        earlyCheckinEligible: base.earlyCheckinEligible,
+      }
+    })
 
     return res.status(200).json({ success: true, volunteers })
   } catch (error) {

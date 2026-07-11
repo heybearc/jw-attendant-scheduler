@@ -1,4 +1,7 @@
 import { useState } from 'react'
+import { ConventionDay } from '@prisma/client'
+import { EarlyEntrySchedule } from '@/lib/ivsEarlyCheckin'
+import { EarlyEntryDayControls } from './ivs/EarlyEntryDayControls'
 
 interface IVSVolunteer {
   id: string
@@ -11,10 +14,9 @@ interface IVSVolunteer {
   approvedAt?: string
   approvedBy?: string
   notes?: string
+  earlyEntry?: EarlyEntrySchedule
+  checkIns?: Partial<Record<ConventionDay, { checkedInAt: string }>>
   earlyCheckinEligible?: boolean
-  checkedInAt?: string
-  checkedInBy?: string
-  checkinNotes?: string
 }
 
 interface EditVolunteerModalProps {
@@ -30,7 +32,13 @@ export default function EditVolunteerModal({ volunteer, onClose, onSave }: EditV
   const [approvalStatus, setApprovalStatus] = useState(volunteer.approvalStatus)
   const [notes, setNotes] = useState(volunteer.notes || '')
   const [deniedReason, setDeniedReason] = useState('')
-  const [earlyCheckin, setEarlyCheckin] = useState(volunteer.earlyCheckinEligible || false)
+  const [earlyEntry, setEarlyEntry] = useState<EarlyEntrySchedule>(
+    volunteer.earlyEntry ?? {
+      friday: !!volunteer.earlyCheckinEligible,
+      saturday: !!volunteer.earlyCheckinEligible,
+      sunday: !!volunteer.earlyCheckinEligible,
+    },
+  )
   const [requestRound, setRequestRound] = useState(volunteer.requestRound)
   const [department, setDepartment] = useState(volunteer.submittedBy)
 
@@ -43,9 +51,9 @@ export default function EditVolunteerModal({ volunteer, onClose, onSave }: EditV
       ivsApprovalStatus: approvalStatus,
       ivsApprovalNotes: notes,
       ...(approvalStatus === 'Not Approved' && deniedReason && { ivsDeniedReason: deniedReason }),
-      earlyCheckinEligible: earlyCheckin,
+      earlyEntry,
       ivsRequestRound: requestRound,
-      ivsSubmittedBy: department
+      ivsSubmittedBy: department,
     })
   }
 
@@ -151,15 +159,12 @@ export default function EditVolunteerModal({ volunteer, onClose, onSave }: EditV
           </div>
 
           <div className="mb-4">
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={earlyCheckin}
-                onChange={(e) => setEarlyCheckin(e.target.checked)}
-                className="w-4 h-4"
-              />
-              <span className="text-sm font-medium">Early Check-In Eligible</span>
-            </label>
+            <label className="block text-sm font-medium mb-2">Early entry days</label>
+            <EarlyEntryDayControls
+              schedule={earlyEntry}
+              checkIns={volunteer.checkIns}
+              onChange={setEarlyEntry}
+            />
           </div>
 
           <div className="flex justify-end gap-2">

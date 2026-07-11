@@ -61,7 +61,7 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingVolunteer, setEditingVolunteer] = useState<IVSVolunteer | null>(null)
-  const [selectedVolunteers, setSelectedVolunteers] = useState<string[]>([])
+  const [selectedVolunteers, setSelectedVolunteers] = useState<Set<string>>(new Set())
   const [showBulkModal, setShowBulkModal] = useState(false)
   const [bulkAction, setBulkAction] = useState('')
   const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null)
@@ -292,7 +292,7 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
   }
 
   const handleBulkAction = (action: string) => {
-    if (selectedVolunteers.length === 0) {
+    if (selectedVolunteers.size === 0) {
       notifyAlert('Please select at least one volunteer')
       return
     }
@@ -306,7 +306,7 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          volunteerIds: selectedVolunteers,
+          volunteerIds: Array.from(selectedVolunteers),
           ...data
         }),
       })
@@ -316,7 +316,7 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
         notifyAlert(`Successfully updated ${result.updated} volunteer(s)`)
         setShowBulkModal(false)
         setBulkAction('')
-        setSelectedVolunteers([])
+        setSelectedVolunteers(new Set())
         fetchVolunteers(true)
       } else {
         const error = await response.json()
@@ -398,45 +398,60 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
       ? sortedVolunteers
       : sortedVolunteers.slice(startIndex, endIndex)
 
-  const handleVolunteerCheckboxClick = (
-    e: React.MouseEvent<HTMLInputElement>,
+  const handleVolunteerCheckboxChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
     volunteerId: string,
-    indexOnPage: number
+    indexOnPage: number,
   ) => {
-    e.preventDefault()
-    e.stopPropagation()
-
-    if (e.shiftKey && selectionAnchorIndexRef.current !== null) {
-      const lo = Math.min(selectionAnchorIndexRef.current, indexOnPage)
-      const hi = Math.max(selectionAnchorIndexRef.current, indexOnPage)
-      const ids = paginatedVolunteers.slice(lo, hi + 1).map((v) => v.id)
-      setSelectedVolunteers((prev) => Array.from(new Set([...prev, ...ids])))
-      selectionAnchorIndexRef.current = indexOnPage
-      return
-    }
-
     selectionAnchorIndexRef.current = indexOnPage
-    setSelectedVolunteers((prev) =>
-      prev.includes(volunteerId)
-        ? prev.filter((id) => id !== volunteerId)
-        : [...prev, volunteerId],
-    )
+    const checked = e.target.checked
+    setSelectedVolunteers((prev) => {
+      const next = new Set(prev)
+      if (checked) next.add(volunteerId)
+      else next.delete(volunteerId)
+      return next
+    })
+  }
+
+  const handleVolunteerCheckboxShiftClick = (
+    e: React.MouseEvent<HTMLInputElement>,
+    indexOnPage: number,
+  ) => {
+    if (!e.shiftKey || selectionAnchorIndexRef.current === null) return
+    e.preventDefault()
+    const lo = Math.min(selectionAnchorIndexRef.current, indexOnPage)
+    const hi = Math.max(selectionAnchorIndexRef.current, indexOnPage)
+    const ids = paginatedVolunteers.slice(lo, hi + 1).map((v) => v.id)
+    setSelectedVolunteers((prev) => {
+      const next = new Set(prev)
+      ids.forEach((id) => next.add(id))
+      return next
+    })
+    selectionAnchorIndexRef.current = indexOnPage
   }
 
   const allPageSelected =
     paginatedVolunteers.length > 0 &&
-    paginatedVolunteers.every((v) => selectedVolunteers.includes(v.id))
+    paginatedVolunteers.every((v) => selectedVolunteers.has(v.id))
 
   const handleSelectAll = () => {
     selectionAnchorIndexRef.current = null
     const pageIds = paginatedVolunteers.map((v) => v.id)
     const everyPageRowSelected =
-      pageIds.length > 0 && pageIds.every((id) => selectedVolunteers.includes(id))
+      pageIds.length > 0 && pageIds.every((id) => selectedVolunteers.has(id))
 
     if (everyPageRowSelected) {
-      setSelectedVolunteers((prev) => prev.filter((id) => !pageIds.includes(id)))
+      setSelectedVolunteers((prev) => {
+        const next = new Set(prev)
+        pageIds.forEach((id) => next.delete(id))
+        return next
+      })
     } else {
-      setSelectedVolunteers((prev) => Array.from(new Set([...prev, ...pageIds])))
+      setSelectedVolunteers((prev) => {
+        const next = new Set(prev)
+        pageIds.forEach((id) => next.add(id))
+        return next
+      })
     }
   }
 
@@ -504,10 +519,10 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
           )}
         </div>
 
-        {selectedVolunteers.length > 0 && (
+        {selectedVolunteers.size > 0 && (
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:ml-auto sm:w-auto w-full">
             <span className="text-sm text-gray-600 sm:whitespace-nowrap">
-              {selectedVolunteers.length} selected
+              {selectedVolunteers.size} selected
             </span>
             <select
               aria-label="Bulk actions"
@@ -672,9 +687,9 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
                 <div className="flex gap-3">
                   <input
                     type="checkbox"
-                    readOnly
-                    checked={selectedVolunteers.includes(volunteer.id)}
-                    onClick={(e) => handleVolunteerCheckboxClick(e, volunteer.id, index)}
+                    checked={selectedVolunteers.has(volunteer.id)}
+                    onChange={(e) => handleVolunteerCheckboxChange(e, volunteer.id, index)}
+                    onClick={(e) => handleVolunteerCheckboxShiftClick(e, index)}
                     className="mt-1 h-5 w-5 shrink-0 cursor-pointer"
                   />
                   <div className="min-w-0 flex-1 space-y-1">
@@ -813,9 +828,9 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
                     <td className="px-4 py-2 border">
                       <input
                         type="checkbox"
-                        readOnly
-                        checked={selectedVolunteers.includes(volunteer.id)}
-                        onClick={(e) => handleVolunteerCheckboxClick(e, volunteer.id, index)}
+                        checked={selectedVolunteers.has(volunteer.id)}
+                        onChange={(e) => handleVolunteerCheckboxChange(e, volunteer.id, index)}
+                        onClick={(e) => handleVolunteerCheckboxShiftClick(e, index)}
                         className="cursor-pointer"
                       />
                     </td>
@@ -1009,7 +1024,7 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
       {showBulkModal && (
         <BulkActionModal
           action={bulkAction}
-          selectedCount={selectedVolunteers.length}
+          selectedCount={selectedVolunteers.size}
           onClose={() => {
             setShowBulkModal(false)
             setBulkAction('')

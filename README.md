@@ -276,6 +276,7 @@ For issues or questions:
 
 ## 📝 Version History
 
+- **v4.23.2** (2026-06-03) - IVS Approvals: fix bulk checkbox immediate visual feedback
 - **v4.23.1** (2026-06-03) - IVS Approvals: fix scroll jump on updates and bulk checkbox selection lag
 - **v4.23.0** (2026-06-03) - IVS per-day early entry (Fri/Sat/Sun eligibility and check-in by convention day)
 - **v4.22.0** (2026-06-03) - In-app toasts and confirmation dialogs (replaces browser alert/confirm)

@@ -113,7 +113,7 @@ export default function IVSApprovalsHelp() {
               <li>Choose an action:
                 <ul className="list-disc list-inside ml-6 mt-2 space-y-1">
                   <li><strong>Set status</strong> - Pick any status (Pending, Requested, Approved, Not Approved); optional shared note for Not Approved</li>
-                  <li><strong>Set early entry</strong> - Turn early check-in eligibility on or off for all selected</li>
+                  <li><strong>Set early entry days</strong> - Choose Friday, Saturday, Sunday, or combinations for all selected</li>
                   <li><strong>Change round</strong> - Move everyone to the same request round number</li>
                   <li><strong>Change department name</strong> - Set the same department label for all selected</li>
                   <li><strong>Change congregation name</strong> - Set the same congregation for all selected (fixes names after import)</li>
@@ -129,20 +129,27 @@ export default function IVSApprovalsHelp() {
             
             <h3 className="text-xl font-semibold text-gray-700 mb-3">What is Early Check-In?</h3>
             <p className="text-gray-700 mb-4">
-              Some IVS volunteers may be eligible to check in early (before the event officially starts).
-              You can mark volunteers as "Early Entry Eligible" to allow them to check in ahead of time.
+              Some IVS volunteers may check in early on convention days (Friday, Saturday, or Sunday).
+              You choose which days each volunteer is eligible — any combination of Fri, Sat, and Sun.
             </p>
 
-            <h3 className="text-xl font-semibold text-gray-700 mb-3">Enabling Early Check-In</h3>
+            <h3 className="text-xl font-semibold text-gray-700 mb-3">Setting early entry days</h3>
             <ol className="list-decimal list-inside space-y-2 text-gray-700 mb-6 ml-4">
-              <li>Click <strong>Edit</strong> on a volunteer</li>
-              <li>Check the <strong>Early Entry Eligible</strong> box</li>
-              <li>Save changes</li>
+              <li>On the Approvals list, use the <strong>Fri / Sat / Sun</strong> toggles on each row (or open <strong>Edit</strong>)</li>
+              <li>Tap <strong>All</strong> or <strong>None</strong> for quick presets, or pick individual days</li>
+              <li>Changes save when you toggle a day</li>
             </ol>
 
             <p className="text-gray-700 mb-4">
-              Or use bulk actions to enable early entry for multiple volunteers at once.
+              Or use bulk actions → <strong>Set early entry days</strong> for multiple volunteers at once.
             </p>
+
+            <div className="bg-amber-50 border-l-4 border-amber-500 p-4 mb-4">
+              <p className="text-amber-900">
+                <strong>Note:</strong> If you remove eligibility for a day that already has a check-in,
+                TheoShift asks for confirmation and clears that day&apos;s check-in record.
+              </p>
+            </div>
           </section>
 
           {/* Early Check-In Tab */}
@@ -155,20 +162,22 @@ export default function IVSApprovalsHelp() {
               on tablets or phones. It provides:
             </p>
             <ul className="list-disc list-inside space-y-2 text-gray-700 mb-6 ml-4">
+              <li><strong>Day tabs</strong> - Today, Friday, Saturday, Sunday</li>
               <li><strong>Large search bar</strong> - Search by name or congregation</li>
-              <li><strong>Real-time stats</strong> - See pending, checked in, and total counts</li>
-              <li><strong>Collapsible sections</strong> - PENDING CHECK-IN and CHECKED IN sections</li>
-              <li><strong>Big check-in buttons</strong> - Easy to tap on mobile devices</li>
+              <li><strong>Real-time stats</strong> - Pending, checked in, and eligible counts for the selected day</li>
+              <li><strong>Collapsible sections</strong> - PENDING CHECK-IN and CHECKED IN for that day</li>
+              <li><strong>Big check-in buttons</strong> - Check in one day at a time</li>
               <li><strong>Live updates</strong> - Automatically refreshes every 5 seconds</li>
             </ul>
 
             <h3 className="text-xl font-semibold text-gray-700 mb-3">How to Use It</h3>
             <ol className="list-decimal list-inside space-y-2 text-gray-700 mb-6 ml-4">
               <li>On the IVS Module page, click the <strong>⏰ Early Check-In</strong> tab</li>
-              <li>Use the search bar to find a volunteer</li>
+              <li>Select <strong>Today</strong> or a specific day (Fri / Sat / Sun)</li>
+              <li>Use the search bar to find a volunteer eligible for that day</li>
               <li>Tap the green <strong>Check In</strong> button in the PENDING section</li>
-              <li>The volunteer moves to the CHECKED IN section automatically</li>
-              <li>Use the <strong>Undo</strong> button if you need to reverse a check-in</li>
+              <li>The volunteer appears under CHECKED IN for that day only</li>
+              <li>Use <strong>Undo</strong> to reverse a check-in for the day you are viewing</li>
             </ol>
 
             <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-4">
@@ -257,8 +266,9 @@ export default function IVSApprovalsHelp() {
                   How do I clear a check-in if someone was checked in by mistake?
                 </h3>
                 <p className="text-gray-600">
-                  Click Edit on the volunteer and use the <strong>Clear Check-In</strong> button.
-                  This will remove their check-in time and allow them to be checked in again.
+                  On the Early Check-In tab, find the volunteer under CHECKED IN for the day you are viewing
+                  and tap <strong>Undo</strong>. You can also remove that day&apos;s eligibility on the Approvals tab
+                  (you will be asked to confirm if a check-in exists).
                 </p>
               </div>
             </div>

@@ -276,6 +276,7 @@ For issues or questions:
 
 ## 📝 Version History
 
+- **v4.23.1** (2026-06-03) - IVS Approvals: fix scroll jump on updates and bulk checkbox selection lag
 - **v4.23.0** (2026-06-03) - IVS per-day early entry (Fri/Sat/Sun eligibility and check-in by convention day)
 - **v4.22.0** (2026-06-03) - In-app toasts and confirmation dialogs (replaces browser alert/confirm)
 - **v4.21.8** (2026-05-08) - Volunteer broadcast: “all active” aligned with active roster; email sender fallback; clearer send feedback for large lists and chat notify parity

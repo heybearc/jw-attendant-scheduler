@@ -69,12 +69,13 @@ export default function IVSModulePage({ event, canEdit }: IVSModulePageProps) {
             </div>
           </div>
 
-          {/* Tab Content */}
-          {activeTab === 'approvals' ? (
+          {/* Tab Content — keep mounted so scroll/selection are not reset on tab switch */}
+          <div className={activeTab === 'approvals' ? '' : 'hidden'}>
             <IVSApprovalsContent event={event} canEdit={canEdit} />
-          ) : (
+          </div>
+          <div className={activeTab === 'checkin' ? '' : 'hidden'}>
             <IVSCheckinContent event={event} />
-          )}
+          </div>
         </div>
       </EventPageLayout>
     </TemplateProvider>

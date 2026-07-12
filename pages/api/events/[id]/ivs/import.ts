@@ -7,6 +7,8 @@ import ExcelJS from 'exceljs'
 import { v4 as uuidv4 } from 'uuid'
 import { handleApiError } from '@/lib/apiError'
 import { canManageIvsVolunteers } from '@/lib/eventAccess'
+import { ivsPlaceholderEmail } from '@/lib/ivs'
+import { findOrCreateVolunteer } from '@/lib/volunteerHelpers'
 
 export const config = {
   api: {
@@ -104,14 +106,16 @@ export default async function handler(
         // Parse name into first and last
         const { firstName, lastName } = parseName(volunteer.name)
 
-        // Check for duplicates in this event
+        // Check for duplicates on this event's IVS list (by global volunteer email)
         const existing = await prisma.event_volunteers.findFirst({
           where: {
             eventId: eventId as string,
+            ivsImportBatchId: { not: null },
             volunteer: {
-              firstName,
-              lastName,
-              congregation: volunteer.congregation,
+              email: {
+                equals: ivsPlaceholderEmail(firstName, lastName),
+                mode: 'insensitive',
+              },
             },
           },
         })
@@ -120,31 +124,13 @@ export default async function handler(
           skipped++
           continue
         }
-        
 
-        // Create global volunteer record if doesn't exist
-        let globalVolunteer = await prisma.volunteers.findFirst({
-          where: {
-            firstName,
-            lastName,
-            congregation: volunteer.congregation,
-          },
+        const globalVolunteer = await findOrCreateVolunteer({
+          firstName,
+          lastName,
+          email: ivsPlaceholderEmail(firstName, lastName),
+          congregation: volunteer.congregation,
         })
-
-        if (!globalVolunteer) {
-          globalVolunteer = await prisma.volunteers.create({
-            data: {
-              id: uuidv4(),
-              firstName,
-              lastName,
-              email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}@temp.local`,
-              congregation: volunteer.congregation,
-              isActive: true,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-            },
-          })
-        }
 
         // Check if volunteer is an elder (auto-approve)
         const formsOfService = globalVolunteer.formsOfService as string[] | null

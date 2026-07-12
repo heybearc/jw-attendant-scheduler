@@ -4,6 +4,8 @@ import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '@/lib/prisma'
 import { canViewIvsVolunteers, canManageIvsVolunteers } from '@/lib/eventAccess'
 import { earlyCheckinInclude, mapVolunteerEarlyCheckinPayload } from '@/lib/ivsEarlyCheckin'
+import { ivsPlaceholderEmail } from '@/lib/ivs'
+import { findOrCreateVolunteer } from '@/lib/volunteerHelpers'
 import { v4 as uuidv4 } from 'uuid'
 
 export default async function handler(
@@ -123,10 +125,12 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
     const existing = await prisma.event_volunteers.findFirst({
       where: {
         eventId,
+        ivsImportBatchId: { not: null },
         volunteer: {
-          firstName,
-          lastName,
-          congregation,
+          email: {
+            equals: ivsPlaceholderEmail(firstName, lastName),
+            mode: 'insensitive',
+          },
         },
       },
     })
@@ -135,32 +139,16 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
       return res.status(409).json({
         success: false,
         message:
-          'A volunteer with this name and congregation is already on this event roster.',
+          'This volunteer is already on the IVS list for this event.',
       })
     }
 
-    let globalVolunteer = await prisma.volunteers.findFirst({
-      where: {
-        firstName,
-        lastName,
-        congregation,
-      },
+    const globalVolunteer = await findOrCreateVolunteer({
+      firstName,
+      lastName,
+      email: ivsPlaceholderEmail(firstName, lastName),
+      congregation,
     })
-
-    if (!globalVolunteer) {
-      globalVolunteer = await prisma.volunteers.create({
-        data: {
-          id: uuidv4(),
-          firstName,
-          lastName,
-          email: `${firstName.toLowerCase()}.${lastName.toLowerCase() || 'volunteer'}@temp.local`,
-          congregation,
-          isActive: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      })
-    }
 
     const fos = globalVolunteer.formsOfService
     const formsOfService = Array.isArray(fos) ? fos : typeof fos === 'string' ? [fos] : []
@@ -208,6 +196,12 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
       message: 'Volunteer added',
     })
   } catch (error: any) {
+    if (error?.code === 'P2002') {
+      return res.status(409).json({
+        success: false,
+        message: 'This volunteer already exists and could not be added again.',
+      })
+    }
     return res.status(500).json({
       success: false,
       message: error?.message || 'Internal server error',

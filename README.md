@@ -276,6 +276,7 @@ For issues or questions:
 
 ## 📝 Version History
 
+- **v4.23.4** (2026-06-04) - IVS Add volunteer: reuse global registry by email, clear duplicate message
 - **v4.23.3** (2026-06-04) - IVS: fix hydration errors and page crash on IVS module load
 - **v4.23.2** (2026-06-03) - IVS Approvals: fix bulk checkbox immediate visual feedback
 - **v4.23.1** (2026-06-03) - IVS Approvals: fix scroll jump on updates and bulk checkbox selection lag

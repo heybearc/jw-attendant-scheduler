@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { GetServerSideProps } from 'next'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../../api/auth/[...nextauth]'
@@ -16,6 +16,11 @@ interface IVSModulePageProps {
 
 export default function IVSModulePage({ event, canEdit }: IVSModulePageProps) {
   const [activeTab, setActiveTab] = useState<'approvals' | 'checkin'>('approvals')
+  const [checkinEverOpened, setCheckinEverOpened] = useState(false)
+
+  useEffect(() => {
+    if (activeTab === 'checkin') setCheckinEverOpened(true)
+  }, [activeTab])
 
   const moduleConfig = event?.settings?.modules
     ? {
@@ -69,13 +74,15 @@ export default function IVSModulePage({ event, canEdit }: IVSModulePageProps) {
             </div>
           </div>
 
-          {/* Tab Content — keep mounted so scroll/selection are not reset on tab switch */}
+          {/* Approvals always mounted; check-in mounts after first visit (avoids SSR hydration mismatch) */}
           <div className={activeTab === 'approvals' ? '' : 'hidden'}>
             <IVSApprovalsContent event={event} canEdit={canEdit} />
           </div>
-          <div className={activeTab === 'checkin' ? '' : 'hidden'}>
-            <IVSCheckinContent event={event} />
-          </div>
+          {checkinEverOpened && (
+            <div className={activeTab === 'checkin' ? '' : 'hidden'}>
+              <IVSCheckinContent event={event} />
+            </div>
+          )}
         </div>
       </EventPageLayout>
     </TemplateProvider>

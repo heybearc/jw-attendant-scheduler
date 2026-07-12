@@ -11,6 +11,7 @@ import {
 } from '@/lib/ivsEarlyCheckin'
 import { notifyAlert } from '../../lib/ui/toast'
 import { appConfirmMessage } from '../../lib/ui/confirm'
+import { SafeDate } from '../SafeDate'
 
 type ViewDay = ConventionDay | 'TODAY'
 
@@ -35,9 +36,9 @@ interface IVSCheckinContentProps {
   event: { id: string; name: string }
 }
 
-function resolveActiveDay(viewDay: ViewDay): ConventionDay | null {
+function resolveActiveDay(viewDay: ViewDay, today: ConventionDay | null): ConventionDay | null {
   if (viewDay !== 'TODAY') return viewDay
-  return getCurrentConventionDay()
+  return today
 }
 
 export default function IVSCheckinContent({ event }: IVSCheckinContentProps) {
@@ -46,13 +47,21 @@ export default function IVSCheckinContent({ event }: IVSCheckinContentProps) {
   const [volunteers, setVolunteers] = useState<IVSVolunteer[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
-  const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
   const [exporting, setExporting] = useState(false)
   const [pendingCollapsed, setPendingCollapsed] = useState(false)
   const [checkedInCollapsed, setCheckedInCollapsed] = useState(false)
   const [viewDay, setViewDay] = useState<ViewDay>('TODAY')
+  const [conventionToday, setConventionToday] = useState<ConventionDay | null>(null)
+  const [clientReady, setClientReady] = useState(false)
 
-  const activeDay = resolveActiveDay(viewDay)
+  useEffect(() => {
+    setConventionToday(getCurrentConventionDay())
+    setLastUpdated(new Date())
+    setClientReady(true)
+  }, [])
+
+  const activeDay = resolveActiveDay(viewDay, conventionToday)
 
   useScrollRestoration(`${router.asPath}:ivs-checkin`, !loading)
 
@@ -208,9 +217,11 @@ export default function IVSCheckinContent({ event }: IVSCheckinContentProps) {
     return { pendingVolunteers: pending, checkedInVolunteers: checkedIn, eligibleCount: eligible }
   }, [volunteers, activeDay, searchLower])
 
-  const dayHeading = activeDay
-    ? conventionDayLabel(activeDay)
-    : 'Today (not a convention day)'
+  const dayHeading = !clientReady
+    ? 'Today'
+    : activeDay
+      ? conventionDayLabel(activeDay)
+      : 'Today (not a convention day)'
 
   return (
     <>
@@ -279,7 +290,10 @@ export default function IVSCheckinContent({ event }: IVSCheckinContentProps) {
           </div>
         </div>
         <div className="mt-2 text-center text-xs text-gray-500">
-          Last updated: {new Date(lastUpdated).toLocaleTimeString()}
+          Last updated:{' '}
+          <span suppressHydrationWarning>
+            {clientReady && lastUpdated ? new Date(lastUpdated).toLocaleTimeString() : '—'}
+          </span>
           <span className="ml-2 text-green-600">● Live</span>
         </div>
       </div>
@@ -390,13 +404,7 @@ export default function IVSCheckinContent({ event }: IVSCheckinContentProps) {
                               </div>
                               <div className="text-xs text-gray-500 mt-1 break-words">
                                 Checked in:{' '}
-                                {new Date(record.checkedInAt).toLocaleString('en-US', {
-                                  month: 'short',
-                                  day: 'numeric',
-                                  hour: 'numeric',
-                                  minute: '2-digit',
-                                  hour12: true,
-                                })}
+                                <SafeDate dateString={record.checkedInAt} format="datetime" />
                                 {record.checkedInBy ? ` · ${record.checkedInBy}` : ''}
                               </div>
                             </div>

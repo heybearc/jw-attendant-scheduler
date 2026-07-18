@@ -11,6 +11,8 @@ import { IVS_APPROVAL_STATUSES } from '@/lib/ivs'
 import {
   CONVENTION_DAYS,
   EarlyEntrySchedule,
+  formatEarlyEntrySummary,
+  hasAnyEarlyEligibility,
   isCheckedInForDay,
 } from '@/lib/ivsEarlyCheckin'
 import { EarlyEntryDayControls } from './EarlyEntryDayControls'
@@ -51,13 +53,14 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
   const [filterStatus, setFilterStatus] = useState('')
   const [filterRound, setFilterRound] = useState('')
   const [filterCongregation, setFilterCongregation] = useState('')
+  const [filterEarlyEntry, setFilterEarlyEntry] = useState<'all' | 'eligible' | 'none'>('all')
   const [searchTerm, setSearchTerm] = useState('')
   const [departments, setDepartments] = useState<string[]>([])
   const [rounds, setRounds] = useState<number[]>([])
   const [congregations, setCongregations] = useState<string[]>([])
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(25)
-  const [sortField, setSortField] = useState<keyof IVSVolunteer>('lastName')
+  const [sortField, setSortField] = useState<keyof IVSVolunteer | 'earlyEntry'>('lastName')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingVolunteer, setEditingVolunteer] = useState<IVSVolunteer | null>(null)
@@ -348,12 +351,13 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
     }
   }
 
-  const handleSort = (field: keyof IVSVolunteer) => {
+  const handleSort = (field: keyof IVSVolunteer | 'earlyEntry') => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
     } else {
       setSortField(field)
-      setSortDirection('asc')
+      // Early entry: default desc so eligible rows surface first
+      setSortDirection(field === 'earlyEntry' ? 'desc' : 'asc')
     }
   }
 
@@ -362,17 +366,43 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
     if (filterStatus && v.approvalStatus !== filterStatus) return false
     if (filterRound && v.requestRound !== parseInt(filterRound)) return false
     if (filterCongregation && v.congregation !== filterCongregation) return false
+    if (filterEarlyEntry === 'eligible' && !hasAnyEarlyEligibility(v.earlyEntry ?? { friday: false, saturday: false, sunday: false })) {
+      return false
+    }
+    if (filterEarlyEntry === 'none' && hasAnyEarlyEligibility(v.earlyEntry ?? { friday: false, saturday: false, sunday: false })) {
+      return false
+    }
     
     if (searchTerm) {
       const search = searchTerm.toLowerCase()
       const fullName = `${v.firstName} ${v.lastName}`.toLowerCase()
       const congregation = v.congregation.toLowerCase()
-      if (!fullName.includes(search) && !congregation.includes(search)) return false
+      const department = (v.submittedBy || '').toLowerCase()
+      if (!fullName.includes(search) && !congregation.includes(search) && !department.includes(search)) return false
     }
     return true
   })
 
+  const earlyEntrySortKey = (v: IVSVolunteer) => {
+    const schedule = v.earlyEntry ?? { friday: false, saturday: false, sunday: false }
+    const days =
+      (schedule.friday ? 1 : 0) + (schedule.saturday ? 1 : 0) + (schedule.sunday ? 1 : 0)
+    // Eligible first when descending; secondary by day summary for stable grouping
+    return { days, summary: formatEarlyEntrySummary(schedule).toLowerCase() }
+  }
+
   const sortedVolunteers = [...filteredVolunteers].sort((a, b) => {
+    if (sortField === 'earlyEntry') {
+      const aKey = earlyEntrySortKey(a)
+      const bKey = earlyEntrySortKey(b)
+      if (aKey.days !== bKey.days) {
+        return sortDirection === 'asc' ? aKey.days - bKey.days : bKey.days - aKey.days
+      }
+      if (aKey.summary < bKey.summary) return sortDirection === 'asc' ? -1 : 1
+      if (aKey.summary > bKey.summary) return sortDirection === 'asc' ? 1 : -1
+      return `${a.lastName} ${a.firstName}`.localeCompare(`${b.lastName} ${b.firstName}`)
+    }
+
     let aVal = a[sortField]
     let bVal = b[sortField]
     
@@ -465,6 +495,7 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
     setFilterStatus('')
     setFilterRound('')
     setFilterCongregation('')
+    setFilterEarlyEntry('all')
     setSearchTerm('')
     setCurrentPage(1)
   }
@@ -552,13 +583,13 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
           enterKeyHint="search"
           value={searchTerm}
           onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-          placeholder="Search by name or congregation..."
+          placeholder="Search by name, congregation, or department..."
           className="w-full min-h-[44px] px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
         />
       </div>
 
       {/* Filters */}
-      <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
         <select
           value={filterDepartment}
           onChange={(e) => { setFilterDepartment(e.target.value); setCurrentPage(1); }}
@@ -605,11 +636,25 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
           ))}
         </select>
 
-        {(filterDepartment || filterStatus || filterRound || filterCongregation || searchTerm) && (
+        <select
+          value={filterEarlyEntry}
+          onChange={(e) => {
+            setFilterEarlyEntry(e.target.value as 'all' | 'eligible' | 'none')
+            setCurrentPage(1)
+          }}
+          className="w-full min-w-0 min-h-[44px] px-3 py-2 border rounded-md text-base"
+          aria-label="Filter by early entry"
+        >
+          <option value="all">Early entry: All</option>
+          <option value="eligible">Early entry: Eligible</option>
+          <option value="none">Early entry: None</option>
+        </select>
+
+        {(filterDepartment || filterStatus || filterRound || filterCongregation || filterEarlyEntry !== 'all' || searchTerm) && (
           <button
             type="button"
             onClick={handleClearFilters}
-            className="min-h-[44px] px-3 py-2 text-sm text-gray-600 hover:text-gray-800 border rounded-md sm:col-span-2 lg:col-span-4"
+            className="min-h-[44px] px-3 py-2 text-sm text-gray-600 hover:text-gray-800 border rounded-md sm:col-span-2 lg:col-span-5"
           >
             Clear Filters
           </button>
@@ -818,7 +863,12 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
                   >
                     Status {sortField === 'approvalStatus' && (sortDirection === 'asc' ? '↑' : '↓')}
                   </th>
-                  <th className="px-4 py-2 border text-left">Early Entry</th>
+                  <th
+                    className="px-4 py-2 border text-left cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleSort('earlyEntry')}
+                  >
+                    Early Entry {sortField === 'earlyEntry' && (sortDirection === 'asc' ? '↑' : '↓')}
+                  </th>
                   <th className="px-4 py-2 border text-left">Actions</th>
                 </tr>
               </thead>

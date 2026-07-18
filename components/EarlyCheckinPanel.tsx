@@ -173,7 +173,12 @@ export default function EarlyCheckinPanel({
   const matchesSearch = (v: EarlyCheckinVolunteerPayload) => {
     const fullName = `${v.firstName} ${v.lastName}`.toLowerCase()
     const congregation = v.congregation.toLowerCase()
-    return fullName.includes(searchLower) || congregation.includes(searchLower)
+    const department = (v.department || '').toLowerCase()
+    return (
+      fullName.includes(searchLower) ||
+      congregation.includes(searchLower) ||
+      department.includes(searchLower)
+    )
   }
 
   const { pendingVolunteers, checkedInVolunteers } = useMemo(() => {
@@ -235,7 +240,7 @@ export default function EarlyCheckinPanel({
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search by name or congregation..."
+            placeholder="Search by name, congregation, or department..."
             className="w-full px-4 py-3 rounded-lg text-gray-900 text-lg"
           />
         </div>
@@ -256,7 +261,7 @@ export default function EarlyCheckinPanel({
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search by name or congregation..."
+            placeholder="Search by name, congregation, or department..."
             className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
           />
         </div>
@@ -338,6 +343,9 @@ export default function EarlyCheckinPanel({
                                 {volunteer.firstName} {volunteer.lastName}
                               </div>
                               <div className="text-sm text-gray-600">{volunteer.congregation}</div>
+                              {volunteer.department ? (
+                                <div className="text-sm text-gray-500">{volunteer.department}</div>
+                              ) : null}
                             </div>
                             <button
                               onClick={() => handleCheckIn(volunteer.id, activeDay)}
@@ -384,6 +392,9 @@ export default function EarlyCheckinPanel({
                                   {volunteer.firstName} {volunteer.lastName}
                                 </div>
                                 <div className="text-sm text-gray-600">{volunteer.congregation}</div>
+                              {volunteer.department ? (
+                                <div className="text-sm text-gray-500">{volunteer.department}</div>
+                              ) : null}
                                 <div className="text-xs text-gray-500 mt-1">
                                   Checked in:{' '}
                                   <SafeDate dateString={record.checkedInAt} format="datetime" />

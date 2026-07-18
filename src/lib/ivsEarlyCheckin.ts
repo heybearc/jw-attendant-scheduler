@@ -28,6 +28,8 @@ export type EarlyCheckinVolunteerPayload = {
   firstName: string
   lastName: string
   congregation: string
+  /** IVS department label (ivsSubmittedBy) */
+  department: string
   earlyEntry: EarlyEntrySchedule
   checkIns: Partial<Record<ConventionDay, DayCheckInRecord>>
   /** @deprecated use earlyEntry + checkIns */
@@ -197,6 +199,7 @@ type EventVolunteerWithCheckins = {
   earlyCheckinSaturday: boolean
   earlyCheckinSunday: boolean
   earlyCheckinEligible: boolean | null
+  ivsSubmittedBy?: string | null
   volunteer: { firstName: string; lastName: string; congregation: string } | null
   earlyCheckins: Array<{
     conventionDay: ConventionDay
@@ -216,6 +219,7 @@ export function mapVolunteerEarlyCheckinPayload(
     firstName: ev.volunteer?.firstName || '',
     lastName: ev.volunteer?.lastName || '',
     congregation: ev.volunteer?.congregation || '',
+    department: ev.ivsSubmittedBy || '',
     earlyEntry,
     checkIns,
     earlyCheckinEligible: hasAnyEarlyEligibility(earlyEntry),

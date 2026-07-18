@@ -30,6 +30,7 @@ interface IVSVolunteer {
   earlyEntry: EarlyEntrySchedule
   checkIns: Partial<Record<ConventionDay, { checkedInAt: string; checkedInBy: string | null }>>
   earlyCheckinEligible?: boolean
+  submittedBy?: string
 }
 
 interface IVSCheckinContentProps {
@@ -179,7 +180,12 @@ export default function IVSCheckinContent({ event }: IVSCheckinContentProps) {
   const matchesSearch = (v: IVSVolunteer) => {
     const fullName = `${v.firstName} ${v.lastName}`.toLowerCase()
     const congregation = v.congregation.toLowerCase()
-    return fullName.includes(searchLower) || congregation.includes(searchLower)
+    const department = (v.submittedBy || '').toLowerCase()
+    return (
+      fullName.includes(searchLower) ||
+      congregation.includes(searchLower) ||
+      department.includes(searchLower)
+    )
   }
 
   const { pendingVolunteers, checkedInVolunteers, eligibleCount } = useMemo(() => {
@@ -242,7 +248,7 @@ export default function IVSCheckinContent({ event }: IVSCheckinContentProps) {
           enterKeyHint="search"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Search by name or congregation..."
+          placeholder="Search by name, congregation, or department..."
           className="w-full min-h-[44px] px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 text-base"
         />
       </div>
@@ -346,6 +352,11 @@ export default function IVSCheckinContent({ event }: IVSCheckinContentProps) {
                             <div className="text-sm text-gray-600 break-words">
                               {volunteer.congregation}
                             </div>
+                            {volunteer.submittedBy ? (
+                              <div className="text-sm text-gray-500 break-words">
+                                {volunteer.submittedBy}
+                              </div>
+                            ) : null}
                           </div>
                           <button
                             type="button"
@@ -402,6 +413,11 @@ export default function IVSCheckinContent({ event }: IVSCheckinContentProps) {
                               <div className="text-sm text-gray-600 break-words">
                                 {volunteer.congregation}
                               </div>
+                              {volunteer.submittedBy ? (
+                                <div className="text-sm text-gray-500 break-words">
+                                  {volunteer.submittedBy}
+                                </div>
+                              ) : null}
                               <div className="text-xs text-gray-500 mt-1 break-words">
                                 Checked in:{' '}
                                 <SafeDate dateString={record.checkedInAt} format="datetime" />

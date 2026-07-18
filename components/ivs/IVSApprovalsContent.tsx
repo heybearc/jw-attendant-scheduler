@@ -16,6 +16,7 @@ import {
   isCheckedInForDay,
 } from '@/lib/ivsEarlyCheckin'
 import { EarlyEntryDayControls } from './EarlyEntryDayControls'
+import IvsDepartmentContactsPanel from './IvsDepartmentContactsPanel'
 import { notifyAlert, toast } from '../../lib/ui/toast'
 import { appConfirm, appConfirmMessage } from '../../lib/ui/confirm'
 
@@ -587,6 +588,17 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
           className="w-full min-h-[44px] px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
         />
       </div>
+
+      {canEdit && (
+        <div className="mb-4">
+          <IvsDepartmentContactsPanel
+            eventId={eventId}
+            canEdit={canEdit}
+            mode="manage"
+            initialDepartment={filterDepartment}
+          />
+        </div>
+      )}
 
       {/* Filters */}
       <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">

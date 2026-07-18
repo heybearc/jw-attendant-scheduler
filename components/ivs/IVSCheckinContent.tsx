@@ -12,6 +12,7 @@ import {
 import { notifyAlert } from '../../lib/ui/toast'
 import { appConfirmMessage } from '../../lib/ui/confirm'
 import { SafeDate } from '../SafeDate'
+import IvsDepartmentContactsPanel from './IvsDepartmentContactsPanel'
 
 type ViewDay = ConventionDay | 'TODAY'
 
@@ -251,6 +252,10 @@ export default function IVSCheckinContent({ event }: IVSCheckinContentProps) {
           placeholder="Search by name, congregation, or department..."
           className="w-full min-h-[44px] px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 text-base"
         />
+      </div>
+
+      <div className="mb-4">
+        <IvsDepartmentContactsPanel eventId={eventId} mode="lookup" />
       </div>
 
       <div className="mb-4 flex flex-wrap gap-2">

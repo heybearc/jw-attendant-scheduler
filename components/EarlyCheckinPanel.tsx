@@ -10,6 +10,7 @@ import {
 import { notifyAlert } from '../lib/ui/toast'
 import { appConfirmMessage } from '../lib/ui/confirm'
 import { SafeDate } from './SafeDate'
+import IvsDepartmentContactsPanel from './ivs/IvsDepartmentContactsPanel'
 
 type ViewDay = ConventionDay | 'TODAY'
 
@@ -266,6 +267,10 @@ export default function EarlyCheckinPanel({
           />
         </div>
       )}
+
+      <div className="p-3 bg-white border-b">
+        <IvsDepartmentContactsPanel eventId={eventId} mode="lookup" />
+      </div>
 
       <div className="p-3 bg-white border-b flex flex-wrap gap-2">
         {DAY_TABS.map((tab) => (

@@ -35,7 +35,7 @@ Theocratic Shift Scheduler is a comprehensive web application designed to manage
 - **Filters** - Overseer and role filters on the positions page apply everywhere you view positions (list, grid, and export), with clearer messages when nothing matches (v4.21.1+)
 - **Mobile event workspace** - On phones and tablets, move between Overview, Positions, Volunteers, and other event areas using **Section** and **More** (no sideways-scrolling tab strip); Event Settings uses the same pattern for its sections (v4.21.3+)
 - **Volunteers & IVS lists** - Choose how many rows per page on IVS Approvals; **Shift+click** checkboxes to select a range on the current page (Volunteers + IVS); browser refresh keeps your scroll position on long lists (v4.21.4+)
-- **IVS Module** - Approvals and Early Check-In are laid out for phones and tablets (cards and large tap targets) while keeping the full table on larger screens (v4.21.2+)
+- **IVS Module** - Approvals and Early Check-In for phones and tablets; downloadable import template with optional STATUS and EARLY ENTRY columns; department contacts for desk lookup (v4.26.0+)
 - **Unlimited Positions** - Create numbered positions per event
 - **Position Shifts** - Time-based shift assignments
 - **Position Templates** - Reusable position configurations
@@ -276,6 +276,7 @@ For issues or questions:
 
 ## 📝 Version History
 
+- **v4.26.0** (2026-07-20) - IVS import template with optional STATUS and EARLY ENTRY; fix volunteer Early Check-In day counts when simulating
 - **v4.25.0** (2026-07-20) - IVS department contacts (overseer/assistants) for early-entry desk lookup
 - **v4.24.0** (2026-07-18) - IVS: sort/filter early entry on Approvals; show department on Early Check-In
 - **v4.23.4** (2026-06-04) - IVS Add volunteer: reuse global registry by email, clear duplicate message

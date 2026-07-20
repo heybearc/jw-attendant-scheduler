@@ -63,32 +63,63 @@ export default function IVSApprovalsHelp() {
           <section className="mb-8">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">📥 Importing IVS Volunteers</h2>
             
-            <h3 className="text-xl font-semibold text-gray-700 mb-3">What You'll Need</h3>
+            <h3 className="text-xl font-semibold text-gray-700 mb-3">Download the template</h3>
             <p className="text-gray-700 mb-4">
-              A spreadsheet (Excel or CSV) with the following columns:
+              On Approvals, click <strong>Import Volunteers</strong>, then <strong>Download template</strong>.
+              The spreadsheet includes sample rows and an Instructions sheet.
             </p>
+
+            <h3 className="text-xl font-semibold text-gray-700 mb-3">Required columns</h3>
             <ul className="list-disc list-inside space-y-2 text-gray-700 mb-6 ml-4">
-              <li><strong>First Name</strong> - Volunteer's first name</li>
-              <li><strong>Last Name</strong> - Volunteer's last name</li>
-              <li><strong>Congregation</strong> - Their home congregation</li>
-              <li><strong>Submitted By</strong> - Department requesting the volunteer</li>
-              <li><strong>Request Round</strong> - Round number (1, 2, 3, etc.)</li>
+              <li><strong>NAME</strong> — Full name (first and last)</li>
+              <li><strong>CONGREGATION</strong> — Home congregation</li>
+            </ul>
+
+            <h3 className="text-xl font-semibold text-gray-700 mb-3">Optional columns</h3>
+            <ul className="list-disc list-inside space-y-2 text-gray-700 mb-6 ml-4">
+              <li>
+                <strong>DEPARTMENT</strong> — Per-row department (overrides the default set in the import dialog)
+              </li>
+              <li>
+                <strong>STATUS</strong> — Pending, Requested, Approved, or Not Approved. Leave blank to default
+                (elders auto-approve; everyone else starts Pending)
+              </li>
+              <li>
+                <strong>EARLY ENTRY</strong> — Examples: <code>Fri, Sat</code>, <code>All days</code>,{' '}
+                <code>Yes</code>, <code>No</code>. Leave blank to skip
+              </li>
+              <li>
+                Or use separate Yes/No columns: <strong>EARLY ENTRY FRIDAY</strong>,{' '}
+                <strong>EARLY ENTRY SATURDAY</strong>, <strong>EARLY ENTRY SUNDAY</strong>
+              </li>
             </ul>
 
             <h3 className="text-xl font-semibold text-gray-700 mb-3">How to Import</h3>
             <ol className="list-decimal list-inside space-y-2 text-gray-700 mb-6 ml-4">
               <li>Click <strong>Import Volunteers</strong></li>
-              <li>Select your spreadsheet file</li>
-              <li>The system will validate and import the volunteers</li>
-              <li>You'll see a success message with the number imported</li>
+              <li>Optionally download the template and fill it from your spreadsheet</li>
+              <li>Choose the <strong>Request Round</strong> (applies to the whole file)</li>
+              <li>Optionally set a default <strong>Department Name</strong> for rows without DEPARTMENT</li>
+              <li>Select your Excel/CSV file and click Import</li>
+              <li>You&apos;ll see how many were imported and how many existing people were updated</li>
             </ol>
 
             <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-4">
               <p className="text-yellow-800">
-                <strong>⚠️ Note:</strong> All imported volunteers start with "Pending" status.
-                You'll need to review and approve or deny each request.
+                <strong>⚠️ Note:</strong> Re-importing the same person updates department, status, and early
+                entry when those columns are present. You can import a full working spreadsheet that already
+                includes approval status and early-entry days.
               </p>
             </div>
+          </section>
+
+          {/* Department contacts */}
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4">📞 Department Contacts</h2>
+            <p className="text-gray-700 mb-4">
+              Store each department&apos;s overseer and assistants so the early-entry desk can look them up
+              quickly. Manage contacts on the Approvals tab; the Early Check-In tab shows a lookup panel.
+            </p>
           </section>
 
           {/* Managing Volunteers */}
@@ -163,8 +194,9 @@ export default function IVSApprovalsHelp() {
             </p>
             <ul className="list-disc list-inside space-y-2 text-gray-700 mb-6 ml-4">
               <li><strong>Day tabs</strong> - Today, Friday, Saturday, Sunday</li>
-              <li><strong>Large search bar</strong> - Search by name or congregation</li>
-              <li><strong>Real-time stats</strong> - Pending, checked in, and eligible counts for the selected day</li>
+              <li><strong>Large search bar</strong> - Search by name, congregation, or department</li>
+              <li><strong>Department contacts</strong> - Look up overseer/assistants for a department</li>
+              <li><strong>Real-time stats</strong> - Pending and checked-in counts for the selected day</li>
               <li><strong>Collapsible sections</strong> - PENDING CHECK-IN and CHECKED IN for that day</li>
               <li><strong>Big check-in buttons</strong> - Check in one day at a time</li>
               <li><strong>Live updates</strong> - Automatically refreshes every 5 seconds</li>
@@ -196,7 +228,8 @@ export default function IVSApprovalsHelp() {
             </p>
             <ul className="list-disc list-inside space-y-2 text-gray-700 mb-6 ml-4">
               <li><strong>Department</strong> - Show only volunteers from a specific department</li>
-              <li><strong>Status</strong> - Filter by Pending, Approved, or Denied</li>
+              <li><strong>Status</strong> - Filter by Pending, Requested, Approved, or Not Approved</li>
+              <li><strong>Early Entry</strong> - All, Eligible, or None</li>
               <li><strong>Round</strong> - Show only volunteers from a specific request round</li>
             </ul>
           </section>
@@ -237,7 +270,7 @@ export default function IVSApprovalsHelp() {
                 </h3>
                 <p className="text-gray-600">
                   Yes! Click Edit on the volunteer and change their status. You can move volunteers
-                  between Pending, Approved, and Denied at any time.
+                  between Pending, Requested, Approved, and Not Approved at any time.
                 </p>
               </div>
 

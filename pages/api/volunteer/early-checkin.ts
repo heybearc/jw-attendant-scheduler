@@ -1,5 +1,4 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import { ConventionDay } from '@prisma/client'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../auth/[...nextauth]'
 import { prisma } from '@/lib/prisma'
@@ -13,36 +12,8 @@ import {
   mapVolunteerEarlyCheckinPayload,
   parseConventionDayParam,
   resolveViewDay,
-  scheduleFromRecord,
 } from '@/lib/ivsEarlyCheckin'
-
-async function verifyIvsTeamMember(userId: string, eventId: string) {
-  const event = await prisma.events.findUnique({
-    where: { id: eventId },
-    select: { eventType: true },
-  })
-
-  if (event?.eventType !== 'REGIONAL_CONVENTION') {
-    return { ok: false as const, status: 403, message: 'This is not an IVS event' }
-  }
-
-  const ivsTeamMember = await prisma.position_assignments.findFirst({
-    where: {
-      volunteerId: userId,
-      positions: { eventId },
-    },
-  })
-
-  if (!ivsTeamMember) {
-    return {
-      ok: false as const,
-      status: 403,
-      message: 'Access denied - IVS team member access required',
-    }
-  }
-
-  return { ok: true as const }
-}
+import { verifyVolunteerIvsEarlyCheckinAccess } from '@/lib/ivsVolunteerEarlyCheckinAccess'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -60,7 +31,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ success: false, message: 'Event ID required' })
     }
 
-    const access = await verifyIvsTeamMember(session.user.id, eventId)
+    const access = await verifyVolunteerIvsEarlyCheckinAccess(
+      req,
+      session.user.id,
+      session.user.role,
+      eventId,
+    )
     if (!access.ok) {
       return res.status(access.status).json({ success: false, message: access.message })
     }

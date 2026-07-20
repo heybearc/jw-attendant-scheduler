@@ -10,6 +10,7 @@ import {
   scheduleFromRecord,
   upsertDayCheckIn,
 } from '@/lib/ivsEarlyCheckin'
+import { verifyVolunteerIvsEarlyCheckinAccess } from '@/lib/ivsVolunteerEarlyCheckinAccess'
 
 function parseDay(body: Record<string, unknown>): ConventionDay | null {
   const raw = body.conventionDay
@@ -43,27 +44,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ success: false, message: 'Event ID and Volunteer ID required' })
     }
 
-    const event = await prisma.events.findUnique({
-      where: { id: eventId },
-      select: { eventType: true },
-    })
-
-    if (event?.eventType !== 'REGIONAL_CONVENTION') {
-      return res.status(403).json({ success: false, message: 'This is not an IVS event' })
-    }
-
-    const ivsTeamMember = await prisma.position_assignments.findFirst({
-      where: {
-        volunteerId: session.user.id,
-        positions: { eventId },
-      },
-    })
-
-    if (!ivsTeamMember) {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied - IVS team member access required',
-      })
+    const access = await verifyVolunteerIvsEarlyCheckinAccess(
+      req,
+      session.user.id,
+      session.user.role,
+      eventId,
+    )
+    if (!access.ok) {
+      return res.status(access.status).json({ success: false, message: access.message })
     }
 
     const day = parseDay(body)

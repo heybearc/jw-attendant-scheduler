@@ -12,6 +12,7 @@ import {
   isEligibleForDay,
   scheduleFromRecord,
 } from '@/lib/ivsEarlyCheckin'
+import { verifyVolunteerIvsEarlyCheckinAccess } from '@/lib/ivsVolunteerEarlyCheckinAccess'
 import ExcelJS from 'exceljs'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -31,19 +32,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ success: false, message: 'Event ID required' })
     }
 
-    const ivsVolunteer = await prisma.event_volunteers.findFirst({
-      where: {
-        eventId,
-        userId: session.user.id,
-        ivsSubmittedBy: 'IVS',
-        ivsApprovalStatus: 'Approved',
-      },
-    })
-
-    if (!ivsVolunteer) {
-      return res
-        .status(403)
-        .json({ success: false, message: 'Access denied - IVS volunteer access required' })
+    const access = await verifyVolunteerIvsEarlyCheckinAccess(
+      req,
+      session.user.id,
+      session.user.role,
+      eventId,
+    )
+    if (!access.ok) {
+      return res.status(access.status).json({ success: false, message: access.message })
     }
 
     const event = await prisma.events.findUnique({

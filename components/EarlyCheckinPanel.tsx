@@ -9,6 +9,7 @@ import {
 } from '@/lib/ivsEarlyCheckin'
 import { notifyAlert } from '../lib/ui/toast'
 import { appConfirmMessage } from '../lib/ui/confirm'
+import { getViewAsHeaders } from '@/lib/viewAsClient'
 import { SafeDate } from './SafeDate'
 import IvsDepartmentContactsPanel from './ivs/IvsDepartmentContactsPanel'
 
@@ -79,6 +80,7 @@ export default function EarlyCheckinPanel({
       const dayQuery = viewDay === 'TODAY' ? 'TODAY' : viewDay
       const response = await fetch(
         `/api/volunteer/early-checkin?eventId=${eventId}&day=${dayQuery}`,
+        { headers: { ...getViewAsHeaders() } },
       )
       if (response.ok) {
         const data = await response.json()
@@ -97,7 +99,7 @@ export default function EarlyCheckinPanel({
     try {
       const response = await fetch(`/api/volunteer/early-checkin/check-in`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getViewAsHeaders() },
         body: JSON.stringify({ eventId, volunteerId, conventionDay: day }),
       })
 
@@ -125,7 +127,7 @@ export default function EarlyCheckinPanel({
     try {
       const response = await fetch(`/api/volunteer/early-checkin/undo`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getViewAsHeaders() },
         body: JSON.stringify({ eventId, volunteerId, conventionDay: day }),
       })
 
@@ -146,7 +148,7 @@ export default function EarlyCheckinPanel({
       setExporting(true)
       const response = await fetch(`/api/volunteer/early-checkin/export?eventId=${eventId}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getViewAsHeaders() },
       })
 
       if (response.ok) {

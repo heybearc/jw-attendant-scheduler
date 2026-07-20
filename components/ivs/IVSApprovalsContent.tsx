@@ -143,7 +143,10 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
 
       if (response.ok) {
         const result = await response.json()
-        notifyAlert(`Successfully imported ${result.imported} volunteer(s)`)
+        const parts = [`imported ${result.imported || 0}`]
+        if (result.updated) parts.push(`updated ${result.updated}`)
+        if (result.errors?.length) parts.push(`${result.errors.length} error(s)`)
+        notifyAlert(`Import complete: ${parts.join(', ')}`)
         setShowImportModal(false)
         fetchVolunteers(true)
       } else {
@@ -1035,6 +1038,7 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
       {/* Import Modal */}
       {showImportModal && (
         <ImportModal
+          eventId={eventId}
           onClose={() => setShowImportModal(false)}
           onImport={handleImport}
         />

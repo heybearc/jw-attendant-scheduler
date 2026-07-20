@@ -276,6 +276,7 @@ For issues or questions:
 
 ## 📝 Version History
 
+- **v4.25.0** (2026-07-20) - IVS department contacts (overseer/assistants) for early-entry desk lookup
 - **v4.24.0** (2026-07-18) - IVS: sort/filter early entry on Approvals; show department on Early Check-In
 - **v4.23.4** (2026-06-04) - IVS Add volunteer: reuse global registry by email, clear duplicate message
 - **v4.23.3** (2026-06-04) - IVS: fix hydration errors and page crash on IVS module load

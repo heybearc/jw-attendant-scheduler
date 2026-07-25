@@ -700,15 +700,19 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
     window.URL.revokeObjectURL(url)
   }
 
-  // Bulk Edit Functions
-  const handleSelectAttendant = (associationId: string) => {
+  // Bulk Edit Functions — use onChange (not preventDefault onClick) so the checkbox
+  // paints immediately; same pattern as IVS Approvals (v4.23.2).
+  const handleAttendantCheckboxChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    associationId: string,
+    indexOnPage: number
+  ) => {
+    selectionAnchorIndexRef.current = indexOnPage
+    const checked = e.target.checked
     setSelectedAttendants((prev) => {
       const next = new Set(prev)
-      if (next.has(associationId)) {
-        next.delete(associationId)
-      } else {
-        next.add(associationId)
-      }
+      if (checked) next.add(associationId)
+      else next.delete(associationId)
       return next
     })
   }
@@ -810,27 +814,21 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
     }
   }
 
-  const handleAttendantCheckboxClick = (
-    e: React.MouseEvent,
-    associationId: string,
+  const handleAttendantCheckboxShiftClick = (
+    e: React.MouseEvent<HTMLInputElement>,
     indexOnPage: number
   ) => {
+    if (!e.shiftKey || selectionAnchorIndexRef.current === null) return
     e.preventDefault()
-    e.stopPropagation()
-    if (e.shiftKey && selectionAnchorIndexRef.current !== null) {
-      const lo = Math.min(selectionAnchorIndexRef.current, indexOnPage)
-      const hi = Math.max(selectionAnchorIndexRef.current, indexOnPage)
-      const ids = paginatedAttendants.slice(lo, hi + 1).map((a) => a.associationId)
-      setSelectedAttendants((prev) => {
-        const next = new Set(prev)
-        ids.forEach((id) => next.add(id))
-        return next
-      })
-      selectionAnchorIndexRef.current = indexOnPage
-      return
-    }
+    const lo = Math.min(selectionAnchorIndexRef.current, indexOnPage)
+    const hi = Math.max(selectionAnchorIndexRef.current, indexOnPage)
+    const ids = paginatedAttendants.slice(lo, hi + 1).map((a) => a.associationId)
+    setSelectedAttendants((prev) => {
+      const next = new Set(prev)
+      ids.forEach((id) => next.add(id))
+      return next
+    })
     selectionAnchorIndexRef.current = indexOnPage
-    handleSelectAttendant(associationId)
   }
 
   const handleBulkEdit = () => {
@@ -1519,9 +1517,10 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                           <input
                             type="checkbox"
                             checked={selectedAttendants.has(attendant.associationId)}
-                            onClick={(e) =>
-                              handleAttendantCheckboxClick(e, attendant.associationId, index)
+                            onChange={(e) =>
+                              handleAttendantCheckboxChange(e, attendant.associationId, index)
                             }
+                            onClick={(e) => handleAttendantCheckboxShiftClick(e, index)}
                             className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                           />
                         </div>
@@ -1784,9 +1783,10 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                           <input
                             type="checkbox"
                             checked={selectedAttendants.has(attendant.associationId)}
-                            onClick={(e) =>
-                              handleAttendantCheckboxClick(e, attendant.associationId, index)
+                            onChange={(e) =>
+                              handleAttendantCheckboxChange(e, attendant.associationId, index)
                             }
+                            onClick={(e) => handleAttendantCheckboxShiftClick(e, index)}
                             className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                           />
                         </td>

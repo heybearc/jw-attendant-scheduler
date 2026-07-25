@@ -55,17 +55,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
 
       const contacts = readIvsDepartmentContacts(event.settings)
+      const volunteerDepartments = Array.from(
+        new Set(departments.map((d) => d.ivsSubmittedBy!).filter(Boolean)),
+      ).sort((a, b) => a.localeCompare(b))
       const departmentNames = Array.from(
-        new Set([
-          ...departments.map((d) => d.ivsSubmittedBy!).filter(Boolean),
-          ...Object.keys(contacts),
-        ]),
+        new Set([...volunteerDepartments, ...Object.keys(contacts)]),
       ).sort((a, b) => a.localeCompare(b))
 
       return res.status(200).json({
         success: true,
         contacts,
         departments: departmentNames,
+        volunteerDepartments,
       })
     }
 

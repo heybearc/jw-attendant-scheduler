@@ -120,6 +120,21 @@ export default function IVSApprovalsHelp() {
               Store each department&apos;s overseer and assistants so the early-entry desk can look them up
               quickly. Manage contacts on the Approvals tab; the Early Check-In tab shows a lookup panel.
             </p>
+            <ul className="list-disc list-inside space-y-2 text-gray-700 mb-4 ml-4">
+              <li>
+                <strong>Add</strong> a department name if it is not already on the list, then save overseer
+                / assistant details
+              </li>
+              <li>
+                <strong>Clear contact info</strong> removes phone/email/names but keeps the department in
+                the list
+              </li>
+              <li>
+                <strong>Remove department</strong> deletes that spelling from contacts. If volunteers still
+                use that department label, it will reappear until you rename those rows (bulk{' '}
+                <strong>Change department name</strong>)
+              </li>
+            </ul>
           </section>
 
           {/* Managing Volunteers */}

@@ -6,6 +6,7 @@ import {
   IvsDepartmentContactsMap,
 } from '@/lib/ivsDepartmentContacts'
 import { notifyAlert, toast } from '../../lib/ui/toast'
+import { appConfirmMessage } from '../../lib/ui/confirm'
 
 type Mode = 'manage' | 'lookup'
 
@@ -34,6 +35,7 @@ export default function IvsDepartmentContactsPanel({
 }: Props) {
   const [contacts, setContacts] = useState<IvsDepartmentContactsMap>({})
   const [departments, setDepartments] = useState<string[]>([])
+  const [volunteerDepartments, setVolunteerDepartments] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [selectedDept, setSelectedDept] = useState(initialDepartment)
@@ -53,6 +55,7 @@ export default function IvsDepartmentContactsPanel({
       const data = await res.json()
       setContacts(data.contacts || {})
       setDepartments(data.departments || [])
+      setVolunteerDepartments(data.volunteerDepartments || [])
     } catch (e) {
       console.error(e)
       notifyAlert('Failed to load department contacts')
@@ -74,7 +77,15 @@ export default function IvsDepartmentContactsPanel({
       setDraft(emptyContact())
       return
     }
-    setDraft(contacts[selectedDept] ? { ...emptyContact(), ...contacts[selectedDept], assistants: [...(contacts[selectedDept].assistants || [])] } : emptyContact())
+    setDraft(
+      contacts[selectedDept]
+        ? {
+            ...emptyContact(),
+            ...contacts[selectedDept],
+            assistants: [...(contacts[selectedDept].assistants || [])],
+          }
+        : emptyContact(),
+    )
   }, [selectedDept, contacts])
 
   const departmentOptions = useMemo(() => {
@@ -84,6 +95,9 @@ export default function IvsDepartmentContactsPanel({
   }, [departments, contacts])
 
   const selectedContact = selectedDept ? contacts[selectedDept] : undefined
+  const selectedIsOnVolunteers = selectedDept
+    ? volunteerDepartments.some((d) => d.toLowerCase() === selectedDept.toLowerCase())
+    : false
 
   const saveContact = async () => {
     if (!selectedDept) {
@@ -113,8 +127,15 @@ export default function IvsDepartmentContactsPanel({
     }
   }
 
-  const removeContact = async () => {
+  const clearContactInfo = async () => {
     if (!selectedDept) return
+    if (
+      !(await appConfirmMessage(
+        `Clear contact info for “${selectedDept}”? The department stays in the list.`,
+      ))
+    ) {
+      return
+    }
     try {
       setSaving(true)
       const next = { ...contacts }
@@ -126,15 +147,56 @@ export default function IvsDepartmentContactsPanel({
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        notifyAlert(data.message || 'Failed to remove contacts')
+        notifyAlert(data.message || 'Failed to clear contacts')
         return
       }
       setContacts(data.contacts || next)
       setDraft(emptyContact())
-      toast.success('Department contacts removed')
+      toast.success('Department contacts cleared')
     } catch (e) {
       console.error(e)
-      notifyAlert('Failed to remove contacts')
+      notifyAlert('Failed to clear contacts')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const removeDepartment = async () => {
+    if (!selectedDept) return
+
+    const message = selectedIsOnVolunteers
+      ? `Remove “${selectedDept}” from department contacts?\n\nThis name is still used on IVS volunteer rows, so it will show up again in the list until those volunteers’ department labels are corrected (bulk “Change department name” on Approvals). Contact info for this spelling will be deleted.`
+      : `Remove “${selectedDept}” from department contacts? Contact info for this department will be deleted and it will leave the list.`
+
+    if (!(await appConfirmMessage(message))) return
+
+    try {
+      setSaving(true)
+      const next = { ...contacts }
+      delete next[selectedDept]
+      const res = await fetch(`/api/events/${eventId}/ivs/department-contacts`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contacts: next }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        notifyAlert(data.message || 'Failed to remove department')
+        return
+      }
+      const saved = data.contacts || next
+      setContacts(saved)
+      setDepartments((prev) => prev.filter((d) => d !== selectedDept))
+      setSelectedDept('')
+      setDraft(emptyContact())
+      toast.success(
+        selectedIsOnVolunteers
+          ? 'Contacts removed — department may reappear until volunteer rows are renamed'
+          : 'Department removed',
+      )
+    } catch (e) {
+      console.error(e)
+      notifyAlert('Failed to remove department')
     } finally {
       setSaving(false)
     }
@@ -238,6 +300,19 @@ export default function IvsDepartmentContactsPanel({
                 <ContactReadOnly department={selectedDept} contact={selectedContact} />
               ) : canEdit ? (
                 <div className="space-y-3">
+                  {selectedIsOnVolunteers ? (
+                    <p className="text-xs text-gray-500">
+                      This name is used on IVS volunteer rows. To drop a misspelling from the list
+                      entirely, rename those volunteers (bulk Change department name), then remove
+                      the old spelling here.
+                    </p>
+                  ) : (
+                    <p className="text-xs text-amber-800 bg-amber-50 border border-amber-100 rounded-md px-3 py-2">
+                      Contact-only department (not on any volunteer row). You can remove it from the
+                      list if it was added by mistake.
+                    </p>
+                  )}
+
                   <Field
                     label="Overseer name"
                     value={draft.overseerName || ''}
@@ -299,7 +374,7 @@ export default function IvsDepartmentContactsPanel({
                     )}
                   </div>
 
-                  <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                  <div className="flex flex-col sm:flex-row flex-wrap gap-2 pt-2">
                     <button
                       type="button"
                       onClick={saveContact}
@@ -311,13 +386,21 @@ export default function IvsDepartmentContactsPanel({
                     {contactHasAnyInfo(contacts[selectedDept]) && (
                       <button
                         type="button"
-                        onClick={removeContact}
+                        onClick={clearContactInfo}
                         disabled={saving}
-                        className="min-h-[44px] px-4 py-2 bg-red-50 text-red-700 rounded-md hover:bg-red-100 disabled:opacity-50"
+                        className="min-h-[44px] px-4 py-2 bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200 disabled:opacity-50"
                       >
-                        Clear department contacts
+                        Clear contact info
                       </button>
                     )}
+                    <button
+                      type="button"
+                      onClick={removeDepartment}
+                      disabled={saving}
+                      className="min-h-[44px] px-4 py-2 bg-red-50 text-red-700 rounded-md hover:bg-red-100 disabled:opacity-50"
+                    >
+                      Remove department
+                    </button>
                   </div>
                 </div>
               ) : (

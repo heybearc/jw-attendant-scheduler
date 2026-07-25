@@ -15,6 +15,7 @@ import { computeSessionAttendanceBreakdown } from '@/lib/countSessionReporting'
 import { notifyAlert, toast } from '../../../lib/ui/toast'
 import { appConfirm, appConfirmMessage } from '../../../lib/ui/confirm'
 import { appPrompt } from '../../../lib/ui/prompt'
+import { displayPhone } from '@/lib/formatPhone'
 // Template types removed - using event.settings directly
 
 interface Event {
@@ -658,7 +659,7 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
                   {event.departmentOverseerPhone && (
                     <div className="flex items-center gap-1 mt-1 text-sm text-gray-600">
                       <span>📞</span>
-                      <span>{event.departmentOverseerPhone}</span>
+                      <span>{displayPhone(event.departmentOverseerPhone)}</span>
                     </div>
                   )}
                   {event.departmentOverseerEmail && (
@@ -693,7 +694,7 @@ export default function EventDetailsPage({ event, canEdit, canDelete, canManageC
                         <div key={idx} className="text-sm">
                           <div className="font-medium text-gray-800">{keyman.name}</div>
                           {keyman.phone && (
-                            <div className="text-xs text-gray-600 mt-0.5">📞 {keyman.phone}</div>
+                            <div className="text-xs text-gray-600 mt-0.5">📞 {displayPhone(keyman.phone)}</div>
                           )}
                         </div>
                       ))}

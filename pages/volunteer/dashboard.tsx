@@ -23,7 +23,7 @@ import {
   getChatPushSetupStatus,
 } from '@/lib/chatPushClient'
 import { notifyAlert, toast } from '../../lib/ui/toast'
-import { formatPhoneNumber } from '@/lib/formatPhone'
+import { formatPhoneNumber, displayPhone } from '@/lib/formatPhone'
 
 // Lazy load mobile dashboard (only loaded on mobile devices)
 const MobileVolunteerDashboard = dynamic(() => import('../../components/MobileVolunteerDashboard'), {
@@ -1841,9 +1841,15 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
                       <input
                         type="tel"
                         value={editProfileData.phone}
-                        onChange={(e) => setEditProfileData({ ...editProfileData, phone: e.target.value })}
+                        onChange={(e) =>
+                          setEditProfileData({
+                            ...editProfileData,
+                            phone: formatPhoneNumber(e.target.value),
+                          })
+                        }
                         className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="(555) 123-4567"
+                        maxLength={14}
                       />
                     </div>
                     <div className="flex space-x-2 pt-2">
@@ -1877,7 +1883,7 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
                     </div>
                     <div>
                       <span className="text-gray-500">Phone:</span>
-                      <p className="font-medium">{dashboardData.volunteer.phone || <span className="text-gray-400">Not provided</span>}</p>
+                      <p className="font-medium">{displayPhone(dashboardData.volunteer.phone) || <span className="text-gray-400">Not provided</span>}</p>
                     </div>
                   </div>
                 )}
@@ -1899,7 +1905,7 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
                           <p className="font-medium text-gray-900">{contact.name}</p>
                           <p className="text-gray-600">{contact.role}</p>
                           {contact.phone && (
-                            <p className="text-gray-600">📞 {contact.phone}</p>
+                            <p className="text-gray-600">📞 {displayPhone(contact.phone)}</p>
                           )}
                           {contact.email && (
                             <p className="text-gray-600">📧 {contact.email}</p>

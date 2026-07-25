@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { BulkImportModalProps, AttendantBulkImport, AttendantImportRow } from '../../types'
 import { FORMS_OF_SERVICE } from '../../types'
 import ActionButton from '../atoms/ActionButton'
+import { normalizePhoneForStorage } from '@/lib/formatPhone'
 
 export default function BulkImportModal({
   isOpen,
@@ -120,7 +121,7 @@ Mike,Johnson,mike.j@example.com,,South Congregation,"Other Department",false,Cur
 
         // Set defaults
         row.isActive = row.isActive === 'false' ? false : true
-        row.phone = row.phone || ''
+        row.phone = normalizePhoneForStorage(row.phone || '')
         row.notes = row.notes || ''
 
         parsed.push(row)

@@ -1,4 +1,5 @@
 import { sendEmail } from './email'
+import { displayPhone } from './formatPhone'
 
 /**
  * Phase 4C: Assignment Notification Email Templates
@@ -138,7 +139,7 @@ export function generateAssignmentCreatedEmail(data: AssignmentEmailData): strin
               ${data.overseerPhone ? `
               <tr>
                 <td style="padding: 8px 0; color: #92400e; font-weight: 500;">Phone:</td>
-                <td style="padding: 8px 0; color: #78350f;">${data.overseerPhone}</td>
+                <td style="padding: 8px 0; color: #78350f;">${displayPhone(data.overseerPhone)}</td>
               </tr>
               ` : ''}
             </table>
@@ -433,7 +434,7 @@ export function generateAssignmentReminderEmail(data: AssignmentReminderData): s
             <h4 style="color: #374151; margin: 0 0 10px 0;">👤 Your Overseer: ${data.overseerName}</h4>
             <p style="color: #6b7280; margin: 0;">
               ${data.overseerEmail ? `Email: <a href="mailto:${data.overseerEmail}" style="color: #3b82f6;">${data.overseerEmail}</a><br>` : ''}
-              ${data.overseerPhone ? `Phone: ${data.overseerPhone}` : ''}
+              ${data.overseerPhone ? `Phone: ${displayPhone(data.overseerPhone)}` : ''}
             </p>
           </div>
           ` : ''}

@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '../../../../../src/lib/prisma'
 import { handleApiError } from '@/lib/apiError'
+import { normalizePhoneOrNull } from '@/lib/formatPhone'
 
 // APEX GUARDIAN - NEW SYSTEM IMPORT API
 // This API imports attendants but doesn't create position assignments
@@ -139,7 +140,7 @@ async function handleCreateEventAttendant(req: NextApiRequest, res: NextApiRespo
         firstName,
         lastName,
         email,
-        phone: phone || null,
+        phone: normalizePhoneOrNull(phone),
         congregation: congregation || '',
         notes: notes || null,
         formsOfService: processedFormsOfService,
@@ -236,7 +237,7 @@ async function handleBulkImportEventAttendants(req: NextApiRequest, res: NextApi
             data: {
               firstName: attendantData.firstName,
               lastName: attendantData.lastName,
-              phone: attendantData.phone || null,
+              phone: normalizePhoneOrNull(attendantData.phone),
               congregation: attendantData.congregation || '',
               notes: attendantData.notes || null,
               formsOfService: formsOfService,
@@ -288,7 +289,7 @@ async function handleBulkImportEventAttendants(req: NextApiRequest, res: NextApi
               firstName: attendantData.firstName,
               lastName: attendantData.lastName,
               email: attendantData.email,
-              phone: attendantData.phone || null,
+              phone: normalizePhoneOrNull(attendantData.phone),
               congregation: attendantData.congregation || '',
               notes: attendantData.notes || null,
               formsOfService: formsOfService,

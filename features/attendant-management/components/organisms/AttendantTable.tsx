@@ -3,6 +3,7 @@ import { AttendantTableProps, Attendant } from '../../types'
 import StatusBadge from '../atoms/StatusBadge'
 import FormOfServiceBadge from '../atoms/FormOfServiceBadge'
 import ActionButton from '../atoms/ActionButton'
+import { displayPhone } from '@/lib/formatPhone'
 
 export default function AttendantTable({
   attendants,
@@ -220,7 +221,7 @@ export default function AttendantTable({
                 
                 <td className="px-2 py-3 text-sm text-gray-500">
                   <div className="truncate">
-                    {attendant.phone || 'N/A'}
+                    {displayPhone(attendant.phone) || 'N/A'}
                   </div>
                 </td>
                 

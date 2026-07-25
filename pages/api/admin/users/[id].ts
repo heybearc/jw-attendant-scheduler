@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../../auth/[...nextauth]'
 import { prisma } from '../../../../src/lib/prisma'
 import bcrypt from 'bcryptjs'
+import { normalizePhoneOrNull } from '@/lib/formatPhone'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -97,7 +98,7 @@ async function handleUpdateUser(req: NextApiRequest, res: NextApiResponse, id: s
       ...(firstName && { firstName }),
       ...(lastName && { lastName }),
       ...(email && { email }),
-      ...(phone !== undefined && { phone: phone || null }),
+      ...(phone !== undefined && { phone: normalizePhoneOrNull(phone) }),
       ...(role && { role }),
       ...(typeof isActive === 'boolean' && { isActive }),
       ...(passwordHash && { passwordHash }),
@@ -106,7 +107,7 @@ async function handleUpdateUser(req: NextApiRequest, res: NextApiResponse, id: s
 
     // If linking to a volunteer and user doesn't have a phone, pull from volunteer
     if (linkedVolunteer && !phone && linkedVolunteer.phone) {
-      updateData.phone = linkedVolunteer.phone
+      updateData.phone = normalizePhoneOrNull(linkedVolunteer.phone)
     }
 
     const user = await prisma.users.update({

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { VolunteerBadges } from './VolunteerBadges'
+import { displayPhone } from '@/lib/formatPhone'
 
 interface Volunteer {
   id: string
@@ -146,7 +147,7 @@ export default function VolunteerDetailsPopup({ volunteer, children, onEdit }: V
                   </div>
                   <div>
                     <label className="text-xs text-gray-500">Phone</label>
-                    <p className="text-sm text-gray-900">{volunteer.phone || 'Not provided'}</p>
+                    <p className="text-sm text-gray-900">{displayPhone(volunteer.phone) || 'Not provided'}</p>
                   </div>
                   <div>
                     <label className="text-xs text-gray-500">Congregation</label>

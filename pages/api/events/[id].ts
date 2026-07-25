@@ -4,6 +4,17 @@ import { authOptions } from "../auth/[...nextauth]"
 import { prisma } from "../../../src/lib/prisma"
 import { canDeleteEvent } from "../../../src/lib/eventAccess"
 import { handleApiError, apiSuccess } from "../../../src/lib/apiError"
+import { normalizePhoneOrNull, normalizePhoneForStorage } from "@/lib/formatPhone"
+
+function normalizeContactList(value: unknown): unknown {
+  if (!Array.isArray(value)) return value
+  return value.map((item) => {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) return item
+    const row = item as Record<string, unknown>
+    if (row.phone == null || row.phone === '') return item
+    return { ...row, phone: normalizePhoneForStorage(String(row.phone)) }
+  })
+}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const session = await getServerSession(req, res, authOptions)
@@ -96,11 +107,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         // Add oversight fields if provided
         if (departmentOverseerName !== undefined) updateData.departmentOverseerName = departmentOverseerName || null
-        if (departmentOverseerPhone !== undefined) updateData.departmentOverseerPhone = departmentOverseerPhone || null
+        if (departmentOverseerPhone !== undefined) {
+          updateData.departmentOverseerPhone = normalizePhoneOrNull(departmentOverseerPhone)
+        }
         if (departmentOverseerEmail !== undefined) updateData.departmentOverseerEmail = departmentOverseerEmail || null
         if (departmentOverseerUserId !== undefined) updateData.departmentOverseerUserId = departmentOverseerUserId || null
-        if (departmentOverseerAssistants !== undefined) updateData.departmentOverseerAssistants = departmentOverseerAssistants || []
-        if (keyman !== undefined) updateData.keyman = keyman || []
+        if (departmentOverseerAssistants !== undefined) {
+          updateData.departmentOverseerAssistants = normalizeContactList(departmentOverseerAssistants) || []
+        }
+        if (keyman !== undefined) {
+          updateData.keyman = normalizeContactList(keyman) || []
+        }
 
         // Update the event using Prisma relations
         const event = await prisma.events.update({

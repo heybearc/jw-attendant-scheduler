@@ -3,6 +3,7 @@ import { AttendantModalProps, AttendantCreateInput } from '../../types'
 import { FormOfService } from '../../types'
 import ActionButton from '../atoms/ActionButton'
 import FormsOfServiceSelect from '../../../../components/FormsOfServiceSelect'
+import PhoneInput from '../../../../components/PhoneInput'
 
 export default function AttendantCreateModal({
   isOpen,
@@ -201,16 +202,12 @@ export default function AttendantCreateModal({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Phone
-                  </label>
-                  <input
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                  <PhoneInput
+                    label="Phone"
+                    value={formData.phone || ''}
+                    onChange={(value) => handleInputChange('phone', value)}
                     disabled={saving}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter phone number"
                   />
                 </div>
               </div>

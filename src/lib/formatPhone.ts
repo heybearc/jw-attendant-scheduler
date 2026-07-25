@@ -50,3 +50,25 @@ export function normalizePhoneForStorage(value: string | null | undefined): stri
   if (!trimmed) return ''
   return formatPhoneNumber(trimmed)
 }
+
+/** Empty → null (for Prisma optional phone columns). */
+export function normalizePhoneOrNull(value: string | null | undefined): string | null {
+  const normalized = normalizePhoneForStorage(value)
+  return normalized || null
+}
+
+/** Format for display; returns empty string if missing. */
+export function displayPhone(value: string | null | undefined): string {
+  return normalizePhoneForStorage(value)
+}
+
+/** Normalize phone fields on contact-like objects `{ phone?: string }`. */
+export function normalizeContactPhones<T extends { phone?: string | null }>(
+  items: T[] | null | undefined,
+): T[] {
+  if (!Array.isArray(items)) return []
+  return items.map((item) => ({
+    ...item,
+    phone: normalizePhoneForStorage(item.phone ?? '') || (item.phone === null ? null : ''),
+  }))
+}

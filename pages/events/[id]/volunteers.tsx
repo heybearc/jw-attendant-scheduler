@@ -11,6 +11,7 @@ import { useScrollRestoration } from '../../../hooks/useScrollRestoration'
 import { notifyAlert, toast } from '../../../lib/ui/toast'
 import { appConfirm, appConfirmMessage } from '../../../lib/ui/confirm'
 import PhoneInput from '../../../components/PhoneInput'
+import { displayPhone } from '@/lib/formatPhone'
 
 interface Event {
   id: string
@@ -2788,7 +2789,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                     </div>
                     <div>
                       <label className="text-xs text-gray-500">Phone</label>
-                      <p className="text-sm text-gray-900">{viewingAttendant.phone || 'Not provided'}</p>
+                      <p className="text-sm text-gray-900">{displayPhone(viewingAttendant.phone) || 'Not provided'}</p>
                     </div>
                     <div>
                       <label className="text-xs text-gray-500">Congregation</label>

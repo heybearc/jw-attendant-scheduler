@@ -8,6 +8,7 @@ import { useRouter } from 'next/router'
 import Head from 'next/head'
 import { notifyAlert, toast } from '../../../lib/ui/toast'
 import { appConfirm, appConfirmMessage } from '../../../lib/ui/confirm'
+import PhoneInput from '../../../components/PhoneInput'
 
 interface Lanyard {
   id: string
@@ -478,12 +479,11 @@ export default function EventLanyardsPage({ eventId, event, lanyards, attendants
 
             <div className="grid grid-cols-1 md:grid-cols-[200px,1fr] gap-2 items-center">
               <label className="font-semibold text-gray-700">Phone:</label>
-              <input
-                type="tel"
+              <PhoneInput
                 value={exportInfo.phone}
-                onChange={(e) => setExportInfo({...exportInfo, phone: e.target.value})}
+                onChange={(value) => setExportInfo({ ...exportInfo, phone: value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md print:border-0 print:border-b print:border-black print:p-0 print:pl-2"
-                placeholder="216-469-8897"
+                placeholder="(216) 469-8897"
               />
             </div>
           </div>

@@ -9,7 +9,7 @@
 
 import { prisma } from '@/lib/prisma'
 import { randomUUID } from 'crypto'
-import { normalizePhoneForStorage } from '@/lib/formatPhone'
+import { normalizePhoneOrNull } from '@/lib/formatPhone'
 
 interface FindOrCreateVolunteerParams {
   firstName: string
@@ -60,7 +60,7 @@ export async function findOrCreateVolunteer(params: FindOrCreateVolunteerParams)
       lastName,
       email: normalizedEmail,
       congregation,
-      phone: phone ? normalizePhoneForStorage(phone) || null : null,
+      phone: normalizePhoneOrNull(phone),
       formsOfService: formsOfService || [],
       userId: userId || null,
       updatedAt: new Date()

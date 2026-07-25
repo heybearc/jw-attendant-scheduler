@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { GetServerSideProps } from 'next'
 import Head from 'next/head'
+import { displayPhone } from '@/lib/formatPhone'
 
 interface Assignment {
   id: string
@@ -173,7 +174,7 @@ export default function GuestLookupPage() {
                   <h4 className="text-sm font-medium text-gray-700">Contact Information</h4>
                   <div className="mt-1 text-sm text-gray-600">
                     <p>Email: {result.attendant.email}</p>
-                    {result.attendant.phone && <p>Phone: {result.attendant.phone}</p>}
+                    {result.attendant.phone && <p>Phone: {displayPhone(result.attendant.phone)}</p>}
                     <p>Congregation: {result.attendant.congregation}</p>
                   </div>
                 </div>

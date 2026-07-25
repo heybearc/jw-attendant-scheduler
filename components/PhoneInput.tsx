@@ -24,7 +24,6 @@ export default function PhoneInput({
   className = 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500',
   label
 }: PhoneInputProps) {
-  // Format existing value when component mounts or value changes externally
   useEffect(() => {
     if (value) {
       const formatted = formatPhoneNumber(value)
@@ -32,6 +31,8 @@ export default function PhoneInput({
         onChange(formatted)
       }
     }
+    // Only re-format when the external value changes (paste / load), not on every keystroke cycle
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

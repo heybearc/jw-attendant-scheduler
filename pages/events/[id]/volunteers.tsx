@@ -10,6 +10,7 @@ import { useRouter } from 'next/router'
 import { useScrollRestoration } from '../../../hooks/useScrollRestoration'
 import { notifyAlert, toast } from '../../../lib/ui/toast'
 import { appConfirm, appConfirmMessage } from '../../../lib/ui/confirm'
+import PhoneInput from '../../../components/PhoneInput'
 
 interface Event {
   id: string
@@ -2109,13 +2110,10 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        Phone
-                      </label>
-                      <input
-                        type="tel"
+                      <PhoneInput
+                        label="Phone"
                         value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        onChange={(value) => setFormData({ ...formData, phone: value })}
                         className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                       />
                     </div>

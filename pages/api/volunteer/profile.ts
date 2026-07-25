@@ -2,20 +2,11 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../src/lib/prisma'
 import bcrypt from 'bcryptjs'
 import { handleApiError } from '@/lib/apiError'
-
-// Format phone number to (XXX) XXX-XXXX
-function formatPhoneNumber(phone: string): string {
-  const cleaned = phone.replace(/\D/g, '')
-  if (cleaned.length === 10) {
-    return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`
-  }
-  return phone // Return as-is if not 10 digits
-}
+import { normalizePhoneForStorage, unformatPhoneNumber } from '@/lib/formatPhone'
 
 // Get last 4 digits of phone number
 function getLastFourDigits(phone: string): string {
-  const cleaned = phone.replace(/\D/g, '')
-  return cleaned.slice(-4)
+  return unformatPhoneNumber(phone).slice(-4)
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -31,7 +22,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Format phone number
-    const formattedPhone = phone ? formatPhoneNumber(phone) : ''
+    const formattedPhone = phone ? normalizePhoneForStorage(phone) : ''
     
     // Get last 4 digits for new PIN
     const newPin = phone ? getLastFourDigits(phone) : null

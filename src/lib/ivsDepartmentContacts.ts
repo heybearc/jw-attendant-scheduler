@@ -3,6 +3,8 @@
  * Keyed by department name (matches event_volunteers.ivsSubmittedBy).
  */
 
+import { normalizePhoneForStorage } from '@/lib/formatPhone'
+
 export type IvsDepartmentAssistant = {
   name: string
   phone?: string
@@ -31,13 +33,15 @@ export function readIvsDepartmentContacts(settings: unknown): IvsDepartmentConta
     const assistantsRaw = Array.isArray(v.assistants) ? v.assistants : []
     out[dept] = {
       overseerName: typeof v.overseerName === 'string' ? v.overseerName.trim() : '',
-      overseerPhone: typeof v.overseerPhone === 'string' ? v.overseerPhone.trim() : '',
+      overseerPhone: normalizePhoneForStorage(
+        typeof v.overseerPhone === 'string' ? v.overseerPhone : '',
+      ),
       overseerEmail: typeof v.overseerEmail === 'string' ? v.overseerEmail.trim() : '',
       assistants: assistantsRaw
         .filter((a): a is Record<string, unknown> => !!a && typeof a === 'object' && !Array.isArray(a))
         .map((a) => ({
           name: typeof a.name === 'string' ? a.name.trim() : '',
-          phone: typeof a.phone === 'string' ? a.phone.trim() : '',
+          phone: normalizePhoneForStorage(typeof a.phone === 'string' ? a.phone : ''),
           email: typeof a.email === 'string' ? a.email.trim() : '',
         }))
         .filter((a) => a.name || a.phone || a.email),
@@ -58,10 +62,17 @@ export function mergeIvsDepartmentContactsIntoSettings(
   for (const [key, value] of Object.entries(contacts)) {
     const dept = key.trim()
     if (!dept) continue
-    const assistants = (value.assistants || []).filter((a) => a.name || a.phone || a.email)
+    const assistants = (value.assistants || [])
+      .map((a) => ({
+        ...a,
+        phone: normalizePhoneForStorage(a.phone),
+        name: (a.name || '').trim(),
+        email: (a.email || '').trim(),
+      }))
+      .filter((a) => a.name || a.phone || a.email)
     const entry: IvsDepartmentContact = {
       overseerName: (value.overseerName || '').trim(),
-      overseerPhone: (value.overseerPhone || '').trim(),
+      overseerPhone: normalizePhoneForStorage(value.overseerPhone),
       overseerEmail: (value.overseerEmail || '').trim(),
       assistants,
     }

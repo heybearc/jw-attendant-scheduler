@@ -134,6 +134,9 @@ export default function IVSApprovalsHelp() {
                 use that department label, it will reappear until you rename those rows (bulk{' '}
                 <strong>Change department name</strong>)
               </li>
+              <li>
+                Phone numbers format as <strong>(XXX) XXX-XXXX</strong> as you type or paste (including +1)
+              </li>
             </ul>
           </section>
 

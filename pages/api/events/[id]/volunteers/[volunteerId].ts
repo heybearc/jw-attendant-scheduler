@@ -4,6 +4,7 @@ import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '../../../../../src/lib/prisma'
 import { checkEventAccess, canManageAttendants } from '../../../../../src/lib/eventAccess'
 import { handleApiError } from '@/lib/apiError'
+import { normalizePhoneForStorage } from '@/lib/formatPhone'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { id: eventId, volunteerId } = req.query
@@ -144,7 +145,7 @@ async function handleUpdateVolunteer(req: NextApiRequest, res: NextApiResponse, 
     if (firstName !== undefined) updateData.firstName = firstName
     if (lastName !== undefined) updateData.lastName = lastName
     if (email !== undefined) updateData.email = email
-    if (phone !== undefined) updateData.phone = phone || null
+    if (phone !== undefined) updateData.phone = phone ? normalizePhoneForStorage(phone) || null : null
     if (notes !== undefined) updateData.notes = notes || null
     if (congregation !== undefined) updateData.congregation = congregation || ''
     if (processedFormsOfService.length > 0) updateData.formsOfService = processedFormsOfService

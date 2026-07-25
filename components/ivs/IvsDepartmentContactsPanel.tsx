@@ -7,6 +7,8 @@ import {
 } from '@/lib/ivsDepartmentContacts'
 import { notifyAlert, toast } from '../../lib/ui/toast'
 import { appConfirmMessage } from '../../lib/ui/confirm'
+import PhoneInput from '../PhoneInput'
+import { formatPhoneNumber } from '@/lib/formatPhone'
 
 type Mode = 'manage' | 'lookup'
 
@@ -318,11 +320,14 @@ export default function IvsDepartmentContactsPanel({
                     value={draft.overseerName || ''}
                     onChange={(v) => setDraft((p) => ({ ...p, overseerName: v }))}
                   />
-                  <Field
-                    label="Overseer phone"
-                    value={draft.overseerPhone || ''}
-                    onChange={(v) => setDraft((p) => ({ ...p, overseerPhone: v }))}
-                  />
+                  <label className="block">
+                    <span className="block text-xs font-medium text-gray-600 mb-1">Overseer phone</span>
+                    <PhoneInput
+                      value={draft.overseerPhone || ''}
+                      onChange={(v) => setDraft((p) => ({ ...p, overseerPhone: v }))}
+                      className="w-full min-h-[44px] px-3 py-2 border rounded-md text-base"
+                    />
+                  </label>
                   <Field
                     label="Overseer email"
                     value={draft.overseerEmail || ''}
@@ -351,11 +356,14 @@ export default function IvsDepartmentContactsPanel({
                               value={a.name}
                               onChange={(v) => updateAssistant(i, { name: v })}
                             />
-                            <Field
-                              label="Phone"
-                              value={a.phone || ''}
-                              onChange={(v) => updateAssistant(i, { phone: v })}
-                            />
+                            <label className="block">
+                              <span className="block text-xs font-medium text-gray-600 mb-1">Phone</span>
+                              <PhoneInput
+                                value={a.phone || ''}
+                                onChange={(v) => updateAssistant(i, { phone: v })}
+                                className="w-full min-h-[44px] px-3 py-2 border rounded-md text-base"
+                              />
+                            </label>
                             <Field
                               label="Email"
                               value={a.email || ''}
@@ -479,11 +487,12 @@ function ContactReadOnly({
 }
 
 function ContactLinks({ phone, email }: { phone?: string; email?: string }) {
+  const displayPhone = phone ? formatPhoneNumber(phone) : ''
   return (
     <div className="flex flex-wrap gap-3 mt-0.5 text-blue-600">
-      {phone ? (
-        <a href={`tel:${phone.replace(/[^\d+]/g, '')}`} className="hover:underline">
-          {phone}
+      {displayPhone ? (
+        <a href={`tel:${displayPhone.replace(/[^\d+]/g, '')}`} className="hover:underline">
+          {displayPhone}
         </a>
       ) : null}
       {email ? (

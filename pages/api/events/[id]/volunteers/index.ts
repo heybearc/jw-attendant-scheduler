@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '../../../../../src/lib/prisma'
 import { handleApiError } from '@/lib/apiError'
+import { normalizePhoneForStorage } from '@/lib/formatPhone'
 
 // NEW VOLUNTEERS API ENDPOINT
 // This API manages volunteers for events
@@ -140,7 +141,7 @@ async function handleCreateEventVolunteer(req: NextApiRequest, res: NextApiRespo
         firstName,
         lastName,
         email,
-        phone: phone || null,
+        phone: phone ? normalizePhoneForStorage(phone) || null : null,
         congregation: congregation || '',
         notes: notes || null,
         formsOfService: processedFormsOfService,
@@ -240,7 +241,9 @@ async function handleBulkImportEventVolunteers(req: NextApiRequest, res: NextApi
             data: {
               firstName: volunteerData.firstName,
               lastName: volunteerData.lastName,
-              phone: volunteerData.phone || null,
+              phone: volunteerData.phone
+                ? normalizePhoneForStorage(volunteerData.phone) || null
+                : null,
               congregation: volunteerData.congregation || '',
               notes: volunteerData.notes || null,
               formsOfService: formsOfService,
@@ -292,7 +295,9 @@ async function handleBulkImportEventVolunteers(req: NextApiRequest, res: NextApi
               firstName: volunteerData.firstName,
               lastName: volunteerData.lastName,
               email: volunteerData.email,
-              phone: volunteerData.phone || null,
+              phone: volunteerData.phone
+                ? normalizePhoneForStorage(volunteerData.phone) || null
+                : null,
               congregation: volunteerData.congregation || '',
               notes: volunteerData.notes || null,
               formsOfService: formsOfService,

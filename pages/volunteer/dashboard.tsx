@@ -23,6 +23,7 @@ import {
   getChatPushSetupStatus,
 } from '@/lib/chatPushClient'
 import { notifyAlert, toast } from '../../lib/ui/toast'
+import { formatPhoneNumber } from '@/lib/formatPhone'
 
 // Lazy load mobile dashboard (only loaded on mobile devices)
 const MobileVolunteerDashboard = dynamic(() => import('../../components/MobileVolunteerDashboard'), {
@@ -558,16 +559,8 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
     }
   }
   
-  // Format phone number as user types
-  const formatPhoneInput = (value: string) => {
-    const cleaned = value.replace(/\D/g, '')
-    if (cleaned.length <= 3) return cleaned
-    if (cleaned.length <= 6) return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3)}`
-    return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6, 10)}`
-  }
-
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatPhoneInput(e.target.value)
+    const formatted = formatPhoneNumber(e.target.value)
     setProfileData({ ...profileData, phone: formatted })
   }
 

@@ -100,12 +100,25 @@ export default async function handler(
 
     if (ivsApprovalStatus !== undefined) {
       updateData.ivsApprovalStatus = ivsApprovalStatus
-      
+
       if (ivsApprovalStatus === 'Approved') {
         updateData.ivsApprovedAt = new Date()
         updateData.ivsApprovedBy = session.user.email || session.user.id
-      } else if (ivsApprovalStatus === 'Not Approved' && ivsDeniedReason) {
-        updateData.ivsDeniedReason = ivsDeniedReason
+        updateData.ivsDeniedReason = null
+      } else if (ivsApprovalStatus === 'Not Approved') {
+        // Match bulk setStatus: approval stamp only applies while Approved
+        updateData.ivsApprovedAt = null
+        updateData.ivsApprovedBy = null
+        if (ivsDeniedReason !== undefined) {
+          const reason =
+            typeof ivsDeniedReason === 'string' ? ivsDeniedReason.trim() : ''
+          updateData.ivsDeniedReason = reason === '' ? null : reason
+        }
+      } else {
+        // Pending, Requested, or any other non-Approved status
+        updateData.ivsApprovedAt = null
+        updateData.ivsApprovedBy = null
+        updateData.ivsDeniedReason = null
       }
     }
 

@@ -56,8 +56,14 @@ export default async function handler(
         approvalStatus: ev.ivsApprovalStatus || 'Pending',
         submittedBy: ev.ivsSubmittedBy || '',
         requestRound: ev.ivsRequestRound || 1,
-        approvedAt: ev.ivsApprovedAt ? formatDate(ev.ivsApprovedAt) : undefined,
-        approvedBy: ev.ivsApprovedBy || undefined,
+        approvedAt:
+          (ev.ivsApprovalStatus || 'Pending') === 'Approved' && ev.ivsApprovedAt
+            ? formatDate(ev.ivsApprovedAt)
+            : undefined,
+        approvedBy:
+          (ev.ivsApprovalStatus || 'Pending') === 'Approved'
+            ? ev.ivsApprovedBy || undefined
+            : undefined,
         notes: ev.ivsApprovalNotes || undefined,
         earlyEntry: base.earlyEntry,
         checkIns: base.checkIns,

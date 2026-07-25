@@ -67,7 +67,10 @@ export default async function handler(
       NAME: `${ev.volunteer?.firstName || ''} ${ev.volunteer?.lastName || ''}`.trim(),
       CONGREGATION: ev.volunteer?.congregation || '',
       'APPROVAL STATUS': ev.ivsApprovalStatus || 'Pending',
-      'APPROVAL DATE': ev.ivsApprovedAt ? formatDate(ev.ivsApprovedAt) : '',
+      'APPROVAL DATE':
+        (ev.ivsApprovalStatus || 'Pending') === 'Approved' && ev.ivsApprovedAt
+          ? formatDate(ev.ivsApprovedAt)
+          : '',
       DEPARTMENT: ev.ivsSubmittedBy || '',
       ROUND: ev.ivsRequestRound || '',
       NOTES: ev.ivsApprovalNotes || '',

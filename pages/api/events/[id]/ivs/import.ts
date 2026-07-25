@@ -206,6 +206,9 @@ export default async function handler(
               updateData.ivsApprovedAt = existing.ivsApprovedAt || new Date()
               updateData.ivsApprovedBy =
                 existing.ivsApprovedBy || session.user.email || session.user.id
+            } else {
+              updateData.ivsApprovedAt = null
+              updateData.ivsApprovedBy = null
             }
           }
 

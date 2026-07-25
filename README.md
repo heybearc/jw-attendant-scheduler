@@ -35,7 +35,7 @@ Theocratic Shift Scheduler is a comprehensive web application designed to manage
 - **Filters** - Overseer and role filters on the positions page apply everywhere you view positions (list, grid, and export), with clearer messages when nothing matches (v4.21.1+)
 - **Mobile event workspace** - On phones and tablets, move between Overview, Positions, Volunteers, and other event areas using **Section** and **More** (no sideways-scrolling tab strip); Event Settings uses the same pattern for its sections (v4.21.3+)
 - **Volunteers & IVS lists** - Choose how many rows per page on IVS Approvals; **Shift+click** checkboxes to select a range on the current page (Volunteers + IVS); browser refresh keeps your scroll position on long lists (v4.21.4+)
-- **IVS Module** - Approvals and Early Check-In for phones and tablets; downloadable import template with optional STATUS and EARLY ENTRY; department contacts with remove/clear; phone numbers format as (XXX) XXX-XXXX (v4.27.0+)
+- **IVS Module** - Approvals and Early Check-In for phones and tablets; downloadable import template with optional STATUS and EARLY ENTRY; department contacts with remove/clear; phone numbers format as (XXX) XXX-XXXX app-wide (v4.28.0+)
 - **Unlimited Positions** - Create numbered positions per event
 - **Position Shifts** - Time-based shift assignments
 - **Position Templates** - Reusable position configurations
@@ -276,6 +276,7 @@ For issues or questions:
 
 ## 📝 Version History
 
+- **v4.28.0** (2026-07-25) - Phone (XXX) XXX-XXXX formatting app-wide; existing numbers normalized
 - **v4.27.0** (2026-07-25) - IVS: remove department from contacts; phone (XXX) XXX-XXXX formatting; clear approval date when not Approved
 - **v4.26.1** (2026-07-25) - Volunteers page: multi-select checkboxes show checked immediately
 - **v4.26.0** (2026-07-20) - IVS import template with optional STATUS and EARLY ENTRY; fix volunteer Early Check-In day counts when simulating

@@ -276,6 +276,7 @@ For issues or questions:
 
 ## 📝 Version History
 
+- **v4.26.1** (2026-07-25) - Volunteers page: multi-select checkboxes show checked immediately
 - **v4.26.0** (2026-07-20) - IVS import template with optional STATUS and EARLY ENTRY; fix volunteer Early Check-In day counts when simulating
 - **v4.25.0** (2026-07-20) - IVS department contacts (overseer/assistants) for early-entry desk lookup
 - **v4.24.0** (2026-07-18) - IVS: sort/filter early entry on Approvals; show department on Early Check-In

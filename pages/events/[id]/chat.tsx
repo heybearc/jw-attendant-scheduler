@@ -6,6 +6,10 @@ import EventPageWrapper from '../../../components/EventPageWrapper'
 import { notifyAlert, toast } from '../../../lib/ui/toast'
 import { appConfirm, appConfirmMessage } from '../../../lib/ui/confirm'
 import { appPrompt } from '../../../lib/ui/prompt'
+import {
+  abortEventBulkEmail,
+  formatBulkEmailConfirmMessage,
+} from '../../../lib/bulkEmailClient'
 
 interface EventData {
   id: string
@@ -589,32 +593,66 @@ export default function EventStaffChatPage({
   }
 
   const handleNotifyChatLaunch = async () => {
-    const promptResult = await appPrompt({
-      title: 'Notify volunteers about chat',
-      message: 'Optional note for volunteers (leave blank to skip):',
-      placeholder: 'Optional note…',
-      confirmLabel: 'Send emails',
-    })
-    // Cancel returns null — do not send (|| '' would treat cancel like empty OK).
-    if (promptResult === null) return
-    const note = promptResult.trim()
-    setNotifySending(true)
     try {
+      const previewRes = await fetch(`/api/events/${event.id}/chat/notify-volunteers?preview=1`)
+      const preview = await previewRes.json()
+      if (!previewRes.ok || !preview.success) {
+        throw new Error(preview.error || 'Could not load recipient count')
+      }
+      if (preview.job && !preview.job.done) {
+        notifyAlert(
+          `A chat notify job is already running (${preview.job.sent}/${preview.job.total}). Use Abort to stop it.`
+        )
+        setNotifySending(true)
+        return
+      }
+      if (!preview.recipientCount) {
+        notifyAlert('No roster volunteers with email to notify (IVS-only are excluded).')
+        return
+      }
+
+      const confirmed = await appConfirm({
+        title: 'Notify chat launch',
+        message: formatBulkEmailConfirmMessage({
+          recipientCount: preview.recipientCount,
+          estimatedSeconds: preview.estimatedSeconds,
+          scopeNote: preview.scopeNote,
+        }),
+        confirmLabel: 'Continue',
+        cancelLabel: 'Cancel',
+      })
+      if (!confirmed) return
+
+      const promptResult = await appPrompt({
+        title: 'Optional note',
+        message: 'Optional note for volunteers (leave blank to skip):',
+        placeholder: 'Optional note…',
+        confirmLabel: 'Queue emails',
+      })
+      if (promptResult === null) return
+      const note = promptResult.trim()
+
+      setNotifySending(true)
       const response = await fetch(`/api/events/${event.id}/chat/notify-volunteers`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: note })
+        body: JSON.stringify({ message: note }),
       })
       const data = await response.json()
       if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Failed to send chat rollout emails')
+        throw new Error(data.error || 'Failed to queue chat rollout emails')
       }
-      notifyAlert(data.message || `Sent ${data.sent} email(s).`)
+      notifyAlert(data.message || `Queued ${data.recipientCount} email(s).`)
     } catch (err: any) {
-      notifyAlert(err?.message || 'Failed to send chat rollout emails')
-    } finally {
       setNotifySending(false)
+      notifyAlert(err?.message || 'Failed to send chat rollout emails')
     }
+  }
+
+  const handleAbortChatNotify = async () => {
+    const result = await abortEventBulkEmail(event.id, 'chat-notify')
+    notifyAlert(result.message)
+    if (result.ok) setNotifySending(false)
   }
 
   const openDmModal = async () => {
@@ -681,14 +719,25 @@ export default function EventStaffChatPage({
             </div>
             <div className="flex flex-shrink-0 flex-wrap items-center gap-2">
               {canNotifyChatLaunch && (
-                <button
-                  type="button"
-                  onClick={handleNotifyChatLaunch}
-                  disabled={notifySending}
-                  className="text-sm px-3 py-2 rounded-md border border-indigo-200 bg-indigo-50 text-indigo-800 hover:bg-indigo-100 disabled:opacity-60"
-                >
-                  {notifySending ? 'Sending…' : '💬 Notify chat launch'}
-                </button>
+                <>
+                  <button
+                    type="button"
+                    onClick={handleNotifyChatLaunch}
+                    disabled={notifySending}
+                    className="text-sm px-3 py-2 rounded-md border border-indigo-200 bg-indigo-50 text-indigo-800 hover:bg-indigo-100 disabled:opacity-60"
+                  >
+                    {notifySending ? 'Queued…' : '💬 Notify chat launch'}
+                  </button>
+                  {notifySending && (
+                    <button
+                      type="button"
+                      onClick={handleAbortChatNotify}
+                      className="text-sm px-3 py-2 rounded-md border border-red-200 bg-red-50 text-red-800 hover:bg-red-100"
+                    >
+                      Abort email send
+                    </button>
+                  )}
+                </>
               )}
               <button
                 onClick={async () => {

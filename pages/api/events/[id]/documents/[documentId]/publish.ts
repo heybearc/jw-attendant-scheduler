@@ -53,13 +53,14 @@ async function handlePublishDocument(req: NextApiRequest, res: NextApiResponse, 
     let publishedCount = 0
 
     if (publishType === 'all') {
-      // Get all volunteers for this event using raw query
+      // Volunteers roster only — exclude IVS-only imports
       const eventVolunteers = await prisma.$queryRaw`
         SELECT ev."volunteerId", v."firstName", v."lastName"
         FROM event_volunteers ev
         JOIN volunteers v ON ev."volunteerId" = v.id
         WHERE ev."eventId" = ${eventId}
         AND ev."isActive" = true
+        AND ev."on_volunteer_roster" = true
       ` as any[]
 
       publishedCount = eventVolunteers.length
@@ -73,7 +74,7 @@ async function handlePublishDocument(req: NextApiRequest, res: NextApiResponse, 
         `
       }
       
-      console.log(`Published document ${documentId} to all ${publishedCount} volunteers in event ${eventId}`)
+      console.log(`Published document ${documentId} to all ${publishedCount} roster volunteers in event ${eventId}`)
     } else {
       // Verify volunteers exist and are part of this event
       const eventVolunteers = await prisma.$queryRaw`
@@ -126,38 +127,65 @@ async function handlePublishDocument(req: NextApiRequest, res: NextApiResponse, 
             return
           }
           
-          // Get volunteers with email addresses
-          const volunteerIds = publishType === 'all' 
-            ? (await prisma.$queryRaw`SELECT "volunteerId" FROM event_volunteers WHERE "eventId" = ${eventId} AND "isActive" = true` as any[]).map((v: any) => v.volunteerId)
-            : attendantIds
-          
+          // Roster only — never email IVS-only imports on "publish to all"
+          const volunteerIds =
+            publishType === 'all'
+              ? (
+                  await prisma.event_volunteers.findMany({
+                    where: {
+                      eventId,
+                      isActive: true,
+                      volunteerId: { not: null },
+                      onVolunteerRoster: true,
+                    },
+                    select: { volunteerId: true },
+                  })
+                )
+                  .map((v) => v.volunteerId)
+                  .filter((id): id is string => !!id)
+              : attendantIds
+
           const volunteers = await prisma.volunteers.findMany({
             where: {
-              id: { in: volunteerIds }
+              id: { in: volunteerIds },
             },
-            select: { id: true, firstName: true, email: true }
+            select: { id: true, firstName: true, email: true },
           })
-          
-          const baseUrl = process.env.NEXTAUTH_URL || `${req.headers['x-forwarded-proto'] || 'https'}://${req.headers.host}`
-          const documentUrl = `${baseUrl}/events/${eventId}/documents`
-          
-          // Send emails
-          for (const volunteer of volunteers) {
-            if (volunteer.email) {
-              try {
-                await sendDocumentPublishEmail({
-                  firstName: volunteer.firstName,
-                  email: volunteer.email,
-                  documentTitle: document.title,
-                  eventName: event.name,
-                  documentUrl: documentUrl
-                })
-              } catch (err) {
-                console.error(`Failed to send email to ${volunteer.email}:`, err)
-              }
-            }
+
+          const { runThrottledBulkEmail, tryAcquireEmailJob, uniqueByEmail } =
+            await import('../../../../../../src/lib/bulkEmailJob')
+          const recipients = uniqueByEmail(
+            volunteers.filter((v) => !!v.email?.trim()) as {
+              id: string
+              firstName: string
+              email: string
+            }[]
+          )
+          const jobKind = 'document-publish'
+          if (!tryAcquireEmailJob(`${jobKind}:${eventId}`)) {
+            console.warn(`[document-publish] skip emails — job already running for ${eventId}`)
+            return
           }
-          
+
+          const baseUrl =
+            process.env.NEXTAUTH_URL ||
+            `${req.headers['x-forwarded-proto'] || 'https'}://${req.headers.host}`
+          const documentUrl = `${baseUrl}/events/${eventId}/documents`
+
+          await runThrottledBulkEmail({
+            eventId,
+            kind: jobKind,
+            recipients,
+            sendOne: async (volunteer) => {
+              await sendDocumentPublishEmail({
+                firstName: volunteer.firstName || 'Volunteer',
+                email: volunteer.email,
+                documentTitle: document.title,
+                eventName: event.name,
+                documentUrl,
+              })
+            },
+          })
         } catch (emailError) {
           console.error('Failed to send document notifications:', emailError)
         }
@@ -169,9 +197,9 @@ async function handlePublishDocument(req: NextApiRequest, res: NextApiResponse, 
       data: {
         publishType,
         publishedCount,
-        publishedAt: new Date().toISOString()
+        publishedAt: new Date().toISOString(),
       },
-      message: `Document published to ${publishedCount} attendant${publishedCount !== 1 ? 's' : ''}`
+      message: `Document published to ${publishedCount} attendant${publishedCount !== 1 ? 's' : ''}`,
     })
   } catch (error) {
     console.error('Publish document error:', error)

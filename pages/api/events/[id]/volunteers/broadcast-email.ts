@@ -8,7 +8,12 @@ import {
   formatPlainMessageAsHtml,
 } from '@/lib/volunteerBroadcastEmail'
 import { formatCalendarDateLabel } from '@/lib/calendarDate'
-import { tryAcquireEmailJob, releaseEmailJob } from '@/lib/emailSendGuard'
+import {
+  tryAcquireEmailJob,
+  runThrottledBulkEmail,
+  estimateBulkEmailDurationSeconds,
+  getBulkEmailJob,
+} from '@/lib/bulkEmailJob'
 import { volunteerRosterWhere } from '@/lib/volunteerRoster'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -91,6 +96,8 @@ async function handleBroadcastEmail(req: NextApiRequest, res: NextApiResponse) {
   const messageHtml = formatPlainMessageAsHtml(messageRaw)
 
   let memberships: {
+    id?: string
+    volunteerId?: string | null
     volunteer: { firstName: string; email: string } | null
   }[]
 
@@ -120,6 +127,7 @@ async function handleBroadcastEmail(req: NextApiRequest, res: NextApiResponse) {
       where: {
         eventId,
         volunteerId: { not: null },
+        ...volunteerRosterWhere,
         OR: [{ id: { in: associationIds } }, { volunteerId: { in: associationIds } }],
       },
       select: {
@@ -131,7 +139,7 @@ async function handleBroadcastEmail(req: NextApiRequest, res: NextApiResponse) {
 
     const matchedKeys = new Set<string>()
     for (const m of memberships) {
-      if (associationIds.includes(m.id)) matchedKeys.add(m.id)
+      if (m.id && associationIds.includes(m.id)) matchedKeys.add(m.id)
       if (m.volunteerId && associationIds.includes(m.volunteerId)) matchedKeys.add(m.volunteerId)
     }
     const unmatched = associationIds.filter((id) => !matchedKeys.has(id))
@@ -167,88 +175,55 @@ async function handleBroadcastEmail(req: NextApiRequest, res: NextApiResponse) {
     })
   }
 
-  const jobKey = `broadcast-email:${eventId}`
+  const JOB_KIND = 'broadcast'
+  const jobKey = `${JOB_KIND}:${eventId}`
   if (!tryAcquireEmailJob(jobKey)) {
     return res.status(409).json({
       success: false,
       error:
-        'An email blast is already in progress for this event. Wait for it to finish before sending again.',
+        'An email blast is already in progress for this event. Wait or abort it first.',
+      job: getBulkEmailJob(jobKey),
     })
   }
 
-  // Send in the background so HAProxy/nginx does not return 504 while SMTP delivers many messages.
   const eventName = event.name
   const recipientsSnapshot = uniqueRecipients.map((r) => ({ ...r }))
-  void runBroadcastEmailJob({
-    recipients: recipientsSnapshot,
-    subject: subjectSafe,
-    messageHtml,
-    eventName,
-    startDate,
-    endDate,
-    dashboardUrl,
+  const n = uniqueRecipients.length
+  const estimatedSeconds = estimateBulkEmailDurationSeconds(n)
+
+  void runThrottledBulkEmail({
     eventId,
-    jobKey,
+    kind: JOB_KIND,
+    recipients: recipientsSnapshot,
+    sendOne: async (recipient) => {
+      const html = generateVolunteerBroadcastEmail({
+        firstName: recipient.firstName || 'Volunteer',
+        eventName,
+        eventStartDate: startDate,
+        eventEndDate: endDate,
+        dashboardUrl,
+        messageHtml,
+      })
+      await sendEmail({
+        to: recipient.email,
+        subject: subjectSafe,
+        html,
+      })
+    },
+  }).then((snap) => {
+    console.log(
+      `[broadcast-email] event=${eventId} done sent=${snap.sent} failed=${snap.failed} aborted=${snap.aborted}`
+    )
   })
 
-  const n = uniqueRecipients.length
   return res.status(202).json({
     success: true,
     async: true,
+    job: JOB_KIND,
     recipientCount: n,
-    message: `Queued ${n} recipient${n === 1 ? '' : 's'}. Gmail accepts the send first; each recipient’s mail server may still reject later (disabled mailbox, full inbox, etc.) — watch your inbox for bounce notices. You can leave this page — large lists may take a minute. Do not click Send again.`,
+    estimatedSeconds,
+    message: `Queued ${n} recipient${n === 1 ? '' : 's'} (~${Math.ceil(
+      estimatedSeconds / 60
+    )} min at Gmail-safe pace). Watch for bounce notices. Abort from Volunteers if needed — do not click Send again.`,
   })
-}
-
-async function runBroadcastEmailJob(params: {
-  recipients: { firstName: string; email: string }[]
-  subject: string
-  messageHtml: string
-  eventName: string
-  startDate?: string
-  endDate?: string
-  dashboardUrl: string
-  eventId: string
-  jobKey: string
-}) {
-  const { recipients, subject, messageHtml, eventName, startDate, endDate, dashboardUrl, eventId, jobKey } =
-    params
-  let sent = 0
-  let failed = 0
-  const errors: string[] = []
-
-  try {
-    for (const recipient of recipients) {
-      try {
-        const html = generateVolunteerBroadcastEmail({
-          firstName: recipient.firstName,
-          eventName,
-          eventStartDate: startDate,
-          eventEndDate: endDate,
-          dashboardUrl,
-          messageHtml,
-        })
-        await sendEmail({
-          to: recipient.email,
-          subject,
-          html,
-        })
-        sent++
-      } catch (err: unknown) {
-        failed++
-        const msg = err instanceof Error ? err.message : 'Unknown send error'
-        errors.push(`${recipient.email}: ${msg}`)
-      }
-    }
-    console.log(
-      `[broadcast-email] event=${eventId} done sent=${sent} failed=${failed}${failed ? ` firstError=${errors[0]}` : ''}`
-    )
-    if (sent === 0 && failed > 0) {
-      console.error('[broadcast-email] all sends failed:', errors.slice(0, 10))
-    }
-  } catch (err: unknown) {
-    console.error('[broadcast-email] job crashed', err)
-  } finally {
-    releaseEmailJob(jobKey)
-  }
 }

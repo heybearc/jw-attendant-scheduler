@@ -5,9 +5,19 @@ import { prisma } from '@/lib/prisma'
 import { isEmailConfigured, sendEmail } from '@/lib/email'
 import { generateChatEnabledEmail } from '@/lib/chatEmails'
 import { formatCalendarDateLabel } from '@/lib/calendarDate'
+import { getEventRosterEmailRecipients } from '@/lib/eventRosterEmail'
+import {
+  tryAcquireEmailJob,
+  bulkEmailJobKey,
+  runThrottledBulkEmail,
+  estimateBulkEmailDurationSeconds,
+  getBulkEmailJob,
+} from '@/lib/bulkEmailJob'
+
+const JOB_KIND = 'chat-notify'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
+  if (req.method !== 'GET' && req.method !== 'POST') {
     return res.status(405).json({ success: false, error: 'Method not allowed' })
   }
 
@@ -23,11 +33,38 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const actor = await prisma.users.findUnique({
     where: { email: session.user.email },
-    select: { id: true, role: true }
+    select: { id: true, role: true },
   })
 
   if (!actor || !['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN'].includes(actor.role)) {
     return res.status(403).json({ success: false, error: 'Insufficient permissions' })
+  }
+
+  const event = await prisma.events.findUnique({
+    where: { id: eventId },
+    select: { id: true, name: true, startDate: true, endDate: true },
+  })
+
+  if (!event) {
+    return res.status(404).json({ success: false, error: 'Event not found' })
+  }
+
+  const recipients = await getEventRosterEmailRecipients(eventId)
+  const recipientCount = recipients.length
+  const estimatedSeconds = estimateBulkEmailDurationSeconds(recipientCount)
+  const jobKey = bulkEmailJobKey(eventId, JOB_KIND)
+  const existing = getBulkEmailJob(jobKey)
+
+  if (req.method === 'GET' || req.body?.preview === true || req.query.preview === '1') {
+    return res.status(200).json({
+      success: true,
+      preview: true,
+      recipientCount,
+      estimatedSeconds,
+      scope: 'volunteers_roster',
+      scopeNote: 'Only Volunteers roster (excludes IVS-only imports)',
+      job: existing && !existing.done ? existing : null,
+    })
   }
 
   const emailReady = await isEmailConfigured()
@@ -35,89 +72,67 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ success: false, error: 'Email is not configured' })
   }
 
-  const event = await prisma.events.findUnique({
-    where: { id: eventId },
-    select: { id: true, name: true, startDate: true, endDate: true }
-  })
-
-  if (!event) {
-    return res.status(404).json({ success: false, error: 'Event not found' })
-  }
-
-  const customMessage = typeof req.body?.message === 'string' ? req.body.message.trim() : ''
-
-  const memberships = await prisma.event_volunteers.findMany({
-    where: {
-      eventId,
-      isActive: true,
-      volunteerId: { not: null },
-      volunteer: { isActive: true },
-    },
-    select: {
-      volunteer: {
-        select: { id: true, firstName: true, email: true }
-      }
-    }
-  })
-
-  const recipients = memberships
-    .map((m) => m.volunteer)
-    .filter((v): v is { id: string; firstName: string; email: string } => !!v?.email)
-
-  const seenEmails = new Set<string>()
-  const uniqueRecipients = recipients.filter((r) => {
-    const key = r.email.toLowerCase()
-    if (seenEmails.has(key)) return false
-    seenEmails.add(key)
-    return true
-  })
-
-  if (uniqueRecipients.length === 0) {
+  if (recipientCount === 0) {
     return res.status(200).json({
       success: true,
       sent: 0,
       failed: 0,
-      message: 'No active volunteers with email found for this event'
+      message: 'No roster volunteers with email found for this event',
     })
   }
 
+  if (!tryAcquireEmailJob(jobKey)) {
+    return res.status(409).json({
+      success: false,
+      error:
+        'A chat-notify email job is already running for this event. Wait or abort it first.',
+      job: getBulkEmailJob(jobKey),
+    })
+  }
+
+  const customMessage = typeof req.body?.message === 'string' ? req.body.message.trim() : ''
   const baseUrl = process.env.NEXTAUTH_URL || 'https://theoshift.com'
   const dashboardUrl = `${baseUrl}/volunteer/dashboard?eventId=${event.id}`
-  const startDate = event.startDate ? formatCalendarDateLabel(event.startDate.toISOString()) : undefined
+  const startDate = event.startDate
+    ? formatCalendarDateLabel(event.startDate.toISOString())
+    : undefined
   const endDate = event.endDate ? formatCalendarDateLabel(event.endDate.toISOString()) : undefined
+  const eventName = event.name
+  const recipientsSnapshot = recipients.map((r) => ({ ...r }))
 
-  let sent = 0
-  let failed = 0
-  const errors: string[] = []
-
-  for (const recipient of uniqueRecipients) {
-    try {
+  void runThrottledBulkEmail({
+    eventId,
+    kind: JOB_KIND,
+    recipients: recipientsSnapshot,
+    sendOne: async (recipient) => {
       const html = generateChatEnabledEmail({
-        firstName: recipient.firstName,
-        eventName: event.name,
+        firstName: recipient.firstName || 'Volunteer',
+        eventName,
         eventStartDate: startDate || undefined,
         eventEndDate: endDate || undefined,
         dashboardUrl,
-        customMessage: customMessage || undefined
+        customMessage: customMessage || undefined,
       })
-
       await sendEmail({
         to: recipient.email,
-        subject: `Event chat is now available for ${event.name}`,
-        html
+        subject: `Event chat is now available for ${eventName}`,
+        html,
       })
-      sent++
-    } catch (error: any) {
-      failed++
-      errors.push(`${recipient.email}: ${error?.message || 'Unknown send error'}`)
-    }
-  }
+    },
+  }).then((snap) => {
+    console.log(
+      `[chat-notify] event=${eventId} done sent=${snap.sent} failed=${snap.failed} aborted=${snap.aborted}`
+    )
+  })
 
-  return res.status(200).json({
+  return res.status(202).json({
     success: true,
-    sent,
-    failed,
-    errors: failed > 0 ? errors : undefined,
-    message: `Chat rollout email sent to ${sent} volunteer${sent === 1 ? '' : 's'}${failed ? ` (${failed} failed)` : ''}`
+    async: true,
+    job: JOB_KIND,
+    recipientCount,
+    estimatedSeconds,
+    message: `Queued chat launch email to ${recipientCount} roster volunteer${
+      recipientCount === 1 ? '' : 's'
+    } (~${Math.ceil(estimatedSeconds / 60)} min at Gmail-safe pace). You can Abort from Chat if needed.`,
   })
 }

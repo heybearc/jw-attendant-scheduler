@@ -10,6 +10,10 @@ import { useRouter } from 'next/router'
 import { useScrollRestoration } from '../../../hooks/useScrollRestoration'
 import { notifyAlert, toast } from '../../../lib/ui/toast'
 import { appConfirm, appConfirmMessage } from '../../../lib/ui/confirm'
+import {
+  abortEventBulkEmail,
+  formatBulkEmailConfirmMessage,
+} from '../../../lib/bulkEmailClient'
 import PhoneInput from '../../../components/PhoneInput'
 import { displayPhone } from '@/lib/formatPhone'
 import { volunteerRosterWhere } from '@/lib/volunteerRoster'
@@ -225,6 +229,9 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
   const [broadcastSubject, setBroadcastSubject] = useState('')
   const [broadcastMessage, setBroadcastMessage] = useState('')
   const [broadcastSending, setBroadcastSending] = useState(false)
+  const [bulkEmailJobKind, setBulkEmailJobKind] = useState<'broadcast' | 'availability' | null>(
+    null
+  )
   /** Snapshot of association IDs when emailing “selected” so sends aren’t affected if selection changes while the modal is open. */
   const [broadcastPinnedSelection, setBroadcastPinnedSelection] = useState<string[]>([])
   const [filters, setFilters] = useState<{
@@ -469,7 +476,21 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
   const handleSendBulkRequest = async () => {
     if (selectedAttendants.size === 0) return
 
+    const count = selectedAttendants.size
+    const confirmed = await appConfirm({
+      title: 'Send availability requests',
+      message: formatBulkEmailConfirmMessage({
+        recipientCount: count,
+        estimatedSeconds: Math.ceil(count * 1.2),
+        scopeNote: 'Selected Volunteers roster people only (not IVS-only).',
+      }),
+      confirmLabel: 'Queue emails',
+      cancelLabel: 'Cancel',
+    })
+    if (!confirmed) return
+
     setSendingBulkRequest(true)
+    setBulkEmailJobKind('availability')
     try {
       const attendantIds = Array.from(selectedAttendants).map(associationId => {
         const attendant = attendants.find(a => a.associationId === associationId)
@@ -492,7 +513,7 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
         notifyAlert(
           result.async
             ? result.message ||
-                `✅ Queued availability requests for ${result.recipientCount ?? result.sent} volunteers — do not click Send again`
+                `✅ Queued availability requests for ${result.recipientCount ?? result.sent} volunteers`
             : `✅ Availability requests sent to ${result.sent} attendants${result.failed > 0 ? `\n⚠️ ${result.failed} failed` : ''}`
         )
         setShowBulkRequestModal(false)
@@ -501,10 +522,12 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
         setBulkRequestMessage('')
         preserveStateAndReload()
       } else {
+        setBulkEmailJobKind(null)
         notifyAlert(result.error || 'Failed to send availability requests')
       }
     } catch (error) {
       console.error('Error sending bulk availability request:', error)
+      setBulkEmailJobKind(null)
       notifyAlert('Failed to send availability requests')
     } finally {
       setSendingBulkRequest(false)
@@ -761,7 +784,28 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
       notifyAlert('Select at least one volunteer, or choose “All active volunteers”.')
       return
     }
+
+    const count =
+      broadcastEmailScope === 'selected'
+        ? broadcastPinnedSelection.length
+        : activeVolunteersWithEmailCount
+    const confirmed = await appConfirm({
+      title: 'Send volunteer email',
+      message: formatBulkEmailConfirmMessage({
+        recipientCount: count,
+        estimatedSeconds: Math.ceil(count * 1.2),
+        scopeNote:
+          broadcastEmailScope === 'selected'
+            ? 'Selected Volunteers roster people only.'
+            : 'All active Volunteers roster people with email (excludes IVS-only).',
+      }),
+      confirmLabel: 'Queue emails',
+      cancelLabel: 'Cancel',
+    })
+    if (!confirmed) return
+
     setBroadcastSending(true)
+    setBulkEmailJobKind('broadcast')
     try {
       const res = await fetch(`/api/events/${eventId}/volunteers/broadcast-email`, {
         method: 'POST',
@@ -777,6 +821,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
+        setBulkEmailJobKind(null)
         const detail =
           typeof data.error === 'string'
             ? data.error
@@ -789,25 +834,29 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
       if (data.async) {
         notifyAlert(
           data.message ||
-            `Sending to ${data.recipientCount ?? ''} recipient(s) in the background. Large lists may take a minute.`
+            `Sending to ${data.recipientCount ?? ''} recipient(s) in the background.`
         )
       } else {
-        const extra =
-          Array.isArray(data.errors) && data.errors.length > 0
-            ? `\n\n${data.errors.slice(0, 5).join('\n')}${data.errors.length > 5 ? '\n…' : ''}`
-            : ''
-        notifyAlert((data.message || `Sent to ${data.sent || 0} recipient(s)`) + extra)
+        notifyAlert(data.message || 'Email sent.')
+        setBulkEmailJobKind(null)
       }
       setShowBroadcastEmailModal(false)
       setBroadcastSubject('')
       setBroadcastMessage('')
-      setBroadcastPinnedSelection([])
-    } catch (e) {
-      console.error(e)
+    } catch (error) {
+      console.error('Broadcast email error:', error)
+      setBulkEmailJobKind(null)
       notifyAlert('Failed to send email')
     } finally {
       setBroadcastSending(false)
     }
+  }
+
+  const handleAbortBulkEmail = async () => {
+    if (!bulkEmailJobKind) return
+    const result = await abortEventBulkEmail(eventId, bulkEmailJobKind)
+    notifyAlert(result.message)
+    if (result.ok) setBulkEmailJobKind(null)
   }
 
   const handleSelectAll = () => {
@@ -1134,6 +1183,15 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                   </svg>
                   Email volunteers
                 </button>
+                {bulkEmailJobKind && (
+                  <button
+                    type="button"
+                    onClick={handleAbortBulkEmail}
+                    className="inline-flex items-center px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-md transition-colors"
+                  >
+                    Abort {bulkEmailJobKind === 'availability' ? 'availability' : 'email'} send
+                  </button>
+                )}
               </div>
             )}
           </div>

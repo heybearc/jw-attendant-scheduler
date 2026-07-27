@@ -8,7 +8,12 @@ import {
   escapeHtml,
   formatPlainMessageAsHtml,
 } from '../../../../src/lib/volunteerBroadcastEmail'
-import { tryAcquireEmailJob, releaseEmailJob } from '../../../../src/lib/emailSendGuard'
+import {
+  tryAcquireEmailJob,
+  runThrottledBulkEmail,
+  estimateBulkEmailDurationSeconds,
+  getBulkEmailJob,
+} from '../../../../src/lib/bulkEmailJob'
 import { volunteerRosterWhere } from '../../../../src/lib/volunteerRoster'
 
 /**
@@ -113,11 +118,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return true
     })
 
-    const jobKey = `availability-request:${eventId}`
+    const JOB_KIND = 'availability'
+    const jobKey = `${JOB_KIND}:${eventId}`
     if (!tryAcquireEmailJob(jobKey)) {
       return res.status(409).json({
         error:
-          'An availability email send is already in progress for this event. Wait for it to finish before sending again.',
+          'An availability email send is already in progress for this event. Wait or abort it first.',
+        job: getBulkEmailJob(jobKey),
       })
     }
 
@@ -152,77 +159,79 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const recipientsSnapshot = attendants.map((a) => ({ ...a }))
     const eventName = event.name
     const location = event.location || event.venue || 'Location TBD'
-
-    void (async () => {
-      try {
-        let sent = 0
-        let failed = 0
-        for (const attendant of recipientsSnapshot) {
-          try {
-            const existing = await prisma.volunteer_availability.findUnique({
-              where: {
-                eventId_volunteerId: {
-                  eventId,
-                  volunteerId: attendant.id
-                }
-              }
-            })
-
-            if (existing) {
-              await prisma.volunteer_availability.update({
-                where: { id: existing.id },
-                data: {
-                  requestedAt: new Date(),
-                  reminderSentAt: null
-                }
-              })
-            } else {
-              await prisma.volunteer_availability.create({
-                data: {
-                  id: randomBytes(16).toString('hex'),
-                  eventId,
-                  volunteerId: attendant.id,
-                  status: 'PENDING',
-                  requestedAt: new Date()
-                }
-              })
-            }
-
-            const emailHtml = generateAvailabilityRequestEmail({
-              volunteerFirstName: attendant.firstName,
-              volunteerLastName: attendant.lastName,
-              eventName,
-              startDate,
-              endDate,
-              location,
-              deadline: deadlineDate,
-              customMessageHtml: messageHtml || undefined,
-              responseUrl
-            })
-
-            await sendAvailabilityEmail(attendant.email, `Availability Request: ${eventName}`, emailHtml)
-            sent++
-          } catch (error: any) {
-            failed++
-            console.error(`[availability-request] failed ${attendant.email}:`, error?.message || error)
-          }
-        }
-        console.log(`[availability-request] event=${eventId} done sent=${sent} failed=${failed}`)
-      } catch (err) {
-        console.error('[availability-request] job crashed', err)
-      } finally {
-        releaseEmailJob(jobKey)
-      }
-    })()
-
     const n = recipientsSnapshot.length
+    const estimatedSeconds = estimateBulkEmailDurationSeconds(n)
+
+    void runThrottledBulkEmail({
+      eventId,
+      kind: JOB_KIND,
+      recipients: recipientsSnapshot,
+      sendOne: async (attendant) => {
+        const volunteerId = attendant.id!
+        const existing = await prisma.volunteer_availability.findUnique({
+          where: {
+            eventId_volunteerId: {
+              eventId,
+              volunteerId,
+            },
+          },
+        })
+
+        if (existing) {
+          await prisma.volunteer_availability.update({
+            where: { id: existing.id },
+            data: {
+              requestedAt: new Date(),
+              reminderSentAt: null,
+            },
+          })
+        } else {
+          await prisma.volunteer_availability.create({
+            data: {
+              id: randomBytes(16).toString('hex'),
+              eventId,
+              volunteerId,
+              status: 'PENDING',
+              requestedAt: new Date(),
+            },
+          })
+        }
+
+        const emailHtml = generateAvailabilityRequestEmail({
+          volunteerFirstName: attendant.firstName || '',
+          volunteerLastName: attendant.lastName || '',
+          eventName,
+          startDate,
+          endDate,
+          location,
+          deadline: deadlineDate,
+          customMessageHtml: messageHtml || undefined,
+          responseUrl,
+        })
+
+        await sendAvailabilityEmail(
+          attendant.email,
+          `Availability Request: ${eventName}`,
+          emailHtml
+        )
+      },
+    }).then((snap) => {
+      console.log(
+        `[availability-request] event=${eventId} done sent=${snap.sent} failed=${snap.failed} aborted=${snap.aborted}`
+      )
+    })
+
     return res.status(202).json({
       success: true,
       async: true,
+      job: JOB_KIND,
       recipientCount: n,
       sent: n,
       failed: 0,
-      message: `Queued availability requests for ${n} volunteer${n === 1 ? '' : 's'}. Large lists may take a minute — do not click Send again.`,
+      estimatedSeconds,
+      message: `Queued availability requests for ${n} volunteer${n === 1 ? '' : 's'} (~${Math.ceil(
+        estimatedSeconds / 60
+      )} min at Gmail-safe pace). Abort from Volunteers if needed — do not click Send again.`,
     })
 
   } catch (error: any) {

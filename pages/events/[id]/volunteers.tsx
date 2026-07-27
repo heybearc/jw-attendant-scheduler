@@ -12,6 +12,7 @@ import { notifyAlert, toast } from '../../../lib/ui/toast'
 import { appConfirm, appConfirmMessage } from '../../../lib/ui/confirm'
 import PhoneInput from '../../../components/PhoneInput'
 import { displayPhone } from '@/lib/formatPhone'
+import { volunteerRosterWhere } from '@/lib/volunteerRoster'
 
 interface Event {
   id: string
@@ -527,7 +528,7 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
       let payload: {
         error?: string
         success?: boolean
-        data?: { message?: string; alreadyOnEvent?: boolean }
+        data?: { message?: string; alreadyOnEvent?: boolean; promotedFromIvs?: boolean }
       } = {}
       try {
         if (raw) payload = JSON.parse(raw)
@@ -544,6 +545,8 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
         setShowAddModal(false)
         if (payload.data?.alreadyOnEvent) {
           toast.info(payload.data.message || 'This volunteer is already on this event')
+        } else if (payload.data?.promotedFromIvs) {
+          toast.success(payload.data.message || 'Added to volunteer roster (already on IVS)')
         }
         preserveStateAndReload()
       } else {
@@ -3042,12 +3045,11 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       status: eventData.status
     }
 
-    // Simplified: Get attendants for this event (including inactive)
-    // Exclude IVS approval volunteers - they only appear in IVS Approvals tab
+    // Roster only — IVS-only imports stay off this page until promoted
     const eventAttendants = await prisma.event_volunteers.findMany({
       where: {
         eventId: id as string,
-        ivsImportBatchId: null as any // Exclude IVS imports
+        ...volunteerRosterWhere,
       },
       select: {
         volunteerId: true

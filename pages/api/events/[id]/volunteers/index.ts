@@ -4,6 +4,7 @@ import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '../../../../../src/lib/prisma'
 import { handleApiError } from '@/lib/apiError'
 import { normalizePhoneForStorage } from '@/lib/formatPhone'
+import { volunteerRosterWhere } from '@/lib/volunteerRoster'
 
 // NEW VOLUNTEERS API ENDPOINT
 // This API manages volunteers for events
@@ -53,13 +54,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
 async function handleGetEventVolunteers(req: NextApiRequest, res: NextApiResponse, eventId: string, event: any) {
   try {
-    // Get volunteers from event_volunteers table (mapped to event_attendants)
-    // Exclude IVS approval volunteers - they only appear in IVS Approvals tab
+    // Roster only (IVS-only imports stay on the IVS tab until promoted)
     const eventVolunteers = await prisma.event_volunteers.findMany({
       where: {
         eventId: eventId,
         isActive: true,
-        ivsImportBatchId: null as any // Exclude IVS imports
+        ...volunteerRosterWhere,
       },
       include: {
         volunteer: {
@@ -201,18 +201,11 @@ async function handleCreateEventVolunteer(req: NextApiRequest, res: NextApiRespo
     })
 
     if (existingAssignment) {
-      if (!existingAssignment.isActive) {
-        await prisma.event_volunteers.update({
-          where: { id: existingAssignment.id },
-          data: {
-            isActive: true,
-            isOverseer: req.body.isOverseer || false,
-            isKeyman: req.body.isKeyman || false,
-            updatedAt: new Date()
-          }
-        })
-      } else {
-        // Idempotent: already on the event — not a failure
+      const alreadyOnRoster =
+        existingAssignment.isActive && existingAssignment.onVolunteerRoster
+
+      if (alreadyOnRoster) {
+        // Idempotent: already on the Volunteers roster — not a failure
         return res.status(200).json({
           success: true,
           data: {
@@ -229,6 +222,40 @@ async function handleCreateEventVolunteer(req: NextApiRequest, res: NextApiRespo
           }
         })
       }
+
+      // Reactivate and/or promote IVS-only membership onto the Volunteers roster.
+      // Keep IVS fields so they remain on the IVS tab.
+      const promotedFromIvs =
+        !!existingAssignment.ivsImportBatchId && !existingAssignment.onVolunteerRoster
+
+      await prisma.event_volunteers.update({
+        where: { id: existingAssignment.id },
+        data: {
+          isActive: true,
+          onVolunteerRoster: true,
+          isOverseer: req.body.isOverseer || false,
+          isKeyman: req.body.isKeyman || false,
+          updatedAt: new Date()
+        }
+      })
+
+      if (promotedFromIvs) {
+        return res.status(200).json({
+          success: true,
+          data: {
+            id: volunteer.id,
+            firstName: volunteer.firstName,
+            lastName: volunteer.lastName,
+            email: volunteer.email,
+            phone: volunteer.phone,
+            congregation: volunteer.congregation,
+            formsOfService: volunteer.formsOfService,
+            isActive: volunteer.isActive,
+            promotedFromIvs: true,
+            message: 'Added to volunteer roster (already on IVS for this event)'
+          }
+        })
+      }
     } else {
       await prisma.event_volunteers.create({
         data: {
@@ -237,6 +264,7 @@ async function handleCreateEventVolunteer(req: NextApiRequest, res: NextApiRespo
           volunteerId: volunteer.id,
           role: 'VOLUNTEER',
           isActive: true,
+          onVolunteerRoster: true,
           isOverseer: req.body.isOverseer || false,
           isKeyman: req.body.isKeyman || false,
           createdAt: new Date(),

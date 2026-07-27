@@ -31,6 +31,7 @@ import {
   getShiftVolunteersNeeded
 } from '../../../lib/shiftCapacity'
 import { sortShiftsByTime } from '../../../lib/shiftSort'
+import { volunteerRosterWhere } from '@/lib/volunteerRoster'
 import ShiftInlineEditor from '../../../components/ShiftInlineEditor'
 
 // Utility function to convert 24-hour time to 12-hour format
@@ -3133,12 +3134,11 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     })
 
     
-    // Get event-attendant associations for this specific event (SOURCE OF TRUTH)
-    // Exclude IVS volunteers (they have ivsImportBatchId set)
+    // Roster only — IVS-only imports stay off Positions until promoted
     const eventAssociations = await prisma.event_volunteers.findMany({
       where: {
         eventId: id as string,
-        ivsImportBatchId: null
+        ...volunteerRosterWhere,
       },
       include: {
         volunteer: {

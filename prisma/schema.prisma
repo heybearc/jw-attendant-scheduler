@@ -253,6 +253,11 @@ model event_volunteers {
   isOverseer              Boolean                @default(false) @map("is_overseer")
   isElder                 Boolean                @default(false) @map("is_elder")
   
+  // True when this person is on the Volunteers / Positions roster.
+  // IVS imports create event_volunteers rows with this false so they stay IVS-only
+  // until explicitly added via the Volunteers page (same unique event+volunteer row).
+  onVolunteerRoster       Boolean                @default(false) @map("on_volunteer_roster")
+
   // IVS Approval Workflow Fields (optional, null if not using IVS module)
   ivsApprovalStatus       String?                @map("ivs_approval_status")
   ivsSubmittedBy          String?                @map("ivs_submitted_by")

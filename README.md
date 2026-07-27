@@ -37,10 +37,10 @@ Theocratic Shift Scheduler is a comprehensive web application designed to manage
 - **Volunteers & IVS lists** - Choose how many rows per page on IVS Approvals; **Shift+click** checkboxes to select a range on the current page (Volunteers + IVS); browser refresh keeps your scroll position on long lists (v4.21.4+)
 - **IVS Module** - Approvals and Early Check-In for phones and tablets; downloadable import template with optional STATUS and EARLY ENTRY; department contacts with remove/clear; phone numbers format as (XXX) XXX-XXXX app-wide (v4.28.0+)
 - **Unlimited Positions** - Create numbered positions per event
-- **Position Shifts** - Time-based shift assignments
+- **Position Shifts** - Time-based shifts; set how many people are needed per shift; edit name/times in place; shifts sort AM→PM (v4.29.0+)
 - **Position Templates** - Reusable position configurations
 - **Bulk Operations** - Manage multiple positions efficiently
-- **Auto-Assignment Engine** - Priority-based assignment algorithm with conflict detection
+- **Auto-Assignment Engine** - Priority-based assignment with conflict detection and multi-person shift capacity (v4.29.0+)
 - **Drag-and-Drop** - Intuitive assignment creation
 
 ### Count Times System (NEW in v4.18.0)
@@ -276,6 +276,7 @@ For issues or questions:
 
 ## 📝 Version History
 
+- **v4.29.0** (2026-07-26) - Positions: multi-person shifts (volunteers needed), in-place shift edit, AM–PM auto-sort
 - **v4.28.0** (2026-07-25) - Phone (XXX) XXX-XXXX formatting app-wide; existing numbers normalized
 - **v4.27.0** (2026-07-25) - IVS: remove department from contacts; phone (XXX) XXX-XXXX formatting; clear approval date when not Approved
 - **v4.26.1** (2026-07-25) - Volunteers page: multi-select checkboxes show checked immediately

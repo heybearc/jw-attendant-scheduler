@@ -28,6 +28,18 @@ export default function ManagingAssignmentsPage({ userRole }: ManagingAssignment
           </p>
         </div>
 
+        {(userRole === 'ADMIN' || userRole === 'OVERSEER' || userRole === 'ASSISTANT_OVERSEER' || userRole === 'KEYMAN') && (
+          <div className="bg-white border border-gray-200 rounded-lg p-6 mb-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-3">🕐 Shifts on Positions</h2>
+            <ul className="space-y-2 text-sm text-gray-600">
+              <li>• <strong>Volunteers needed:</strong> Set how many people serve on one shift (default is 1). Useful for regional stations with several volunteers at the same time.</li>
+              <li>• <strong>Edit in place:</strong> Use <strong>Edit</strong> on a shift to fix the name or times without deleting it.</li>
+              <li>• <strong>Order:</strong> Shifts are listed from morning to evening automatically. All Day shifts appear last.</li>
+              <li>• <strong>Fill progress:</strong> Each shift shows how many seats are filled (for example <code>2/4</code>).</li>
+            </ul>
+          </div>
+        )}
+
         <div className="space-y-8">
           {/* Position Types */}
           <div>

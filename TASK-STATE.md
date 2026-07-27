@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-07-26  
 **Branch:** `main`  
-**Production:** **LIVE** **GREEN** `10.92.3.22` · **STANDBY** **BLUE** `10.92.3.24` — both **v4.28.0**.
+**Production:** shipping **v4.29.0** (shift capacity + in-place edit).
 
 ---
 

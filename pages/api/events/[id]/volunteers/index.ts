@@ -124,52 +124,122 @@ async function handleCreateEventVolunteer(req: NextApiRequest, res: NextApiRespo
       })
     }
 
+    const normalizedEmail = String(email).toLowerCase().trim()
+    if (!normalizedEmail) {
+      return res.status(400).json({
+        success: false,
+        error: 'A valid email is required'
+      })
+    }
+
     // Process forms of service
     let processedFormsOfService: string[] = []
     if (formsOfService) {
       if (Array.isArray(formsOfService)) {
         processedFormsOfService = formsOfService
       } else if (typeof formsOfService === 'string') {
-        processedFormsOfService = formsOfService.split(',').map(f => f.trim())
+        processedFormsOfService = formsOfService.split(',').map((f: string) => f.trim()).filter(Boolean)
       }
     }
 
-    // Create new volunteer
-    const volunteer = await prisma.volunteers.create({
-      data: {
-        id: require('crypto').randomUUID(),
-        firstName,
-        lastName,
-        email,
-        phone: phone ? normalizePhoneForStorage(phone) || null : null,
-        congregation: congregation || '',
-        notes: notes || null,
-        formsOfService: processedFormsOfService,
-        isAvailable: true,
-        isActive: true,
-        userId: null,
-        createdAt: new Date(),
-        updatedAt: new Date()
+    const phoneNormalized = phone ? normalizePhoneForStorage(phone) || null : null
+
+    // Global registry: one person per email — reuse if already in the system
+    let volunteer = await prisma.volunteers.findFirst({
+      where: {
+        email: { equals: normalizedEmail, mode: 'insensitive' }
       }
     })
 
-    // Automatically assign to event
-    await prisma.event_volunteers.create({
-      data: {
-        id: require('crypto').randomUUID(),
-        eventId: eventId,
-        volunteerId: volunteer.id,
-        role: 'VOLUNTEER',
-        isActive: true,
-        isOverseer: req.body.isOverseer || false,
-        isKeyman: req.body.isKeyman || false,
-        createdAt: new Date(),
-        updatedAt: new Date()
+    let createdNew = false
+
+    if (volunteer) {
+      // Keep profile fresh when re-adding to an event
+      volunteer = await prisma.volunteers.update({
+        where: { id: volunteer.id },
+        data: {
+          firstName,
+          lastName,
+          phone: phoneNormalized ?? volunteer.phone,
+          congregation: congregation || volunteer.congregation || '',
+          notes: notes !== undefined && notes !== null ? notes : volunteer.notes,
+          formsOfService:
+            processedFormsOfService.length > 0
+              ? processedFormsOfService
+              : volunteer.formsOfService,
+          isActive: true,
+          updatedAt: new Date()
+        }
+      })
+    } else {
+      volunteer = await prisma.volunteers.create({
+        data: {
+          id: require('crypto').randomUUID(),
+          firstName,
+          lastName,
+          email: normalizedEmail,
+          phone: phoneNormalized,
+          congregation: congregation || '',
+          notes: notes || null,
+          formsOfService: processedFormsOfService,
+          isAvailable: true,
+          isActive: true,
+          userId: null,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+      })
+      createdNew = true
+    }
+
+    // Link to this event (or reactivate existing link)
+    const existingAssignment = await prisma.event_volunteers.findFirst({
+      where: {
+        eventId,
+        volunteerId: volunteer.id
       }
     })
 
+    if (existingAssignment) {
+      if (!existingAssignment.isActive) {
+        await prisma.event_volunteers.update({
+          where: { id: existingAssignment.id },
+          data: {
+            isActive: true,
+            isOverseer: req.body.isOverseer || false,
+            isKeyman: req.body.isKeyman || false,
+            updatedAt: new Date()
+          }
+        })
+      } else {
+        return res.status(409).json({
+          success: false,
+          error: 'This volunteer is already on this event',
+          data: {
+            id: volunteer.id,
+            firstName: volunteer.firstName,
+            lastName: volunteer.lastName,
+            email: volunteer.email
+          }
+        })
+      }
+    } else {
+      await prisma.event_volunteers.create({
+        data: {
+          id: require('crypto').randomUUID(),
+          eventId,
+          volunteerId: volunteer.id,
+          role: 'VOLUNTEER',
+          isActive: true,
+          isOverseer: req.body.isOverseer || false,
+          isKeyman: req.body.isKeyman || false,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+      })
+    }
 
-    return res.status(201).json({
+    return res.status(createdNew ? 201 : 200).json({
       success: true,
       data: {
         id: volunteer.id,
@@ -180,11 +250,13 @@ async function handleCreateEventVolunteer(req: NextApiRequest, res: NextApiRespo
         congregation: volunteer.congregation,
         formsOfService: volunteer.formsOfService,
         isActive: volunteer.isActive,
-        message: 'Volunteer created and assigned to event'
+        message: createdNew
+          ? 'Volunteer created and assigned to event'
+          : 'Existing volunteer linked to event'
       }
     })
   } catch (error) {
-    // Error logged by handleApiError
+    console.error('Failed to create volunteer:', error)
     return res.status(500).json({ success: false, error: 'Failed to create volunteer' })
   }
 }

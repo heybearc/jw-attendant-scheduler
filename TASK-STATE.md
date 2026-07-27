@@ -1,8 +1,8 @@
 # TheoShift Task State
 
-**Last updated:** 2026-06-08  
+**Last updated:** 2026-07-26  
 **Branch:** `main`  
-**Production:** **LIVE** **BLUE** `10.92.3.24` · **STANDBY** **GREEN** `10.92.3.22` (HAProxy verified 2026-06-08; both nodes on **v4.22.0**).
+**Production:** **LIVE** **GREEN** `10.92.3.22` · **STANDBY** **BLUE** `10.92.3.24` — both **v4.28.0**.
 
 ---
 
@@ -12,24 +12,23 @@
 
 ### What I'm doing right now
 
-Resume the **mobile audit** for `/events/[id]/positions` and `/events/[id]/volunteers` (card layouts under `md`, 44px targets, filters usable on phones). **v4.22.0** (toasts + inline dialogs) is **LIVE** — spot-check confirmations on mobile while auditing.
+Resume the **mobile audit** for `/events/[id]/positions` and `/events/[id]/volunteers` when next coding. IVS / phone work through **v4.28.0** is shipped.
 
 ### Recent completions
 
-- ✅ **v4.22.0 shipped** — Replaced browser `alert`/`confirm`/`prompt` with Chapter Hub-style **toasts** + **inline confirm/prompt** (`AppUiProvider`, ~45 files); **`/ship`** + **`/sync`**; qa-01 **4 passed / 1 skipped**; GitHub release [v4.22.0](https://github.com/heybearc/theoshift/releases/tag/v4.22.0) (`fe17b1d6`, `9c04d150`, `04287a63`).
-- ✅ **Release-gate** — Chat pin test updated for inline confirm dialog (`04287a63`).
-- ✅ **v4.21.9 — IVS** — Overseer/keyman IVS management + bulk actions (prior release).
+- ✅ **v4.28.0** — App-wide phone `(XXX) XXX-XXXX`; DB normalize (168 volunteers, etc.)
+- ✅ **v4.27.0** — Remove IVS department from contacts; approval date clear when not Approved; phone format on contacts
+- ✅ **v4.26.x** — IVS import template (STATUS/EARLY ENTRY); volunteer early check-in day counts; Volunteers checkbox feedback
 
 ### Next steps
 
-1. Continue **mobile audit**: Positions + Volunteers — cards under `md`, no horizontal-scroll-only workflows, 44px actions.
-2. Quick **prod smoke** on phone: delete/cancel flows use new dialogs (not browser popups).
-3. Triage **`/admin/feedback`** when online (0 new as of end-day).
-4. Run **`/test-release theoshift standby`** after large mobile UI changes.
+1. Continue **mobile audit**: Positions + Volunteers — cards under `md`, 44px actions.
+2. Triage **`/admin/feedback`** when online.
+3. Run **`/test-release theoshift standby`** after large mobile UI changes.
 
 ## Exact next command
 
-`/start-day` — then open Positions or Volunteers on a narrow viewport and continue the mobile audit.
+Open Positions or Volunteers on a narrow viewport and continue the mobile audit.
 
 ---
 
@@ -53,15 +52,15 @@ Resume the **mobile audit** for `/events/[id]/positions` and `/events/[id]/volun
 
 ## Session snapshot — recent `main` commits
 
-- `fe17b1d6` — Release v4.22.0 — toasts and confirmation dialogs  
-- `04287a63` — test: release-gate chat pin inline confirm  
-- `9c04d150` — feat: replace alert/confirm with toasts and dialogs  
+- `7a4bb4bf` — Release v4.28.0 — App-wide phone number formatting  
+- `4239b626` — feat: apply phone formatting app-wide and normalize existing numbers  
+- `4da8e5ea` — Release v4.27.0 — IVS contacts remove, phone format, approval date fix  
 
 ---
 
 ## Feedback triage (this session)
 
-- **Resolved:** 0 · **Promoted:** 0 · **Triaged:** 0 new (`scripts/ssh-query-feedback.sh new`).
+- **Resolved:** 0 · **Promoted:** 0 · **Triaged:** 0 new URGENT (`scripts/ssh-query-feedback.sh new` → 0 rows).
 
 ---
 

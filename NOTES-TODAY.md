@@ -1,22 +1,24 @@
 ---
-date: 2026-07-18
+date: 2026-07-26
 purpose: Scratchpad for today's discoveries (promote on /end-day)
 ---
 
 ## Today
 
 ### Focus
-- IVS Approvals: early entry sort + eligible filter; check-in shows department
+- Mid-day checkpoint after IVS + phone formatting releases (v4.26–v4.28)
 
 ### Discoveries / Notes
-- Backlog: import early-entry days from IVS spreadsheet (`parseEarlyEntryDaysInput` already exists in lib)
-- Next design candidate: IVS department contacts (overseer / assistants / phone) keyed by `ivsSubmittedBy` for early-entry desk lookup when a volunteer isn’t found — prefer department-level contacts over per-volunteer overseer links
+- LIVE + STANDBY both on **v4.28.0** (GREEN live / BLUE standby) — no undeployed work
+- IVS: import template (STATUS + EARLY ENTRY), department contacts remove, approval-date clear on non-Approved, phone normalize app-wide
+- Department contacts stay Approvals (manage) + Early Check-In lookup (incl. volunteer Early Check-In for IVS team) — user confirmed keep as-is
+- Backlog item “import early-entry from spreadsheet” — **done** (v4.26+)
 
 ### Decisions to Promote
-- 
+- Keep IVS department contacts placement (Approvals manage / Early Check-In lookup only)
 
 ### Blockers / Risks
 - 
 
 ### Links / Commands
-- 
+- Deploy contract: commit → push → STANDBY after each completed fix/feature

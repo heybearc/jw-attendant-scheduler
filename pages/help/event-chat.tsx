@@ -83,6 +83,11 @@ export default function EventChatHelpPage({ userRole }: Props) {
                 <li>
                   <strong>Delete</strong>: remove a message for everyone.
                 </li>
+                <li>
+                  <strong>Notify chat launch</strong>: emails Volunteers-roster people that chat is available.
+                  You&apos;ll see the recipient count first; IVS-only people are not included. Use{' '}
+                  <strong>Abort</strong> if you need to stop a large send.
+                </li>
               </ul>
             </section>
           )}

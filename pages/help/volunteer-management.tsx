@@ -33,8 +33,13 @@ export default function VolunteerManagementHelp({ userRole }: VolunteerManagemen
           <h2 className="text-2xl font-semibold text-gray-900 mb-4">📧 Email volunteers on an event</h2>
           <p className="text-gray-700 mb-4">
             Open an event and go to the <strong>Volunteers</strong> section. Use <strong>Email volunteers</strong>{' '}
-            (near Add / Import) to message <strong>all active volunteers</strong> who have an email on file, or
+            (near Add / Import) to message <strong>all active roster volunteers</strong> who have an email on file, or
             select rows and use <strong>Email selected</strong> in the blue toolbar.
+          </p>
+          <p className="text-gray-700 mb-4">
+            Before sending, TheoShift shows how many people will receive the email and an estimated time.
+            You can cancel there, or use <strong>Abort</strong> if a large send is already running.
+            Messages keep your paragraph spacing. IVS-only people (not on the Volunteers roster) are not emailed.
           </p>
           <p className="text-gray-700 mb-4">
             Enter a subject and message; TheoShift sends through your organization&apos;s configured email
@@ -42,7 +47,7 @@ export default function VolunteerManagementHelp({ userRole }: VolunteerManagemen
             <strong>Shift</strong> and click another to include everyone in between.
           </p>
           <p className="text-gray-700 mb-0">
-            &quot;All active&quot; matches volunteers who are marked active on the roster and have an email—same idea as the Active filter on the list. Large sends may take a little while; wait for the confirmation message when finished.
+            &quot;All active&quot; matches volunteers who are marked active on the roster and have an email—same idea as the Active filter on the list. Large sends are paced for Gmail safety and may take several minutes.
           </p>
         </section>
 

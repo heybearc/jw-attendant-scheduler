@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { authOptions } from '../../../../../auth/[...nextauth]'
 import { prisma } from '../../../../../../../src/lib/prisma'
 import { canManagePosition } from '../../../../../../../src/lib/eventAccess'
+import { resequencePositionShifts } from '../../../../../../../lib/resequencePositionShifts'
 
 // APEX GUARDIAN: Individual Shift Management API
 // Handles update/deletion of individual shifts with proper cleanup
@@ -74,7 +75,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === 'PATCH') {
-      return await handleUpdateShift(req, res, shiftId)
+      return await handleUpdateShift(req, res, positionId, shiftId, shift)
     }
 
     if (req.method === 'DELETE') {
@@ -89,16 +90,45 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 }
 
-async function handleUpdateShift(req: NextApiRequest, res: NextApiResponse, shiftId: string) {
+async function handleUpdateShift(
+  req: NextApiRequest,
+  res: NextApiResponse,
+  positionId: string,
+  shiftId: string,
+  existing: { isAllDay: boolean }
+) {
   const validated = updateShiftSchema.parse(req.body)
   if (Object.keys(validated).length === 0) {
     return res.status(400).json({ success: false, error: 'No fields to update' })
   }
 
+  const nextIsAllDay = validated.isAllDay ?? existing.isAllDay
+
+  if (validated.isAllDay === true) {
+    const siblingCount = await prisma.position_shifts.count({
+      where: { positionId, id: { not: shiftId } }
+    })
+    if (siblingCount > 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Cannot set All Day — this position already has other shifts'
+      })
+    }
+  }
+
+  const data: Record<string, unknown> = { ...validated }
+  if (nextIsAllDay) {
+    data.startTime = null
+    data.endTime = null
+    data.isAllDay = true
+  }
+
   const updated = await prisma.position_shifts.update({
     where: { id: shiftId },
-    data: validated
+    data
   })
+
+  await resequencePositionShifts(positionId)
 
   return res.status(200).json({
     success: true,
@@ -130,6 +160,8 @@ async function handleDeleteShift(req: NextApiRequest, res: NextApiResponse, even
         where: { id: shiftId }
       })
     })
+
+    await resequencePositionShifts(positionId)
 
     return res.status(200).json({
       success: true,

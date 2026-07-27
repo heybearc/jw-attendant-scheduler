@@ -6,6 +6,7 @@ import { z } from 'zod'
 import crypto from 'crypto'
 import { handleApiError } from '@/lib/apiError'
 import { canManagePosition } from '../../../../../../src/lib/eventAccess'
+import { resequencePositionShifts } from '../../../../../../lib/resequencePositionShifts'
 
 // Validation schema for shift creation
 const shiftSchema = z.object({
@@ -97,6 +98,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           data: shiftData
         })
 
+        await resequencePositionShifts(positionId)
 
         return res.status(201).json({
           success: true,

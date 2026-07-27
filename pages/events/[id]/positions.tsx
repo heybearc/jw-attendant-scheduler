@@ -30,6 +30,8 @@ import {
   getPositionSlotFillRatio,
   getShiftVolunteersNeeded
 } from '../../../lib/shiftCapacity'
+import { sortShiftsByTime } from '../../../lib/shiftSort'
+import ShiftInlineEditor from '../../../components/ShiftInlineEditor'
 
 // Utility function to convert 24-hour time to 12-hour format
 function formatTime12Hour(time24: string): string {
@@ -477,6 +479,8 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
   const [showExportMenu, setShowExportMenu] = useState(false)
   const [showActionsMenu, setShowActionsMenu] = useState(false)
   const [isSmallScreen, setIsSmallScreen] = useState(false)
+  const [editingShiftId, setEditingShiftId] = useState<string | null>(null)
+  const [savingShiftId, setSavingShiftId] = useState<string | null>(null)
 
   // Persist viewMode to localStorage whenever it changes
   useEffect(() => {
@@ -1902,7 +1906,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                       <div className="mb-4">
                         <p className="text-xs font-medium text-gray-500 mb-2">🕐 Shift Assignments</p>
                         <div className="space-y-2">
-                          {position.shifts.map(shift => {
+                          {sortShiftsByTime(position.shifts).map(shift => {
                             // Find assignments for this specific shift
                             const shiftSpecificAssignments = position.assignments?.filter(assignment => 
                               assignment.shift?.id === shift.id
@@ -1920,6 +1924,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                             )
                             const shiftOverseerName = shiftLeadershipAssignments.find(a => a.role === 'OVERSEER')
                             const positionOversight = position.oversight?.[0]
+                            const isEditing = editingShiftId === shift.id
                             
                             return (
                               <div key={shift.id} className="bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 rounded-lg p-3 hover:shadow-sm transition-all duration-200">
@@ -1946,44 +1951,69 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                                       {filledCount}/{neededCount}
                                     </span>
                                   </div>
-                                  <div className="flex items-center space-x-2">
-                                    {canManageContent && (
-                                      <label className="flex items-center gap-1 text-xs text-gray-500" title="Volunteers needed on this shift">
-                                        <span>Need</span>
-                                        <input
-                                          type="number"
-                                          min={1}
-                                          max={50}
-                                          defaultValue={neededCount}
-                                          className="w-12 px-1 py-0.5 border border-gray-300 rounded text-xs"
-                                          onBlur={async (e) => {
-                                            const next = Math.max(1, Math.min(50, parseInt(e.target.value, 10) || 1))
-                                            if (next === neededCount) return
-                                            const ok = await positionService.updateShift(position.id, shift.id, {
-                                              volunteersNeeded: next
-                                            })
-                                            if (ok) {
-                                              router.reload()
-                                            } else {
-                                              notifyAlert('Failed to update shift capacity')
-                                              e.target.value = String(neededCount)
-                                            }
-                                          }}
-                                        />
-                                      </label>
+                                  <div className="flex items-center space-x-1">
+                                    {canManageContent && !isEditing && (
+                                      <button
+                                        type="button"
+                                        onClick={() => setEditingShiftId(shift.id)}
+                                        className="text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded px-1.5 py-0.5 transition-colors"
+                                        title={`Edit ${shift.name} shift`}
+                                      >
+                                        Edit
+                                      </button>
                                     )}
-                                    <button
-                                      onClick={() => handleDeleteShift(position.id, shift.id, shift.name)}
-                                      className="text-xs text-red-600 hover:text-red-800 hover:bg-red-100 rounded px-1 py-0.5 transition-colors"
-                                      title={`Delete ${shift.name} shift`}
-                                    >
-                                      ✕
-                                    </button>
+                                    {canManageContent && (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleDeleteShift(position.id, shift.id, shift.name || 'Shift')}
+                                        className="text-xs text-red-600 hover:text-red-800 hover:bg-red-100 rounded px-1 py-0.5 transition-colors"
+                                        title={`Delete ${shift.name || 'Shift'} shift`}
+                                      >
+                                        ✕
+                                      </button>
+                                    )}
                                   </div>
                                 </div>
 
+                                {isEditing && (
+                                  <ShiftInlineEditor
+                                    initial={{
+                                      name: shift.name || '',
+                                      startTime: shift.startTime || '',
+                                      endTime: shift.endTime || '',
+                                      isAllDay: !!shift.isAllDay,
+                                      volunteersNeeded: neededCount
+                                    }}
+                                    saving={savingShiftId === shift.id}
+                                    onCancel={() => setEditingShiftId(null)}
+                                    onSave={async (values) => {
+                                      setSavingShiftId(shift.id)
+                                      try {
+                                        const ok = await positionService.updateShift(position.id, shift.id, {
+                                          name: values.name,
+                                          startTime: values.isAllDay ? null : values.startTime || null,
+                                          endTime: values.isAllDay ? null : values.endTime || null,
+                                          isAllDay: values.isAllDay,
+                                          volunteersNeeded: values.volunteersNeeded
+                                        })
+                                        if (ok) {
+                                          setEditingShiftId(null)
+                                          router.reload()
+                                        } else {
+                                          notifyAlert('Failed to update shift')
+                                        }
+                                      } catch (err) {
+                                        console.error(err)
+                                        notifyAlert('Failed to update shift')
+                                      } finally {
+                                        setSavingShiftId(null)
+                                      }
+                                    }}
+                                  />
+                                )}
+
                                 {/* Prefer shift overseer; fall back to position oversight label */}
-                                {shiftOverseerName ? (
+                                {!isEditing && (shiftOverseerName ? (
                                   <p className="text-xs text-blue-700 mb-1">
                                     Shift overseer: {(shiftOverseerName as any).volunteer?.firstName || (shiftOverseerName as any).attendant?.firstName}{' '}
                                     {(shiftOverseerName as any).volunteer?.lastName || (shiftOverseerName as any).attendant?.lastName}
@@ -1992,7 +2022,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                                   <p className="text-xs text-gray-500 mb-1">
                                     Position overseer: {positionOversight.overseer.firstName} {positionOversight.overseer.lastName}
                                   </p>
-                                ) : null}
+                                ) : null)}
                                 {/* Shift Leadership Assignments */}
                                 {shiftLeadershipAssignments.length > 0 && (
                                   <div className="mb-2">
@@ -3046,7 +3076,9 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
                 }
               }
             },
-            shifts: true
+            shifts: {
+              orderBy: { sequence: 'asc' }
+            }
           },
           orderBy: [
             { positionNumber: 'asc' }

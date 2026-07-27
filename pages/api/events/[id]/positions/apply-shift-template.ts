@@ -4,6 +4,7 @@ import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '../../../../../src/lib/prisma'
 import { z } from 'zod'
 import crypto from 'crypto'
+import { resequencePositionShifts } from '../../../../../lib/resequencePositionShifts'
 
 // Validation schema for applying shift templates
 const applyTemplateSchema = z.object({
@@ -142,6 +143,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             positionShifts.push(newShift)
             totalShiftsCreated++
           }
+
+          await resequencePositionShifts(position.id)
           
           results.push({
             positionId: position.id,

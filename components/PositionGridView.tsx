@@ -5,6 +5,7 @@
 
 import React, { useState, useMemo } from 'react'
 import { checkAttendantConflict, findAlternativeAttendants } from '../src/lib/conflictDetection'
+import { sortShiftsByTime } from '../lib/shiftSort'
 
 interface Shift {
   id: string
@@ -295,7 +296,7 @@ export default function PositionGridView({
 
                   <div className="p-4">
                     <div className="grid grid-cols-3 gap-3">
-                      {position.shifts?.map(shift => {
+                      {sortShiftsByTime(position.shifts).map(shift => {
                         const shiftStatus = getShiftStatus(position, shift)
                         
                         return (
@@ -369,7 +370,7 @@ export default function PositionGridView({
                       </div>
                     </div>
                     <div className="space-y-2">
-                      {position.shifts?.map(shift => {
+                      {sortShiftsByTime(position.shifts).map(shift => {
                         const shiftStatus = getShiftStatus(position, shift)
                         return (
                           <div

@@ -4,6 +4,7 @@ import {
   getPositionSlotFillRatio,
   getShiftVolunteersNeeded
 } from '../lib/shiftCapacity'
+import { sortShiftsByTime } from '../lib/shiftSort'
 
 interface Shift {
   id: string
@@ -169,7 +170,7 @@ export default function PositionCard({
           <div className="mb-4">
             <p className="text-xs font-medium text-gray-500 mb-2">🕐 Shift Assignments</p>
             <div className="space-y-2">
-              {position.shifts.map(shift => {
+              {sortShiftsByTime(position.shifts).map(shift => {
                 const shiftSpecificAssignments = position.assignments?.filter(
                   assignment => assignment.shift?.id === shift.id
                 ) || []

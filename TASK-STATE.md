@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-07-26  
 **Branch:** `main`  
-**Production:** **LIVE** **BLUE** `10.92.3.24` · **STANDBY** **GREEN** `10.92.3.22` — both **v4.29.0**.
+**Production:** shipping **v4.29.1** (bulk create number collision fix).
 
 ---
 

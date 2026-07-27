@@ -276,6 +276,7 @@ For issues or questions:
 
 ## 📝 Version History
 
+- **v4.29.1** (2026-07-26) - Fix bulk create positions colliding with existing numbers
 - **v4.29.0** (2026-07-26) - Positions: multi-person shifts (volunteers needed), in-place shift edit, AM–PM auto-sort
 - **v4.28.0** (2026-07-25) - Phone (XXX) XXX-XXXX formatting app-wide; existing numbers normalized
 - **v4.27.0** (2026-07-25) - IVS: remove department from contacts; phone (XXX) XXX-XXXX formatting; clear approval date when not Approved

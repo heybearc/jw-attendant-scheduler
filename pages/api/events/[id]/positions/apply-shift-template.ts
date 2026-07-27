@@ -131,7 +131,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               startTime: shiftTemplate.isAllDay ? null : shiftTemplate.startTime,
               endTime: shiftTemplate.isAllDay ? null : shiftTemplate.endTime,
               isAllDay: shiftTemplate.isAllDay,
-              sequence: existingShifts.length + i + 1
+              sequence: existingShifts.length + i + 1,
+              volunteersNeeded: Math.max(1, Math.min(50, Number(shiftTemplate.volunteersNeeded) || 1))
             }
             
             const newShift = await prisma.position_shifts.create({

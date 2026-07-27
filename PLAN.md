@@ -1,8 +1,8 @@
 # TheoShift Plan
 
-**Last updated:** 2026-06-08  
+**Last updated:** 2026-07-26  
 **Current phase:** Feature Development + Platform Infrastructure  
-**Status:** **v4.22.0 LIVE** (toasts + inline confirm/prompt, Chapter Hub pattern). Both nodes synced. Continued work: Positions/Volunteers **mobile audit**.
+**Status:** **v4.28.0 LIVE**. Option C: shift `volunteersNeeded` + capacity-aware auto-assign. Full Positions redesign deferred to backlog (out-of-band).
 
 ---
 
@@ -23,6 +23,7 @@ This follows the usual small-team pattern: **one system of record in the app**, 
 ## Current Phase
 
 ### Active Work
+- **Positions Option C (regional multi-body shifts)** — additive: `volunteersNeeded` on shifts (default 1), fill progress `n/needed`, prefer shift-level OVERSEER for pool/display, capacity-aware auto-assign. Must not change default 1-per-shift behavior for existing events.
 - **Mobile readiness across TheoShift** — eliminate horizontal-scroll-only workflows, ensure 44px tap targets, improve responsive layouts on event and admin pages, verify on Safari/Chrome/Edge/Firefox.
 
 ### Completed This Phase
@@ -59,6 +60,11 @@ This follows the usual small-team pattern: **one system of record in the app**, 
 ## Prioritized Backlog
 
 ### High Priority
+- **Positions page redesign (out-of-band)** — Rebuild Positions UX/logic for multi-body shifts, rotating per-shift overseers, and regional multi-day stations without overloading the current page. Ship Option C first on the live page; redesign in a parallel branch/surface and publish when ready (do not break events using today’s layout).
+  - Status: Backlog (approved direction)
+  - Effort: XL
+  - Constraint: Current page remains source of truth until redesigned page is explicitly published
+  - Drivers: 4+ volunteers per shift; different overseer per shift; 3-day regionals; auto-assign + position oversight mismatch
 - **TheoShift Native In-App Chat (Event-Scoped, Magic-Link Compatible)** — Real-time communication for overseers and volunteers inside TheoShift
   - Status: Planned (approved direction)
   - Effort: L (MVP) / XL (full rollout)

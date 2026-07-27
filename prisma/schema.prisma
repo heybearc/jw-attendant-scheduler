@@ -637,6 +637,8 @@ model position_shifts {
   name                 String
   sequence             Int
   startTime            String?
+  /// How many people should serve on this shift (default 1 = legacy behavior)
+  volunteersNeeded     Int                    @default(1)
   position_assignments position_assignments[] @relation("ShiftToAssignments")
   positions            positions              @relation("PositionToShifts", fields: [positionId], references: [id], onDelete: Cascade)
 

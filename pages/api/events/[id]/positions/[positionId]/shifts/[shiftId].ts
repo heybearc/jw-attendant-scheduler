@@ -1,14 +1,22 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth'
+import { z } from 'zod'
 import { authOptions } from '../../../../../auth/[...nextauth]'
 import { prisma } from '../../../../../../../src/lib/prisma'
-import { handleApiError } from '@/lib/apiError'
+import { canManagePosition } from '../../../../../../../src/lib/eventAccess'
 
 // APEX GUARDIAN: Individual Shift Management API
-// Handles deletion of individual shifts with proper cleanup
+// Handles update/deletion of individual shifts with proper cleanup
+
+const updateShiftSchema = z.object({
+  volunteersNeeded: z.number().int().min(1).max(50).optional(),
+  name: z.string().min(1).max(100).optional(),
+  startTime: z.string().nullable().optional(),
+  endTime: z.string().nullable().optional(),
+  isAllDay: z.boolean().optional()
+})
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  console.log('🎯 SHIFT MANAGEMENT API CALLED')
   try {
     const session = await getServerSession(req, res, authOptions)
     
@@ -21,12 +29,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!eventId || typeof eventId !== 'string' || 
         !positionId || typeof positionId !== 'string' ||
         !shiftId || typeof shiftId !== 'string') {
-      console.log('❌ Invalid parameters')
       return res.status(400).json({ success: false, error: 'Event ID, Position ID, and Shift ID are required' })
     }
 
-    // Verify event exists
-    console.log('3. Verifying event exists...')
+    const user = await prisma.users.findUnique({
+      where: { email: session.user?.email || '' }
+    })
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' })
+    }
+
+    if (!(await canManagePosition(user.id, eventId, positionId))) {
+      return res.status(403).json({ success: false, error: 'Insufficient permissions' })
+    }
+
     const event = await prisma.events.findUnique({
       where: { id: eventId }
     })
@@ -35,8 +51,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ success: false, error: 'Event not found' })
     }
 
-    // Verify position exists and belongs to event
-    console.log('4. Verifying position exists...')
     const position = await prisma.positions.findFirst({
       where: { 
         id: positionId,
@@ -48,8 +62,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ success: false, error: 'Position not found' })
     }
 
-    // Verify shift exists and belongs to position
-    console.log('5. Verifying shift exists...')
     const shift = await prisma.position_shifts.findFirst({
       where: { 
         id: shiftId,
@@ -61,16 +73,38 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ success: false, error: 'Shift not found' })
     }
 
+    if (req.method === 'PATCH') {
+      return await handleUpdateShift(req, res, shiftId)
+    }
+
     if (req.method === 'DELETE') {
       return await handleDeleteShift(req, res, eventId, positionId, shiftId, shift.name)
     }
 
+    res.setHeader('Allow', ['PATCH', 'DELETE'])
     return res.status(405).json({ success: false, error: 'Method not allowed' })
   } catch (error: any) {
     console.error('❌ SHIFT MANAGEMENT API ERROR:', error.message)
-    console.error('Stack:', error.stack)
     return res.status(500).json({ success: false, error: 'Internal server error' })
   }
+}
+
+async function handleUpdateShift(req: NextApiRequest, res: NextApiResponse, shiftId: string) {
+  const validated = updateShiftSchema.parse(req.body)
+  if (Object.keys(validated).length === 0) {
+    return res.status(400).json({ success: false, error: 'No fields to update' })
+  }
+
+  const updated = await prisma.position_shifts.update({
+    where: { id: shiftId },
+    data: validated
+  })
+
+  return res.status(200).json({
+    success: true,
+    data: updated,
+    message: 'Shift updated successfully'
+  })
 }
 
 async function handleDeleteShift(req: NextApiRequest, res: NextApiResponse, eventId: string, positionId: string, shiftId: string, shiftName: string) {

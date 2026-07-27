@@ -25,6 +25,11 @@ import { authOptions } from '../../api/auth/[...nextauth]'
 import crypto from 'crypto'
 import { notifyAlert, toast } from '../../../lib/ui/toast'
 import { appConfirm, appConfirmMessage } from '../../../lib/ui/confirm'
+import {
+  countShiftAssignments,
+  getPositionSlotFillRatio,
+  getShiftVolunteersNeeded
+} from '../../../lib/shiftCapacity'
 
 // Utility function to convert 24-hour time to 12-hour format
 function formatTime12Hour(time24: string): string {
@@ -58,6 +63,7 @@ interface Position {
     startTime?: string
     endTime?: string
     isAllDay: boolean
+    volunteersNeeded?: number
   }>
   assignments?: Array<{
     id: string
@@ -1577,21 +1583,26 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
               </div>
             </div>
             {(() => {
-              const totalShifts = positions.filter(p => p.isActive).reduce((sum, pos) => sum + (pos.shifts?.length || 0), 0)
-              const assignedShifts = positions.filter(p => p.isActive).reduce((sum, pos) => {
-                return sum + (pos.shifts?.filter(shift => {
-                  const shiftAssignments = pos.assignments?.filter(a => a.shift?.id === shift.id && a.role === 'VOLUNTEER').length || 0
-                  return shiftAssignments > 0
-                }).length || 0)
-              }, 0)
-              const completionPercentage = totalShifts > 0 ? Math.round((assignedShifts / totalShifts) * 100) : 0
+              const activePositions = positions.filter(p => p.isActive)
+              const { filled, needed, percentage: completionPercentage } = activePositions.reduce(
+                (acc, pos) => {
+                  const r = getPositionSlotFillRatio(pos.shifts, pos.assignments)
+                  return {
+                    filled: acc.filled + r.filled,
+                    needed: acc.needed + r.needed,
+                    percentage: 0
+                  }
+                },
+                { filled: 0, needed: 0, percentage: 0 }
+              )
+              const pct = needed > 0 ? Math.round((filled / needed) * 100) : 0
               
               return (
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
                   <div className="flex items-center justify-between mb-3">
                     <div>
                       <p className="text-sm font-medium text-gray-500">Shift Coverage</p>
-                      <p className="text-3xl font-bold text-gray-900">{assignedShifts}/{totalShifts}</p>
+                      <p className="text-3xl font-bold text-gray-900">{filled}/{needed}</p>
                     </div>
                     <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
                       <span className="text-2xl">✅</span>
@@ -1600,14 +1611,14 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                   <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
                     <div 
                       className={`h-3 rounded-full transition-all duration-500 ${
-                        completionPercentage === 100 ? 'bg-green-500' : 
-                        completionPercentage >= 80 ? 'bg-blue-500' : 
-                        completionPercentage >= 50 ? 'bg-yellow-500' : 'bg-red-500'
+                        pct === 100 ? 'bg-green-500' : 
+                        pct >= 80 ? 'bg-blue-500' : 
+                        pct >= 50 ? 'bg-yellow-500' : 'bg-red-500'
                       }`}
-                      style={{ width: `${completionPercentage}%` }}
+                      style={{ width: `${pct}%` }}
                     ></div>
                   </div>
-                  <p className="text-sm text-gray-600">{completionPercentage}% Complete</p>
+                  <p className="text-sm text-gray-600">{pct}% Complete</p>
                 </div>
               )
             })()}
@@ -1782,13 +1793,9 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
               </div>
             ) : (
               getFilteredPositionsWithOverseer().map((position) => {
-                // Calculate completion percentage for this position
-                const totalShifts = position.shifts?.length || 0
-                const assignedShifts = position.shifts?.filter(shift => {
-                  const shiftAssignments = position.assignments?.filter(a => a.shift?.id === shift.id && a.role === 'VOLUNTEER').length || 0
-                  return shiftAssignments > 0
-                }).length || 0
-                const completionPercentage = totalShifts > 0 ? Math.round((assignedShifts / totalShifts) * 100) : 0
+                // Slot-based completion (respects volunteersNeeded, default 1)
+                const { filled: assignedShifts, needed: totalShifts, percentage: completionPercentage } =
+                  getPositionSlotFillRatio(position.shifts, position.assignments)
                 
                 return (
                 <div key={position.id} className={`group relative rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 ${
@@ -1863,7 +1870,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                     <div className="mb-4">
                       <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
                         <span>Assignment Progress</span>
-                        <span>{assignedShifts}/{totalShifts} shifts filled</span>
+                        <span>{assignedShifts}/{totalShifts} slots filled</span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                         <div 
@@ -1901,23 +1908,23 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                               assignment.shift?.id === shift.id
                             ) || []
                             
-                            // Get ALL leadership assignments (both position-level and shift-specific)
-                            const allLeadershipAssignments = position.assignments?.filter(assignment => 
-                              assignment.role === 'OVERSEER' || assignment.role === 'KEYMAN'
-                            ) || []
+                            const filledCount = countShiftAssignments(position.assignments, shift.id)
+                            const neededCount = getShiftVolunteersNeeded(shift)
                             
                             // Separate regular attendants from leadership for this shift
                             const attendantAssignments = shiftSpecificAssignments.filter(assignment => 
-                              assignment.role === 'VOLUNTEER'
+                              assignment.role === 'VOLUNTEER' || assignment.role === 'ATTENDANT'
                             )
                             const shiftLeadershipAssignments = shiftSpecificAssignments.filter(assignment => 
                               assignment.role === 'OVERSEER' || assignment.role === 'KEYMAN'
                             )
+                            const shiftOverseerName = shiftLeadershipAssignments.find(a => a.role === 'OVERSEER')
+                            const positionOversight = position.oversight?.[0]
                             
                             return (
                               <div key={shift.id} className="bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 rounded-lg p-3 hover:shadow-sm transition-all duration-200">
                                 <div className="flex items-center justify-between mb-1">
-                                  <div className="flex items-center space-x-2">
+                                  <div className="flex items-center space-x-2 flex-wrap gap-y-1">
                                     <span className="text-xs font-medium text-gray-700">
                                       {shift.name}
                                     </span>
@@ -1931,11 +1938,40 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                                         All Day
                                       </span>
                                     )}
+                                    <span className={`text-xs px-1.5 py-0.5 rounded ${
+                                      filledCount >= neededCount
+                                        ? 'bg-green-100 text-green-800'
+                                        : 'bg-amber-100 text-amber-800'
+                                    }`}>
+                                      {filledCount}/{neededCount}
+                                    </span>
                                   </div>
                                   <div className="flex items-center space-x-2">
-                                    <span className="text-xs text-gray-400">
-                                      {attendantAssignments.length} attendant{attendantAssignments.length !== 1 ? 's' : ''}
-                                    </span>
+                                    {canManageContent && (
+                                      <label className="flex items-center gap-1 text-xs text-gray-500" title="Volunteers needed on this shift">
+                                        <span>Need</span>
+                                        <input
+                                          type="number"
+                                          min={1}
+                                          max={50}
+                                          defaultValue={neededCount}
+                                          className="w-12 px-1 py-0.5 border border-gray-300 rounded text-xs"
+                                          onBlur={async (e) => {
+                                            const next = Math.max(1, Math.min(50, parseInt(e.target.value, 10) || 1))
+                                            if (next === neededCount) return
+                                            const ok = await positionService.updateShift(position.id, shift.id, {
+                                              volunteersNeeded: next
+                                            })
+                                            if (ok) {
+                                              router.reload()
+                                            } else {
+                                              notifyAlert('Failed to update shift capacity')
+                                              e.target.value = String(neededCount)
+                                            }
+                                          }}
+                                        />
+                                      </label>
+                                    )}
                                     <button
                                       onClick={() => handleDeleteShift(position.id, shift.id, shift.name)}
                                       className="text-xs text-red-600 hover:text-red-800 hover:bg-red-100 rounded px-1 py-0.5 transition-colors"
@@ -1945,7 +1981,18 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                                     </button>
                                   </div>
                                 </div>
-                                
+
+                                {/* Prefer shift overseer; fall back to position oversight label */}
+                                {shiftOverseerName ? (
+                                  <p className="text-xs text-blue-700 mb-1">
+                                    Shift overseer: {(shiftOverseerName as any).volunteer?.firstName || (shiftOverseerName as any).attendant?.firstName}{' '}
+                                    {(shiftOverseerName as any).volunteer?.lastName || (shiftOverseerName as any).attendant?.lastName}
+                                  </p>
+                                ) : positionOversight?.overseer ? (
+                                  <p className="text-xs text-gray-500 mb-1">
+                                    Position overseer: {positionOversight.overseer.firstName} {positionOversight.overseer.lastName}
+                                  </p>
+                                ) : null}
                                 {/* Shift Leadership Assignments */}
                                 {shiftLeadershipAssignments.length > 0 && (
                                   <div className="mb-2">
@@ -2329,10 +2376,15 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
 
         {/* Assign Volunteer Modal */}
         {showAssignAttendantModal && selectedPosition && (() => {
-          // Get oversight filtering
+          // Prefer shift-level OVERSEER/KEYMAN for volunteer pool; fall back to position oversight
           const oversight = selectedPosition.oversight && selectedPosition.oversight.length > 0 ? selectedPosition.oversight[0] : null
-          const positionOverseer = oversight?.overseer
-          const positionKeyman = oversight?.keyman
+          const shiftLeadership = selectedPosition.assignments?.filter(
+            a => a.shift?.id === selectedShift?.id && (a.role === 'OVERSEER' || a.role === 'KEYMAN')
+          ) || []
+          const shiftOverseerAssign = shiftLeadership.find(a => a.role === 'OVERSEER')
+          const shiftKeymanAssign = shiftLeadership.find(a => a.role === 'KEYMAN')
+          const positionOverseer = (shiftOverseerAssign as any)?.volunteer || (shiftOverseerAssign as any)?.attendant || oversight?.overseer
+          const positionKeyman = (shiftKeymanAssign as any)?.volunteer || (shiftKeymanAssign as any)?.attendant || oversight?.keyman
           let filteredAttendants = attendants?.filter(att => att.isActive) || []
           if (positionOverseer || positionKeyman) {
             filteredAttendants = filteredAttendants.filter(attendant => {

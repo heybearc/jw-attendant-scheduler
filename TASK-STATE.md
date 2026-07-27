@@ -8,27 +8,27 @@
 
 ## Current Task
 
-**Mobile readiness (Positions / Volunteers)** — IN PROGRESS 🚧
+**Positions Option C (shift capacity)** — DONE ✅ (pending STANDBY verify)
 
 ### What I'm doing right now
 
-Resume the **mobile audit** for `/events/[id]/positions` and `/events/[id]/volunteers` when next coding. IVS / phone work through **v4.28.0** is shipped.
+Option C shipped locally: `volunteersNeeded` on shifts, fill progress, shift-OVERSEER pool preference, capacity-aware auto-assign. Full Positions redesign remains backlog.
 
 ### Recent completions
 
-- ✅ **v4.28.0** — App-wide phone `(XXX) XXX-XXXX`; DB normalize (168 volunteers, etc.)
-- ✅ **v4.27.0** — Remove IVS department from contacts; approval date clear when not Approved; phone format on contacts
-- ✅ **v4.26.x** — IVS import template (STATUS/EARLY ENTRY); volunteer early check-in day counts; Volunteers checkbox feedback
+- ✅ **Option C** — Shift capacity + auto-assign (2026-07-26)
+- ✅ **v4.28.0** — App-wide phone `(XXX) XXX-XXXX`; DB normalize
+- ✅ **v4.27.0** — IVS contacts remove, phone format, approval date fix
 
 ### Next steps
 
-1. Continue **mobile audit**: Positions + Volunteers — cards under `md`, 44px actions.
-2. Triage **`/admin/feedback`** when online.
-3. Run **`/test-release theoshift standby`** after large mobile UI changes.
+1. Verify Option C on STANDBY (create shift with needed=4, assign, auto-assign).
+2. Continue **mobile audit**: Positions + Volunteers.
+3. Triage **`/admin/feedback`** when online.
 
 ## Exact next command
 
-Open Positions or Volunteers on a narrow viewport and continue the mobile audit.
+Smoke-test STANDBY Positions: set shift Need=4, assign multiple volunteers, confirm fill badge.
 
 ---
 

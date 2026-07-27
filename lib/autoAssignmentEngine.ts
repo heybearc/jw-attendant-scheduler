@@ -8,6 +8,8 @@
  * Extracted from positions.tsx as part of gradual refactoring (Week 1, Step 1)
  */
 
+import { getOpenShiftSlots, getShiftVolunteersNeeded } from './shiftCapacity'
+
 // ============================================================================
 // TYPE DEFINITIONS
 // ============================================================================
@@ -18,6 +20,7 @@ export interface Shift {
   startTime?: string
   endTime?: string
   isAllDay: boolean
+  volunteersNeeded?: number
 }
 
 export interface Volunteer {
@@ -42,7 +45,12 @@ export interface Volunteer {
 export interface Assignment {
   id: string
   role: string
-  attendant: {
+  attendant?: {
+    id: string
+    firstName: string
+    lastName: string
+  }
+  volunteer?: {
     id: string
     firstName: string
     lastName: string
@@ -80,6 +88,21 @@ export interface Position {
       lastName: string
     }
   }>
+}
+
+/** Alias — engine historically used "attendant" naming */
+export type Attendant = Volunteer
+
+type UnfilledShiftSlot = {
+  position: Position
+  shift: Shift
+  positionName: string
+  shiftName: string
+  slotKey: string
+}
+
+function getAssignmentPersonId(assignment: Assignment | undefined): string | undefined {
+  return assignment?.attendant?.id || assignment?.volunteer?.id
 }
 
 export interface AssignmentProgress {
@@ -346,10 +369,12 @@ export class AutoAssignmentEngine {
   }
 
   /**
-   * Collect all unfilled shifts grouped by oversight
+   * Collect open shift slots grouped by effective oversight.
+   * Prefers shift-level OVERSEER/KEYMAN when present; falls back to position oversight.
+   * Emits one entry per open capacity slot (volunteersNeeded, default 1).
    */
-  private collectUnfilledShifts(): Map<string, Array<{position: Position, shift: Shift, positionName: string, shiftName: string}>> {
-    const unfilledShifts = new Map<string, Array<{position: Position, shift: Shift, positionName: string, shiftName: string}>>()
+  private collectUnfilledShifts(): Map<string, UnfilledShiftSlot[]> {
+    const unfilledShifts = new Map<string, UnfilledShiftSlot[]>()
 
     this.positions.forEach(position => {
       if (!position.shifts || position.shifts.length === 0) return
@@ -362,21 +387,34 @@ export class AutoAssignmentEngine {
         ? position.shifts
         : position.shifts?.filter(shift => !shift.isAllDay) || []
 
-      const positionOverseerId = positionOversight?.overseer?.id || 'none'
-      const positionKeymanId = positionOversight?.keyman?.id || 'none'
-      const positionLeadershipKey = `${positionOverseerId}-${positionKeymanId}`
-
       shiftsToFill.forEach(shift => {
-        const currentAssignments = position.assignments?.filter(a => a.shift?.id === shift.id).length || 0
-        if (currentAssignments === 0) {
-          if (!unfilledShifts.has(positionLeadershipKey)) {
-            unfilledShifts.set(positionLeadershipKey, [])
+        const shiftAssignments = position.assignments?.filter(a => a.shift?.id === shift.id) || []
+        const shiftOverseer = shiftAssignments.find(a => a.role === 'OVERSEER')
+        const shiftKeyman = shiftAssignments.find(a => a.role === 'KEYMAN')
+
+        const overseerId =
+          getAssignmentPersonId(shiftOverseer) ||
+          positionOversight?.overseer?.id ||
+          'none'
+        const keymanId =
+          getAssignmentPersonId(shiftKeyman) ||
+          positionOversight?.keyman?.id ||
+          'none'
+        const leadershipKey = `${overseerId}-${keymanId}`
+
+        const openSlots = getOpenShiftSlots(shift, position.assignments)
+        const filled = getShiftVolunteersNeeded(shift) - openSlots
+
+        for (let i = 0; i < openSlots; i++) {
+          if (!unfilledShifts.has(leadershipKey)) {
+            unfilledShifts.set(leadershipKey, [])
           }
-          unfilledShifts.get(positionLeadershipKey)!.push({
+          unfilledShifts.get(leadershipKey)!.push({
             position,
             shift,
             positionName: position.name,
-            shiftName: shift.name
+            shiftName: shift.name,
+            slotKey: `${shift.id}#${filled + i}`
           })
         }
       })
@@ -390,7 +428,7 @@ export class AutoAssignmentEngine {
    */
   private async performRoundRobinAssignment(
     leadershipKey: string,
-    unfilledShifts: Array<{position: Position, shift: Shift, positionName: string, shiftName: string}>,
+    unfilledShifts: UnfilledShiftSlot[],
     availableAttendants: Attendant[],
     initialProgressCount: number
   ): Promise<{assignmentCount: number, progressCount: number}> {
@@ -401,7 +439,7 @@ export class AutoAssignmentEngine {
     availableAttendants.forEach(att => {
       const existingShifts = this.positions
         .flatMap(pos => pos.assignments || [])
-        .filter(a => a.attendant?.id === att.id)
+        .filter(a => getAssignmentPersonId(a) === att.id)
         .map(a => a.shift)
         .filter((s): s is Shift => s !== undefined)
 
@@ -416,10 +454,10 @@ export class AutoAssignmentEngine {
     const maxShiftsPerAttendant = Math.ceil(avgShiftsPerAttendant)
 
     this.log(`📊 Smart Distribution for ${leadershipKey}:`)
-    this.log(`   Total shifts to fill: ${totalShiftsToFill}`)
+    this.log(`   Total slots to fill: ${totalShiftsToFill}`)
     this.log(`   Total attendants: ${totalAttendants}`)
-    this.log(`   Average: ${avgShiftsPerAttendant.toFixed(2)} shifts per attendant`)
-    this.log(`   Max shifts per attendant: ${maxShiftsPerAttendant}`)
+    this.log(`   Average: ${avgShiftsPerAttendant.toFixed(2)} slots per attendant`)
+    this.log(`   Max slots per attendant: ${maxShiftsPerAttendant}`)
 
     // Sort shifts by position number, then by time
     const sortedShifts = [...unfilledShifts].sort((a, b) => {
@@ -430,6 +468,8 @@ export class AutoAssignmentEngine {
       const bTime = b.shift.startTime || '00:00'
       return aTime.localeCompare(bTime)
     })
+
+    const assignedSlotKeys = new Set<string>()
 
     // PASS 1: Give everyone 1 shift first
     this.log(`📍 PASS 1: Assigning first shift to each attendant...`)
@@ -458,7 +498,8 @@ export class AutoAssignmentEngine {
           const success = await this.assignAttendantToShift(
             shiftInfo.position.id,
             attendant.id,
-            shiftInfo.shift.id
+            shiftInfo.shift.id,
+            attendant
           )
 
           if (success) {
@@ -466,6 +507,7 @@ export class AutoAssignmentEngine {
             progressCount++
             attendantCurrentAssignments.push(shiftInfo.shift)
             attendantAssignments.set(attendant.id, attendantCurrentAssignments)
+            assignedSlotKeys.add(shiftInfo.slotKey)
             assigned = true
 
             this.updateProgress({
@@ -485,15 +527,10 @@ export class AutoAssignmentEngine {
 
     this.log(`✅ Pass 1 complete: ${pass1Assignments} attendants have 1 shift each`)
 
-    // PASS 2: Assign second shifts
+    // PASS 2: Assign second shifts (track by slotKey so multi-capacity shifts stay open)
     this.log(`📍 PASS 2: Assigning second shifts to ${attendantsWithTwoShifts} attendants...`)
 
-    const assignedShiftIds = new Set<string>()
-    attendantAssignments.forEach(shifts => {
-      shifts.forEach(shift => assignedShiftIds.add(shift.id))
-    })
-
-    const remainingShifts = sortedShifts.filter(shiftInfo => !assignedShiftIds.has(shiftInfo.shift.id))
+    const remainingShifts = sortedShifts.filter(shiftInfo => !assignedSlotKeys.has(shiftInfo.slotKey))
 
     attendantIndex = 0
     let pass2Assignments = 0
@@ -530,7 +567,7 @@ export class AutoAssignmentEngine {
         const existingAssignmentsAtThisPosition = this.positions
           .filter(p => p.id === shiftInfo.position.id)
           .flatMap(p => p.assignments || [])
-          .filter(a => a.attendant?.id === attendant.id)
+          .filter(a => getAssignmentPersonId(a) === attendant.id)
 
         if (existingAssignmentsAtThisPosition.length > 0) {
           attendantIndex++
@@ -544,7 +581,8 @@ export class AutoAssignmentEngine {
           const success = await this.assignAttendantToShift(
             shiftInfo.position.id,
             attendant.id,
-            shiftInfo.shift.id
+            shiftInfo.shift.id,
+            attendant
           )
 
           if (success) {
@@ -552,11 +590,8 @@ export class AutoAssignmentEngine {
             progressCount++
             attendantCurrentAssignments.push(shiftInfo.shift)
             attendantAssignments.set(attendant.id, attendantCurrentAssignments)
-
-            if (attendantCurrentAssignments.length === 2) {
-              attendantsWithSecondShift++
-            }
-
+            assignedSlotKeys.add(shiftInfo.slotKey)
+            attendantsWithSecondShift++
             assigned = true
 
             this.updateProgress({
@@ -609,7 +644,8 @@ export class AutoAssignmentEngine {
   private async assignAttendantToShift(
     positionId: string,
     attendantId: string,
-    shiftId: string
+    shiftId: string,
+    attendant?: Attendant
   ): Promise<boolean> {
     try {
       const response = await fetch(`/api/events/${this.eventId}/assignments`, {
@@ -617,13 +653,37 @@ export class AutoAssignmentEngine {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           positionId,
-          attendantId,
+          volunteerId: attendantId,
           shiftId,
-          role: 'ATTENDANT'
+          role: 'VOLUNTEER'
         })
       })
 
-      return response.ok
+      if (!response.ok) return false
+
+      // Keep in-memory assignments in sync for Pass 2 / stats
+      const position = this.positions.find(p => p.id === positionId)
+      const shift = position?.shifts?.find(s => s.id === shiftId)
+      if (position && attendant) {
+        if (!position.assignments) position.assignments = []
+        position.assignments.push({
+          id: `local-${Date.now()}-${attendantId}`,
+          role: 'VOLUNTEER',
+          attendant: {
+            id: attendant.id,
+            firstName: attendant.firstName,
+            lastName: attendant.lastName
+          },
+          volunteer: {
+            id: attendant.id,
+            firstName: attendant.firstName,
+            lastName: attendant.lastName
+          },
+          shift
+        })
+      }
+
+      return true
     } catch (error) {
       this.log(`❌ Assignment API error: ${error}`)
       return false
@@ -642,8 +702,9 @@ export class AutoAssignmentEngine {
     const allAssignedAttendants = new Map<string, number>()
     this.positions.forEach(pos => {
       pos.assignments?.forEach(a => {
-        if (a.attendant) {
-          const name = `${a.attendant.firstName} ${a.attendant.lastName}`
+        const person = a.attendant || a.volunteer
+        if (person) {
+          const name = `${person.firstName} ${person.lastName}`
           allAssignedAttendants.set(name, (allAssignedAttendants.get(name) || 0) + 1)
         }
       })
@@ -660,16 +721,13 @@ export class AutoAssignmentEngine {
       .filter(k => k >= 3)
       .reduce((sum, k) => sum + (distributionCounts.get(k) || 0), 0)
 
-    // Calculate unfilled shifts
+    // Calculate unfilled slots (capacity-aware)
     let totalUnfilledShifts = 0
     for (const positionsGroup of positionsByLeadership.values()) {
       for (const position of positionsGroup) {
         const shifts = position.shifts?.filter(s => !s.isAllDay) || []
         for (const shift of shifts) {
-          const assignments = position.assignments?.filter(a => a.shift?.id === shift.id).length || 0
-          if (assignments === 0) {
-            totalUnfilledShifts++
-          }
+          totalUnfilledShifts += getOpenShiftSlots(shift, position.assignments)
         }
       }
     }
@@ -689,7 +747,7 @@ export class AutoAssignmentEngine {
     message += `\n💡 All assignments respect oversight boundaries - no cross-contamination!`
 
     if (totalUnfilledShifts > 0) {
-      message += `\n\n⚠️ ${totalUnfilledShifts} shifts remain unfilled - insufficient attendants!`
+      message += `\n\n⚠️ ${totalUnfilledShifts} slots remain unfilled - insufficient attendants!`
     }
 
     return {

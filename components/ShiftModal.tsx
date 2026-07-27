@@ -10,6 +10,7 @@ interface ShiftFormData {
   startTime: string
   endTime: string
   isAllDay: boolean
+  volunteersNeeded: number
 }
 
 interface ShiftModalProps {
@@ -117,6 +118,28 @@ export default function ShiftModal({
                     disabled={formData.isAllDay}
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Volunteers needed
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  max={50}
+                  value={formData.volunteersNeeded ?? 1}
+                  onChange={(e) =>
+                    onFormDataChange({
+                      ...formData,
+                      volunteersNeeded: Math.max(1, Math.min(50, parseInt(e.target.value, 10) || 1))
+                    })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  How many people serve on this shift (default 1). Includes shift overseer if they also serve.
+                </p>
               </div>
 
               <div>

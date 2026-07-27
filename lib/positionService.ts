@@ -23,6 +23,7 @@ export interface Shift {
   startTime?: string
   endTime?: string
   isAllDay: boolean
+  volunteersNeeded?: number
 }
 
 export interface Assignment {
@@ -46,6 +47,15 @@ export interface CreateShiftData {
   startTime: string | null
   endTime: string | null
   isAllDay: boolean
+  volunteersNeeded?: number
+}
+
+export interface UpdateShiftData {
+  volunteersNeeded?: number
+  name?: string
+  startTime?: string | null
+  endTime?: string | null
+  isAllDay?: boolean
 }
 
 export interface AssignOversightData {
@@ -122,6 +132,18 @@ export class PositionService {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(shiftData)
+    })
+    return response.ok
+  }
+
+  /**
+   * Update a shift (e.g. volunteersNeeded capacity)
+   */
+  async updateShift(positionId: string, shiftId: string, data: UpdateShiftData): Promise<boolean> {
+    const response = await fetch(`/api/events/${this.eventId}/positions/${positionId}/shifts/${shiftId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
     })
     return response.ok
   }

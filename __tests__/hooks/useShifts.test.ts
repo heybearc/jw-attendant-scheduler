@@ -32,6 +32,7 @@ describe('useShifts', () => {
       startTime: '',
       endTime: '',
       isAllDay: false,
+      volunteersNeeded: 1,
     })
   })
 
@@ -44,6 +45,7 @@ describe('useShifts', () => {
         startTime: '08:00',
         endTime: '12:00',
         isAllDay: false,
+        volunteersNeeded: 1,
       })
     })
 
@@ -69,6 +71,7 @@ describe('useShifts', () => {
         startTime: '08:00',
         endTime: '12:00',
         isAllDay: false,
+        volunteersNeeded: 1,
       })
     })
 
@@ -81,6 +84,7 @@ describe('useShifts', () => {
       startTime: '08:00',
       endTime: '12:00',
       isAllDay: false,
+      volunteersNeeded: 1,
     })
     expect(global.alert).toHaveBeenCalledWith('✅ Shift added successfully')
   })
@@ -103,6 +107,7 @@ describe('useShifts', () => {
         startTime: '',
         endTime: '',
         isAllDay: true,
+        volunteersNeeded: 1,
       })
     })
 

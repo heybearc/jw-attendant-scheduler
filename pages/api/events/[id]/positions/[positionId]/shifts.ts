@@ -12,7 +12,8 @@ const shiftSchema = z.object({
   name: z.string().nullable().optional(),
   startTime: z.string().nullable().optional(),
   endTime: z.string().nullable().optional(),
-  isAllDay: z.boolean().default(false)
+  isAllDay: z.boolean().default(false),
+  volunteersNeeded: z.number().int().min(1).max(50).optional().default(1)
 })
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -88,18 +89,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           startTime: validatedData.isAllDay ? null : validatedData.startTime,
           endTime: validatedData.isAllDay ? null : validatedData.endTime,
           isAllDay: validatedData.isAllDay,
-          sequence: existingShifts.length + 1
+          sequence: existingShifts.length + 1,
+          volunteersNeeded: validatedData.volunteersNeeded ?? 1
         }
-
-        console.log('Data types:', {
-          id: typeof shiftData.id,
-          positionId: typeof shiftData.positionId,
-          name: typeof shiftData.name,
-          startTime: typeof shiftData.startTime,
-          endTime: typeof shiftData.endTime,
-          isAllDay: typeof shiftData.isAllDay,
-          sequence: typeof shiftData.sequence
-        })
 
         const newShift = await prisma.position_shifts.create({
           data: shiftData

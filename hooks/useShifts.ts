@@ -21,6 +21,7 @@ interface ShiftFormData {
   startTime: string
   endTime: string
   isAllDay: boolean
+  volunteersNeeded: number
 }
 
 interface UseShiftsProps {
@@ -45,7 +46,8 @@ export function useShifts({ eventId }: UseShiftsProps): UseShiftsReturn {
     name: '',
     startTime: '',
     endTime: '',
-    isAllDay: false
+    isAllDay: false,
+    volunteersNeeded: 1
   })
 
   const handleShiftSubmit = async (e: React.FormEvent, position: Position | null) => {
@@ -72,12 +74,13 @@ export function useShifts({ eventId }: UseShiftsProps): UseShiftsReturn {
         startTime: shiftFormData.startTime,
         endTime: shiftFormData.endTime,
         isAllDay: shiftFormData.isAllDay,
+        volunteersNeeded: Math.max(1, Math.min(50, Number(shiftFormData.volunteersNeeded) || 1)),
       })
 
       if (success) {
         notifyAlert('✅ Shift added successfully')
         setShowShiftModal(false)
-        setShiftFormData({ name: '', startTime: '', endTime: '', isAllDay: false })
+        setShiftFormData({ name: '', startTime: '', endTime: '', isAllDay: false, volunteersNeeded: 1 })
         router.reload()
       } else {
         notifyAlert('Failed to add shift')

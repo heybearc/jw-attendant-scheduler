@@ -1,4 +1,9 @@
 import React from 'react'
+import {
+  countShiftAssignments,
+  getPositionSlotFillRatio,
+  getShiftVolunteersNeeded
+} from '../lib/shiftCapacity'
 
 interface Shift {
   id: string
@@ -6,11 +11,12 @@ interface Shift {
   startTime: string
   endTime: string
   isAllDay: boolean
+  volunteersNeeded?: number
 }
 
 interface Assignment {
   id: string
-  role: 'ATTENDANT' | 'OVERSEER' | 'KEYMAN'
+  role: 'ATTENDANT' | 'VOLUNTEER' | 'OVERSEER' | 'KEYMAN'
   shift?: { id: string }
   attendant?: {
     id: string
@@ -64,15 +70,9 @@ export default function PositionCard({
   onAssignOversight,
   formatTime12Hour
 }: PositionCardProps) {
-  // Calculate completion percentage
-  const totalShifts = position.shifts?.length || 0
-  const assignedShifts = position.shifts?.filter(shift => {
-    const shiftAssignments = position.assignments?.filter(
-      a => a.shift?.id === shift.id && a.role === 'ATTENDANT'
-    ).length || 0
-    return shiftAssignments > 0
-  }).length || 0
-  const completionPercentage = totalShifts > 0 ? Math.round((assignedShifts / totalShifts) * 100) : 0
+  // Slot-based completion (respects volunteersNeeded)
+  const { filled: assignedShifts, needed: totalShifts, percentage: completionPercentage } =
+    getPositionSlotFillRatio(position.shifts, position.assignments)
 
   return (
     <div className={`group relative rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 ${
@@ -175,16 +175,18 @@ export default function PositionCard({
                 ) || []
                 
                 const attendantAssignments = shiftSpecificAssignments.filter(
-                  assignment => assignment.role === 'ATTENDANT'
+                  assignment => assignment.role === 'ATTENDANT' || assignment.role === 'VOLUNTEER'
                 )
                 const shiftLeadershipAssignments = shiftSpecificAssignments.filter(
                   assignment => assignment.role === 'OVERSEER' || assignment.role === 'KEYMAN'
                 )
+                const filledCount = countShiftAssignments(position.assignments, shift.id)
+                const neededCount = getShiftVolunteersNeeded(shift)
                 
                 return (
                   <div key={shift.id} className="bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 rounded-lg p-3 hover:shadow-sm transition-all duration-200">
                     <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2 flex-wrap gap-y-1">
                         <span className="text-xs font-medium text-gray-700">
                           {shift.name}
                         </span>
@@ -198,11 +200,15 @@ export default function PositionCard({
                             All Day
                           </span>
                         )}
+                        <span className={`text-xs px-1.5 py-0.5 rounded ${
+                          filledCount >= neededCount
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-amber-100 text-amber-800'
+                        }`}>
+                          {filledCount}/{neededCount}
+                        </span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <span className="text-xs text-gray-400">
-                          {attendantAssignments.length} attendant{attendantAssignments.length !== 1 ? 's' : ''}
-                        </span>
                         <button
                           onClick={() => onDeleteShift(position.id, shift.id, shift.name)}
                           className="text-xs text-red-600 hover:text-red-800 hover:bg-red-100 rounded px-1 py-0.5 transition-colors"

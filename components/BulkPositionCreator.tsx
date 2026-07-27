@@ -34,29 +34,55 @@ export default function BulkPositionCreator({ eventId, onClose, onSuccess }: Bul
         return
       }
 
-
       // Smart position management: reuse existing, reactivate inactive, create new
       let successCount = 0
       let errorCount = 0
       let reactivatedCount = 0
       let updatedCount = 0
+      const failureDetails: string[] = []
 
       // Get ALL existing positions (including inactive) for smart matching
       let existingPositions: any[] = []
       try {
-        const existingResponse = await fetch(`/api/events/${eventId}/positions?includeInactive=true&limit=1000`)
+        const existingResponse = await fetch(
+          `/api/events/${eventId}/positions?includeInactive=true&limit=1000`
+        )
         if (existingResponse.ok) {
           const existingData = await existingResponse.json()
-          existingPositions = existingData.data?.positions || []
+          // API returns { positions } (not data.positions)
+          existingPositions = existingData.positions || existingData.data?.positions || []
+        } else {
+          console.warn('Could not fetch existing positions:', existingResponse.status)
         }
       } catch (error) {
         console.warn('Could not fetch existing positions, proceeding with creation only')
+      }
+
+      const usedNumbers = new Set<number>(
+        existingPositions
+          .map((pos: any) => pos.positionNumber)
+          .filter((n: unknown): n is number => typeof n === 'number' && n > 0)
+      )
+
+      const nextAvailableNumber = (): number => {
+        let n = 1
+        while (usedNumbers.has(n)) n++
+        return n
       }
 
       // Extract position numbers from names (e.g., "Station 1" -> 1)
       const extractPositionNumber = (name: string): number | null => {
         const match = name.match(/(?:Station|Position)\s+(\d+)/i)
         return match ? parseInt(match[1], 10) : null
+      }
+
+      const readError = async (response: Response): Promise<string> => {
+        try {
+          const body = await response.json()
+          return body?.error || `HTTP ${response.status}`
+        } catch {
+          return `HTTP ${response.status}`
+        }
       }
 
       for (let i = 0; i < positionNames.length; i++) {
@@ -88,8 +114,10 @@ export default function BulkPositionCreator({ eventId, onClose, onSuccess }: Bul
               })
               if (response.ok) {
                 reactivatedCount++
+                existingByName.isActive = true
               } else {
                 errorCount++
+                failureDetails.push(`${positionName}: ${await readError(response)}`)
               }
             } else {
               updatedCount++
@@ -107,8 +135,11 @@ export default function BulkPositionCreator({ eventId, onClose, onSuccess }: Bul
             })
             if (response.ok) {
               reactivatedCount++
+              existingByNumber.isActive = true
+              existingByNumber.name = positionName
             } else {
               errorCount++
+              failureDetails.push(`${positionName}: ${await readError(response)}`)
             }
           } else if (desiredNumber && !existingByNumber) {
             // Create new position with desired number
@@ -124,14 +155,23 @@ export default function BulkPositionCreator({ eventId, onClose, onSuccess }: Bul
             })
             if (response.ok) {
               successCount++
+              usedNumbers.add(desiredNumber)
+              const created = await response.json().catch(() => null)
+              existingPositions.push({
+                id: created?.data?.id,
+                name: positionName,
+                positionNumber: desiredNumber,
+                isActive: true
+              })
             } else {
               errorCount++
-              console.error(`Failed to create position: ${positionName}`)
+              const err = await readError(response)
+              failureDetails.push(`${positionName}: ${err}`)
+              console.error(`Failed to create position: ${positionName}`, err)
             }
-          } else {
-            // Fallback: create with next available number
-            const maxNumber = existingPositions.reduce((max, pos) => Math.max(max, pos.positionNumber || 0), 0)
-            const nextNumber = maxNumber + 1 + i
+          } else if (desiredNumber && existingByNumber?.isActive) {
+            // Number taken by a different active position — allocate next free number
+            const nextNumber = nextAvailableNumber()
             const response = await fetch(`/api/events/${eventId}/positions`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -144,13 +184,49 @@ export default function BulkPositionCreator({ eventId, onClose, onSuccess }: Bul
             })
             if (response.ok) {
               successCount++
+              usedNumbers.add(nextNumber)
+              existingPositions.push({
+                name: positionName,
+                positionNumber: nextNumber,
+                isActive: true
+              })
             } else {
               errorCount++
-              console.error(`Failed to create position: ${positionName}`)
+              const err = await readError(response)
+              failureDetails.push(`${positionName}: ${err}`)
+              console.error(`Failed to create position: ${positionName}`, err)
+            }
+          } else {
+            // Fallback: create with next available number (never collide with existing)
+            const nextNumber = nextAvailableNumber()
+            const response = await fetch(`/api/events/${eventId}/positions`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                positionNumber: nextNumber,
+                name: positionName,
+                area: defaultArea || undefined,
+                sequence: nextNumber
+              }),
+            })
+            if (response.ok) {
+              successCount++
+              usedNumbers.add(nextNumber)
+              existingPositions.push({
+                name: positionName,
+                positionNumber: nextNumber,
+                isActive: true
+              })
+            } else {
+              errorCount++
+              const err = await readError(response)
+              failureDetails.push(`${positionName}: ${err}`)
+              console.error(`Failed to create position: ${positionName}`, err)
             }
           }
         } catch (error) {
           errorCount++
+          failureDetails.push(`${positionName}: network error`)
           console.error(`Error processing position ${positionName}:`, error)
         }
       }
@@ -169,8 +245,16 @@ export default function BulkPositionCreator({ eventId, onClose, onSuccess }: Bul
           message: `Processed ${totalProcessed} positions: ${parts.join(', ')}`
         }
         onSuccess(result)
+        if (failureDetails.length > 0) {
+          toast.error(`Some positions failed: ${failureDetails.slice(0, 3).join('; ')}`)
+        }
       } else {
-        notifyAlert('Failed to process positions')
+        const detail = failureDetails.slice(0, 3).join('; ')
+        notifyAlert(
+          detail
+            ? `Failed to process positions\n\n${detail}`
+            : 'Failed to process positions'
+        )
       }
     } catch (error) {
       console.error('Bulk create error:', error)

@@ -212,14 +212,20 @@ async function handleCreateEventVolunteer(req: NextApiRequest, res: NextApiRespo
           }
         })
       } else {
-        return res.status(409).json({
-          success: false,
-          error: 'This volunteer is already on this event',
+        // Idempotent: already on the event — not a failure
+        return res.status(200).json({
+          success: true,
           data: {
             id: volunteer.id,
             firstName: volunteer.firstName,
             lastName: volunteer.lastName,
-            email: volunteer.email
+            email: volunteer.email,
+            phone: volunteer.phone,
+            congregation: volunteer.congregation,
+            formsOfService: volunteer.formsOfService,
+            isActive: volunteer.isActive,
+            alreadyOnEvent: true,
+            message: 'This volunteer is already on this event'
           }
         })
       }

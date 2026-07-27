@@ -524,7 +524,11 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
       })
 
       const raw = await response.text()
-      let payload: { error?: string; success?: boolean } = {}
+      let payload: {
+        error?: string
+        success?: boolean
+        data?: { message?: string; alreadyOnEvent?: boolean }
+      } = {}
       try {
         if (raw) payload = JSON.parse(raw)
       } catch {
@@ -538,6 +542,9 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
 
       if (response.ok && payload.success !== false) {
         setShowAddModal(false)
+        if (payload.data?.alreadyOnEvent) {
+          toast.info(payload.data.message || 'This volunteer is already on this event')
+        }
         preserveStateAndReload()
       } else {
         notifyAlert(payload.error || 'Failed to save attendant')

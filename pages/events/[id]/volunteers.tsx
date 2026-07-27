@@ -489,7 +489,12 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
       const result = await response.json()
 
       if (response.ok) {
-        notifyAlert(`✅ Availability requests sent to ${result.sent} attendants${result.failed > 0 ? `\n⚠️ ${result.failed} failed` : ''}`)
+        notifyAlert(
+          result.async
+            ? result.message ||
+                `✅ Queued availability requests for ${result.recipientCount ?? result.sent} volunteers — do not click Send again`
+            : `✅ Availability requests sent to ${result.sent} attendants${result.failed > 0 ? `\n⚠️ ${result.failed} failed` : ''}`
+        )
         setShowBulkRequestModal(false)
         setSelectedAttendants(new Set())
         setBulkRequestDeadline('')

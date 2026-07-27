@@ -4,6 +4,12 @@ import { authOptions } from '../../auth/[...nextauth]'
 import { prisma } from '../../../../src/lib/prisma'
 import { randomBytes } from 'crypto'
 import nodemailer from 'nodemailer'
+import {
+  escapeHtml,
+  formatPlainMessageAsHtml,
+} from '../../../../src/lib/volunteerBroadcastEmail'
+import { tryAcquireEmailJob, releaseEmailJob } from '../../../../src/lib/emailSendGuard'
+import { volunteerRosterWhere } from '../../../../src/lib/volunteerRoster'
 
 /**
  * Phase 4C: Bulk Availability Request API
@@ -48,11 +54,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Get attendants to request from (attendants are event-specific volunteers)
     let attendants
     if (volunteerIds && Array.isArray(volunteerIds) && volunteerIds.length > 0) {
-      // Specific attendants - MUST be associated with this event
+      // Specific attendants - MUST be associated with this event roster
       const eventVolunteers = await prisma.event_volunteers.findMany({
         where: {
           eventId,
           volunteerId: { in: volunteerIds },
+          ...volunteerRosterWhere,
           volunteer: {
             isActive: true
           }
@@ -70,10 +77,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
       attendants = eventVolunteers.map(ev => ev.volunteer).filter(Boolean)
     } else {
-      // All active attendants for this event
+      // All active attendants on the Volunteers roster for this event
       const eventVolunteers = await prisma.event_volunteers.findMany({
         where: {
           eventId,
+          ...volunteerRosterWhere,
           volunteer: {
             isActive: true
           }
@@ -94,6 +102,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (attendants.length === 0) {
       return res.status(400).json({ error: 'No attendants found to request from' })
+    }
+
+    // Deduplicate by email so retries / duplicate rows cannot multiply sends
+    const seenEmails = new Set<string>()
+    attendants = attendants.filter((a) => {
+      const key = (a.email || '').trim().toLowerCase()
+      if (!key || seenEmails.has(key)) return false
+      seenEmails.add(key)
+      return true
+    })
+
+    const jobKey = `availability-request:${eventId}`
+    if (!tryAcquireEmailJob(jobKey)) {
+      return res.status(409).json({
+        error:
+          'An availability email send is already in progress for this event. Wait for it to finish before sending again.',
+      })
     }
 
     // Format dates
@@ -119,80 +144,85 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }) : null
 
     const baseUrl = process.env.NEXTAUTH_URL || `${req.headers['x-forwarded-proto'] || 'https'}://${req.headers.host}`
+    const responseUrl = `${baseUrl}/volunteer/login`
+    const messageHtml = customMessage
+      ? formatPlainMessageAsHtml(String(customMessage), { color: '#92400e', marginBottom: '10px' })
+      : ''
 
-    // Create availability records and send emails
-    const results = {
-      sent: 0,
-      failed: 0,
-      errors: [] as string[]
-    }
+    const recipientsSnapshot = attendants.map((a) => ({ ...a }))
+    const eventName = event.name
+    const location = event.location || event.venue || 'Location TBD'
 
-    for (const attendant of attendants) {
+    void (async () => {
       try {
-        // Check if availability request already exists
-        const existing = await prisma.volunteer_availability.findUnique({
-          where: {
-            eventId_volunteerId: {
-              eventId,
-              volunteerId: attendant.id
+        let sent = 0
+        let failed = 0
+        for (const attendant of recipientsSnapshot) {
+          try {
+            const existing = await prisma.volunteer_availability.findUnique({
+              where: {
+                eventId_volunteerId: {
+                  eventId,
+                  volunteerId: attendant.id
+                }
+              }
+            })
+
+            if (existing) {
+              await prisma.volunteer_availability.update({
+                where: { id: existing.id },
+                data: {
+                  requestedAt: new Date(),
+                  reminderSentAt: null
+                }
+              })
+            } else {
+              await prisma.volunteer_availability.create({
+                data: {
+                  id: randomBytes(16).toString('hex'),
+                  eventId,
+                  volunteerId: attendant.id,
+                  status: 'PENDING',
+                  requestedAt: new Date()
+                }
+              })
             }
+
+            const emailHtml = generateAvailabilityRequestEmail({
+              volunteerFirstName: attendant.firstName,
+              volunteerLastName: attendant.lastName,
+              eventName,
+              startDate,
+              endDate,
+              location,
+              deadline: deadlineDate,
+              customMessageHtml: messageHtml || undefined,
+              responseUrl
+            })
+
+            await sendAvailabilityEmail(attendant.email, `Availability Request: ${eventName}`, emailHtml)
+            sent++
+          } catch (error: any) {
+            failed++
+            console.error(`[availability-request] failed ${attendant.email}:`, error?.message || error)
           }
-        })
-
-        if (existing) {
-          // Update existing request
-          await prisma.volunteer_availability.update({
-            where: { id: existing.id },
-            data: {
-              requestedAt: new Date(),
-              reminderSentAt: null
-            }
-          })
-        } else {
-          // Create new availability request
-          await prisma.volunteer_availability.create({
-            data: {
-              id: randomBytes(16).toString('hex'),
-              eventId,
-              volunteerId: attendant.id,
-              status: 'PENDING',
-              requestedAt: new Date()
-            }
-          })
         }
-
-        // Generate response URL - direct to volunteer login page
-        const responseUrl = `${baseUrl}/volunteer/login`
-
-        // Send email using database configuration
-        const emailHtml = generateAvailabilityRequestEmail({
-          volunteerFirstName: attendant.firstName,
-          volunteerLastName: attendant.lastName,
-          eventName: event.name,
-          startDate,
-          endDate,
-          location: event.location || event.venue || 'Location TBD',
-          deadline: deadlineDate,
-          customMessage,
-          responseUrl
-        })
-
-        await sendAvailabilityEmail(attendant.email, `Availability Request: ${event.name}`, emailHtml)
-
-        results.sent++
-      } catch (error: any) {
-        console.error(`Failed to send to ${attendant.email}:`, error)
-        results.failed++
-        results.errors.push(`${attendant.firstName} ${attendant.lastName}: ${error.message}`)
+        console.log(`[availability-request] event=${eventId} done sent=${sent} failed=${failed}`)
+      } catch (err) {
+        console.error('[availability-request] job crashed', err)
+      } finally {
+        releaseEmailJob(jobKey)
       }
-    }
+    })()
 
-    return res.status(200).json({
+    const n = recipientsSnapshot.length
+    return res.status(202).json({
       success: true,
-      message: `Availability requests sent to ${results.sent} attendants`,
-      sent: results.sent,
-      failed: results.failed,
-      errors: results.errors.length > 0 ? results.errors : undefined
+      async: true,
+      recipientCount: n,
+      sent: n,
+      failed: 0,
+      message: `Queued availability requests for ${n} volunteer${n === 1 ? '' : 's'}. Large lists may take a minute — do not click Send again.`,
     })
 
   } catch (error: any) {
@@ -251,7 +281,6 @@ async function sendAvailabilityEmail(to: string, subject: string, html: string) 
   })
 }
 
-// Generate availability request email HTML
 function generateAvailabilityRequestEmail(data: {
   volunteerFirstName: string
   volunteerLastName: string
@@ -260,96 +289,91 @@ function generateAvailabilityRequestEmail(data: {
   endDate: string
   location: string
   deadline: string | null
-  customMessage?: string
+  customMessageHtml?: string
   responseUrl: string
 }): string {
+  const firstName = escapeHtml(data.volunteerFirstName)
+  const eventName = escapeHtml(data.eventName)
+  const startDate = escapeHtml(data.startDate)
+  const endDate = escapeHtml(data.endDate)
+  const location = escapeHtml(data.location)
+  const deadline = data.deadline ? escapeHtml(data.deadline) : null
+  const responseUrl = escapeHtml(data.responseUrl)
+
   return `
     <!DOCTYPE html>
     <html lang="en">
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Availability Request - ${data.eventName}</title>
+      <title>Availability Request - ${eventName}</title>
     </head>
     <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f3f4f6;">
       <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
-        <!-- Header -->
         <div style="background-color: #3b82f6; color: white; padding: 30px 20px; text-align: center;">
           <h1 style="margin: 0; font-size: 28px; font-weight: bold;">📅 Availability Request</h1>
           <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Can you help with an upcoming event?</p>
         </div>
-
-        <!-- Main Content -->
         <div style="padding: 30px 20px;">
-          <h2 style="color: #374151; margin: 0 0 20px 0;">Hello ${data.volunteerFirstName}!</h2>
-          
+          <h2 style="color: #374151; margin: 0 0 20px 0;">Hello ${firstName}!</h2>
           <p style="color: #6b7280; line-height: 1.6; margin: 0 0 20px 0;">
             We're planning for an upcoming event and would like to know if you're available to serve. Your response will help us plan assignments more effectively.
           </p>
-
-          <!-- Event Details -->
           <div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin: 20px 0;">
             <h3 style="color: #374151; margin: 0 0 15px 0;">📅 Event Information</h3>
             <table style="width: 100%; border-collapse: collapse;">
               <tr>
                 <td style="padding: 8px 0; color: #6b7280; font-weight: 500;">Event:</td>
-                <td style="padding: 8px 0; color: #374151; font-weight: bold;">${data.eventName}</td>
+                <td style="padding: 8px 0; color: #374151; font-weight: bold;">${eventName}</td>
               </tr>
               <tr>
                 <td style="padding: 8px 0; color: #6b7280; font-weight: 500;">Start Date:</td>
-                <td style="padding: 8px 0; color: #374151;">${data.startDate}</td>
+                <td style="padding: 8px 0; color: #374151;">${startDate}</td>
               </tr>
               <tr>
                 <td style="padding: 8px 0; color: #6b7280; font-weight: 500;">End Date:</td>
-                <td style="padding: 8px 0; color: #374151;">${data.endDate}</td>
+                <td style="padding: 8px 0; color: #374151;">${endDate}</td>
               </tr>
               <tr>
                 <td style="padding: 8px 0; color: #6b7280; font-weight: 500;">Location:</td>
-                <td style="padding: 8px 0; color: #374151;">${data.location}</td>
+                <td style="padding: 8px 0; color: #374151;">${location}</td>
               </tr>
-              ${data.deadline ? `
+              ${deadline ? `
               <tr>
                 <td style="padding: 8px 0; color: #6b7280; font-weight: 500;">Response Deadline:</td>
-                <td style="padding: 8px 0; color: #dc2626; font-weight: bold;">${data.deadline}</td>
+                <td style="padding: 8px 0; color: #dc2626; font-weight: bold;">${deadline}</td>
               </tr>
               ` : ''}
             </table>
           </div>
-
-          ${data.customMessage ? `
-          <!-- Custom Message -->
+          ${data.customMessageHtml ? `
           <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0;">
             <h4 style="color: #92400e; margin: 0 0 10px 0;">📝 Message from Coordinator</h4>
-            <p style="color: #92400e; margin: 0; line-height: 1.6;">${data.customMessage}</p>
+            <div>${data.customMessageHtml}</div>
           </div>
           ` : ''}
-
-          <!-- Response Options -->
           <div style="margin: 30px 0;">
             <h3 style="color: #374151; margin: 0 0 15px 0;">Please Let Us Know Your Availability</h3>
             <p style="color: #6b7280; margin: 0 0 20px 0;">
               Click the button below to respond with your availability for this event.
             </p>
           </div>
-
-          <!-- Action Button -->
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${data.responseUrl}" style="display: inline-block; background-color: #3b82f6; color: white; text-decoration: none; padding: 15px 30px; border-radius: 8px; font-weight: bold; font-size: 16px;">
+            <a href="${responseUrl}" style="display: inline-block; background-color: #3b82f6; color: white; text-decoration: none; padding: 15px 30px; border-radius: 8px; font-weight: bold; font-size: 16px;">
               📋 Respond to Request
             </a>
           </div>
-
-          <!-- Response Options Info -->
           <div style="background-color: #eff6ff; border: 1px solid #3b82f6; border-radius: 8px; padding: 20px; margin: 20px 0;">
             <h4 style="color: #1e40af; margin: 0 0 10px 0;">Response Options</h4>
             <ul style="color: #1e40af; margin: 0; padding-left: 20px; line-height: 1.8;">
               <li><strong>Available:</strong> You can serve during the entire event</li>
-              <li><strong>Partial Availability:</strong> You can serve on specific dates/times</li>
+              <li><strong>Partial Availability:</strong> You can serve on specific dates/times (tell us which in Comments)</li>
               <li><strong>Not Available:</strong> You cannot serve at this event</li>
             </ul>
+            <p style="color: #1e40af; margin: 12px 0 0 0; font-size: 14px;">
+              You can leave an optional comment with any response. Comments are required for Partial Availability.
+            </p>
           </div>
-
-          <!-- Why This Matters -->
           <div style="margin: 30px 0;">
             <h4 style="color: #374151; margin: 0 0 10px 0;">Why Your Response Matters</h4>
             <p style="color: #6b7280; line-height: 1.6; margin: 0;">
@@ -362,8 +386,6 @@ function generateAvailabilityRequestEmail(data: {
             </ul>
           </div>
         </div>
-
-        <!-- Footer -->
         <div style="background-color: #374151; color: #d1d5db; padding: 20px; text-align: center;">
           <p style="margin: 0; font-size: 14px;">
             TheoShift - Supporting Theocratic Event Coordination

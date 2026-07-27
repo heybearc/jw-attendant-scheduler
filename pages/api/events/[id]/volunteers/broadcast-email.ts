@@ -8,6 +8,8 @@ import {
   formatPlainMessageAsHtml,
 } from '@/lib/volunteerBroadcastEmail'
 import { formatCalendarDateLabel } from '@/lib/calendarDate'
+import { tryAcquireEmailJob, releaseEmailJob } from '@/lib/emailSendGuard'
+import { volunteerRosterWhere } from '@/lib/volunteerRoster'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -93,12 +95,13 @@ async function handleBroadcastEmail(req: NextApiRequest, res: NextApiResponse) {
   }[]
 
   if (scope === 'all_active') {
-    // Match Volunteers page: "active" = on roster for this event AND volunteer profile not deactivated
+    // Match Volunteers page: roster membership + active profile
     memberships = await prisma.event_volunteers.findMany({
       where: {
         eventId,
         isActive: true,
         volunteerId: { not: null },
+        ...volunteerRosterWhere,
         volunteer: { isActive: true },
       },
       select: {
@@ -164,6 +167,15 @@ async function handleBroadcastEmail(req: NextApiRequest, res: NextApiResponse) {
     })
   }
 
+  const jobKey = `broadcast-email:${eventId}`
+  if (!tryAcquireEmailJob(jobKey)) {
+    return res.status(409).json({
+      success: false,
+      error:
+        'An email blast is already in progress for this event. Wait for it to finish before sending again.',
+    })
+  }
+
   // Send in the background so HAProxy/nginx does not return 504 while SMTP delivers many messages.
   const eventName = event.name
   const recipientsSnapshot = uniqueRecipients.map((r) => ({ ...r }))
@@ -176,6 +188,7 @@ async function handleBroadcastEmail(req: NextApiRequest, res: NextApiResponse) {
     endDate,
     dashboardUrl,
     eventId,
+    jobKey,
   })
 
   const n = uniqueRecipients.length
@@ -183,7 +196,7 @@ async function handleBroadcastEmail(req: NextApiRequest, res: NextApiResponse) {
     success: true,
     async: true,
     recipientCount: n,
-    message: `Queued ${n} recipient${n === 1 ? '' : 's'}. Gmail accepts the send first; each recipient’s mail server may still reject later (disabled mailbox, full inbox, etc.) — watch your inbox for bounce notices. You can leave this page — large lists may take a minute.`,
+    message: `Queued ${n} recipient${n === 1 ? '' : 's'}. Gmail accepts the send first; each recipient’s mail server may still reject later (disabled mailbox, full inbox, etc.) — watch your inbox for bounce notices. You can leave this page — large lists may take a minute. Do not click Send again.`,
   })
 }
 
@@ -196,8 +209,9 @@ async function runBroadcastEmailJob(params: {
   endDate?: string
   dashboardUrl: string
   eventId: string
+  jobKey: string
 }) {
-  const { recipients, subject, messageHtml, eventName, startDate, endDate, dashboardUrl, eventId } =
+  const { recipients, subject, messageHtml, eventName, startDate, endDate, dashboardUrl, eventId, jobKey } =
     params
   let sent = 0
   let failed = 0
@@ -234,5 +248,7 @@ async function runBroadcastEmailJob(params: {
     }
   } catch (err: unknown) {
     console.error('[broadcast-email] job crashed', err)
+  } finally {
+    releaseEmailJob(jobKey)
   }
 }

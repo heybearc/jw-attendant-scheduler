@@ -1,3 +1,5 @@
+import { formatPlainMessageAsHtml } from './volunteerBroadcastEmail'
+
 export interface ChatEnabledEmailData {
   firstName: string
   eventName: string
@@ -16,7 +18,8 @@ export function generateChatEnabledEmail(data: ChatEnabledEmailData): string {
   const messageBlock = data.customMessage
     ? `
       <div style="background-color: #f5f3ff; border-left: 4px solid #8b5cf6; padding: 12px 14px; border-radius: 6px; margin: 18px 0;">
-        <p style="margin: 0; color: #5b21b6; font-size: 14px; line-height: 1.5;"><strong>Message from your oversight team:</strong><br/>${data.customMessage}</p>
+        <p style="margin: 0 0 8px 0; color: #5b21b6; font-size: 14px; line-height: 1.5;"><strong>Message from your oversight team:</strong></p>
+        <div style="color: #5b21b6; font-size: 14px;">${formatPlainMessageAsHtml(data.customMessage, { color: '#5b21b6', marginBottom: '8px' })}</div>
       </div>
     `
     : ''

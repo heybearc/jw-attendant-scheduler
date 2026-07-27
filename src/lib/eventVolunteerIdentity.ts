@@ -19,8 +19,20 @@ export async function getActiveLinkedVolunteerId(userId: string, eventId: string
   })
   if (explicit?.volunteerId) return explicit.volunteerId
 
+  const user = await prisma.users.findUnique({
+    where: { id: userId },
+    select: { email: true }
+  })
+
   const volunteer = await prisma.volunteers.findFirst({
-    where: { userId },
+    where: {
+      OR: [
+        { userId },
+        ...(user?.email
+          ? [{ email: { equals: user.email, mode: 'insensitive' as const } }]
+          : [])
+      ]
+    },
     select: { id: true }
   })
   if (!volunteer) return null

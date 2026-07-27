@@ -185,6 +185,7 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
   const [editingSession, setEditingSession] = useState<string | null>(null)
   const [availabilityRequests, setAvailabilityRequests] = useState<AvailabilityRequest[]>([])
   const [respondingToRequest, setRespondingToRequest] = useState<string | null>(null)
+  const [availabilityComments, setAvailabilityComments] = useState<Record<string, string>>({})
   const [isMobile, setIsMobile] = useState(false)
   const [activeTab, setActiveTab] = useState<'dashboard' | 'checkin'>('dashboard')
   const [viewingDocument, setViewingDocument] = useState<Document | null>(null)
@@ -421,23 +422,33 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
 
   const handleAvailabilityResponse = async (requestId: string, status: string, notes?: string) => {
     try {
+      const comment = (notes ?? availabilityComments[requestId] ?? '').trim()
+      if (status === 'PARTIAL' && !comment) {
+        notifyAlert('Please add a comment explaining your partial availability (for example: “Friday only” or “mornings only”).')
+        return
+      }
+
       setRespondingToRequest(requestId)
       
       const response = await fetch(`/api/volunteer/availability?eventId=${selectedEventId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getViewAsHeaders() },
-        body: JSON.stringify({ requestId, status, notes })
+        body: JSON.stringify({ requestId, status, notes: comment || undefined })
       })
 
       const data = await response.json()
 
       if (data.success) {
-        // Refresh availability requests
+        setAvailabilityComments((prev) => {
+          const next = { ...prev }
+          delete next[requestId]
+          return next
+        })
         if (selectedEventId) {
           await fetchAvailabilityRequests(selectedEventId)
         }
       } else {
-        notifyAlert('Failed to submit response')
+        notifyAlert(data.error || 'Failed to submit response')
       }
     } catch (error) {
       console.error('Failed to submit availability response:', error)
@@ -1409,7 +1420,25 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
                         </div>
                         
                         {request.status === 'PENDING' ? (
-                          <div className="flex flex-wrap gap-2">
+                          <div className="space-y-3">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Comments <span className="text-gray-500 font-normal">(required for Partial)</span>
+                              </label>
+                              <textarea
+                                value={availabilityComments[request.id] || ''}
+                                onChange={(e) =>
+                                  setAvailabilityComments((prev) => ({
+                                    ...prev,
+                                    [request.id]: e.target.value
+                                  }))
+                                }
+                                rows={3}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                placeholder="Optional for Available / Not Available. Required for Partial — e.g. Friday only, mornings only."
+                              />
+                            </div>
+                            <div className="flex flex-wrap gap-2">
                             <button
                               onClick={() => handleAvailabilityResponse(request.id, 'AVAILABLE')}
                               disabled={respondingToRequest === request.id}
@@ -1431,10 +1460,28 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
                             >
                               ❌ Not Available
                             </button>
+                            </div>
                           </div>
                         ) : (
                           <div className="space-y-2">
                             <p className="text-sm text-gray-600">Want to change your response?</p>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Comments
+                              </label>
+                              <textarea
+                                value={availabilityComments[request.id] || ''}
+                                onChange={(e) =>
+                                  setAvailabilityComments((prev) => ({
+                                    ...prev,
+                                    [request.id]: e.target.value
+                                  }))
+                                }
+                                rows={2}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                placeholder="Optional comment (required if choosing Partial)"
+                              />
+                            </div>
                             <div className="flex flex-wrap gap-2">
                               <button
                                 onClick={() => handleAvailabilityResponse(request.id, 'AVAILABLE')}

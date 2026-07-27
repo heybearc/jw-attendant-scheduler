@@ -99,6 +99,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(400).json({ success: false, error: 'Invalid status' })
       }
 
+      const notesText = typeof notes === 'string' ? notes.trim() : ''
+      if (status === 'PARTIAL' && !notesText) {
+        return res.status(400).json({
+          success: false,
+          error: 'Please add a comment explaining your partial availability',
+        })
+      }
+
       const availabilityRequest = await prisma.volunteer_availability.findUnique({
         where: { id: requestId }
       })
@@ -115,10 +123,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         where: { id: requestId },
         data: {
           status,
-          notes: notes || null,
+          notes: notesText || null,
           respondedAt: new Date()
         }
       })
+
+      // Mirror comment onto the volunteer profile notes (visible to coordinators)
+      if (notesText) {
+        const volunteer = await prisma.volunteers.findUnique({
+          where: { id: volunteerId },
+          select: { notes: true }
+        })
+        const stamp = new Date().toISOString().slice(0, 10)
+        const label =
+          status === 'AVAILABLE'
+            ? 'Available'
+            : status === 'PARTIAL'
+              ? 'Partial'
+              : 'Not available'
+        const entry = `[Availability · ${label} · ${stamp}] ${notesText}`
+        const nextNotes = volunteer?.notes?.trim()
+          ? `${volunteer.notes.trim()}\n\n${entry}`
+          : entry
+        await prisma.volunteers.update({
+          where: { id: volunteerId },
+          data: { notes: nextNotes, updatedAt: new Date() }
+        })
+      }
 
       return res.status(200).json({
         success: true,

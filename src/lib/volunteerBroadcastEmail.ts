@@ -16,12 +16,21 @@ export function escapeHtml(text: string): string {
     .replace(/'/g, '&#039;')
 }
 
-/** Plain-text message converted to HTML paragraphs */
-export function formatPlainMessageAsHtml(message: string): string {
-  const escaped = escapeHtml(message.trim())
+/** Plain-text message converted to HTML paragraphs (preserves blank lines). */
+export function formatPlainMessageAsHtml(
+  message: string,
+  options?: { color?: string; marginBottom?: string }
+): string {
+  const color = options?.color ?? '#374151'
+  const marginBottom = options?.marginBottom ?? '12px'
+  const escaped = escapeHtml(String(message ?? '').replace(/\r\n/g, '\n').trim())
+  if (!escaped) return ''
   return escaped
-    .split(/\r?\n/)
-    .map((line) => `<p style="margin:0 0 12px 0;color:#374151;line-height:1.6;">${line || '&nbsp;'}</p>`)
+    .split('\n')
+    .map(
+      (line) =>
+        `<p style="margin:0 0 ${marginBottom} 0;color:${color};line-height:1.6;">${line || '&nbsp;'}</p>`
+    )
     .join('')
 }
 

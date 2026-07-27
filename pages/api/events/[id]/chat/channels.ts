@@ -170,10 +170,44 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   })
 
-  const sortedChannels = sortEventChatChannels(channels)
+  // For DMs, show the other person's name (channel.name is set from the creator's peer)
+  const selfVolunteerId =
+    chatAccess.actor.kind === 'volunteer' ? chatAccess.actor.id : linkedVolunteerId
+  let channelsForClient = channels
+  if (selfVolunteerId) {
+    const peerIds = [
+      ...new Set(
+        channels
+          .filter((c) => c.type === 'VOLUNTEER_DM')
+          .flatMap((c) => [c.dmVolunteerAId, c.dmVolunteerBId])
+          .filter((id): id is string => !!id && id !== selfVolunteerId)
+      )
+    ]
+    if (peerIds.length > 0) {
+      const peers = await prisma.volunteers.findMany({
+        where: { id: { in: peerIds } },
+        select: { id: true, firstName: true, lastName: true }
+      })
+      const peerName = new Map(
+        peers.map((p) => [p.id, `${p.firstName} ${p.lastName}`.trim() || 'Volunteer'])
+      )
+      channelsForClient = channels.map((c) => {
+        if (c.type !== 'VOLUNTEER_DM') return c
+        const peerId =
+          c.dmVolunteerAId === selfVolunteerId
+            ? c.dmVolunteerBId
+            : c.dmVolunteerBId === selfVolunteerId
+              ? c.dmVolunteerAId
+              : null
+        if (!peerId) return c
+        const name = peerName.get(peerId)
+        return name ? { ...c, name: `Message · ${name}` } : c
+      })
+    }
+  }
 
   const channelsWithUnread = await Promise.all(
-    sortedChannels.map(async (channel) => {
+    sortEventChatChannels(channelsForClient).map(async (channel) => {
       const readState = await prisma.event_chat_reads.findFirst({
         where: {
           channelId: channel.id,

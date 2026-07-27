@@ -5,6 +5,7 @@ import Link from 'next/link'
 import PWABottomNav from './PWABottomNav'
 import VolunteerPdfViewer from './VolunteerPdfViewer'
 import { displayPhone } from '@/lib/formatPhone'
+import { notifyAlert } from '../lib/ui/toast'
 
 interface Assignment {
   id: string
@@ -94,7 +95,7 @@ interface MobileVolunteerDashboardProps {
   activeCountGroups?: ActiveCountGroupSummary[]
   documents?: Document[]
   availabilityRequests: AvailabilityRequest[]
-  onAvailabilityResponse: (requestId: string, status: string) => Promise<void>
+  onAvailabilityResponse: (requestId: string, status: string, notes?: string) => Promise<void>
   onRefresh?: () => Promise<void>
   onSignOut?: () => void
   chatEnabled?: boolean
@@ -130,6 +131,7 @@ export default function MobileVolunteerDashboard({
   const [expandedAssignment, setExpandedAssignment] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
   const [respondingToRequest, setRespondingToRequest] = useState<string | null>(null)
+  const [availabilityComments, setAvailabilityComments] = useState<Record<string, string>>({})
   const [viewingDoc, setViewingDoc] = useState<Document | null>(null)
 
   const formatTime = (time: string) => {
@@ -168,9 +170,19 @@ export default function MobileVolunteerDashboard({
   }
 
   const handleAvailabilityResponseWrapper = async (requestId: string, status: string) => {
+    const comment = (availabilityComments[requestId] || '').trim()
+    if (status === 'PARTIAL' && !comment) {
+      notifyAlert('Please add a comment explaining your partial availability (for example: “Friday only”).')
+      return
+    }
     setRespondingToRequest(requestId)
     try {
-      await onAvailabilityResponse(requestId, status)
+      await onAvailabilityResponse(requestId, status, comment || undefined)
+      setAvailabilityComments((prev) => {
+        const next = { ...prev }
+        delete next[requestId]
+        return next
+      })
     } finally {
       setRespondingToRequest(null)
     }
@@ -506,6 +518,18 @@ export default function MobileVolunteerDashboard({
                       </div>
                       
                       <div className="p-3 bg-white bg-opacity-60 space-y-2">
+                        <textarea
+                          value={availabilityComments[request.id] || ''}
+                          onChange={(e) =>
+                            setAvailabilityComments((prev) => ({
+                              ...prev,
+                              [request.id]: e.target.value
+                            }))
+                          }
+                          rows={3}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                          placeholder="Comments (required for Partial) — e.g. Friday only"
+                        />
                         <button
                           onClick={() => handleAvailabilityResponseWrapper(request.id, 'AVAILABLE')}
                           disabled={respondingToRequest === request.id}

@@ -5,6 +5,7 @@ import { prisma } from '../../../../src/lib/prisma'
 import * as nodemailer from 'nodemailer'
 import crypto from 'crypto'
 import { handleApiError } from '@/lib/apiError'
+import { formatPlainMessageAsHtml } from '@/lib/volunteerBroadcastEmail'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -218,7 +219,7 @@ async function sendInvitationEmail(email: string, firstName: string, invitationU
           </p>
           ${customMessage ? `
             <div style="background-color: #dbeafe; border-left: 4px solid #2563eb; padding: 15px; margin: 20px 0;">
-              <p style="color: #1e40af; margin: 0;">${customMessage}</p>
+              ${formatPlainMessageAsHtml(customMessage, { color: '#1e40af', marginBottom: '8px' })}
             </div>
           ` : ''}
           <p style="color: #4b5563; font-size: 16px; line-height: 1.6;">

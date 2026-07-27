@@ -1,8 +1,8 @@
 # TheoShift Task State
 
-**Last updated:** 2026-07-26  
+**Last updated:** 2026-07-27  
 **Branch:** `main`  
-**Production:** **LIVE** **GREEN** `10.92.3.22` · **STANDBY** **BLUE** `10.92.3.24` — both **v4.29.3**.
+**Production:** **LIVE** **BLUE** `10.92.3.24` · **STANDBY** **GREEN** `10.92.3.22` — both **v4.29.4**.
 
 ---
 
@@ -12,10 +12,11 @@
 
 ### What I'm doing right now
 
-v4.29.3 shipped (IVS → Volunteers roster promote). Resume mobile audit when next coding.
+v4.29.4 shipped (safe bulk email). Resume mobile audit when next coding. Remaining: Positions “Send Notifications” throttle/abort.
 
 ### Recent completions
 
+- ✅ **v4.29.4** — Safe bulk email: roster-only, confirm count, throttle, abort
 - ✅ **v4.29.3** — Promote IVS-only people onto Volunteers roster
 - ✅ **v4.29.2** — Fix add volunteer when email already exists
 - ✅ **v4.29.1** — Fix bulk create position number collisions

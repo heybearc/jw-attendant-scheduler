@@ -32,8 +32,9 @@ export default function IVSApprovalsHelp() {
             </p>
             <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4">
               <p className="text-blue-800">
-                <strong>💡 Tip:</strong> IVS volunteers are managed separately from your local volunteers
-                and appear only on the IVS Approvals page, not on the main Volunteers page.
+                <strong>💡 Tip:</strong> IVS imports appear on the IVS Module by default, not on Volunteers.
+                If someone also needs a position assignment, add them on the Volunteers page with the same
+                email — they stay on IVS and also appear on the roster.
               </p>
             </div>
           </section>
@@ -277,8 +278,9 @@ export default function IVSApprovalsHelp() {
                   Why don't I see IVS volunteers on the main Volunteers page?
                 </h3>
                 <p className="text-gray-600">
-                  IVS volunteers are managed separately and only appear on the IVS Approvals page.
-                  This keeps your local volunteers and IVS volunteers organized separately.
+                  People imported for IVS stay on the IVS Module until you also add them as volunteers
+                  for the event. Use <strong>Add Volunteer</strong> with their email — they remain on
+                  IVS and show up on Volunteers/Positions for assignments.
                 </p>
               </div>
 

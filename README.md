@@ -276,6 +276,7 @@ For issues or questions:
 
 ## 📝 Version History
 
+- **v4.29.3** (2026-07-26) - Add IVS people to Volunteers roster without removing them from IVS
 - **v4.29.2** (2026-07-26) - Fix add volunteer when email already exists (link to event instead of 500)
 - **v4.29.1** (2026-07-26) - Fix bulk create positions colliding with existing numbers
 - **v4.29.0** (2026-07-26) - Positions: multi-person shifts (volunteers needed), in-place shift edit, AM–PM auto-sort

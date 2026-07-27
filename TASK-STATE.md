@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-07-26  
 **Branch:** `main`  
-**Production:** shipping **v4.29.1** (bulk create number collision fix).
+**Production:** **LIVE** **GREEN** `10.92.3.22` · **STANDBY** **BLUE** `10.92.3.24` — both **v4.29.1**.
 
 ---
 
@@ -12,13 +12,13 @@
 
 ### What I'm doing right now
 
-v4.29.0 shipped (multi-person shifts + in-place edit). Resume mobile audit when next coding.
+v4.29.1 shipped (bulk create number collision fix). Resume mobile audit when next coding.
 
 ### Recent completions
 
-- ✅ **v4.29.0** — Shift capacity, in-place edit, AM–PM sort (`/ship` + `/sync`)
+- ✅ **v4.29.1** — Fix bulk create colliding with existing position numbers
+- ✅ **v4.29.0** — Shift capacity, in-place edit, AM–PM sort
 - ✅ **v4.28.0** — App-wide phone formatting
-- ✅ **Option C** — Shift `volunteersNeeded` + capacity-aware auto-assign
 
 ### Next steps
 

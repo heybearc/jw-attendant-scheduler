@@ -2,33 +2,32 @@
 
 **Last updated:** 2026-07-26  
 **Branch:** `main`  
-**Production:** shipping **v4.29.0** (shift capacity + in-place edit).
+**Production:** **LIVE** **BLUE** `10.92.3.24` · **STANDBY** **GREEN** `10.92.3.22` — both **v4.29.0**.
 
 ---
 
 ## Current Task
 
-**Positions Option C (shift capacity)** — DONE ✅ (pending STANDBY verify)
+**Mobile readiness (Positions / Volunteers)** — NEXT
 
 ### What I'm doing right now
 
-Option C shipped locally: `volunteersNeeded` on shifts, fill progress, shift-OVERSEER pool preference, capacity-aware auto-assign. Full Positions redesign remains backlog.
+v4.29.0 shipped (multi-person shifts + in-place edit). Resume mobile audit when next coding.
 
 ### Recent completions
 
-- ✅ **Option C** — Shift capacity + auto-assign (2026-07-26)
-- ✅ **v4.28.0** — App-wide phone `(XXX) XXX-XXXX`; DB normalize
-- ✅ **v4.27.0** — IVS contacts remove, phone format, approval date fix
+- ✅ **v4.29.0** — Shift capacity, in-place edit, AM–PM sort (`/ship` + `/sync`)
+- ✅ **v4.28.0** — App-wide phone formatting
+- ✅ **Option C** — Shift `volunteersNeeded` + capacity-aware auto-assign
 
 ### Next steps
 
-1. Verify Option C on STANDBY (create shift with needed=4, assign, auto-assign).
-2. Continue **mobile audit**: Positions + Volunteers.
-3. Triage **`/admin/feedback`** when online.
+1. Continue **mobile audit**: Positions + Volunteers.
+2. Triage **`/admin/feedback`** when online.
 
 ## Exact next command
 
-Smoke-test STANDBY Positions: set shift Need=4, assign multiple volunteers, confirm fill badge.
+Open Positions/Volunteers on a narrow viewport and continue the mobile audit.
 
 ---
 

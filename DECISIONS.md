@@ -617,6 +617,12 @@ This document tracks significant technical decisions made during development.
 3. **E2E tests** must click inline dialog buttons, not `page.once('dialog')`.  
 **Consequences:** Consistent UX with Chapter Hub; release-gate specs must be updated when adding confirm flows. Shipped **v4.22.0**.
 
+### D-TS-045: IVS department contacts placement
+**Date:** 2026-07-26  
+**Context:** Department contacts (overseer/assistants by IVS department) support early-entry desk lookup. Question whether to also expose search on the main volunteer dashboard for all volunteers.  
+**Decision:** Keep as-is — **manage** on IVS Approvals; **lookup** on Early Check-In (admin tab + volunteer Early Check-In for IVS team). Do not add a separate dashboard-wide contacts panel unless a later need is confirmed.  
+**Consequences:** IVS team volunteers already reach lookup via Early Check-In; non–IVS-team volunteers do not see the panel.
+
 ---
 
 ## Shared Decisions

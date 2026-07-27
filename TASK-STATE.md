@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-07-26  
 **Branch:** `main`  
-**Production:** **LIVE** **BLUE** `10.92.3.24` · **STANDBY** **GREEN** `10.92.3.22` — both **v4.29.2**.
+**Production:** **LIVE** **GREEN** `10.92.3.22` · **STANDBY** **BLUE** `10.92.3.24` — both **v4.29.3**.
 
 ---
 
@@ -12,10 +12,11 @@
 
 ### What I'm doing right now
 
-v4.29.2 shipped (volunteer find-or-link by email). Resume mobile audit when next coding.
+v4.29.3 shipped (IVS → Volunteers roster promote). Resume mobile audit when next coding.
 
 ### Recent completions
 
+- ✅ **v4.29.3** — Promote IVS-only people onto Volunteers roster
 - ✅ **v4.29.2** — Fix add volunteer when email already exists
 - ✅ **v4.29.1** — Fix bulk create position number collisions
 - ✅ **v4.29.0** — Shift capacity, in-place edit, AM–PM sort

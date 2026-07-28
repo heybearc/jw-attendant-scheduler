@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-07-28  
 **Branch:** `main`  
-**Production:** **LIVE** **BLUE** `10.92.3.24` · **STANDBY** **GREEN** `10.92.3.22` — shipping **v4.29.11**.
+**Production:** **LIVE** **GREEN** `10.92.3.22` · **STANDBY** **BLUE** `10.92.3.24` — both **v4.29.11**.
 
 ---
 
@@ -12,7 +12,7 @@
 
 ### What I'm doing right now
 
-Shipping **v4.29.11** (cross-oversight capacity fallback). Resume Positions + Volunteers mobile audit next.
+Shipped **v4.29.11** (cross-oversight capacity fallback). Resume Positions + Volunteers mobile audit next.
 
 ### Recent completions
 

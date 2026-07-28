@@ -102,6 +102,8 @@ interface MobileVolunteerDashboardProps {
   chatChannelCount?: number
   chatUnreadCount?: number
   chatHref?: string
+  /** When true, Check-In is available in the bottom nav for this event */
+  showEarlyCheckIn?: boolean
   /** When staff simulates a volunteer, preserve view-as on links to Enter Count */
   enterCountViewAsVolunteerId?: string | null
 }
@@ -122,6 +124,7 @@ export default function MobileVolunteerDashboard({
   chatChannelCount = 0,
   chatUnreadCount = 0,
   chatHref = '/volunteer/chat',
+  showEarlyCheckIn = false,
   enterCountViewAsVolunteerId = null
 }: MobileVolunteerDashboardProps) {
   const enterCountViewAsQuery = enterCountViewAsVolunteerId
@@ -763,7 +766,12 @@ export default function MobileVolunteerDashboard({
           </div>
         </div>
       )}
-      <PWABottomNav activeTab="dashboard" />
+      <PWABottomNav
+        activeTab="dashboard"
+        eventId={event.id}
+        viewAsVolunteerId={enterCountViewAsVolunteerId}
+        showCheckIn={showEarlyCheckIn}
+      />
     </div>
   )
 }

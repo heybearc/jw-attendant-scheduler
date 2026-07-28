@@ -1103,6 +1103,7 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
               : '/volunteer/chat'
           }
           enterCountViewAsVolunteerId={effectiveViewAsVolunteerId}
+          showEarlyCheckIn={!!dashboardData.isIVSTeamMember}
         />
       </>
     )

@@ -53,33 +53,61 @@ export async function resolveEarlyCheckinVolunteerId(
  * IVS early check-in on the volunteer dashboard requires an IVS team position assignment
  * for the effective volunteer (including simulated). Staff with IVS view rights may also access.
  */
-export async function verifyVolunteerIvsEarlyCheckinAccess(
-  req: NextApiRequest,
+export async function verifyVolunteerIvsEarlyCheckinAccessForIds(
   sessionUserId: string,
   sessionRole: string | undefined,
   eventId: string,
+  options?: { viewAsVolunteerId?: string | null },
 ): Promise<EarlyCheckinAccessResult> {
   const event = await prisma.events.findUnique({
     where: { id: eventId },
-    select: { eventType: true },
+    select: { eventType: true, settings: true },
   })
 
-  if (event?.eventType !== 'REGIONAL_CONVENTION') {
-    return { ok: false, status: 403, message: 'This is not an IVS event' }
+  const ivsModuleEnabled = !!(event?.settings as any)?.modules?.ivsModule
+  if (!ivsModuleEnabled) {
+    return { ok: false, status: 403, message: 'IVS module is not enabled for this event' }
   }
 
-  const volunteerId = await resolveEarlyCheckinVolunteerId(req, sessionUserId, sessionRole)
+  let volunteerId: string | null = null
+  const viewAs = options?.viewAsVolunteerId?.trim() || null
+  if (viewAs && canUseViewAs(sessionRole)) {
+    const exists = await prisma.volunteers.findUnique({
+      where: { id: viewAs },
+      select: { id: true },
+    })
+    volunteerId = exists?.id ?? null
+  } else {
+    volunteerId = await resolveVolunteerIdForSessionUser(sessionUserId, sessionRole || '')
+    if (!volunteerId) {
+      const byId = await prisma.volunteers.findUnique({
+        where: { id: sessionUserId },
+        select: { id: true },
+      })
+      volunteerId = byId?.id ?? null
+    }
+  }
 
   if (volunteerId) {
-    const ivsTeamMember = await prisma.position_assignments.findFirst({
+    const onEvent = await prisma.event_volunteers.findFirst({
       where: {
+        eventId,
         volunteerId,
-        positions: { eventId },
+        isActive: true,
       },
       select: { id: true },
     })
-    if (ivsTeamMember) {
-      return { ok: true, volunteerId }
+    if (onEvent) {
+      const ivsTeamMember = await prisma.position_assignments.findFirst({
+        where: {
+          volunteerId,
+          positions: { eventId },
+        },
+        select: { id: true },
+      })
+      if (ivsTeamMember) {
+        return { ok: true, volunteerId }
+      }
     }
   }
 
@@ -91,6 +119,17 @@ export async function verifyVolunteerIvsEarlyCheckinAccess(
   return {
     ok: false,
     status: 403,
-    message: 'Access denied - IVS team member access required',
+    message: 'Access denied - IVS early check-in access required',
   }
+}
+
+export async function verifyVolunteerIvsEarlyCheckinAccess(
+  req: NextApiRequest,
+  sessionUserId: string,
+  sessionRole: string | undefined,
+  eventId: string,
+): Promise<EarlyCheckinAccessResult> {
+  return verifyVolunteerIvsEarlyCheckinAccessForIds(sessionUserId, sessionRole, eventId, {
+    viewAsVolunteerId: getViewAsVolunteerId(req),
+  })
 }

@@ -47,9 +47,12 @@ export default function EarlyCheckinPanel({
   const [pendingCollapsed, setPendingCollapsed] = useState(false)
   const [checkedInCollapsed, setCheckedInCollapsed] = useState(false)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
-  const [viewDay, setViewDay] = useState<ViewDay>('TODAY')
-  const [apiToday, setApiToday] = useState<ConventionDay | null>(null)
+  const [viewDay, setViewDay] = useState<ViewDay>(() =>
+    getCurrentConventionDay() ? 'TODAY' : ConventionDay.FRIDAY,
+  )
+  const [apiToday, setApiToday] = useState<ConventionDay | null>(() => getCurrentConventionDay())
   const [clientReady, setClientReady] = useState(false)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
   useEffect(() => {
     setApiToday(getCurrentConventionDay())
@@ -87,9 +90,15 @@ export default function EarlyCheckinPanel({
         setVolunteers(data.volunteers || [])
         if (data.today) setApiToday(data.today)
         setLastUpdated(new Date())
+        setLoadError(null)
+      } else {
+        const data = await response.json().catch(() => ({}))
+        setVolunteers([])
+        setLoadError(data.message || `Could not load check-in list (${response.status})`)
       }
     } catch (error) {
       console.error('Error fetching volunteers:', error)
+      if (!silent) setLoadError('Could not load check-in list')
     } finally {
       if (!silent) setLoading(false)
     }
@@ -314,11 +323,14 @@ export default function EarlyCheckinPanel({
       </div>
 
       <div className="flex-1 overflow-auto p-4">
-        {loading ? (
+        {loadError ? (
+          <div className="text-center py-8 text-red-600 px-4">{loadError}</div>
+        ) : loading ? (
           <div className="text-center py-8 text-gray-500">Loading...</div>
         ) : !activeDay ? (
-          <div className="text-center py-8 text-gray-500">
-            Early check-in is only available on Friday, Saturday, or Sunday (event local time).
+          <div className="text-center py-8 text-gray-500 px-4">
+            Today is not a convention day. Tap <strong>Fri</strong>, <strong>Sat</strong>, or{' '}
+            <strong>Sun</strong> above to view that day&apos;s early check-in list.
           </div>
         ) : (
           <>

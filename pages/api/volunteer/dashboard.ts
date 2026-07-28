@@ -1,9 +1,19 @@
 import { NextApiRequest, NextApiResponse } from 'next'
+import { getServerSession } from 'next-auth/next'
+import { authOptions } from '../auth/[...nextauth]'
 import { prisma } from '../../../src/lib/prisma'
 import { toDateOnlyStringUTC } from '../../../src/lib/calendarDate'
+import { verifyVolunteerIvsEarlyCheckinAccessForIds } from '@/lib/ivsVolunteerEarlyCheckinAccess'
+import { getViewAsVolunteerId } from '@/lib/countAssignmentsShared'
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ success: false, error: 'Method not allowed' })
+  }
+
+  const session = await getServerSession(req, res, authOptions)
+  if (!session?.user?.id) {
+    return res.status(401).json({ success: false, error: 'Unauthorized' })
   }
 
   const { volunteerId, eventId } = req.query
@@ -13,6 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const vid = String(volunteerId).trim()
+  const eid = String(eventId).trim()
 
   try {
     // Get volunteer information using proper Prisma
@@ -226,13 +237,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
     }
 
-    // Check if Early Check-In tab should be shown
-    // Show if IVS module is enabled for the event (volunteer is already confirmed to be registered for this event)
-    const ivsModuleEnabled = (event.settings as any)?.modules?.ivsModule ?? false
-    
-    // If IVS module is enabled, the volunteer has access to Early Check-In
-    // (they're already registered for the event via event_volunteers)
-    const ivsTeamMember = ivsModuleEnabled ? eventVolunteer : null
+    // Early Check-In: same access rules as /api/volunteer/early-checkin
+    const earlyAccess = await verifyVolunteerIvsEarlyCheckinAccessForIds(
+      session.user.id,
+      session.user.role,
+      eid,
+      { viewAsVolunteerId: getViewAsVolunteerId(req) || vid }
+    )
+    const ivsTeamMember = earlyAccess.ok ? eventVolunteer : null
 
     // Count groups where this volunteer is primary or secondary counter (one combined entry per group).
     const volunteerGroups = await prisma.count_session_groups.findMany({

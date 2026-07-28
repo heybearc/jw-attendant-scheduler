@@ -5,14 +5,22 @@ import { useRouter } from 'next/router'
 import { prisma } from '@/lib/prisma'
 import EarlyCheckinPanel from '../../components/EarlyCheckinPanel'
 import PWABottomNav from '../../components/PWABottomNav'
+import { verifyVolunteerIvsEarlyCheckinAccessForIds } from '@/lib/ivsVolunteerEarlyCheckinAccess'
 
 interface EarlyCheckinPageProps {
-  event: any
+  event: { id: string; name: string }
   hasAccess: boolean
+  accessMessage?: string
 }
 
-export default function VolunteerEarlyCheckinPage({ event, hasAccess }: EarlyCheckinPageProps) {
+export default function VolunteerEarlyCheckinPage({
+  event,
+  hasAccess,
+  accessMessage,
+}: EarlyCheckinPageProps) {
   const router = useRouter()
+  const viewAs =
+    typeof router.query.viewAsVolunteerId === 'string' ? router.query.viewAsVolunteerId : null
 
   if (!hasAccess) {
     return (
@@ -20,10 +28,19 @@ export default function VolunteerEarlyCheckinPage({ event, hasAccess }: EarlyChe
         <div className="bg-white rounded-lg shadow-lg p-6 max-w-md text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
           <p className="text-gray-600 mb-4">
-            You do not have access to the early check-in feature for this event.
+            {accessMessage ||
+              'You do not have access to the early check-in feature for this event.'}
           </p>
           <button
-            onClick={() => router.push('/volunteer/dashboard')}
+            onClick={() =>
+              router.push(
+                event?.id
+                  ? `/volunteer/dashboard?eventId=${event.id}${
+                      viewAs ? `&viewAsVolunteerId=${viewAs}` : ''
+                    }`
+                  : '/volunteer/dashboard',
+              )
+            }
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
           >
             Return to Dashboard
@@ -35,20 +52,31 @@ export default function VolunteerEarlyCheckinPage({ event, hasAccess }: EarlyChe
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <EarlyCheckinPanel 
+      <EarlyCheckinPanel
         eventId={event.id}
         eventName={event.name}
         showHeader={true}
-        onBack={() => router.push('/volunteer/dashboard')}
+        onBack={() =>
+          router.push(
+            `/volunteer/dashboard?eventId=${event.id}${
+              viewAs ? `&viewAsVolunteerId=${viewAs}` : ''
+            }`,
+          )
+        }
       />
-      <PWABottomNav activeTab="checkin" />
+      <PWABottomNav
+        activeTab="checkin"
+        eventId={event.id}
+        viewAsVolunteerId={viewAs}
+        showCheckIn
+      />
     </div>
   )
 }
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const session = await getServerSession(context.req, context.res, authOptions)
-  
+
   if (!session?.user?.id) {
     return {
       redirect: {
@@ -58,16 +86,21 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     }
   }
 
-  const { eventId } = context.query
+  let eventId = context.query.eventId
+  if (Array.isArray(eventId)) eventId = eventId[0]
 
+  // Fall back so mobile bottom-nav deep links still work if query is missing
   if (!eventId || typeof eventId !== 'string') {
     return {
       redirect: {
-        destination: '/volunteer/dashboard',
+        destination: '/volunteer/select-event',
         permanent: false,
       },
     }
   }
+
+  const viewAsRaw = context.query.viewAsVolunteerId
+  const viewAsVolunteerId = typeof viewAsRaw === 'string' ? viewAsRaw : null
 
   try {
     const event = await prisma.events.findUnique({
@@ -75,9 +108,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       select: {
         id: true,
         name: true,
-        startDate: true,
-        endDate: true,
-        settings: true,
       },
     })
 
@@ -90,24 +120,18 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       }
     }
 
-    // Check if IVS module is enabled for this event
-    const ivsModuleEnabled = (event.settings as any)?.modules?.ivsModule ?? false
-
-    // Check if user is registered as a volunteer for this event
-    const eventVolunteer = await prisma.event_volunteers.findFirst({
-      where: {
-        eventId: eventId,
-        userId: session.user.id,
-      },
-    })
-
-    // User has access if IVS module is enabled AND they're registered for the event
-    const hasAccess = ivsModuleEnabled && !!eventVolunteer
+    const access = await verifyVolunteerIvsEarlyCheckinAccessForIds(
+      session.user.id,
+      session.user.role,
+      eventId,
+      { viewAsVolunteerId },
+    )
 
     return {
       props: {
-        event,
-        hasAccess,
+        event: { id: event.id, name: event.name },
+        hasAccess: access.ok,
+        ...(access.ok ? {} : { accessMessage: access.message }),
       },
     }
   } catch (error) {

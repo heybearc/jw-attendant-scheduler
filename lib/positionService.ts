@@ -305,6 +305,7 @@ export class PositionService {
     shiftEnd?: Date
     notes?: string
     sendNotification?: boolean
+    role?: 'VOLUNTEER' | 'ATTENDANT' | 'OVERSEER' | 'KEYMAN'
   }): Promise<boolean> {
     try {
       // If shiftId is provided but no times, fetch the shift details
@@ -339,7 +340,7 @@ export class PositionService {
         volunteerId: data.attendantId,
         positionId: data.positionId,
         shiftId: data.shiftId,
-        role: 'VOLUNTEER'
+        role: data.role || 'VOLUNTEER'
       }
       
       const response = await fetch(`/api/events/${this.eventId}/assignments`, {

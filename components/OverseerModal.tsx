@@ -42,14 +42,21 @@ export default function OverseerModal({
 
   const overseers = attendants?.filter(att => att.isOverseer) || []
   const keymen = attendants?.filter(att => att.isKeyman) || []
+  // Fall back to full roster when isOverseer/isKeyman flags are unset on event associations
+  const overseerOptions = overseers.length > 0 ? overseers : (attendants || [])
+  const keymanOptions = keymen.length > 0 ? keymen : (attendants || [])
 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
       <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
         <div className="mt-3">
           <h3 className="text-lg font-medium text-gray-900 mb-4">
-            Assign Overseer to {position.name}
+            Assign Position Oversight
           </h3>
+          <p className="text-xs text-gray-500 mb-4">
+            Default overseer/keyman for <span className="font-medium text-gray-700">{position.name}</span>.
+            For a specific shift, use <span className="font-medium">+ Assign Overseer</span> on that shift instead.
+          </p>
           
           <form onSubmit={onSubmit}>
             <div className="space-y-4">
@@ -64,9 +71,9 @@ export default function OverseerModal({
                   required
                 >
                   <option value="">Select an overseer...</option>
-                  {overseers.map(attendant => (
+                  {overseerOptions.map(attendant => (
                     <option key={attendant.id} value={attendant.id}>
-                      {attendant.firstName} {attendant.lastName} (Elder)
+                      {attendant.firstName} {attendant.lastName}{attendant.isOverseer ? ' (Elder)' : ''}
                     </option>
                   ))}
                 </select>
@@ -82,7 +89,7 @@ export default function OverseerModal({
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Select a keyman...</option>
-                  {keymen.map(attendant => (
+                  {keymanOptions.map(attendant => (
                     <option key={attendant.id} value={attendant.id}>
                       {attendant.firstName} {attendant.lastName}
                     </option>

@@ -160,12 +160,15 @@ type Attendant = Volunteer
 // AssignVolunteerModal - Conflict-aware volunteer assignment modal
 // ============================================================================
 
+type AssignmentRole = 'VOLUNTEER' | 'OVERSEER' | 'KEYMAN'
+
 interface AssignVolunteerModalProps {
   position: Position
   selectedShift: any | null
   filteredAttendants: Attendant[]
   allPositions: Position[]
   eventId: string
+  initialRole?: AssignmentRole
   onClose: () => void
   onSuccess: () => void
   formatTime: (t: string) => string
@@ -177,15 +180,20 @@ function AssignVolunteerModal({
   filteredAttendants,
   allPositions,
   eventId,
+  initialRole = 'VOLUNTEER',
   onClose,
   onSuccess,
   formatTime
 }: AssignVolunteerModalProps) {
   const [selectedVolunteerId, setSelectedVolunteerId] = React.useState('')
   const [selectedShiftId, setSelectedShiftId] = React.useState(selectedShift?.id || '')
+  const [selectedRole, setSelectedRole] = React.useState<AssignmentRole>(initialRole)
   const [search, setSearch] = React.useState('')
   const [inlineError, setInlineError] = React.useState<string | null>(null)
   const [submitting, setSubmitting] = React.useState(false)
+
+  const roleLabel =
+    selectedRole === 'OVERSEER' ? 'Overseer' : selectedRole === 'KEYMAN' ? 'Keyman' : 'Volunteer'
 
   // Build assignment map once from all positions data
   const assignmentMap = React.useMemo(
@@ -235,7 +243,7 @@ function AssignVolunteerModal({
           positionId: position.id,
           volunteerId: selectedVolunteerId,
           shiftId: selectedShiftId,
-          role: 'VOLUNTEER'
+          role: selectedRole
         })
       })
 
@@ -257,7 +265,7 @@ function AssignVolunteerModal({
             setInlineError(errorData.message || 'Assignment conflict — unable to assign.')
           }
         } else {
-          setInlineError(errorData.error || 'Failed to assign volunteer.')
+          setInlineError(errorData.error || `Failed to assign ${roleLabel.toLowerCase()}.`)
         }
       }
     } catch {
@@ -275,7 +283,7 @@ function AssignVolunteerModal({
           <div className="flex items-start justify-between mb-4">
             <div>
               <h3 className="text-lg font-medium text-gray-900">
-                Assign Volunteer
+                Assign {roleLabel}
               </h3>
               <p className="text-sm text-gray-500 mt-0.5">{position.name}</p>
             </div>
@@ -287,6 +295,25 @@ function AssignVolunteerModal({
           </div>
 
           <form onSubmit={handleSubmit}>
+            {/* Role selector */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+              <select
+                value={selectedRole}
+                onChange={e => { setSelectedRole(e.target.value as AssignmentRole); setInlineError(null) }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              >
+                <option value="VOLUNTEER">Volunteer</option>
+                <option value="OVERSEER">Overseer (this shift)</option>
+                <option value="KEYMAN">Keyman (this shift)</option>
+              </select>
+              {selectedRole !== 'VOLUNTEER' && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Each shift can have one overseer and one keyman.
+                </p>
+              )}
+            </div>
+
             {/* Shift selector */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">Shift</label>
@@ -307,7 +334,7 @@ function AssignVolunteerModal({
 
             {/* Volunteer search */}
             <div className="mb-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Volunteer</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Person</label>
               <input
                 type="text"
                 placeholder="Search by name or congregation..."
@@ -407,7 +434,7 @@ function AssignVolunteerModal({
                 disabled={submitting || !selectedVolunteerId || !selectedShiftId}
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white text-sm rounded-md transition-colors"
               >
-                {submitting ? 'Assigning...' : 'Assign Volunteer'}
+                {submitting ? 'Assigning...' : `Assign ${roleLabel}`}
               </button>
             </div>
           </form>
@@ -482,6 +509,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
   const [isSmallScreen, setIsSmallScreen] = useState(false)
   const [editingShiftId, setEditingShiftId] = useState<string | null>(null)
   const [savingShiftId, setSavingShiftId] = useState<string | null>(null)
+  const [assignModalRole, setAssignModalRole] = useState<AssignmentRole>('VOLUNTEER')
 
   // Persist viewMode to localStorage whenever it changes
   useEffect(() => {
@@ -618,6 +646,23 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
     handleRemoveAssignment,
     handleClearAllAssignments
   } = assignmentsHook
+
+  const openAssignModal = (
+    position: Position,
+    shift: any | null = null,
+    role: AssignmentRole = 'VOLUNTEER'
+  ) => {
+    setSelectedPosition(position)
+    setSelectedShift(shift)
+    setAssignModalRole(role)
+    setShowAssignAttendantModal(true)
+  }
+
+  const closeAssignModal = () => {
+    setShowAssignAttendantModal(false)
+    setSelectedShift(null)
+    setAssignModalRole('VOLUNTEER')
+  }
   
   const {
     showBulkEditModal,
@@ -1924,6 +1969,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                               assignment.role === 'OVERSEER' || assignment.role === 'KEYMAN'
                             )
                             const shiftOverseerName = shiftLeadershipAssignments.find(a => a.role === 'OVERSEER')
+                            const shiftKeymanAssign = shiftLeadershipAssignments.find(a => a.role === 'KEYMAN')
                             const positionOversight = position.oversight?.[0]
                             const isEditing = editingShiftId === shift.id
                             
@@ -2039,6 +2085,9 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                                               <span className={`text-xs font-medium ${roleColor}`}>
                                                 {assignment.volunteer?.firstName} {assignment.volunteer?.lastName}
                                               </span>
+                                              <span className="ml-2 text-xs text-gray-500">
+                                                ({assignment.role === 'OVERSEER' ? 'Overseer' : 'Keyman'})
+                                              </span>
                                             </div>
                                             <button
                                               onClick={() => handleRemoveAssignment(assignment.id)}
@@ -2106,11 +2155,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                                     })}
                                     {/* Add another volunteer button */}
                                     <button
-                                      onClick={() => {
-                                        setSelectedPosition(position)
-                                        setSelectedShift(shift)
-                                        setShowAssignAttendantModal(true)
-                                      }}
+                                      onClick={() => openAssignModal(position, shift, 'VOLUNTEER')}
                                       className="w-full text-xs text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 border border-blue-200 border-dashed rounded px-2 py-1 transition-colors"
                                     >
                                       + Assign Another Volunteer
@@ -2118,15 +2163,33 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                                   </div>
                                 ) : (
                                   <button
-                                    onClick={() => {
-                                      setSelectedPosition(position)
-                                      setSelectedShift(shift)
-                                      setShowAssignAttendantModal(true)
-                                    }}
+                                    onClick={() => openAssignModal(position, shift, 'VOLUNTEER')}
                                     className="w-full text-xs text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded px-2 py-1 transition-colors"
                                   >
                                     + Assign Volunteer
                                   </button>
+                                )}
+                                {canManageContent && (
+                                  <div className="mt-1 space-y-1">
+                                    {!shiftOverseerName && (
+                                      <button
+                                        type="button"
+                                        onClick={() => openAssignModal(position, shift, 'OVERSEER')}
+                                        className="w-full text-xs text-indigo-700 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded px-2 py-1 transition-colors"
+                                      >
+                                        + Assign Overseer
+                                      </button>
+                                    )}
+                                    {!shiftKeymanAssign && (
+                                      <button
+                                        type="button"
+                                        onClick={() => openAssignModal(position, shift, 'KEYMAN')}
+                                        className="w-full text-xs text-purple-700 hover:text-purple-900 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded px-2 py-1 transition-colors"
+                                      >
+                                        + Assign Keyman
+                                      </button>
+                                    )}
+                                  </div>
                                 )}
                               </div>
                             )
@@ -2194,10 +2257,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                             </div>
                           ))}
                           <button
-                            onClick={() => {
-                              setSelectedPosition(position)
-                              setShowAssignAttendantModal(true)
-                            }}
+                            onClick={() => openAssignModal(position, null, 'VOLUNTEER')}
                             className="w-full text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded px-2 py-1 transition-colors"
                           >
                             + Assign Volunteer
@@ -2216,7 +2276,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                           }}
                           className="text-xs bg-green-100 hover:bg-green-200 text-green-800 px-2 py-1 rounded transition-colors"
                         >
-                          👥 Assign Oversight
+                          👥 Position Oversight
                         </button>
                         <button
                           onClick={() => handleEdit(position)}
@@ -2405,7 +2465,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
           onFormDataChange={setOverseerFormData}
         />
 
-        {/* Assign Volunteer Modal */}
+        {/* Assign Volunteer / Overseer / Keyman Modal */}
         {showAssignAttendantModal && selectedPosition && (() => {
           // Prefer shift-level OVERSEER/KEYMAN for volunteer pool; fall back to position oversight
           const oversight = selectedPosition.oversight && selectedPosition.oversight.length > 0 ? selectedPosition.oversight[0] : null
@@ -2417,7 +2477,8 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
           const positionOverseer = (shiftOverseerAssign as any)?.volunteer || (shiftOverseerAssign as any)?.attendant || oversight?.overseer
           const positionKeyman = (shiftKeymanAssign as any)?.volunteer || (shiftKeymanAssign as any)?.attendant || oversight?.keyman
           let filteredAttendants = attendants?.filter(att => att.isActive) || []
-          if (positionOverseer || positionKeyman) {
+          // Leadership picks from the full roster; volunteer picks stay scoped to oversight pool when set
+          if (assignModalRole === 'VOLUNTEER' && (positionOverseer || positionKeyman)) {
             filteredAttendants = filteredAttendants.filter(attendant => {
               const matchesOverseer = positionOverseer && attendant.overseerId === positionOverseer.id
               const matchesKeyman = positionKeyman && attendant.keymanId === positionKeyman.id
@@ -2427,13 +2488,15 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
 
           return (
             <AssignVolunteerModal
+              key={`${selectedShift?.id || 'none'}-${assignModalRole}`}
               position={selectedPosition}
               selectedShift={selectedShift}
               filteredAttendants={filteredAttendants}
               allPositions={positions}
               eventId={eventId}
-              onClose={() => { setShowAssignAttendantModal(false); setSelectedShift(null) }}
-              onSuccess={() => { setShowAssignAttendantModal(false); setSelectedShift(null); router.reload() }}
+              initialRole={assignModalRole}
+              onClose={closeAssignModal}
+              onSuccess={() => { closeAssignModal(); router.reload() }}
               formatTime={formatTime12Hour}
             />
           )

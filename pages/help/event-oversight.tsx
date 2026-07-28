@@ -210,6 +210,13 @@ export default function EventOversightHelp() {
           User roles in User Management still control who appears on the Oversight Dashboard.
         </p>
 
+        <h3>Why do Friday and Saturday shifts conflict?</h3>
+        <p>
+          On multi-day events, each shift needs a <strong>Day</strong> set (edit the shift and pick the date).
+          Naming the shift “Friday” is not enough. Once days are set, the same clock times on different
+          days are allowed.
+        </p>
+
         <h3>Can I export the oversight data?</h3>
         <p>
           Yes! Export functionality for oversight reports (PDF and Excel) is available from the Positions page. 

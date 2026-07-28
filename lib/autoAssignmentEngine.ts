@@ -356,8 +356,8 @@ export class AutoAssignmentEngine {
         return
       }
 
-      const overseerId = attendant.overseer?.id || 'none'
-      const keymanId = attendant.keyman?.id || 'none'
+      const overseerId = attendant.overseer?.id || attendant.overseerId || 'none'
+      const keymanId = attendant.keyman?.id || attendant.keymanId || 'none'
       const leadershipKey = `${overseerId}-${keymanId}`
 
       if (!grouped.has(leadershipKey)) {
@@ -448,21 +448,29 @@ export class AutoAssignmentEngine {
       attendantAssignments.set(att.id, existingShifts)
     })
 
-    // Calculate optimal distribution
+    // Cap per person from remaining work + existing load (multi-day needs 3+).
     const totalShiftsToFill = unfilledShifts.length
     const totalAttendants = availableAttendants.length
-    const avgShiftsPerAttendant = totalShiftsToFill / totalAttendants
-    const attendantsWithTwoShifts = Math.ceil((avgShiftsPerAttendant - 1) * totalAttendants)
-    const maxShiftsPerAttendant = Math.ceil(avgShiftsPerAttendant)
+    const existingAssignmentTotal = availableAttendants.reduce(
+      (sum, att) => sum + (attendantAssignments.get(att.id)?.length || 0),
+      0
+    )
+    const projectedTotal = existingAssignmentTotal + totalShiftsToFill
+    const maxShiftsPerAttendant =
+      totalAttendants === 0 ? 0 : Math.max(1, Math.ceil(projectedTotal / totalAttendants))
 
     this.log(`📊 Smart Distribution for ${leadershipKey}:`)
     this.log(`   Total slots to fill: ${totalShiftsToFill}`)
     this.log(`   Total attendants: ${totalAttendants}`)
-    this.log(`   Average: ${avgShiftsPerAttendant.toFixed(2)} slots per attendant`)
+    this.log(`   Existing assignments: ${existingAssignmentTotal}`)
     this.log(`   Max slots per attendant: ${maxShiftsPerAttendant}`)
 
-    // Sort shifts by position number, then by time
+    // Sort shifts by day, then position number, then time (fill earlier days first)
     const sortedShifts = [...unfilledShifts].sort((a, b) => {
+      const aDay = a.shift.shiftDate ? String(a.shift.shiftDate) : ''
+      const bDay = b.shift.shiftDate ? String(b.shift.shiftDate) : ''
+      if (aDay !== bDay) return aDay.localeCompare(bDay)
+
       const posNumDiff = (a.position.positionNumber || 0) - (b.position.positionNumber || 0)
       if (posNumDiff !== 0) return posNumDiff
 
@@ -472,149 +480,87 @@ export class AutoAssignmentEngine {
     })
 
     const assignedSlotKeys = new Set<string>()
-
-    // PASS 1: Give everyone 1 shift first
-    this.log(`📍 PASS 1: Assigning first shift to each attendant...`)
+    let totalAssignments = 0
     let attendantIndex = 0
-    let pass1Assignments = 0
 
-    for (const shiftInfo of sortedShifts) {
-      if (pass1Assignments >= totalAttendants) break
+    // Pass N: give attendants their Nth shift (supports 3+ day events)
+    for (let targetCount = 1; targetCount <= maxShiftsPerAttendant; targetCount++) {
+      const remainingShifts = sortedShifts.filter(shiftInfo => !assignedSlotKeys.has(shiftInfo.slotKey))
+      if (remainingShifts.length === 0) break
 
-      let assigned = false
-      let attempts = 0
+      this.log(`📍 PASS ${targetCount}: Assigning shift #${targetCount}...`)
+      let passAssignments = 0
 
-      while (!assigned && attempts < availableAttendants.length) {
-        const attendant = availableAttendants[attendantIndex % availableAttendants.length]
-        const attendantCurrentAssignments = attendantAssignments.get(attendant.id) || []
+      for (const shiftInfo of remainingShifts) {
+        let assigned = false
+        let attempts = 0
 
-        if (attendantCurrentAssignments.length > 0) {
-          attendantIndex++
-          attempts++
-          continue
-        }
+        while (!assigned && attempts < availableAttendants.length * 2) {
+          const attendant = availableAttendants[attendantIndex % availableAttendants.length]
+          const attendantCurrentAssignments = attendantAssignments.get(attendant.id) || []
 
-        const hasConflict = this.checkTimeConflict(attendantCurrentAssignments, shiftInfo.shift)
-
-        if (!hasConflict) {
-          const success = await this.assignAttendantToShift(
-            shiftInfo.position.id,
-            attendant.id,
-            shiftInfo.shift.id,
-            attendant
-          )
-
-          if (success) {
-            pass1Assignments++
-            progressCount++
-            attendantCurrentAssignments.push(shiftInfo.shift)
-            attendantAssignments.set(attendant.id, attendantCurrentAssignments)
-            assignedSlotKeys.add(shiftInfo.slotKey)
-            assigned = true
-
-            this.updateProgress({
-              phase: 'Phase 2: Pass 1 - First Shift',
-              current: progressCount,
-              total: 0,
-              message: `Assigning first shift to each attendant (${pass1Assignments}/${totalAttendants})...`,
-              assignments: [`${attendant.firstName} ${attendant.lastName} → ${shiftInfo.positionName} (${shiftInfo.shiftName})`]
-            })
+          // This pass only bumps attendants who currently have (targetCount - 1) shifts
+          if (attendantCurrentAssignments.length !== targetCount - 1) {
+            attendantIndex++
+            attempts++
+            continue
           }
-        }
 
-        attendantIndex++
-        attempts++
-      }
-    }
+          // Avoid stacking multiple shifts on the same position (variety across days/positions)
+          if (targetCount > 1) {
+            const alreadyAtPosition = this.positions
+              .filter(p => p.id === shiftInfo.position.id)
+              .flatMap(p => p.assignments || [])
+              .some(a => getAssignmentPersonId(a) === attendant.id)
 
-    this.log(`✅ Pass 1 complete: ${pass1Assignments} attendants have 1 shift each`)
-
-    // PASS 2: Assign second shifts (track by slotKey so multi-capacity shifts stay open)
-    this.log(`📍 PASS 2: Assigning second shifts to ${attendantsWithTwoShifts} attendants...`)
-
-    const remainingShifts = sortedShifts.filter(shiftInfo => !assignedSlotKeys.has(shiftInfo.slotKey))
-
-    attendantIndex = 0
-    let pass2Assignments = 0
-    let attendantsWithSecondShift = 0
-
-    for (const shiftInfo of remainingShifts) {
-      if (attendantsWithSecondShift >= attendantsWithTwoShifts) {
-        this.log(`⏹️  Pass 2 target reached: ${attendantsWithSecondShift} attendants have 2 shifts`)
-        break
-      }
-
-      let assigned = false
-      let attempts = 0
-
-      while (!assigned && attempts < availableAttendants.length * 2) {
-        const attendant = availableAttendants[attendantIndex % availableAttendants.length]
-        const attendantCurrentAssignments = attendantAssignments.get(attendant.id) || []
-
-        // Skip if attendant already has 2 or more shifts
-        if (attendantCurrentAssignments.length >= 2) {
-          attendantIndex++
-          attempts++
-          continue
-        }
-
-        // Only assign to attendants with exactly 1 shift (for their 2nd shift)
-        if (attendantCurrentAssignments.length !== 1) {
-          attendantIndex++
-          attempts++
-          continue
-        }
-
-        // Check if attendant already has a shift at this position
-        const existingAssignmentsAtThisPosition = this.positions
-          .filter(p => p.id === shiftInfo.position.id)
-          .flatMap(p => p.assignments || [])
-          .filter(a => getAssignmentPersonId(a) === attendant.id)
-
-        if (existingAssignmentsAtThisPosition.length > 0) {
-          attendantIndex++
-          attempts++
-          continue
-        }
-
-        const hasConflict = this.checkTimeConflict(attendantCurrentAssignments, shiftInfo.shift)
-
-        if (!hasConflict) {
-          const success = await this.assignAttendantToShift(
-            shiftInfo.position.id,
-            attendant.id,
-            shiftInfo.shift.id,
-            attendant
-          )
-
-          if (success) {
-            pass2Assignments++
-            progressCount++
-            attendantCurrentAssignments.push(shiftInfo.shift)
-            attendantAssignments.set(attendant.id, attendantCurrentAssignments)
-            assignedSlotKeys.add(shiftInfo.slotKey)
-            attendantsWithSecondShift++
-            assigned = true
-
-            this.updateProgress({
-              phase: 'Phase 2: Pass 2 - Second Shift',
-              current: progressCount,
-              total: 0,
-              message: `Assigning second shifts (${attendantsWithSecondShift}/${attendantsWithTwoShifts} attendants with 2 shifts)...`,
-              assignments: [`${attendant.firstName} ${attendant.lastName} → ${shiftInfo.positionName} (${shiftInfo.shiftName})`]
-            })
+            if (alreadyAtPosition) {
+              attendantIndex++
+              attempts++
+              continue
+            }
           }
+
+          const hasConflict = this.checkTimeConflict(attendantCurrentAssignments, shiftInfo.shift)
+
+          if (!hasConflict) {
+            const success = await this.assignAttendantToShift(
+              shiftInfo.position.id,
+              attendant.id,
+              shiftInfo.shift.id,
+              attendant
+            )
+
+            if (success) {
+              passAssignments++
+              totalAssignments++
+              progressCount++
+              attendantCurrentAssignments.push(shiftInfo.shift)
+              attendantAssignments.set(attendant.id, attendantCurrentAssignments)
+              assignedSlotKeys.add(shiftInfo.slotKey)
+              assigned = true
+
+              this.updateProgress({
+                phase: `Phase 2: Pass ${targetCount} - Shift #${targetCount}`,
+                current: progressCount,
+                total: 0,
+                message: `Assigning shift #${targetCount} (${passAssignments} this pass)...`,
+                assignments: [
+                  `${attendant.firstName} ${attendant.lastName} → ${shiftInfo.positionName} (${shiftInfo.shiftName})`
+                ]
+              })
+            }
+          }
+
+          attendantIndex++
+          attempts++
         }
-
-        attendantIndex++
-        attempts++
       }
-    }
 
-    this.log(`✅ Pass 2 complete: ${pass2Assignments} second shifts assigned`)
+      this.log(`✅ Pass ${targetCount} complete: ${passAssignments} assignments`)
+    }
 
     return {
-      assignmentCount: pass1Assignments + pass2Assignments,
+      assignmentCount: totalAssignments,
       progressCount
     }
   }

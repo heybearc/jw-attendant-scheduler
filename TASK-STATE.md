@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-07-28  
 **Branch:** `main`  
-**Production:** **LIVE** **BLUE** `10.92.3.24` · **STANDBY** **GREEN** `10.92.3.22` — both **v4.29.8**.
+**Production:** **LIVE** **GREEN** `10.92.3.22` · **STANDBY** **BLUE** `10.92.3.24` — both **v4.29.9**.
 
 ---
 
@@ -12,10 +12,11 @@
 
 ### What I'm doing right now
 
-Shipped **v4.29.8** (shift overseer/keyman assign + bulk volunteers needed). Resume Positions + Volunteers mobile audit next.
+Shipped **v4.29.9** (multi-day shift dates + day-aware conflicts). Resume Positions + Volunteers mobile audit next.
 
 ### Recent completions
 
+- ✅ **v4.29.9** — Multi-day shift `shiftDate` + day-aware conflicts; help FAQ
 - ✅ **v4.29.8** — Shift-level overseer/keyman assign; bulk set/update volunteers needed
 - ✅ **v4.29.7** — Mobile Early Check-In hardening + staff Check-In route; 5/5 browser matrix on STANDBY
 - ✅ **v4.29.6** — Roster members can use Early Check-In (no position assignment required)

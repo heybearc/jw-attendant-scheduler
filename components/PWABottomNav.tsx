@@ -111,16 +111,19 @@ export default function PWABottomNav({
     })()
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-lg safe-area-inset-bottom">
-      <div className="flex items-stretch" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+    <nav
+      className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-lg"
+      style={{ paddingBottom: 'max(0px, env(safe-area-inset-bottom))' }}
+    >
+      <div className="flex items-stretch">
         {tabs.map((tab) => {
           const isActive = currentTab === tab.id
-          const className = `flex-1 flex flex-col items-center justify-center py-2 min-h-[56px] touch-manipulation transition-colors ${
+          const className = `flex-1 flex flex-col items-center justify-center py-2 min-h-[56px] touch-manipulation select-none transition-colors ${
             !tab.enabled
               ? 'text-gray-300 cursor-not-allowed'
               : isActive
                 ? 'text-blue-600 bg-blue-50'
-                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                : 'text-gray-500 active:bg-gray-100'
           }`
 
           if (!tab.enabled || !tab.href) {
@@ -128,12 +131,15 @@ export default function PWABottomNav({
               <div
                 key={tab.id}
                 className={className}
+                role="link"
+                aria-disabled="true"
                 title={
                   tab.id === 'checkin'
-                    ? 'Early Check-In is not available for your role on this event'
+                    ? !eventId
+                      ? 'Select an event first'
+                      : 'Early Check-In is not available for this event'
                     : undefined
                 }
-                aria-disabled
               >
                 {tab.icon}
                 <span className="text-xs mt-1 font-medium text-gray-300">{tab.label}</span>
@@ -142,7 +148,13 @@ export default function PWABottomNav({
           }
 
           return (
-            <Link key={tab.id} href={tab.href} className={className}>
+            <Link
+              key={tab.id}
+              href={tab.href}
+              className={className}
+              prefetch={false}
+              aria-current={isActive ? 'page' : undefined}
+            >
               {tab.icon}
               <span
                 className={`text-xs mt-1 font-medium ${isActive ? 'text-blue-600' : 'text-gray-500'}`}

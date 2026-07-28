@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, type CSSProperties } from 'react'
 import { ConventionDay } from '@prisma/client'
 import {
   conventionDayLabel,
@@ -229,31 +229,47 @@ export default function EarlyCheckinPanel({
       : 'Today (not a convention day)'
 
   return (
-    <div className="h-full flex flex-col">
+    <div
+      className="h-full min-h-0 flex flex-col"
+      style={{ WebkitOverflowScrolling: 'touch' } as CSSProperties}
+    >
       {showHeader && (
-        <div className="bg-blue-600 text-white p-4 sticky top-0 z-10 shadow-lg">
-          <div className="flex items-center justify-between mb-3">
+        <div
+          className="bg-blue-600 text-white p-4 sticky top-0 z-10 shadow-lg"
+          style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}
+        >
+          <div className="flex items-center justify-between mb-3 gap-2">
             {onBack && (
-              <button onClick={onBack} className="text-white hover:text-gray-200">
+              <button
+                type="button"
+                onClick={onBack}
+                className="text-white min-h-[44px] min-w-[44px] px-2 touch-manipulation"
+              >
                 ← Back
               </button>
             )}
             <h2 className="text-xl font-bold flex-1 text-center">IVS Early Check-In</h2>
             <button
+              type="button"
               onClick={handleExport}
               disabled={exporting}
-              className="text-white hover:text-gray-200 text-sm disabled:opacity-50"
+              className="text-white text-sm disabled:opacity-50 min-h-[44px] px-2 touch-manipulation"
             >
-              {exporting ? '...' : '📊 Export'}
+              {exporting ? '...' : 'Export'}
             </button>
           </div>
 
           <input
-            type="text"
+            type="search"
+            inputMode="search"
+            autoCapitalize="off"
+            autoCorrect="off"
+            enterKeyHint="search"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search by name, congregation, or department..."
-            className="w-full px-4 py-3 rounded-lg text-gray-900 text-lg"
+            className="w-full px-4 py-3 rounded-lg text-gray-900 text-base"
+            style={{ fontSize: '16px' }}
           />
         </div>
       )}
@@ -262,19 +278,25 @@ export default function EarlyCheckinPanel({
         <div className="p-4 bg-white border-b">
           <div className="flex gap-2 mb-4">
             <button
+              type="button"
               onClick={handleExport}
               disabled={exporting}
-              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
+              className="px-4 py-3 min-h-[44px] touch-manipulation bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
             >
               {exporting ? 'Exporting...' : 'Export Check-In Report'}
             </button>
           </div>
           <input
-            type="text"
+            type="search"
+            inputMode="search"
+            autoCapitalize="off"
+            autoCorrect="off"
+            enterKeyHint="search"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search by name, congregation, or department..."
-            className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-3 border rounded-md focus:ring-2 focus:ring-blue-500 text-base"
+            style={{ fontSize: '16px' }}
           />
         </div>
       )}
@@ -289,10 +311,10 @@ export default function EarlyCheckinPanel({
             key={tab.id}
             type="button"
             onClick={() => setViewDay(tab.id)}
-            className={`min-h-[40px] rounded-lg px-4 py-2 text-sm font-semibold ${
+            className={`min-h-[44px] touch-manipulation rounded-lg px-4 py-2 text-sm font-semibold ${
               viewDay === tab.id
                 ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                : 'bg-gray-100 text-gray-700 active:bg-gray-200'
             }`}
           >
             {tab.label}
@@ -322,7 +344,7 @@ export default function EarlyCheckinPanel({
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto p-4">
+      <div className="flex-1 overflow-auto overscroll-contain p-4 pb-28">
         {loadError ? (
           <div className="text-center py-8 text-red-600 px-4">{loadError}</div>
         ) : loading ? (
@@ -336,8 +358,9 @@ export default function EarlyCheckinPanel({
           <>
             <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
               <button
+                type="button"
                 onClick={() => setPendingCollapsed(!pendingCollapsed)}
-                className="w-full px-4 py-3 bg-orange-50 border-l-4 border-orange-500 flex items-center justify-between hover:bg-orange-100"
+                className="w-full px-4 py-3 min-h-[48px] touch-manipulation bg-orange-50 border-l-4 border-orange-500 flex items-center justify-between active:bg-orange-100"
               >
                 <div className="flex items-center gap-2">
                   <span className="text-lg">{pendingCollapsed ? '▶' : '▼'}</span>
@@ -367,8 +390,9 @@ export default function EarlyCheckinPanel({
                               ) : null}
                             </div>
                             <button
+                              type="button"
                               onClick={() => handleCheckIn(volunteer.id, activeDay)}
-                              className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700"
+                              className="shrink-0 px-6 py-3 min-h-[48px] touch-manipulation bg-green-600 text-white rounded-lg font-semibold active:bg-green-700"
                             >
                               Check In
                             </button>
@@ -383,8 +407,9 @@ export default function EarlyCheckinPanel({
 
             <div className="bg-white rounded-lg shadow overflow-hidden">
               <button
+                type="button"
                 onClick={() => setCheckedInCollapsed(!checkedInCollapsed)}
-                className="w-full px-4 py-3 bg-green-50 border-l-4 border-green-500 flex items-center justify-between hover:bg-green-100"
+                className="w-full px-4 py-3 min-h-[48px] touch-manipulation bg-green-50 border-l-4 border-green-500 flex items-center justify-between active:bg-green-100"
               >
                 <div className="flex items-center gap-2">
                   <span className="text-lg">{checkedInCollapsed ? '▶' : '▼'}</span>
@@ -421,8 +446,9 @@ export default function EarlyCheckinPanel({
                                 </div>
                               </div>
                               <button
+                                type="button"
                                 onClick={() => handleUndoCheckIn(volunteer.id, activeDay)}
-                                className="px-4 py-2 bg-red-100 text-red-700 rounded-md text-sm font-medium hover:bg-red-200"
+                                className="shrink-0 px-4 py-3 min-h-[44px] touch-manipulation bg-red-100 text-red-700 rounded-md text-sm font-medium active:bg-red-200"
                               >
                                 Undo
                               </button>

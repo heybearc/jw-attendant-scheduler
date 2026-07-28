@@ -51,7 +51,13 @@ export default function VolunteerEarlyCheckinPage({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div
+      className="min-h-screen bg-gray-50"
+      style={{
+        paddingBottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))',
+        minHeight: '100dvh',
+      }}
+    >
       <EarlyCheckinPanel
         eventId={event.id}
         eventName={event.name}

@@ -1980,7 +1980,7 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
 
           {/* Early Check-In Tab */}
           {activeTab === 'checkin' && dashboardData.isIVSTeamMember && (
-            <div className="bg-white shadow rounded-lg overflow-hidden" style={{ height: 'calc(100vh - 300px)' }}>
+            <div className="bg-white shadow rounded-lg overflow-hidden" style={{ height: 'calc(100dvh - 300px)', minHeight: '320px' }}>
               <EarlyCheckinPanel 
                 eventId={dashboardData.event.id}
                 eventName={dashboardData.event.name}

@@ -195,7 +195,13 @@ export default function MobileVolunteerDashboard({
   const respondedRequests = availabilityRequests.filter(r => r.status !== 'PENDING')
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div
+      className="min-h-screen bg-gray-50"
+      style={{
+        paddingBottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))',
+        minHeight: '100dvh',
+      }}
+    >
       {/* Mobile Header */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white sticky top-0 z-10 shadow-lg">
         <div className="px-4 py-4">

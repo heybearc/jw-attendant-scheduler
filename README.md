@@ -276,6 +276,7 @@ For issues or questions:
 
 ## 📝 Version History
 
+- **v4.29.7** (2026-07-27) - Mobile Early Check-In hardening + staff Check-In route
 - **v4.29.6** (2026-07-27) - Early Check-In available to event roster members
 - **v4.29.5** (2026-07-27) - Fix mobile volunteer Early Check-In (nav + access)
 - **v4.29.4** (2026-07-27) - Safe bulk email: roster-only, confirm count, throttle, abort

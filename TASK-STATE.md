@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-07-28  
 **Branch:** `main`  
-**Production:** **LIVE** **BLUE** `10.92.3.24` · **STANDBY** **GREEN** `10.92.3.22` — both **v4.29.10**.
+**Production:** **LIVE** **BLUE** `10.92.3.24` · **STANDBY** **GREEN** `10.92.3.22` — shipping **v4.29.11**.
 
 ---
 
@@ -12,10 +12,11 @@
 
 ### What I'm doing right now
 
-Shipped **v4.29.10** (auto-assign N shifts for multi-day). Resume Positions + Volunteers mobile audit next.
+Shipping **v4.29.11** (cross-oversight capacity fallback). Resume Positions + Volunteers mobile audit next.
 
 ### Recent completions
 
+- ✅ **v4.29.11** — Cross-oversight fallback for auto-assign + full roster manual assign
 - ✅ **v4.29.10** — Auto-assign beyond 2 shifts so Sunday (etc.) can fill
 - ✅ **v4.29.9** — Multi-day shift `shiftDate` + day-aware conflicts; help FAQ
 - ✅ **v4.29.8** — Shift-level overseer/keyman assign; bulk set/update volunteers needed

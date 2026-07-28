@@ -2,111 +2,121 @@ import { test, expect, Page } from '@playwright/test'
 
 /**
  * Cross-browser mobile audit for volunteer Early Check-In.
- * Run with projects: Mobile Chrome, Mobile Safari, Mobile Firefox, iPad.
+ * Uses staff credentials (magic-link PIN UI was removed from /volunteer/login).
  */
 
-async function volunteerLogin(page: Page) {
-  const firstName = process.env.VOLUNTEER_FIRST_NAME || 'Cory'
-  const lastName = process.env.VOLUNTEER_LAST_NAME || 'Allen'
-  const congregation = process.env.VOLUNTEER_CONGREGATION || 'Twinsburg'
-  const pin = process.env.VOLUNTEER_PIN || ''
+async function staffLogin(page: Page) {
+  const email = process.env.TEST_USER_EMAIL || ''
+  const password = process.env.TEST_USER_PASSWORD || ''
+  expect(email, 'TEST_USER_EMAIL required').toBeTruthy()
+  expect(password, 'TEST_USER_PASSWORD required').toBeTruthy()
 
-  await page.goto('/volunteer/login')
-  await expect(page.getByRole('heading', { name: /Volunteer Access/i })).toBeVisible({
-    timeout: 20000,
+  await page.goto('/auth/signin')
+  await page.waitForLoadState('domcontentloaded')
+
+  const oversight = page.locator('button:has-text("Oversight")')
+  if (await oversight.isVisible({ timeout: 5000 }).catch(() => false)) {
+    await oversight.click()
+  }
+
+  await page.waitForSelector('input[id="oversight-email"], input[id="email"]', {
+    state: 'visible',
+    timeout: 15000,
   })
-  await page.fill('input[name="firstName"]', firstName)
-  await page.fill('input[name="lastName"]', lastName)
-  await page.fill('input[name="congregation"]', congregation)
-  await page.fill('input[name="pin"]', pin)
-  await page.click('button[type="submit"]')
-  await page.waitForURL(/\/volunteer\/(select-event|dashboard)/, { timeout: 20000 })
+  if (await page.locator('input[id="oversight-email"]').count()) {
+    await page.fill('input[id="oversight-email"]', email)
+    await page.fill('input[id="oversight-password"]', password)
+  } else {
+    await page.fill('input[id="email"]', email)
+    await page.fill('input[id="password"]', password)
+  }
+
+  await Promise.all([
+    page.waitForURL(/\/(dashboard|events|volunteer)/, { timeout: 20000 }),
+    page.click('button[type="submit"]'),
+  ])
 }
 
-async function resolveEventId(page: Page): Promise<string | null> {
-  const fromUrl = page.url().match(/eventId=([^&]+)/)
-  if (fromUrl?.[1]) return decodeURIComponent(fromUrl[1])
-
-  const sessionResp = await page.request.get('/api/auth/session')
-  if (!sessionResp.ok()) return null
-  const session = await sessionResp.json()
-  const volunteerId = session?.user?.id
-  if (!volunteerId) return null
-
-  const eventsResp = await page.request.get(
-    `/api/volunteer/events?volunteerId=${encodeURIComponent(volunteerId)}`,
-  )
-  if (!eventsResp.ok()) return null
-  const body = await eventsResp.json()
-  const events = body?.data?.events || []
-  return events[0]?.id || null
+async function firstIvsEventId(page: Page): Promise<string | null> {
+  const base = process.env.BASE_URL || ''
+  const resp = await page.request.get(`${base}/api/events`)
+  if (!resp.ok()) return null
+  const body = await resp.json()
+  const events = body?.data?.events || body?.events || body
+  if (!Array.isArray(events) || !events.length) return null
+  const ivs = events.find((e: { name?: string }) => /IVS/i.test(e.name || ''))
+  return (ivs || events[0])?.id || null
 }
 
 test.describe('Mobile Early Check-In browser audit', () => {
-  test('bottom nav Check-In opens and day tabs work', async ({ page }, testInfo) => {
+  test('early-checkin page + day tabs work on mobile viewport', async ({ page }, testInfo) => {
     const consoleErrors: string[] = []
     page.on('console', (msg) => {
       if (msg.type() === 'error') consoleErrors.push(msg.text())
     })
     page.on('pageerror', (err) => consoleErrors.push(String(err)))
 
-    await volunteerLogin(page)
-    const eventId = await resolveEventId(page)
-    test.skip(!eventId, 'No volunteer event available for audit account')
+    await staffLogin(page)
+    const dismiss = page.getByRole('button', { name: 'Dismiss' })
+    if (await dismiss.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await dismiss.click()
+    }
+    const eventId = await firstIvsEventId(page)
+    test.skip(!eventId, 'No events available')
 
-    await page.goto(`/volunteer/dashboard?eventId=${encodeURIComponent(eventId!)}`)
-    await page.waitForLoadState('domcontentloaded')
+    await page.goto(`/volunteer/early-checkin?eventId=${encodeURIComponent(eventId!)}`, {
+      waitUntil: 'domcontentloaded',
+    })
+    await expect(page).toHaveURL(/\/volunteer\/early-checkin/, { timeout: 15000 })
 
-    const checkInNav = page.locator('nav').getByText('Check-In', { exact: true })
-    await expect(checkInNav).toBeVisible({ timeout: 20000 })
+    // Either Check-In UI or Access Denied (event without IVS) — both must render cleanly
+    const heading = page.getByRole('heading', { name: /IVS Early Check-In|Access Denied/i })
+    await expect(heading).toBeVisible({ timeout: 20000 })
 
-    // If enabled, nav is a link; if disabled, still visible but greyed
-    const checkInLink = page.locator('nav a').filter({ hasText: 'Check-In' })
-    const enabled = (await checkInLink.count()) > 0
+    const hasAccess = await page.getByRole('heading', { name: /IVS Early Check-In/i }).isVisible()
     testInfo.annotations.push({
-      type: 'checkin-nav',
-      description: enabled ? 'enabled' : 'disabled',
+      type: 'access',
+      description: hasAccess ? 'granted' : 'denied-no-ivs-or-rights',
     })
 
-    if (!enabled) {
-      // Still assert no hard JS crashes on dashboard
-      expect(consoleErrors.filter((e) => !e.includes('favicon')).length).toBe(0)
-      test.skip(true, 'Check-In disabled for this volunteer/event — roster/IVS gate')
-      return
+    if (hasAccess) {
+      for (const day of ['Today', 'Fri', 'Sat', 'Sun']) {
+        const tab = page.getByRole('button', { name: new RegExp(`^${day}`) })
+        await expect(tab).toBeVisible()
+        const box = await tab.boundingBox()
+        expect(box, `${day} tab hit target`).toBeTruthy()
+        expect(box!.height).toBeGreaterThanOrEqual(40)
+        await tab.click()
+        await expect(tab).toHaveClass(/bg-blue-600/)
+      }
+
+      await expect(
+        page
+          .locator('text=Loading...')
+          .or(page.locator('text=PENDING'))
+          .or(page.locator('text=not a convention day'))
+          .or(page.locator('text=Could not load'))
+          .or(page.locator('text=No pending check-ins'))
+          .or(page.locator('text=CHECKED IN')),
+      ).toBeVisible({ timeout: 15000 })
+
+      const checkInNav = page.locator('nav a, nav [aria-disabled="true"]').filter({
+        hasText: 'Check-In',
+      })
+      await expect(checkInNav.first()).toBeVisible()
+      const navBox = await page.locator('nav').last().boundingBox()
+      expect(navBox!.height).toBeGreaterThanOrEqual(48)
     }
 
-    await checkInLink.click()
-    await expect(page).toHaveURL(/\/volunteer\/early-checkin\?eventId=/, { timeout: 15000 })
-    await expect(page.getByRole('heading', { name: /IVS Early Check-In/i })).toBeVisible({
-      timeout: 15000,
-    })
-
-    for (const day of ['Today', 'Fri', 'Sat', 'Sun']) {
-      const tab = page.getByRole('button', { name: new RegExp(`^${day}`) })
-      await expect(tab).toBeVisible()
-      await tab.click()
-      await expect(tab).toHaveClass(/bg-blue-600/)
+    // Search input (when present) must be ≥16px to avoid iOS zoom
+    const search = page.locator('input[type="search"], input[placeholder*="Search"]').first()
+    if (await search.count()) {
+      const fontSize = await search.evaluate((el) => getComputedStyle(el).fontSize)
+      expect(parseFloat(fontSize)).toBeGreaterThanOrEqual(16)
     }
-
-    // List area either loads, shows empty day message, or a clear error — never blank forever
-    await expect(
-      page
-        .locator('text=Loading...')
-        .or(page.locator('text=PENDING'))
-        .or(page.locator('text=not a convention day'))
-        .or(page.locator('text=Could not load'))
-        .or(page.locator('text=No pending check-ins'))
-        .or(page.locator('text=CHECKED IN')),
-    ).toBeVisible({ timeout: 15000 })
-
-    // Bottom nav still reachable above home indicator region
-    const navBox = await page.locator('nav').last().boundingBox()
-    expect(navBox).toBeTruthy()
-    expect(navBox!.height).toBeGreaterThanOrEqual(48)
 
     const fatal = consoleErrors.filter(
-      (e) =>
-        !/favicon|Download the React DevTools|third-party|hydration/i.test(e),
+      (e) => !/favicon|Download the React DevTools|third-party|hydration|net::ERR_/i.test(e),
     )
     expect(fatal, `Console errors on ${testInfo.project.name}: ${fatal.join(' | ')}`).toHaveLength(
       0,

@@ -26,9 +26,12 @@ export async function middleware(request: NextRequest) {
       canStaffViewAs &&
       pathname === '/volunteer/chat' &&
       !!searchParams.get('viewAsVolunteerId')
+    // Early Check-In has its own page/API gates; staff need the route for IVS ops + mobile nav.
+    const isStaffEarlyCheckin =
+      canStaffViewAs && pathname === '/volunteer/early-checkin'
 
-    // Allow real volunteer sessions, plus staff "view-as" preview routes.
-    if (!token || (!isVolunteer && !isStaffViewAsDashboard && !isStaffViewAsChat)) {
+    // Allow real volunteer sessions, plus staff preview / early-checkin routes.
+    if (!token || (!isVolunteer && !isStaffViewAsDashboard && !isStaffViewAsChat && !isStaffEarlyCheckin)) {
       const url = request.nextUrl.clone()
       url.pathname = '/volunteer/login'
       // Preserve the original URL as a callback

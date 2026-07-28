@@ -34,10 +34,13 @@ export default defineConfig({
       use: { ...devices['iPad Pro 11'] },
     },
     {
-      name: 'Mobile Firefox (Pixel 5)',
+      name: 'Mobile Firefox (Pixel-sized)',
       use: {
-        ...devices['Pixel 5'],
         browserName: 'firefox',
+        viewport: { width: 393, height: 851 },
+        deviceScaleFactor: 2.75,
+        hasTouch: true,
+        // Firefox rejects Playwright's isMobile flag from phone device presets
       },
     },
   ],

@@ -1,8 +1,8 @@
 # TheoShift Plan
 
-**Last updated:** 2026-07-26  
+**Last updated:** 2026-07-28  
 **Current phase:** Feature Development + Platform Infrastructure  
-**Status:** **v4.28.0 LIVE**. Option C: shift `volunteersNeeded` + capacity-aware auto-assign. Full Positions redesign deferred to backlog (out-of-band).
+**Status:** **v4.29.7 LIVE** (GREEN). Mobile Early Check-In path hardened; Positions Option C shipped earlier (v4.29.0). Full Positions redesign remains backlog.
 
 ---
 
@@ -23,10 +23,19 @@ This follows the usual small-team pattern: **one system of record in the app**, 
 ## Current Phase
 
 ### Active Work
-- **Positions Option C (regional multi-body shifts)** — additive: `volunteersNeeded` on shifts (default 1), fill progress `n/needed`, prefer shift-level OVERSEER for pool/display, capacity-aware auto-assign. Must not change default 1-per-shift behavior for existing events.
-- **Mobile readiness across TheoShift** — eliminate horizontal-scroll-only workflows, ensure 44px tap targets, improve responsive layouts on event and admin pages, verify on Safari/Chrome/Edge/Firefox.
+- **Mobile readiness across TheoShift** — Positions + Volunteers pages next (narrow viewport). Early Check-In volunteer path done through **v4.29.7**.
+- **Positions Send Notifications safety** — Match v4.29.4 bulk-email pattern (roster-only confirm, throttle, abort).
+
+### Recently Completed (2026-07-27 → 2026-07-28)
+- ✅ **v4.29.7** — Mobile Early Check-In UI harden (touch/safe-area/16px search) + staff `/volunteer/early-checkin` middleware; Playwright mobile matrix 5/5 on STANDBY
+- ✅ **v4.29.6** — Event roster members can use Early Check-In without a position assignment
+- ✅ **v4.29.5** — Mobile PWA Check-In `eventId` wiring + access alignment
+- ✅ **v4.29.4** — Safe bulk email (roster-only, confirm, throttle, abort) for chat/broadcast/availability/document paths
+- ✅ **v4.29.3** — Promote IVS-only people onto Volunteers roster (`onVolunteerRoster`)
+- ✅ **v4.29.0–v4.29.2** — Shift capacity / bulk create / add-volunteer-by-email fixes
 
 ### Completed This Phase
+- ✅ **Positions Option C (regional multi-body shifts)** — `volunteersNeeded`, fill progress, capacity-aware auto-assign (**v4.29.0**)
 - ✅ **v4.22.0 — In-app notifications UX (2026-06)** — Toast notifications and inline confirm/prompt dialogs replace browser `alert`/`confirm`/`prompt` app-wide; `AppUiProvider` in `_app`; release-gate test updated. Shipped `/ship` + `/sync`. Tag `v4.22.0` (`fe17b1d6`, `9c04d150`).
 - ✅ **v4.21.9 — IVS access & bulk (2026-05)** — Overseers and keymen can import/export/add IVS volunteers; Approvals bulk status (incl. congregation/department); manual add single volunteer. Commits `509dbe92`, `31c709e1`, `872996b1`, tag/release `c7e8b224`.
 - ✅ **Volunteer count assignments & simulation (2026-05)** — Dashboard shows station counts only for **confirmed** assignees (`isSuggested: false`); suggestions from Apply Suggestions are draft until saved. Grouped stations exclude duplicate station-level UI; exclusions use `count_session_group_positions`. View-as uses **normalized staff roles** + Enter Count / mobile links / KEYMAN parity. Decision **D-TS-043**. Commits `bef4f7dd`, `4935b31f`, `8e937f66`, `d9fd40b3`.

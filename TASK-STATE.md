@@ -1,8 +1,8 @@
 # TheoShift Task State
 
-**Last updated:** 2026-07-27  
+**Last updated:** 2026-07-28  
 **Branch:** `main`  
-**Production:** **LIVE** **BLUE** `10.92.3.24` · **STANDBY** **GREEN** `10.92.3.22` — both **v4.29.4**.
+**Production:** **LIVE** **GREEN** `10.92.3.22` · **STANDBY** **BLUE** `10.92.3.24` — both **v4.29.7**.
 
 ---
 
@@ -12,24 +12,25 @@
 
 ### What I'm doing right now
 
-v4.29.4 shipped (safe bulk email). Resume mobile audit when next coding. Remaining: Positions “Send Notifications” throttle/abort.
+Early Check-In mobile path is shipped through **v4.29.7**. Resume Positions + Volunteers mobile audit next. Remaining hardening: Positions **Send Notifications** throttle/abort (bulk email safety already on other blasts).
 
 ### Recent completions
 
+- ✅ **v4.29.7** — Mobile Early Check-In hardening + staff Check-In route; 5/5 browser matrix on STANDBY
+- ✅ **v4.29.6** — Roster members can use Early Check-In (no position assignment required)
+- ✅ **v4.29.5** — Mobile Check-In nav `eventId` + access alignment
 - ✅ **v4.29.4** — Safe bulk email: roster-only, confirm count, throttle, abort
 - ✅ **v4.29.3** — Promote IVS-only people onto Volunteers roster
-- ✅ **v4.29.2** — Fix add volunteer when email already exists
-- ✅ **v4.29.1** — Fix bulk create position number collisions
-- ✅ **v4.29.0** — Shift capacity, in-place edit, AM–PM sort
 
 ### Next steps
 
-1. Continue **mobile audit**: Positions + Volunteers.
-2. Triage **`/admin/feedback`** when online.
+1. Continue **mobile audit**: Positions + Volunteers (narrow viewport).
+2. Positions **Send Notifications** — add confirm/throttle/abort like other bulk email paths.
+3. Triage **`/admin/feedback`** when online (0 new URGENT at end-day).
 
 ## Exact next command
 
-Open Positions/Volunteers on a narrow viewport and continue the mobile audit.
+Open Positions on a narrow viewport and continue the mobile audit; note any horizontal-scroll or &lt;44px tap issues.
 
 ---
 
@@ -37,10 +38,13 @@ Open Positions/Volunteers on a narrow viewport and continue the mobile audit.
 
 **Current**
 
+- **Chat push banner** — Expected when Web Push is unavailable (e.g. iPhone Safari not installed to Home Screen). Chat still works via polling; copy always mentions iPhone even on unsupported desktop browsers.
 - **PIN column** — Still in DB; magic links are primary UI. Planned cleanup per backlog (legacy note).
+- **Positions Send Notifications** — Still lacks confirm/throttle/abort (other bulk emails fixed in v4.29.4).
 
 **Recently addressed (don’t regress)**
 
+- ~~Mobile Early Check-In greyed / Access Denied for roster~~ — **v4.29.5–v4.29.7**.
 - ~~Browser alert/confirm popups~~ — **v4.22.0** uses in-app toasts and dialogs app-wide.
 - ~~Phantom count assignments~~ — **D-TS-043**; suggested rows are draft for volunteer surfaces.
 
@@ -53,15 +57,17 @@ Open Positions/Volunteers on a narrow viewport and continue the mobile audit.
 
 ## Session snapshot — recent `main` commits
 
-- `7a4bb4bf` — Release v4.28.0 — App-wide phone number formatting  
-- `4239b626` — feat: apply phone formatting app-wide and normalize existing numbers  
-- `4da8e5ea` — Release v4.27.0 — IVS contacts remove, phone format, approval date fix  
+- `2d2b6e51` — Release v4.29.7 — Mobile Early Check-In hardening  
+- `0a4b8522` — fix: allow staff Early Check-In route and harden mobile browsers  
+- `90f7d7f6` — Release v4.29.6 — Roster Early Check-In  
+- `cb793795` — Release v4.29.5 — Mobile Early Check-In fix  
+- `305ff928` — Release v4.29.4 — Safe bulk email  
 
 ---
 
 ## Feedback triage (this session)
 
-- **Resolved:** 0 · **Promoted:** 0 · **Triaged:** 0 new URGENT (`scripts/ssh-query-feedback.sh new` → 0 rows).
+- **Resolved:** 0 · **Promoted:** 0 · **Triaged:** 0 new (`scripts/ssh-query-feedback.sh new` → 0 rows).
 
 ---
 

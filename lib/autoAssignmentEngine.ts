@@ -224,12 +224,12 @@ export class AutoAssignmentEngine {
         this.log(`   ${key}: ${shifts.length} unfilled shifts`)
       })
 
-      // Round-robin assignment for each oversight group
+      // Round-robin assignment for each oversight group (primary match)
       for (const [leadershipKey, unfilledShifts] of unfilledShiftsByOversight.entries()) {
         const availableAttendantsInGroup = allAttendantsByOversight.get(leadershipKey) || []
 
         if (availableAttendantsInGroup.length === 0) {
-          this.log(`⚠️ No attendants available for oversight group: ${leadershipKey}`)
+          this.log(`⚠️ No matched attendants for oversight group: ${leadershipKey} (will try cross-oversight fallback)`)
           continue
         }
 
@@ -245,11 +245,50 @@ export class AutoAssignmentEngine {
         )
 
         assignmentCount += result.assignmentCount
+        hierarchyMatches += result.assignmentCount
         progressCount = result.progressCount
       }
 
+      // Cross-oversight fallback: fill leftover capacity from any free volunteer
+      this.log('📅 Phase 4: Cross-oversight fallback for remaining slots...')
+      const remainingByOversight = this.collectUnfilledShifts()
+      const remainingSlots: UnfilledShiftSlot[] = []
+      remainingByOversight.forEach(slots => {
+        remainingSlots.push(...slots)
+      })
+
+      let fallbackAssignments = 0
+      if (remainingSlots.length > 0) {
+        const fallbackPool = this.getAssignableAttendants(eventSpecificAttendants)
+        this.log(
+          `🔄 Fallback: ${remainingSlots.length} open slot(s), ${fallbackPool.length} attendant(s) available across oversight`
+        )
+
+        if (fallbackPool.length > 0) {
+          const fallbackResult = await this.performRoundRobinAssignment(
+            'cross-oversight-fallback',
+            remainingSlots,
+            fallbackPool,
+            progressCount
+          )
+          fallbackAssignments = fallbackResult.assignmentCount
+          assignmentCount += fallbackAssignments
+          progressCount = fallbackResult.progressCount
+          this.log(`✅ Fallback assigned ${fallbackAssignments} slot(s) across oversight`)
+        } else {
+          this.log('⚠️ Fallback skipped — no assignable attendants left')
+        }
+      } else {
+        this.log('✅ No remaining slots — fallback not needed')
+      }
+
       // Calculate final statistics
-      return this.calculateFinalStatistics(assignmentCount, hierarchyMatches, positionsByLeadership)
+      return this.calculateFinalStatistics(
+        assignmentCount,
+        hierarchyMatches,
+        fallbackAssignments,
+        positionsByLeadership
+      )
     } catch (error) {
       this.log(`❌ Auto-assign error: ${error}`)
       throw error
@@ -331,6 +370,22 @@ export class AutoAssignmentEngine {
     })
 
     return grouped
+  }
+
+  /**
+   * Active attendants who are not position overseers/keymen (eligible for volunteer slots).
+   */
+  private getAssignableAttendants(attendants: Attendant[]): Attendant[] {
+    return attendants.filter(attendant => {
+      if (!attendant.isActive) return false
+      const isOverseer = this.positions.some(pos =>
+        pos.oversight?.some(o => o.overseer?.id === attendant.id)
+      )
+      const isKeyman = this.positions.some(pos =>
+        pos.oversight?.some(o => o.keyman?.id === attendant.id)
+      )
+      return !isOverseer && !isKeyman
+    })
   }
 
   /**
@@ -630,6 +685,7 @@ export class AutoAssignmentEngine {
   private calculateFinalStatistics(
     assignmentCount: number,
     hierarchyMatches: number,
+    fallbackAssignments: number,
     positionsByLeadership: Map<string, Position[]>
   ): AutoAssignmentResult {
     // Calculate distribution statistics
@@ -669,16 +725,20 @@ export class AutoAssignmentEngine {
     // Build final message
     let message = `🎯 Oversight-Aware Auto-Assign Complete!\n\n`
     message += `✅ Total Assignments: ${assignmentCount}\n`
+    message += `   • ${hierarchyMatches} matched their overseer/keyman\n`
+    if (fallbackAssignments > 0) {
+      message += `   • ${fallbackAssignments} filled from other oversight groups (capacity fallback)\n`
+    }
     message += `👥 Attendants Used: ${allAssignedAttendants.size}\n\n`
     message += `📊 Distribution:\n`
     message += `   • ${with1Shift} attendants with 1 shift\n`
     message += `   • ${with2Shifts} attendants with 2 shifts\n`
 
     if (with3PlusShifts > 0) {
-      message += `   ⚠️ ${with3PlusShifts} attendants with 3+ shifts\n`
+      message += `   • ${with3PlusShifts} attendants with 3+ shifts\n`
     }
 
-    message += `\n💡 All assignments respect oversight boundaries - no cross-contamination!`
+    message += `\n💡 Primary fill respects oversight; leftover slots use cross-oversight fallback.`
 
     if (totalUnfilledShifts > 0) {
       message += `\n\n⚠️ ${totalUnfilledShifts} slots remain unfilled - insufficient attendants!`
@@ -688,7 +748,7 @@ export class AutoAssignmentEngine {
       success: true,
       totalAssignments: assignmentCount,
       hierarchyMatches,
-      fallbackAssignments: 0,
+      fallbackAssignments,
       attendantsUsed: allAssignedAttendants.size,
       distribution: {
         with1Shift,

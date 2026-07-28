@@ -173,6 +173,9 @@ interface AssignVolunteerModalProps {
   allPositions: Position[]
   eventId: string
   initialRole?: AssignmentRole
+  /** When set, list sorts matching oversight first and labels others */
+  preferredOverseerId?: string | null
+  preferredKeymanId?: string | null
   onClose: () => void
   onSuccess: () => void
   formatTime: (t: string) => string
@@ -185,6 +188,8 @@ function AssignVolunteerModal({
   allPositions,
   eventId,
   initialRole = 'VOLUNTEER',
+  preferredOverseerId = null,
+  preferredKeymanId = null,
   onClose,
   onSuccess,
   formatTime
@@ -198,6 +203,13 @@ function AssignVolunteerModal({
 
   const roleLabel =
     selectedRole === 'OVERSEER' ? 'Overseer' : selectedRole === 'KEYMAN' ? 'Keyman' : 'Volunteer'
+
+  const matchesPreferredOversight = (attendant: Attendant) => {
+    if (!preferredOverseerId && !preferredKeymanId) return true
+    const matchesOverseer = preferredOverseerId && attendant.overseerId === preferredOverseerId
+    const matchesKeyman = preferredKeymanId && attendant.keymanId === preferredKeymanId
+    return Boolean(matchesOverseer || matchesKeyman)
+  }
 
   // Build assignment map once from all positions data
   const assignmentMap = React.useMemo(
@@ -224,11 +236,15 @@ function AssignVolunteerModal({
     return full.includes(search.toLowerCase())
   })
 
-  // Sort: no-conflict first, then conflict
+  // Sort: preferred oversight first, then no-conflict, then conflict
   const sorted = [...visibleAttendants].sort((a, b) => {
+    const aPref = matchesPreferredOversight(a) ? 0 : 1
+    const bPref = matchesPreferredOversight(b) ? 0 : 1
+    if (aPref !== bPref) return aPref - bPref
     const ac = conflictMap.get(a.id)?.hasConflict ? 1 : 0
     const bc = conflictMap.get(b.id)?.hasConflict ? 1 : 0
-    return ac - bc
+    if (ac !== bc) return ac - bc
+    return `${a.lastName} ${a.firstName}`.localeCompare(`${b.lastName} ${b.firstName}`)
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -346,6 +362,11 @@ function AssignVolunteerModal({
                 onChange={e => setSearch(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               />
+              {(preferredOverseerId || preferredKeymanId) && selectedRole === 'VOLUNTEER' && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Matching overseer/keyman listed first. Others are available for capacity overflow.
+                </p>
+              )}
             </div>
 
             {/* Volunteer list */}
@@ -357,6 +378,7 @@ function AssignVolunteerModal({
                   const c = conflictMap.get(attendant.id)
                   const hasConflict = c?.hasConflict
                   const isSelected = selectedVolunteerId === attendant.id
+                  const isPreferred = matchesPreferredOversight(attendant)
                   return (
                     <button
                       key={attendant.id}
@@ -380,6 +402,11 @@ function AssignVolunteerModal({
                         )}
                       </div>
                       <div className="flex items-center gap-1.5 ml-2 shrink-0">
+                        {!isPreferred && selectedRole === 'VOLUNTEER' && (preferredOverseerId || preferredKeymanId) && (
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">
+                            Other group
+                          </span>
+                        )}
                         {hasConflict && (
                           <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2576,14 +2603,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
           const positionOverseer = (shiftOverseerAssign as any)?.volunteer || (shiftOverseerAssign as any)?.attendant || oversight?.overseer
           const positionKeyman = (shiftKeymanAssign as any)?.volunteer || (shiftKeymanAssign as any)?.attendant || oversight?.keyman
           let filteredAttendants = attendants?.filter(att => att.isActive) || []
-          // Leadership picks from the full roster; volunteer picks stay scoped to oversight pool when set
-          if (assignModalRole === 'VOLUNTEER' && (positionOverseer || positionKeyman)) {
-            filteredAttendants = filteredAttendants.filter(attendant => {
-              const matchesOverseer = positionOverseer && attendant.overseerId === positionOverseer.id
-              const matchesKeyman = positionKeyman && attendant.keymanId === positionKeyman.id
-              return matchesOverseer || matchesKeyman
-            })
-          }
+          // Full roster for manual assign; modal sorts matching overseer/keyman first
 
           return (
             <AssignVolunteerModal
@@ -2594,6 +2614,8 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
               allPositions={positions}
               eventId={eventId}
               initialRole={assignModalRole}
+              preferredOverseerId={positionOverseer?.id || null}
+              preferredKeymanId={positionKeyman?.id || null}
               onClose={closeAssignModal}
               onSuccess={() => { closeAssignModal(); router.reload() }}
               formatTime={formatTime12Hour}

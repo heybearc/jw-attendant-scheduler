@@ -217,6 +217,13 @@ export default function EventOversightHelp() {
           days are allowed.
         </p>
 
+        <h3>What if a shift needs more people than one overseer has?</h3>
+        <p>
+          Auto-assign fills from that overseer’s group first, then uses volunteers from other groups for
+          leftover slots. When assigning manually, matching people appear first; others are labeled
+          “Other group” and can still be selected.
+        </p>
+
         <h3>Can I export the oversight data?</h3>
         <p>
           Yes! Export functionality for oversight reports (PDF and Excel) is available from the Positions page. 

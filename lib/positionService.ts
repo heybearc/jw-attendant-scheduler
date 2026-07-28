@@ -24,6 +24,7 @@ export interface Shift {
   endTime?: string
   isAllDay: boolean
   volunteersNeeded?: number
+  shiftDate?: string | Date | null
 }
 
 export interface Assignment {
@@ -48,6 +49,7 @@ export interface CreateShiftData {
   endTime: string | null
   isAllDay: boolean
   volunteersNeeded?: number
+  shiftDate?: string | null
 }
 
 export interface UpdateShiftData {
@@ -56,6 +58,7 @@ export interface UpdateShiftData {
   startTime?: string | null
   endTime?: string | null
   isAllDay?: boolean
+  shiftDate?: string | null
 }
 
 export interface AssignOversightData {

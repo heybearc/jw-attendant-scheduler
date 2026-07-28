@@ -642,6 +642,8 @@ model position_shifts {
   name                 String
   sequence             Int
   startTime            String?
+  /// Calendar day for multi-day events (null = undated / single-day legacy)
+  shiftDate            DateTime?              @db.Date
   /// How many people should serve on this shift (default 1 = legacy behavior)
   volunteersNeeded     Int                    @default(1)
   position_assignments position_assignments[] @relation("ShiftToAssignments")
@@ -649,6 +651,7 @@ model position_shifts {
 
   @@index([positionId])
   @@index([positionId, sequence])
+  @@index([positionId, shiftDate])
 }
 
 model positions {

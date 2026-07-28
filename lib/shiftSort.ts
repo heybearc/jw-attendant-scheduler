@@ -11,6 +11,7 @@ export type ShiftTimeLike = {
   isAllDay?: boolean
   sequence?: number
   volunteersNeeded?: number | null
+  shiftDate?: string | Date | null
 }
 
 /** Normalize "7:50" / "07:50" / "07:50:00" → minutes from midnight for compare. */
@@ -25,7 +26,18 @@ export function shiftStartMinutes(shift: ShiftTimeLike): number | null {
   return hours * 60 + minutes
 }
 
+function shiftDateKey(shift: ShiftTimeLike): string {
+  if (!shift.shiftDate) return ''
+  if (typeof shift.shiftDate === 'string') {
+    return shift.shiftDate.slice(0, 10)
+  }
+  return shift.shiftDate.toISOString().slice(0, 10)
+}
+
 export function compareShiftsByTime(a: ShiftTimeLike, b: ShiftTimeLike): number {
+  const dateCmp = shiftDateKey(a).localeCompare(shiftDateKey(b))
+  if (dateCmp !== 0) return dateCmp
+
   const aAllDay = !!a.isAllDay
   const bAllDay = !!b.isAllDay
   if (aAllDay && !bAllDay) return 1

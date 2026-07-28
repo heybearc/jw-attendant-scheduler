@@ -9,6 +9,7 @@
  */
 
 import { getOpenShiftSlots, getShiftVolunteersNeeded } from './shiftCapacity'
+import { shiftsConflict } from './shiftConflict'
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -21,6 +22,7 @@ export interface Shift {
   endTime?: string
   isAllDay: boolean
   volunteersNeeded?: number
+  shiftDate?: string | Date | null
 }
 
 export interface Volunteer {
@@ -621,21 +623,7 @@ export class AutoAssignmentEngine {
    * Check if a shift conflicts with existing assignments
    */
   private checkTimeConflict(existingShifts: Shift[], newShift: Shift): boolean {
-    return existingShifts.some(existingShift => {
-      // If attendant has an all-day shift, they can't take any other shift
-      if (existingShift.isAllDay) return true
-
-      // If new shift is all-day, attendant can't have any existing shifts
-      if (newShift.isAllDay && existingShifts.length > 0) return true
-
-      const existingEnd = existingShift.endTime || '23:59'
-      const newStart = newShift.startTime || '00:00'
-      const existingStart = existingShift.startTime || '00:00'
-      const newEnd = newShift.endTime || '23:59'
-
-      // Check for direct time overlap
-      return existingEnd > newStart && existingStart < newEnd
-    })
+    return existingShifts.some(existingShift => shiftsConflict(existingShift, newShift))
   }
 
   /**

@@ -1,4 +1,6 @@
 import React, { useState } from 'react'
+import { formatEventDayLabel } from '../lib/eventDates'
+import { toDateKey } from '../lib/shiftConflict'
 
 export type ShiftEditValues = {
   name: string
@@ -6,10 +8,12 @@ export type ShiftEditValues = {
   endTime: string
   isAllDay: boolean
   volunteersNeeded: number
+  shiftDate: string | null
 }
 
 type ShiftInlineEditorProps = {
   initial: ShiftEditValues
+  eventDateKeys?: string[]
   saving?: boolean
   onCancel: () => void
   onSave: (values: ShiftEditValues) => Promise<void> | void
@@ -17,11 +21,15 @@ type ShiftInlineEditorProps = {
 
 export default function ShiftInlineEditor({
   initial,
+  eventDateKeys = [],
   saving = false,
   onCancel,
   onSave
 }: ShiftInlineEditorProps) {
-  const [values, setValues] = useState<ShiftEditValues>(initial)
+  const [values, setValues] = useState<ShiftEditValues>({
+    ...initial,
+    shiftDate: toDateKey(initial.shiftDate) || null
+  })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -31,7 +39,8 @@ export default function ShiftInlineEditor({
       name,
       startTime: values.isAllDay ? '' : values.startTime,
       endTime: values.isAllDay ? '' : values.endTime,
-      volunteersNeeded: Math.max(1, Math.min(50, Number(values.volunteersNeeded) || 1))
+      volunteersNeeded: Math.max(1, Math.min(50, Number(values.volunteersNeeded) || 1)),
+      shiftDate: values.shiftDate || null
     })
   }
 
@@ -48,6 +57,24 @@ export default function ShiftInlineEditor({
           disabled={saving}
         />
       </div>
+      {eventDateKeys.length > 0 && (
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Day</label>
+          <select
+            value={values.shiftDate || ''}
+            onChange={(e) => setValues({ ...values, shiftDate: e.target.value || null })}
+            className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={saving}
+          >
+            <option value="">No day set</option>
+            {eventDateKeys.map(key => (
+              <option key={key} value={key}>
+                {formatEventDayLabel(key)}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-2">
         <div>
           <label className="block text-xs font-medium text-gray-600 mb-1">Start</label>

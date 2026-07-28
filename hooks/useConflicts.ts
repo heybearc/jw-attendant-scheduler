@@ -2,7 +2,12 @@
  * useConflicts - Client-side conflict detection for position assignments
  * Builds a volunteer → assigned shifts map from position data and detects
  * time overlaps before the user submits, enabling inline warnings.
+ *
+ * Multi-day: shifts only conflict when they share the same shiftDate
+ * (or both are undated — legacy single-day behavior).
  */
+
+import { shiftsConflict } from '../lib/shiftConflict'
 
 export interface ShiftTime {
   id: string
@@ -10,6 +15,7 @@ export interface ShiftTime {
   startTime?: string | null
   endTime?: string | null
   isAllDay: boolean
+  shiftDate?: string | Date | null
 }
 
 export interface ConflictDetail {
@@ -17,6 +23,7 @@ export interface ConflictDetail {
   shiftName: string
   startTime?: string | null
   endTime?: string | null
+  shiftDate?: string | Date | null
 }
 
 export type ConflictType = 'TIME_OVERLAP' | 'ALL_DAY_CONFLICT' | 'DUPLICATE_SHIFT'
@@ -71,19 +78,6 @@ export function buildVolunteerAssignmentMap(
 }
 
 /**
- * Check if two time strings overlap.
- * Times are HH:MM strings (24h). Returns true if they overlap.
- */
-function timesOverlap(
-  aStart: string,
-  aEnd: string,
-  bStart: string,
-  bEnd: string
-): boolean {
-  return aEnd > bStart && aStart < bEnd
-}
-
-/**
  * Given a volunteer and a target shift, determine if there is a conflict
  * with their existing assignments.
  */
@@ -104,51 +98,27 @@ export function detectConflict(
     }
   }
 
-  // All-day conflict: volunteer has all-day shift, or target is all-day and they have others
-  const hasAllDay = existing.some(e => e.shift.isAllDay)
-  if (hasAllDay) {
-    const conflict = existing.find(e => e.shift.isAllDay)!
-    return {
-      hasConflict: true,
-      type: 'ALL_DAY_CONFLICT',
-      conflicts: [{ positionName: conflict.positionName, shiftName: conflict.shift.name }],
-      message: `Already has an all-day shift at ${conflict.positionName}`
-    }
+  const conflicting = existing.filter(e => shiftsConflict(targetShift, e.shift))
+
+  if (conflicting.length === 0) {
+    return { hasConflict: false, conflicts: [], message: '' }
   }
 
-  if (targetShift.isAllDay && existing.length > 0) {
-    return {
-      hasConflict: true,
-      type: 'ALL_DAY_CONFLICT',
-      conflicts: existing.map(e => ({ positionName: e.positionName, shiftName: e.shift.name })),
-      message: 'Has existing shifts — cannot assign all-day shift'
-    }
+  const hasAllDay = targetShift.isAllDay || conflicting.some(e => e.shift.isAllDay)
+  return {
+    hasConflict: true,
+    type: hasAllDay ? 'ALL_DAY_CONFLICT' : 'TIME_OVERLAP',
+    conflicts: conflicting.map(e => ({
+      positionName: e.positionName,
+      shiftName: e.shift.name,
+      startTime: e.shift.startTime,
+      endTime: e.shift.endTime,
+      shiftDate: e.shift.shiftDate
+    })),
+    message: hasAllDay
+      ? `Conflicts with all-day or same-day shift at ${conflicting.map(e => e.positionName).join(', ')}`
+      : `Time overlap with ${conflicting.map(e => `${e.positionName} (${e.shift.name})`).join(', ')}`
   }
-
-  // Time overlap check
-  if (!targetShift.isAllDay && targetShift.startTime && targetShift.endTime) {
-    const overlapping = existing.filter(e => {
-      const s = e.shift
-      if (!s || s.isAllDay || !s.startTime || !s.endTime) return false
-      return timesOverlap(targetShift.startTime!, targetShift.endTime!, s.startTime, s.endTime)
-    })
-
-    if (overlapping.length > 0) {
-      return {
-        hasConflict: true,
-        type: 'TIME_OVERLAP',
-        conflicts: overlapping.map(e => ({
-          positionName: e.positionName,
-          shiftName: e.shift.name,
-          startTime: e.shift.startTime,
-          endTime: e.shift.endTime
-        })),
-        message: `Time overlap with ${overlapping.map(e => `${e.positionName} (${e.shift.name})`).join(', ')}`
-      }
-    }
-  }
-
-  return { hasConflict: false, conflicts: [], message: '' }
 }
 
 /**

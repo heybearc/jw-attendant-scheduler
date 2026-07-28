@@ -7,6 +7,7 @@ import crypto from 'crypto'
 import { handleApiError } from '@/lib/apiError'
 import { canManagePosition } from '../../../../../../src/lib/eventAccess'
 import { resequencePositionShifts } from '../../../../../../lib/resequencePositionShifts'
+import { parseDateKey, sameShiftDay } from '../../../../../../lib/shiftConflict'
 
 // Validation schema for shift creation
 const shiftSchema = z.object({
@@ -14,7 +15,12 @@ const shiftSchema = z.object({
   startTime: z.string().nullable().optional(),
   endTime: z.string().nullable().optional(),
   isAllDay: z.boolean().default(false),
-  volunteersNeeded: z.number().int().min(1).max(50).optional().default(1)
+  volunteersNeeded: z.number().int().min(1).max(50).optional().default(1),
+  shiftDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .nullable()
+    .optional()
 })
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -60,22 +66,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           where: { positionId: positionId }
         })
 
-        const hasAllDayShift = existingShifts.some(s => s.isAllDay)
+        const nextShiftDate = validatedData.shiftDate
+          ? parseDateKey(validatedData.shiftDate)
+          : null
+        const nextShiftDay = {
+          isAllDay: validatedData.isAllDay,
+          shiftDate: nextShiftDate
+        }
 
-        // Prevent creating any shift if an All Day shift exists
-        if (hasAllDayShift) {
+        const sameDayAllDay = existingShifts.find(
+          s => s.isAllDay && sameShiftDay(s, nextShiftDay)
+        )
+
+        // Prevent creating any shift on a day that already has an All Day shift
+        if (sameDayAllDay) {
           return res.status(400).json({ 
-            error: 'Cannot add more shifts - this position has an All Day shift that covers the entire 24-hour period',
+            error: 'Cannot add more shifts on this day — an All Day shift already covers it',
             success: false
           })
         }
 
-        // Prevent creating an All Day shift if other shifts exist
-        if (validatedData.isAllDay && existingShifts.length > 0) {
-          return res.status(400).json({ 
-            error: 'Cannot create All Day shift - this position already has other shifts',
-            success: false
-          })
+        // Prevent creating an All Day shift if other shifts exist on the same day
+        if (validatedData.isAllDay) {
+          const sameDaySibling = existingShifts.find(s => sameShiftDay(s, nextShiftDay))
+          if (sameDaySibling) {
+            return res.status(400).json({ 
+              error: 'Cannot create All Day shift — this position already has other shifts on that day',
+              success: false
+            })
+          }
         }
 
 
@@ -91,7 +110,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           endTime: validatedData.isAllDay ? null : validatedData.endTime,
           isAllDay: validatedData.isAllDay,
           sequence: existingShifts.length + 1,
-          volunteersNeeded: validatedData.volunteersNeeded ?? 1
+          volunteersNeeded: validatedData.volunteersNeeded ?? 1,
+          shiftDate: nextShiftDate
         }
 
         const newShift = await prisma.position_shifts.create({

@@ -6,6 +6,7 @@ import { z } from 'zod'
 import crypto from 'crypto'
 import { handleApiError } from '@/lib/apiError'
 import { canManageAssignments } from '../../../../src/lib/eventAccess'
+import { shiftsConflict } from '../../../../lib/shiftConflict'
 
 // Validation schema for assignment creation
 const assignmentSchema = z.object({
@@ -104,9 +105,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           })
         }
         
-        // Check for all-day shift conflicts
-        // If attendant has an all-day shift, they can't take any other shift
-        // If assigning an all-day shift, attendant can't have any existing shifts
+        // Check for same-day conflicts (all-day and time overlap)
         const existingAssignments = await prisma.position_assignments.findMany({
           where: {
             volunteerId: validatedData.volunteerId,
@@ -123,50 +122,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }
         })
         
-        // Check if attendant already has an all-day shift
-        const hasAllDayShift = existingAssignments.some((a: any) => a.shift?.isAllDay)
-        if (hasAllDayShift) {
-          return res.status(409).json({
-            error: 'Attendant already has an all-day shift',
-            conflictType: 'ALL_DAY_CONFLICT',
-            message: 'Cannot assign additional shifts to attendant with all-day shift'
-          })
-        }
-        
-        // Check if assigning an all-day shift to attendant with existing shifts
-        if (targetShift.isAllDay && existingAssignments.length > 0) {
-          return res.status(409).json({
-            error: 'Cannot assign all-day shift to attendant with existing shifts',
-            conflictType: 'ALL_DAY_CONFLICT',
-            message: 'Attendant must have no other shifts to receive all-day shift'
-          })
-        }
-        
-        // Check for time conflicts with other shifts (if not all-day)
-        if (!targetShift.isAllDay && targetShift.startTime && targetShift.endTime) {
-          const conflictingAssignments = existingAssignments.filter((assignment: any) => {
-            const shift = assignment.shift
-            if (!shift || shift.isAllDay) return false
-            
-            // Check for time overlap
-            return shift.endTime! > targetShift.startTime! && shift.startTime! < targetShift.endTime!
-          })
+        const conflictingAssignments = existingAssignments.filter((assignment: any) => {
+          const shift = assignment.shift
+          if (!shift) return false
+          return shiftsConflict(targetShift, shift)
+        })
           
-          if (conflictingAssignments.length > 0) {
-            const conflicts = conflictingAssignments.map((assignment: any) => ({
-              positionName: assignment.positions?.name || 'Unknown position',
-              shiftName: assignment.shift?.name || 'Unknown shift',
-              startTime: assignment.shift?.startTime,
-              endTime: assignment.shift?.endTime
-            }))
+        if (conflictingAssignments.length > 0) {
+          const conflicts = conflictingAssignments.map((assignment: any) => ({
+            positionName: assignment.positions?.name || 'Unknown position',
+            shiftName: assignment.shift?.name || 'Unknown shift',
+            startTime: assignment.shift?.startTime,
+            endTime: assignment.shift?.endTime,
+            shiftDate: assignment.shift?.shiftDate
+          }))
+
+          const hasAllDay = targetShift.isAllDay || conflictingAssignments.some((a: any) => a.shift?.isAllDay)
             
-            return res.status(409).json({
-              error: 'Time conflict detected with existing assignments',
-              conflictType: 'TIME_OVERLAP',
-              conflicts: conflicts,
-              message: `Attendant has conflicting assignments during this time period`
-            })
-          }
+          return res.status(409).json({
+            error: hasAllDay
+              ? 'Same-day all-day shift conflict'
+              : 'Time conflict detected with existing assignments',
+            conflictType: hasAllDay ? 'ALL_DAY_CONFLICT' : 'TIME_OVERLAP',
+            conflicts: conflicts,
+            message: hasAllDay
+              ? 'Cannot assign overlapping same-day shifts when an all-day shift is involved'
+              : `Attendant has conflicting assignments during this time period`
+          })
         }
         
         // Check if shift already has someone in this specific role (only for OVERSEER/KEYMAN)

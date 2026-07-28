@@ -1,4 +1,5 @@
 import React from 'react'
+import { formatEventDayLabel } from '../lib/eventDates'
 
 interface Position {
   id: string
@@ -11,12 +12,14 @@ interface ShiftFormData {
   endTime: string
   isAllDay: boolean
   volunteersNeeded: number
+  shiftDate: string | null
 }
 
 interface ShiftModalProps {
   isOpen: boolean
   position: Position | null
   formData: ShiftFormData
+  eventDateKeys?: string[]
   onClose: () => void
   onSubmit: (e: React.FormEvent) => void
   onFormDataChange: (data: ShiftFormData) => void
@@ -26,6 +29,7 @@ export default function ShiftModal({
   isOpen,
   position,
   formData,
+  eventDateKeys = [],
   onClose,
   onSubmit,
   onFormDataChange
@@ -92,6 +96,31 @@ export default function ShiftModal({
                   placeholder="e.g., Morning, Evening, All Day"
                 />
               </div>
+
+              {eventDateKeys.length > 1 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Day
+                  </label>
+                  <select
+                    value={formData.shiftDate || ''}
+                    onChange={(e) =>
+                      onFormDataChange({ ...formData, shiftDate: e.target.value || null })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select a day…</option>
+                    {eventDateKeys.map(key => (
+                      <option key={key} value={key}>
+                        {formatEventDayLabel(key)}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Required for multi-day events so Friday and Saturday shifts do not conflict.
+                  </p>
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-4">
                 <div>

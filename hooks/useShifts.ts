@@ -3,6 +3,7 @@ import { useRouter } from 'next/router'
 import { createPositionService } from '../lib/positionService'
 import { notifyAlert, toast } from '../lib/ui/toast'
 import { appConfirm, appConfirmMessage } from '../lib/ui/confirm'
+import { sameShiftDay } from '../lib/shiftConflict'
 
 interface Position {
   id: string
@@ -13,6 +14,7 @@ interface Position {
     startTime: string
     endTime: string
     isAllDay: boolean
+    shiftDate?: string | Date | null
   }>
 }
 
@@ -22,6 +24,7 @@ interface ShiftFormData {
   endTime: string
   isAllDay: boolean
   volunteersNeeded: number
+  shiftDate: string | null
 }
 
 interface UseShiftsProps {
@@ -47,25 +50,41 @@ export function useShifts({ eventId }: UseShiftsProps): UseShiftsReturn {
     startTime: '',
     endTime: '',
     isAllDay: false,
-    volunteersNeeded: 1
+    volunteersNeeded: 1,
+    shiftDate: null
   })
 
   const handleShiftSubmit = async (e: React.FormEvent, position: Position | null) => {
     e.preventDefault()
     
     if (!position) return
+
+    const nextDay = {
+      isAllDay: shiftFormData.isAllDay,
+      shiftDate: shiftFormData.shiftDate
+    }
     
-    // APEX GUARDIAN: Bidirectional shift logic validation
+    // Day-scoped All Day validation
     if (shiftFormData.isAllDay && position.shifts && position.shifts.length > 0) {
-      const hasPartialShifts = position.shifts.some(shift => !shift.isAllDay)
-      if (hasPartialShifts) {
+      const sameDayPartial = position.shifts.some(
+        shift => !shift.isAllDay && sameShiftDay(shift, nextDay)
+      )
+      if (sameDayPartial) {
         notifyAlert(
           '❌ Cannot add All Day shift\n\n' +
-          'This position already has partial shifts. An All Day shift covers the entire 24-hour period and conflicts with existing partial shifts.\n\n' +
-          'Please delete existing partial shifts first, then add the All Day shift.'
+          'This position already has partial shifts on that day.\n\n' +
+          'Delete those shifts first, or pick a different day.'
         )
         return
       }
+    }
+
+    if (!shiftFormData.isAllDay && position.shifts?.some(s => s.isAllDay && sameShiftDay(s, nextDay))) {
+      notifyAlert(
+        '❌ Cannot add shift\n\n' +
+        'An All Day shift already covers that day for this position.'
+      )
+      return
     }
     
     try {
@@ -75,12 +94,20 @@ export function useShifts({ eventId }: UseShiftsProps): UseShiftsReturn {
         endTime: shiftFormData.endTime,
         isAllDay: shiftFormData.isAllDay,
         volunteersNeeded: Math.max(1, Math.min(50, Number(shiftFormData.volunteersNeeded) || 1)),
+        shiftDate: shiftFormData.shiftDate
       })
 
       if (success) {
         notifyAlert('✅ Shift added successfully')
         setShowShiftModal(false)
-        setShiftFormData({ name: '', startTime: '', endTime: '', isAllDay: false, volunteersNeeded: 1 })
+        setShiftFormData({
+          name: '',
+          startTime: '',
+          endTime: '',
+          isAllDay: false,
+          volunteersNeeded: 1,
+          shiftDate: null
+        })
         router.reload()
       } else {
         notifyAlert('Failed to add shift')

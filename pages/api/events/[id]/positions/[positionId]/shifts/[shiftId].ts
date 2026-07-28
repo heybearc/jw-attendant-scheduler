@@ -5,6 +5,7 @@ import { authOptions } from '../../../../../auth/[...nextauth]'
 import { prisma } from '../../../../../../../src/lib/prisma'
 import { canManagePosition } from '../../../../../../../src/lib/eventAccess'
 import { resequencePositionShifts } from '../../../../../../../lib/resequencePositionShifts'
+import { parseDateKey, sameShiftDay } from '../../../../../../../lib/shiftConflict'
 
 // APEX GUARDIAN: Individual Shift Management API
 // Handles update/deletion of individual shifts with proper cleanup
@@ -14,7 +15,12 @@ const updateShiftSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   startTime: z.string().nullable().optional(),
   endTime: z.string().nullable().optional(),
-  isAllDay: z.boolean().optional()
+  isAllDay: z.boolean().optional(),
+  shiftDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .nullable()
+    .optional()
 })
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -95,7 +101,7 @@ async function handleUpdateShift(
   res: NextApiResponse,
   positionId: string,
   shiftId: string,
-  existing: { isAllDay: boolean }
+  existing: { isAllDay: boolean; shiftDate: Date | null }
 ) {
   const validated = updateShiftSchema.parse(req.body)
   if (Object.keys(validated).length === 0) {
@@ -103,20 +109,40 @@ async function handleUpdateShift(
   }
 
   const nextIsAllDay = validated.isAllDay ?? existing.isAllDay
+  const nextShiftDate =
+    validated.shiftDate === undefined
+      ? existing.shiftDate
+      : validated.shiftDate
+        ? parseDateKey(validated.shiftDate)
+        : null
+  const nextDay = { isAllDay: nextIsAllDay, shiftDate: nextShiftDate }
 
-  if (validated.isAllDay === true) {
-    const siblingCount = await prisma.position_shifts.count({
-      where: { positionId, id: { not: shiftId } }
-    })
-    if (siblingCount > 0) {
+  const siblings = await prisma.position_shifts.findMany({
+    where: { positionId, id: { not: shiftId } }
+  })
+
+  if (nextIsAllDay) {
+    const sameDaySibling = siblings.find(s => sameShiftDay(s, nextDay))
+    if (sameDaySibling) {
       return res.status(400).json({
         success: false,
-        error: 'Cannot set All Day — this position already has other shifts'
+        error: 'Cannot set All Day — this position already has other shifts on that day'
+      })
+    }
+  } else {
+    const sameDayAllDay = siblings.find(s => s.isAllDay && sameShiftDay(s, nextDay))
+    if (sameDayAllDay) {
+      return res.status(400).json({
+        success: false,
+        error: 'Cannot update shift — an All Day shift already covers that day'
       })
     }
   }
 
   const data: Record<string, unknown> = { ...validated }
+  if (validated.shiftDate !== undefined) {
+    data.shiftDate = nextShiftDate
+  }
   if (nextIsAllDay) {
     data.startTime = null
     data.endTime = null

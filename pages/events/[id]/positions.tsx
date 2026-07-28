@@ -32,6 +32,8 @@ import {
   clampVolunteersNeeded
 } from '../../../lib/shiftCapacity'
 import { sortShiftsByTime } from '../../../lib/shiftSort'
+import { shiftsConflict, toDateKey } from '../../../lib/shiftConflict'
+import { enumerateEventDateKeys, formatEventDayLabel, isMultiDayEvent } from '../../../lib/eventDates'
 import { volunteerRosterWhere } from '@/lib/volunteerRoster'
 import ShiftInlineEditor from '../../../components/ShiftInlineEditor'
 
@@ -68,6 +70,7 @@ interface Position {
     endTime?: string
     isAllDay: boolean
     volunteersNeeded?: number
+    shiftDate?: string | null
   }>
   assignments?: Array<{
     id: string
@@ -664,7 +667,16 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
     setSelectedShift(null)
     setAssignModalRole('VOLUNTEER')
   }
-  
+
+  const eventDateKeys = enumerateEventDateKeys(event?.startDate, event?.endDate)
+  const multiDayEvent = isMultiDayEvent(event?.startDate, event?.endDate)
+  const undatedShiftCount = multiDayEvent
+    ? positions.reduce(
+        (count, p) => count + (p.shifts?.filter(s => !toDateKey(s.shiftDate)).length || 0),
+        0
+      )
+    : 0
+
   const {
     showBulkEditModal,
     setShowBulkEditModal,
@@ -921,6 +933,8 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
       const volunteersNeeded = clampVolunteersNeeded(
         (document.getElementById('bulk-shift-needed') as HTMLInputElement)?.value
       )
+      const shiftDate =
+        (document.getElementById('bulk-shift-date') as HTMLSelectElement)?.value || null
       
       if (!isAllDay && (!shiftStart || !shiftEnd)) {
         notifyAlert('Please specify start and end times, or check "All Day"')
@@ -929,6 +943,11 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
       
       if (!shiftName) {
         notifyAlert('Please specify a shift name')
+        return
+      }
+
+      if (multiDayEvent && !shiftDate) {
+        notifyAlert('Please select a day for this shift (multi-day event)')
         return
       }
       
@@ -957,7 +976,8 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
           startTime: isAllDay ? null : (shiftStart || ''),
           endTime: isAllDay ? null : (shiftEnd || ''),
           isAllDay: isAllDay,
-          volunteersNeeded
+          volunteersNeeded,
+          shiftDate
         })
         
         if (success) {
@@ -1370,6 +1390,13 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
 
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {multiDayEvent && undatedShiftCount > 0 && canManageContent && (
+            <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              This is a multi-day event. {undatedShiftCount} shift{undatedShiftCount === 1 ? '' : 's'} still have no day set,
+              so same clock times on different days may show as conflicts. Edit each shift and choose
+              Fri / Sat / Sun (or the event day) — naming the shift is not enough.
+            </div>
+          )}
           <div className="mb-8">
             {/* Professional Action Toolbar */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -2058,6 +2085,16 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                                         All Day
                                       </span>
                                     )}
+                                    {toDateKey(shift.shiftDate) && (
+                                      <span className="text-xs text-indigo-700 bg-indigo-100 px-1.5 py-0.5 rounded">
+                                        {formatEventDayLabel(toDateKey(shift.shiftDate)!)}
+                                      </span>
+                                    )}
+                                    {multiDayEvent && !toDateKey(shift.shiftDate) && (
+                                      <span className="text-xs text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded" title="Set a day so Friday/Saturday shifts do not conflict">
+                                        No day
+                                      </span>
+                                    )}
                                     <span className={`text-xs px-1.5 py-0.5 rounded ${
                                       filledCount >= neededCount
                                         ? 'bg-green-100 text-green-800'
@@ -2097,8 +2134,10 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                                       startTime: shift.startTime || '',
                                       endTime: shift.endTime || '',
                                       isAllDay: !!shift.isAllDay,
-                                      volunteersNeeded: neededCount
+                                      volunteersNeeded: neededCount,
+                                      shiftDate: toDateKey(shift.shiftDate)
                                     }}
+                                    eventDateKeys={eventDateKeys}
                                     saving={savingShiftId === shift.id}
                                     onCancel={() => setEditingShiftId(null)}
                                     onSave={async (values) => {
@@ -2109,7 +2148,8 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                                           startTime: values.isAllDay ? null : values.startTime || null,
                                           endTime: values.isAllDay ? null : values.endTime || null,
                                           isAllDay: values.isAllDay,
-                                          volunteersNeeded: values.volunteersNeeded
+                                          volunteersNeeded: values.volunteersNeeded,
+                                          shiftDate: values.shiftDate
                                         })
                                         if (ok) {
                                           setEditingShiftId(null)
@@ -2182,14 +2222,10 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                                       const assignmentMapForRow = buildVolunteerAssignmentMap(positions)
                                       const volunteerShifts = volunteerId ? (assignmentMapForRow.get(volunteerId) || []) : []
                                       const hasRowConflict = volunteerShifts.length > 1 && (() => {
-                                        // Check if any two of their shifts overlap
                                         for (let i = 0; i < volunteerShifts.length; i++) {
                                           for (let j = i + 1; j < volunteerShifts.length; j++) {
-                                            const a = volunteerShifts[i].shift
-                                            const b = volunteerShifts[j].shift
-                                            if (a.isAllDay || b.isAllDay) return true
-                                            if (a.startTime && a.endTime && b.startTime && b.endTime) {
-                                              if (a.endTime > b.startTime && a.startTime < b.endTime) return true
+                                            if (shiftsConflict(volunteerShifts[i].shift, volunteerShifts[j].shift)) {
+                                              return true
                                             }
                                           }
                                         }
@@ -2264,22 +2300,16 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                           })}
                         </div>
                         
-                        {/* Add Shift Button - Only show if no All Day shift exists */}
-                        {!position.shifts?.some(s => s.isAllDay) ? (
-                          <button
-                            onClick={() => {
-                              setSelectedPosition(position)
-                              setShowShiftModal(true)
-                            }}
-                            className="w-full mt-2 text-xs text-green-600 hover:text-green-800 bg-green-50 hover:bg-green-100 border border-green-200 rounded px-2 py-1 transition-colors"
-                          >
-                            + Add Shift
-                          </button>
-                        ) : (
-                          <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
-                            ℹ️ Cannot add more shifts - this position has an All Day shift that covers the entire 24-hour period
-                          </div>
-                        )}
+                        {/* Add Shift — always allowed when days differ from existing All Day */}
+                        <button
+                          onClick={() => {
+                            setSelectedPosition(position)
+                            setShowShiftModal(true)
+                          }}
+                          className="w-full mt-2 text-xs text-green-600 hover:text-green-800 bg-green-50 hover:bg-green-100 border border-green-200 rounded px-2 py-1 transition-colors"
+                        >
+                          + Add Shift
+                        </button>
                       </div>
                     ) : (
                       <div className="mb-4">
@@ -2517,6 +2547,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
           isOpen={showShiftModal}
           position={selectedPosition}
           formData={shiftFormData}
+          eventDateKeys={eventDateKeys}
           onClose={() => setShowShiftModal(false)}
           onSubmit={handleShiftSubmit}
           onFormDataChange={setShiftFormData}
@@ -2723,6 +2754,26 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                           />
                         </div>
+
+                        {multiDayEvent && (
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Day
+                            </label>
+                            <select
+                              id="bulk-shift-date"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                              defaultValue=""
+                            >
+                              <option value="">Select a day…</option>
+                              {eventDateKeys.map(key => (
+                                <option key={key} value={key}>
+                                  {formatEventDayLabel(key)}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
                         
                         <div className="flex items-end">
                           <div className="flex items-center h-10">
@@ -3285,7 +3336,8 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
                     name: true,
                     startTime: true,
                     endTime: true,
-                    isAllDay: true
+                    isAllDay: true,
+                    shiftDate: true
                   }
                 }
               }
@@ -3342,7 +3394,24 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
       // Assignments and shifts are already correctly named from the schema
       return {
         ...position,
-        oversight: positionOversight
+        oversight: positionOversight,
+        shifts: (position.shifts || []).map((shift: any) => ({
+          ...shift,
+          shiftDate: shift.shiftDate ? toDateKey(shift.shiftDate) : null,
+          createdAt: shift.createdAt instanceof Date ? shift.createdAt.toISOString() : shift.createdAt
+        })),
+        assignments: (position.assignments || []).map((assignment: any) => ({
+          ...assignment,
+          assignedAt: assignment.assignedAt instanceof Date ? assignment.assignedAt.toISOString() : assignment.assignedAt,
+          shift: assignment.shift
+            ? {
+                ...assignment.shift,
+                shiftDate: assignment.shift.shiftDate
+                  ? toDateKey(assignment.shift.shiftDate)
+                  : null
+              }
+            : assignment.shift
+        }))
       }
     })
 

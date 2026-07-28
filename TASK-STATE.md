@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-07-28  
 **Branch:** `main`  
-**Production:** **LIVE** **GREEN** `10.92.3.22` · **STANDBY** **BLUE** `10.92.3.24` — both **v4.29.7**.
+**Production:** **LIVE** **BLUE** `10.92.3.24` · **STANDBY** **GREEN** `10.92.3.22` — both **v4.29.8**.
 
 ---
 
@@ -12,10 +12,11 @@
 
 ### What I'm doing right now
 
-Early Check-In mobile path is shipped through **v4.29.7**. Resume Positions + Volunteers mobile audit next. Remaining hardening: Positions **Send Notifications** throttle/abort (bulk email safety already on other blasts).
+Shipped **v4.29.8** (shift overseer/keyman assign + bulk volunteers needed). Resume Positions + Volunteers mobile audit next.
 
 ### Recent completions
 
+- ✅ **v4.29.8** — Shift-level overseer/keyman assign; bulk set/update volunteers needed
 - ✅ **v4.29.7** — Mobile Early Check-In hardening + staff Check-In route; 5/5 browser matrix on STANDBY
 - ✅ **v4.29.6** — Roster members can use Early Check-In (no position assignment required)
 - ✅ **v4.29.5** — Mobile Check-In nav `eventId` + access alignment
@@ -25,8 +26,7 @@ Early Check-In mobile path is shipped through **v4.29.7**. Resume Positions + Vo
 ### Next steps
 
 1. Continue **mobile audit**: Positions + Volunteers (narrow viewport).
-2. Positions **Send Notifications** — add confirm/throttle/abort like other bulk email paths.
-3. Triage **`/admin/feedback`** when online (0 new URGENT at end-day).
+2. Triage **`/admin/feedback`** when online.
 
 ## Exact next command
 

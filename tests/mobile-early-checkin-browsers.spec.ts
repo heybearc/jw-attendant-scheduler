@@ -92,12 +92,11 @@ test.describe('Mobile Early Check-In browser audit', () => {
 
       await expect(
         page
-          .locator('text=Loading...')
-          .or(page.locator('text=PENDING'))
-          .or(page.locator('text=not a convention day'))
-          .or(page.locator('text=Could not load'))
-          .or(page.locator('text=No pending check-ins'))
-          .or(page.locator('text=CHECKED IN')),
+          .getByRole('heading', { name: /PENDING|CHECKED IN/i })
+          .or(page.getByText(/not a convention day/i))
+          .or(page.getByText(/Could not load/i))
+          .or(page.getByText(/No pending check-ins/i))
+          .first(),
       ).toBeVisible({ timeout: 15000 })
 
       const checkInNav = page.locator('nav a, nav [aria-disabled="true"]').filter({

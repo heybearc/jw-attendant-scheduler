@@ -50,8 +50,8 @@ export async function resolveEarlyCheckinVolunteerId(
 }
 
 /**
- * IVS early check-in on the volunteer dashboard requires an IVS team position assignment
- * for the effective volunteer (including simulated). Staff with IVS view rights may also access.
+ * Early check-in is available when IVS is on for the event and the person is on that
+ * event roster (active event_volunteers). Staff with IVS view rights may also open it.
  */
 export async function verifyVolunteerIvsEarlyCheckinAccessForIds(
   sessionUserId: string,
@@ -98,20 +98,10 @@ export async function verifyVolunteerIvsEarlyCheckinAccessForIds(
       select: { id: true },
     })
     if (onEvent) {
-      const ivsTeamMember = await prisma.position_assignments.findFirst({
-        where: {
-          volunteerId,
-          positions: { eventId },
-        },
-        select: { id: true },
-      })
-      if (ivsTeamMember) {
-        return { ok: true, volunteerId }
-      }
+      return { ok: true, volunteerId }
     }
   }
 
-  // Staff with IVS visibility (e.g. admin not assigned as IVS team) can still open the list
   if (await canViewIvsVolunteers(sessionUserId, eventId)) {
     return { ok: true, volunteerId: volunteerId || sessionUserId }
   }
@@ -119,7 +109,7 @@ export async function verifyVolunteerIvsEarlyCheckinAccessForIds(
   return {
     ok: false,
     status: 403,
-    message: 'Access denied - IVS early check-in access required',
+    message: 'Access denied - Early check-in is only available for people on this event roster',
   }
 }
 

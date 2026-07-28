@@ -62,12 +62,12 @@ export default function MobileFeaturesHelp() {
         </p>
         <ul>
           <li><strong>Dashboard:</strong> Your assignments and event information</li>
-          <li><strong>Check-In:</strong> Early check-in for your event (shown when you have IVS Early Check-In access for that event)</li>
+          <li><strong>Check-In:</strong> Early check-in for your event (available when you are on the event roster and IVS is enabled)</li>
           <li><strong>Events:</strong> Browse and select events</li>
         </ul>
         <p>
           The active page is highlighted in blue so you always know where you are. Tap any icon to switch instantly.
-          If <strong>Check-In</strong> looks greyed out, select an event first, or you may not have Early Check-In rights for that event.
+          If <strong>Check-In</strong> looks greyed out, select an event first, or confirm you are on that event&apos;s Volunteers roster.
         </p>
 
         <div className="bg-blue-50 border-l-4 border-blue-400 p-4 my-4">

@@ -275,6 +275,7 @@ For issues or questions:
 4. Contact the project maintainer for deployment access
 
 ## 📝 Version History
+- **v4.29.8** (2026-07-28) - Positions: assign shift overseer/keyman; bulk set volunteers needed
 
 - **v4.29.7** (2026-07-27) - Mobile Early Check-In hardening + staff Check-In route
 - **v4.29.6** (2026-07-27) - Early Check-In available to event roster members

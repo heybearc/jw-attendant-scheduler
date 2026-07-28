@@ -203,8 +203,11 @@ export default function EventOversightHelp() {
 
         <h3>How do I assign someone to an oversight role?</h3>
         <p>
-          Oversight assignments are made on the Positions page. When assigning a volunteer to a position, 
-          their user role (set in User Management) determines if they appear in the Oversight Dashboard.
+          On the <strong>Positions</strong> page, open a shift and use <strong>+ Assign Overseer</strong>
+          or <strong>+ Assign Keyman</strong> for that shift. You can also choose Overseer or Keyman
+          from the role menu when assigning someone. Use <strong>Position Oversight</strong> for a
+          default overseer for the whole position when you do not need a different person per shift.
+          User roles in User Management still control who appears on the Oversight Dashboard.
         </p>
 
         <h3>Can I export the oversight data?</h3>

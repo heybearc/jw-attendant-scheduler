@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-07-28  
 **Branch:** `main`  
-**Production:** **LIVE** **GREEN** `10.92.3.22` · **STANDBY** **BLUE** `10.92.3.24` — shipping **v4.29.10**.
+**Production:** **LIVE** **BLUE** `10.92.3.24` · **STANDBY** **GREEN** `10.92.3.22` — both **v4.29.10**.
 
 ---
 
@@ -12,7 +12,7 @@
 
 ### What I'm doing right now
 
-Shipping **v4.29.10** (auto-assign N shifts for multi-day). Resume Positions + Volunteers mobile audit next.
+Shipped **v4.29.10** (auto-assign N shifts for multi-day). Resume Positions + Volunteers mobile audit next.
 
 ### Recent completions
 

@@ -21,6 +21,13 @@ export function getShiftVolunteersNeeded(shift: ShiftCapacityLike | null | undef
   return Math.floor(needed)
 }
 
+/** Clamp capacity for create/update forms (1–50). */
+export function clampVolunteersNeeded(raw: unknown): number {
+  const n = typeof raw === 'number' ? raw : Number(raw)
+  if (!Number.isFinite(n)) return 1
+  return Math.max(1, Math.min(50, Math.floor(n)))
+}
+
 /** Count people assigned to a shift (includes OVERSEER/KEYMAN — they fill a body slot). */
 export function countShiftAssignments(
   assignments: AssignmentCapacityLike[] | null | undefined,

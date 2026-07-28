@@ -72,6 +72,7 @@ export interface BulkOversightData {
 export interface ApplyShiftTemplateData {
   positionIds: string[]
   templateType: string
+  volunteersNeeded?: number
 }
 
 export interface CreateAssignmentData {

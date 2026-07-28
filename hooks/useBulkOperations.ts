@@ -21,7 +21,7 @@ interface UseBulkOperationsReturn {
   
   handleBulkEdit: (area: string, isActive: string) => Promise<void>
   handleApplyTemplate: (templateType: string) => Promise<void>
-  handleBulkShiftCreate: (shiftName: string, shiftStart: string, shiftEnd: string, isAllDay: boolean) => Promise<void>
+  handleBulkShiftCreate: (shiftName: string, shiftStart: string, shiftEnd: string, isAllDay: boolean, volunteersNeeded?: number) => Promise<void>
   handleBulkOversight: (overseerId: string, keymanId: string) => Promise<void>
   handleClearAllShifts: () => Promise<void>
 }
@@ -115,7 +115,13 @@ export function useBulkOperations({ eventId, selectedPositions, positions }: Use
     }
   }
 
-  const handleBulkShiftCreate = async (shiftName: string, shiftStart: string, shiftEnd: string, isAllDay: boolean) => {
+  const handleBulkShiftCreate = async (
+    shiftName: string,
+    shiftStart: string,
+    shiftEnd: string,
+    isAllDay: boolean,
+    volunteersNeeded: number = 1
+  ) => {
     if (!shiftName) {
       notifyAlert('Please enter a shift name')
       return
@@ -147,6 +153,8 @@ export function useBulkOperations({ eventId, selectedPositions, positions }: Use
           return
         }
       }
+
+      const needed = Math.max(1, Math.min(50, Number(volunteersNeeded) || 1))
       
       let successCount = 0
       for (const positionId of selectedPositions) {
@@ -154,7 +162,8 @@ export function useBulkOperations({ eventId, selectedPositions, positions }: Use
           name: shiftName,
           startTime: isAllDay ? null : shiftStart,
           endTime: isAllDay ? null : shiftEnd,
-          isAllDay: isAllDay
+          isAllDay: isAllDay,
+          volunteersNeeded: needed
         })
         
         if (success) {

@@ -10,11 +10,14 @@ import { resequencePositionShifts } from '../../../../../lib/resequencePositionS
 const applyTemplateSchema = z.object({
   positionIds: z.array(z.string().min(1)),
   templateType: z.enum(['standard', 'extended', 'allday', 'custom']),
+  /** Applied to every shift created from the template (default 1). */
+  volunteersNeeded: z.number().int().min(1).max(50).optional().default(1),
   customShifts: z.array(z.object({
     name: z.string().min(1),
     startTime: z.string().min(1),
     endTime: z.string().min(1),
-    isAllDay: z.boolean().default(false)
+    isAllDay: z.boolean().default(false),
+    volunteersNeeded: z.number().int().min(1).max(50).optional()
   })).optional()
 })
 
@@ -133,7 +136,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               endTime: shiftTemplate.isAllDay ? null : shiftTemplate.endTime,
               isAllDay: shiftTemplate.isAllDay,
               sequence: existingShifts.length + i + 1,
-              volunteersNeeded: Math.max(1, Math.min(50, Number(shiftTemplate.volunteersNeeded) || 1))
+              volunteersNeeded: Math.max(
+                1,
+                Math.min(
+                  50,
+                  Number(
+                    (shiftTemplate as { volunteersNeeded?: number }).volunteersNeeded ??
+                      validatedData.volunteersNeeded
+                  ) || 1
+                )
+              )
             }
             
             const newShift = await prisma.position_shifts.create({

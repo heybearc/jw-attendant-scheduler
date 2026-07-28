@@ -28,7 +28,8 @@ import { appConfirm, appConfirmMessage } from '../../../lib/ui/confirm'
 import {
   countShiftAssignments,
   getPositionSlotFillRatio,
-  getShiftVolunteersNeeded
+  getShiftVolunteersNeeded,
+  clampVolunteersNeeded
 } from '../../../lib/shiftCapacity'
 import { sortShiftsByTime } from '../../../lib/shiftSort'
 import { volunteerRosterWhere } from '@/lib/volunteerRoster'
@@ -865,6 +866,9 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
   const handleBulkTemplateApplication = async () => {
     try {
       const templateType = (document.getElementById('bulk-template') as HTMLSelectElement)?.value
+      const volunteersNeeded = clampVolunteersNeeded(
+        (document.getElementById('bulk-template-needed') as HTMLInputElement)?.value
+      )
       
       if (!templateType) {
         notifyAlert('Please select a template')
@@ -891,7 +895,8 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
       
       const success = await positionService.applyShiftTemplate({
         positionIds: Array.from(selectedPositions),
-        templateType: templateType
+        templateType: templateType,
+        volunteersNeeded
       })
       
       if (success) {
@@ -913,6 +918,9 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
       const shiftStart = (document.getElementById('bulk-shift-start') as HTMLInputElement)?.value
       const shiftEnd = (document.getElementById('bulk-shift-end') as HTMLInputElement)?.value
       const isAllDay = (document.getElementById('bulk-shift-allday') as HTMLInputElement)?.checked
+      const volunteersNeeded = clampVolunteersNeeded(
+        (document.getElementById('bulk-shift-needed') as HTMLInputElement)?.value
+      )
       
       if (!isAllDay && (!shiftStart || !shiftEnd)) {
         notifyAlert('Please specify start and end times, or check "All Day"')
@@ -948,7 +956,8 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
           name: shiftName,
           startTime: isAllDay ? null : (shiftStart || ''),
           endTime: isAllDay ? null : (shiftEnd || ''),
-          isAllDay: isAllDay
+          isAllDay: isAllDay,
+          volunteersNeeded
         })
         
         if (success) {
@@ -958,11 +967,66 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
         }
       }
       
-      notifyAlert(`✅ Successfully created "${shiftName}" shift for ${successCount} of ${selectedPositions.size} positions`)
+      notifyAlert(`✅ Successfully created "${shiftName}" shift (${volunteersNeeded} needed) for ${successCount} of ${selectedPositions.size} positions`)
       router.reload()
     } catch (error) {
       console.error('Custom shift creation error:', error)
       notifyAlert('Failed to create shifts')
+    }
+  }
+
+  // Bulk update volunteersNeeded on existing shifts across selected positions
+  const handleBulkUpdateVolunteersNeeded = async () => {
+    try {
+      const volunteersNeeded = clampVolunteersNeeded(
+        (document.getElementById('bulk-update-needed') as HTMLInputElement)?.value
+      )
+      const nameFilter = (
+        (document.getElementById('bulk-update-shift-name') as HTMLInputElement)?.value || ''
+      ).trim().toLowerCase()
+
+      const selectedPositionObjects = positions.filter(p => selectedPositions.has(p.id))
+      let updatedCount = 0
+      let skippedCount = 0
+
+      setIsSubmitting(true)
+      for (const position of selectedPositionObjects) {
+        const shifts = position.shifts || []
+        for (const shift of shifts) {
+          if (nameFilter && !(shift.name || '').toLowerCase().includes(nameFilter)) {
+            skippedCount++
+            continue
+          }
+          const success = await positionService.updateShift(position.id, shift.id, {
+            volunteersNeeded
+          })
+          if (success) {
+            updatedCount++
+          } else {
+            skippedCount++
+          }
+        }
+      }
+
+      if (updatedCount === 0) {
+        notifyAlert(
+          nameFilter
+            ? `No shifts matching "${nameFilter}" found on selected positions`
+            : 'No shifts found on selected positions'
+        )
+        return
+      }
+
+      notifyAlert(
+        `✅ Updated volunteers needed to ${volunteersNeeded} on ${updatedCount} shift${updatedCount === 1 ? '' : 's'}` +
+          (skippedCount > 0 ? ` (${skippedCount} skipped)` : '')
+      )
+      router.reload()
+    } catch (error) {
+      console.error('Bulk update volunteers needed error:', error)
+      notifyAlert('Failed to update volunteers needed')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -973,6 +1037,9 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
       const shiftStart = (document.getElementById('combined-shift-start') as HTMLInputElement)?.value
       const shiftEnd = (document.getElementById('combined-shift-end') as HTMLInputElement)?.value
       const isAllDay = (document.getElementById('combined-shift-allday') as HTMLInputElement)?.checked
+      const volunteersNeeded = clampVolunteersNeeded(
+        (document.getElementById('combined-shift-needed') as HTMLInputElement)?.value
+      )
       const overseerId = (document.getElementById('combined-overseer') as HTMLSelectElement)?.value
       const keymanId = (document.getElementById('combined-keyman') as HTMLSelectElement)?.value
       
@@ -995,7 +1062,8 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
           name: shiftName,
           startTime: isAllDay ? null : (shiftStart || ''),
           endTime: isAllDay ? null : (shiftEnd || ''),
-          isAllDay: isAllDay
+          isAllDay: isAllDay,
+          volunteersNeeded
         })
         
         if (success) {
@@ -2570,16 +2638,30 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                     {/* Apply Template Option */}
                     <div className="mb-6 p-4 border border-orange-300 rounded-md bg-white">
                       <h5 className="font-medium text-gray-900 mb-3">Apply Shift Template</h5>
-                      <div className="flex items-center space-x-4">
-                        <select 
-                          id="bulk-template"
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        >
-                          <option value="">Choose a template...</option>
-                          <option value="standard">Standard Day (7:50-10, 10-12, 12-2, 2-5)</option>
-                          <option value="extended">Extended Day (6:30-8:30, 8:30-10:30, 10:30-12:45, 12:45-3, 3-Close)</option>
-                          <option value="allday">All Day Shift</option>
-                        </select>
+                      <div className="flex flex-col sm:flex-row sm:items-end gap-4">
+                        <div className="flex-1">
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Template</label>
+                          <select 
+                            id="bulk-template"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                          >
+                            <option value="">Choose a template...</option>
+                            <option value="standard">Standard Day (7:50-10, 10-12, 12-2, 2-5)</option>
+                            <option value="extended">Extended Day (6:30-8:30, 8:30-10:30, 10:30-12:45, 12:45-3, 3-Close)</option>
+                            <option value="allday">All Day Shift</option>
+                          </select>
+                        </div>
+                        <div className="w-full sm:w-36">
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Volunteers needed</label>
+                          <input
+                            id="bulk-template-needed"
+                            type="number"
+                            min={1}
+                            max={50}
+                            defaultValue={1}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                          />
+                        </div>
                         <button
                           onClick={handleBulkTemplateApplication}
                           disabled={isSubmitting}
@@ -2591,9 +2673,9 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                     </div>
                     
                     {/* Create Custom Shift Option */}
-                    <div className="p-4 border border-orange-300 rounded-md bg-white">
+                    <div className="mb-6 p-4 border border-orange-300 rounded-md bg-white">
                       <h5 className="font-medium text-gray-900 mb-3">Create Custom Shift</h5>
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
                             Shift Name
@@ -2627,6 +2709,20 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                           />
                         </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Volunteers needed
+                          </label>
+                          <input
+                            id="bulk-shift-needed"
+                            type="number"
+                            min={1}
+                            max={50}
+                            defaultValue={1}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                          />
+                        </div>
                         
                         <div className="flex items-end">
                           <div className="flex items-center h-10">
@@ -2650,6 +2746,49 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                         >
                           {isSubmitting ? 'Creating...' : `Create Shift for ${selectedPositions.size} Positions`}
                         </button>
+                      </div>
+                    </div>
+
+                    {/* Update Existing Shifts Capacity */}
+                    <div className="p-4 border border-orange-300 rounded-md bg-white">
+                      <h5 className="font-medium text-gray-900 mb-1">Update Volunteers Needed</h5>
+                      <p className="text-xs text-gray-500 mb-3">
+                        Change capacity on existing shifts for the selected positions. Leave name blank to update all shifts.
+                      </p>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Volunteers needed
+                          </label>
+                          <input
+                            id="bulk-update-needed"
+                            type="number"
+                            min={1}
+                            max={50}
+                            defaultValue={1}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Match shift name (optional)
+                          </label>
+                          <input
+                            id="bulk-update-shift-name"
+                            type="text"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            placeholder="e.g., Morning"
+                          />
+                        </div>
+                        <div className="flex items-end">
+                          <button
+                            onClick={handleBulkUpdateVolunteersNeeded}
+                            disabled={isSubmitting}
+                            className="w-full px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-400 text-white rounded-md font-medium"
+                          >
+                            {isSubmitting ? 'Updating...' : `Update on ${selectedPositions.size} Positions`}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -2700,6 +2839,17 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                             className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
                           />
                           <label htmlFor="combined-shift-allday" className="ml-2 text-sm text-gray-900">All Day</label>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Volunteers needed</label>
+                          <input
+                            id="combined-shift-needed"
+                            type="number"
+                            min={1}
+                            max={50}
+                            defaultValue={1}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          />
                         </div>
                       </div>
                       

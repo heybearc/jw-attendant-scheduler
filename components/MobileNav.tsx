@@ -46,7 +46,17 @@ export default function MobileNav({ selectedEvent }: MobileNavProps) {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
         </svg>
       ),
-      roles: ['ADMIN', 'OVERSEER', 'ATTENDANT']
+      roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN', 'ATTENDANT', 'VOLUNTEER']
+    },
+    {
+      label: 'My Profile',
+      href: '/profile',
+      icon: (
+        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
+      ),
+      roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN', 'ATTENDANT', 'VOLUNTEER']
     },
     {
       label: 'Help',
@@ -56,7 +66,7 @@ export default function MobileNav({ selectedEvent }: MobileNavProps) {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       ),
-      roles: ['ADMIN', 'OVERSEER', 'ATTENDANT', 'VOLUNTEER']
+      roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN', 'ATTENDANT', 'VOLUNTEER']
     }
   ]
 
@@ -142,7 +152,7 @@ export default function MobileNav({ selectedEvent }: MobileNavProps) {
 
               {/* User Info */}
               {session?.user && (
-                <div className="p-4 border-b border-gray-200">
+                <Link href="/profile" className="p-4 border-b border-gray-200 block hover:bg-gray-50">
                   <div className="flex items-center">
                     <div className="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold">
                       {session.user.name?.charAt(0) || session.user.email?.charAt(0) || 'U'}
@@ -150,9 +160,10 @@ export default function MobileNav({ selectedEvent }: MobileNavProps) {
                     <div className="ml-3">
                       <div className="text-sm font-medium text-gray-900">{session.user.name || 'User'}</div>
                       <div className="text-xs text-gray-600">{session.user.email}</div>
+                      <div className="text-xs text-blue-600 mt-0.5">View profile →</div>
                     </div>
                   </div>
-                </div>
+                </Link>
               )}
 
               {/* Navigation Items */}

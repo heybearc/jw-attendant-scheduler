@@ -1,6 +1,6 @@
 # TheoShift Task State
 
-**Last updated:** 2026-07-28  
+**Last updated:** 2026-07-29  
 **Branch:** `main`  
 **Production:** **LIVE** **GREEN** `10.92.3.22` · **STANDBY** **BLUE** `10.92.3.24` — both **v4.29.11**.
 
@@ -8,11 +8,32 @@
 
 ## Current Task
 
-**Mobile readiness (Positions / Volunteers)** — NEXT
+**FB-038 My Profile + account self-delete** — IN PROGRESS
 
 ### What I'm doing right now
 
-Shipped **v4.29.11** (cross-oversight capacity fallback). Resume Positions + Volunteers mobile audit next.
+Implementing **My Profile** (edit details, password) and permanent self-delete that clears assignments; adding Profile nav on Event Selection and in-event header.
+
+### Recent completions
+
+- ✅ **v4.29.11** — Cross-oversight fallback for auto-assign + full roster manual assign
+- ✅ **v4.29.10** — Auto-assign beyond 2 shifts so Sunday (etc.) can fill
+- ✅ **v4.29.9** — Multi-day shift `shiftDate` + day-aware conflicts; help FAQ
+- ✅ **v4.29.8** — Shift-level overseer/keyman assign; bulk set/update volunteers needed
+- ✅ **v4.29.7** — Mobile Early Check-In hardening + staff Check-In route; 5/5 browser matrix on STANDBY
+- ✅ **v4.29.6** — Roster members can use Early Check-In (no position assignment required)
+- ✅ **v4.29.5** — Mobile Check-In nav `eventId` + access alignment
+- ✅ **v4.29.4** — Safe bulk email: roster-only, confirm count, throttle, abort
+- ✅ **v4.29.3** — Promote IVS-only people onto Volunteers roster
+
+### Next steps
+
+1. Finish Profile + self-delete on STANDBY, then ship.
+2. Continue **mobile audit**: Positions + Volunteers (narrow viewport).
+
+## Exact next command
+
+Test `/profile` on STANDBY after deploy; then `/ship /sync`.
 
 ### Recent completions
 

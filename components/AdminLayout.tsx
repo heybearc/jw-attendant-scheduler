@@ -100,9 +100,18 @@ export default function AdminLayout({ children, title, breadcrumbs = [], userLas
             </div>
             
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-700 hidden sm:inline">
+              <Link
+                href="/profile"
+                className="text-sm text-gray-700 hidden sm:inline hover:text-blue-700 underline-offset-2 hover:underline"
+              >
                 Welcome, {session?.user?.name}
-              </span>
+              </Link>
+              <Link
+                href="/profile"
+                className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Profile
+              </Link>
               <button
                 onClick={handleSignOut}
                 className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-md text-sm font-medium transition-colors"

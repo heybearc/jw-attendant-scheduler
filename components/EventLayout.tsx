@@ -67,7 +67,13 @@ export default function EventLayout({
       label: 'Event Selection',
       href: '/events/select',
       icon: '🎯',
-      roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN', 'VOLUNTEER']
+      roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN', 'VOLUNTEER', 'ATTENDANT']
+    },
+    {
+      label: 'My Profile',
+      href: '/profile',
+      icon: '👤',
+      roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN', 'VOLUNTEER', 'ATTENDANT']
     }
   ]
 
@@ -151,9 +157,13 @@ export default function EventLayout({
               {/* User Menu */}
               {session?.user && (
                 <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                  <span className="hidden sm:inline text-sm text-gray-700 truncate max-w-[8rem] md:max-w-[14rem]">
+                  <Link
+                    href="/profile"
+                    className="hidden sm:inline text-sm text-gray-700 hover:text-blue-700 truncate max-w-[8rem] md:max-w-[14rem] underline-offset-2 hover:underline"
+                    title="My Profile"
+                  >
                     {session.user.name}
-                  </span>
+                  </Link>
                   <span
                     className={`hidden sm:inline-flex px-2 py-1 text-xs rounded-full shrink-0 ${
                       session.user.role === 'ADMIN'
@@ -165,6 +175,12 @@ export default function EventLayout({
                   >
                     {session.user.role}
                   </span>
+                  <Link
+                    href="/profile"
+                    className="sm:hidden text-xs text-blue-600 hover:text-blue-800 px-1 py-2 min-h-[44px] inline-flex items-center touch-manipulation"
+                  >
+                    Profile
+                  </Link>
                   <button
                     type="button"
                     onClick={handleSignOut}

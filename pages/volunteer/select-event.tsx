@@ -191,7 +191,13 @@ export default function VolunteerSelectEvent() {
           </div>
 
           {/* Footer */}
-          <div className="mt-8 text-center">
+          <div className="mt-8 text-center flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Link
+              href="/profile"
+              className="text-sm text-blue-600 hover:text-blue-800 font-medium inline-flex items-center gap-2"
+            >
+              My Profile
+            </Link>
             <button
               onClick={() => {
                 signOut({ callbackUrl: '/auth/signin?role=volunteer' })

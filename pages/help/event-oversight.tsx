@@ -224,6 +224,14 @@ export default function EventOversightHelp() {
           “Other group” and can still be selected.
         </p>
 
+        <h3>How do I manage or delete my account?</h3>
+        <p>
+          Open <strong>My Profile</strong> from Event Selection, the header (click your name), or the
+          mobile menu. You can update your details there. To permanently remove your account and
+          personal information, use <strong>Delete my account</strong> — any position assignments are
+          cleared automatically so schedules stay accurate.
+        </p>
+
         <h3>Can I export the oversight data?</h3>
         <p>
           Yes! Export functionality for oversight reports (PDF and Excel) is available from the Positions page. 

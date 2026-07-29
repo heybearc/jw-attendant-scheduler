@@ -212,8 +212,8 @@ export default function EventSelectPage({ events, userLastSeenVersion, releaseSu
       />
       <div className="container mx-auto px-4 py-8">
         {/* Top Navigation */}
-        <div className="flex justify-between items-center mb-4">
-          <div>
+        <div className="flex justify-between items-center mb-4 gap-2 flex-wrap">
+          <div className="flex items-center gap-2">
             {(session?.user?.role === 'ADMIN' || session?.user?.role === 'admin') && (
               <Link
                 href="/admin"
@@ -223,12 +223,20 @@ export default function EventSelectPage({ events, userLastSeenVersion, releaseSu
               </Link>
             )}
           </div>
-          <button
-            onClick={() => signOut({ redirect: true }).then(() => window.location.href = '/auth/signin')}
-            className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
-          >
-            🚪 Sign Out
-          </button>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/profile"
+              className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+            >
+              👤 My Profile
+            </Link>
+            <button
+              onClick={() => signOut({ redirect: true }).then(() => window.location.href = '/auth/signin')}
+              className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+            >
+              🚪 Sign Out
+            </button>
+          </div>
         </div>
 
         {/* Header */}

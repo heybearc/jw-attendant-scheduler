@@ -211,6 +211,16 @@ export default function MobileVolunteerDashboard({
               <p className="text-sm text-blue-100 mt-1">{volunteer.congregation}</p>
             </div>
             <div className="flex items-center space-x-2">
+              <Link
+                href="/profile"
+                className="p-2 bg-white bg-opacity-20 rounded-full hover:bg-opacity-30 transition-all"
+                aria-label="My Profile"
+                title="My Profile"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </Link>
               <button
                 onClick={handlePullToRefresh}
                 disabled={refreshing}

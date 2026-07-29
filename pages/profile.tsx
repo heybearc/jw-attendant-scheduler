@@ -7,6 +7,10 @@ import Link from 'next/link'
 import Head from 'next/head'
 import { authOptions } from './api/auth/[...nextauth]'
 import { notifyAlert, toast } from '../lib/ui/toast'
+import {
+  getViewAsHeaders,
+  getViewAsVolunteerId
+} from '@/lib/viewAsClient'
 
 interface ProfileData {
   firstName: string
@@ -19,6 +23,7 @@ interface ProfileData {
   hasVolunteerRecord: boolean
   assignmentCount: number
   canChangePassword: boolean
+  deletionMethod: 'email' | 'password'
 }
 
 export default function ProfilePage() {
@@ -39,7 +44,10 @@ export default function ProfilePage() {
     confirmPassword: ''
   })
   const [deleteConfirm, setDeleteConfirm] = useState('')
+  const [deletePassword, setDeletePassword] = useState('')
   const [showDelete, setShowDelete] = useState(false)
+  const [emailConfirmationSent, setEmailConfirmationSent] = useState(false)
+  const [viewAsActive, setViewAsActive] = useState(false)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -50,8 +58,15 @@ export default function ProfilePage() {
   useEffect(() => {
     if (status !== 'authenticated') return
     ;(async () => {
+      if (getViewAsVolunteerId()) {
+        setViewAsActive(true)
+        setLoading(false)
+        return
+      }
       try {
-        const res = await fetch('/api/profile')
+        const res = await fetch('/api/profile', {
+          headers: getViewAsHeaders()
+        })
         const data = await res.json()
         if (!data.success) {
           notifyAlert(data.error || 'Failed to load profile')
@@ -84,7 +99,10 @@ export default function ProfilePage() {
     try {
       const res = await fetch('/api/profile', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getViewAsHeaders()
+        },
         body: JSON.stringify({
           firstName: form.firstName,
           lastName: form.lastName,
@@ -130,8 +148,15 @@ export default function ProfilePage() {
     try {
       const res = await fetch('/api/profile/delete', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ confirmation: 'DELETE' })
+        headers: {
+          'Content-Type': 'application/json',
+          ...getViewAsHeaders()
+        },
+        body: JSON.stringify({
+          confirmation: 'DELETE',
+          currentPassword:
+            profile?.deletionMethod === 'password' ? deletePassword : undefined
+        })
       })
       const data = await res.json()
       if (!data.success) {
@@ -139,6 +164,13 @@ export default function ProfilePage() {
         setDeleting(false)
         return
       }
+      if (data.requiresEmailConfirmation) {
+        setEmailConfirmationSent(true)
+        setDeleting(false)
+        toast.success('Confirmation email sent')
+        return
+      }
+
       toast.success('Account deleted')
       await signOut({ redirect: false })
       window.location.href = '/auth/signin'
@@ -157,6 +189,25 @@ export default function ProfilePage() {
   }
 
   if (!session) return null
+
+  if (viewAsActive) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <div className="max-w-md bg-white border border-amber-200 rounded-lg shadow-sm p-6 text-center">
+          <h1 className="text-xl font-semibold text-gray-900">Profile unavailable in View As</h1>
+          <p className="text-sm text-gray-600 mt-2">
+            Exit Admin View As before opening, editing, or deleting an account.
+          </p>
+          <Link
+            href="/events/select"
+            className="inline-block mt-4 text-blue-600 hover:text-blue-800"
+          >
+            Return to Event Selection
+          </Link>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <>
@@ -292,7 +343,17 @@ export default function ProfilePage() {
               This cannot be undone.
             </p>
 
-            {!showDelete ? (
+            {emailConfirmationSent ? (
+              <div className="mt-4 rounded-md border border-green-200 bg-green-50 p-4">
+                <p className="text-sm font-medium text-green-800">
+                  Confirmation link sent
+                </p>
+                <p className="text-sm text-green-700 mt-1">
+                  Check your email and open the one-time link within 30 minutes.
+                  Nothing is deleted until you confirm there.
+                </p>
+              </div>
+            ) : !showDelete ? (
               <button
                 type="button"
                 onClick={() => setShowDelete(true)}
@@ -312,12 +373,34 @@ export default function ProfilePage() {
                   placeholder="DELETE"
                   autoComplete="off"
                 />
+                {profile?.deletionMethod === 'password' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Current password
+                    </label>
+                    <input
+                      type="password"
+                      autoComplete="current-password"
+                      className="w-full px-3 py-2 border border-red-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                      value={deletePassword}
+                      onChange={(e) => setDeletePassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                )}
+                {profile?.deletionMethod === 'email' && (
+                  <p className="text-sm text-gray-600">
+                    We’ll email a one-time confirmation link to <strong>{profile.email}</strong>.
+                    Your account remains active until you open that link and confirm.
+                  </p>
+                )}
                 <div className="flex gap-3">
                   <button
                     type="button"
                     onClick={() => {
                       setShowDelete(false)
                       setDeleteConfirm('')
+                      setDeletePassword('')
                     }}
                     className="px-4 py-2 border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50"
                   >
@@ -325,11 +408,19 @@ export default function ProfilePage() {
                   </button>
                   <button
                     type="button"
-                    disabled={deleting || deleteConfirm.trim().toUpperCase() !== 'DELETE'}
+                    disabled={
+                      deleting ||
+                      deleteConfirm.trim().toUpperCase() !== 'DELETE' ||
+                      (profile?.deletionMethod === 'password' && !deletePassword)
+                    }
                     onClick={handleDelete}
                     className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-300 text-white text-sm rounded-md"
                   >
-                    {deleting ? 'Deleting…' : 'Permanently delete account'}
+                    {deleting
+                      ? 'Processing…'
+                      : profile?.deletionMethod === 'email'
+                        ? 'Email confirmation link'
+                        : 'Permanently delete account'}
                   </button>
                 </div>
               </div>

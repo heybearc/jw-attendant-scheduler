@@ -228,8 +228,9 @@ export default function EventOversightHelp() {
         <p>
           Open <strong>My Profile</strong> from Event Selection, the header (click your name), or the
           mobile menu. You can update your details there. To permanently remove your account and
-          personal information, use <strong>Delete my account</strong> — any position assignments are
-          cleared automatically so schedules stay accurate.
+          personal information, use <strong>Delete my account</strong>. Volunteers confirm through a
+          one-time email link; staff confirm with their current password. Any position assignments
+          are cleared automatically so schedules stay accurate.
         </p>
 
         <h3>Can I export the oversight data?</h3>

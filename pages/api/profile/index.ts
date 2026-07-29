@@ -12,6 +12,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(401).json({ success: false, error: 'Unauthorized' })
   }
 
+  if (typeof req.headers['x-view-as-volunteer-id'] === 'string') {
+    return res.status(403).json({
+      success: false,
+      error: 'Exit Admin View As before managing a profile'
+    })
+  }
+
   try {
     if (req.method === 'GET') {
       return await handleGet(req, res, session.user)
@@ -53,7 +60,13 @@ async function handleGet(
       hasPassword: Boolean(account.user),
       hasVolunteerRecord: Boolean(account.volunteer),
       assignmentCount,
-      canChangePassword: Boolean(account.user?.id)
+      canChangePassword:
+        String(sessionUser.role || '').toUpperCase() !== 'VOLUNTEER' &&
+        Boolean(account.user?.id),
+      deletionMethod:
+        String(sessionUser.role || '').toUpperCase() === 'VOLUNTEER'
+          ? 'email'
+          : 'password'
     }
   })
 }

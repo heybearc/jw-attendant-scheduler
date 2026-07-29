@@ -12,7 +12,7 @@
 
 ### What I'm doing right now
 
-Implementing **My Profile** (edit details, password) and permanent self-delete that clears assignments; adding Profile nav on Event Selection and in-event header.
+Implementing **My Profile** and hardened self-delete: volunteers confirm via a 30-minute one-time email link; staff re-enter their password; View As is blocked. Assignments are cleared cleanly.
 
 ### Recent completions
 

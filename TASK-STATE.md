@@ -2,17 +2,17 @@
 
 **Last updated:** 2026-07-29  
 **Branch:** `main`  
-**Production:** **LIVE** **GREEN** `10.92.3.22` · **STANDBY** **BLUE** `10.92.3.24` — shipping **v4.29.12**.
+**Production:** **LIVE** **BLUE** `10.92.3.24` · **STANDBY** **GREEN** `10.92.3.22` — both **v4.29.12**.
 
 ---
 
 ## Current Task
 
-**FB-038 My Profile + account self-delete** — SHIPPING
+**Mobile readiness (Positions / Volunteers)** — NEXT
 
 ### What I'm doing right now
 
-Shipping **My Profile** and hardened self-delete: volunteers confirm via a 30-minute one-time email link; staff re-enter their password; View As is blocked. Assignments are cleared cleanly.
+Shipped **v4.29.12** (My Profile + hardened self-delete); FB-038 resolved. Resume Positions + Volunteers mobile audit next.
 
 ### Recent completions
 
@@ -34,7 +34,7 @@ Shipping **My Profile** and hardened self-delete: volunteers confirm via a 30-mi
 
 ## Exact next command
 
-Test `/profile` on STANDBY after deploy; then `/ship /sync`.
+Open Positions on a narrow viewport and continue the mobile audit; note any horizontal-scroll or &lt;44px tap issues.
 
 ### Recent completions
 

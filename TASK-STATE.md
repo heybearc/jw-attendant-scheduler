@@ -2,20 +2,21 @@
 
 **Last updated:** 2026-07-29  
 **Branch:** `main`  
-**Production:** **LIVE** **GREEN** `10.92.3.22` · **STANDBY** **BLUE** `10.92.3.24` — both **v4.29.11**.
+**Production:** **LIVE** **GREEN** `10.92.3.22` · **STANDBY** **BLUE** `10.92.3.24` — shipping **v4.29.12**.
 
 ---
 
 ## Current Task
 
-**FB-038 My Profile + account self-delete** — IN PROGRESS
+**FB-038 My Profile + account self-delete** — SHIPPING
 
 ### What I'm doing right now
 
-Implementing **My Profile** and hardened self-delete: volunteers confirm via a 30-minute one-time email link; staff re-enter their password; View As is blocked. Assignments are cleared cleanly.
+Shipping **My Profile** and hardened self-delete: volunteers confirm via a 30-minute one-time email link; staff re-enter their password; View As is blocked. Assignments are cleared cleanly.
 
 ### Recent completions
 
+- ✅ **v4.29.12** — My Profile + secure self-service account deletion (FB-038)
 - ✅ **v4.29.11** — Cross-oversight fallback for auto-assign + full roster manual assign
 - ✅ **v4.29.10** — Auto-assign beyond 2 shifts so Sunday (etc.) can fill
 - ✅ **v4.29.9** — Multi-day shift `shiftDate` + day-aware conflicts; help FAQ
@@ -28,8 +29,8 @@ Implementing **My Profile** and hardened self-delete: volunteers confirm via a 3
 
 ### Next steps
 
-1. Finish Profile + self-delete on STANDBY, then ship.
-2. Continue **mobile audit**: Positions + Volunteers (narrow viewport).
+1. Continue **mobile audit**: Positions + Volunteers (narrow viewport).
+2. Triage new feedback.
 
 ## Exact next command
 

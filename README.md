@@ -275,6 +275,7 @@ For issues or questions:
 4. Contact the project maintainer for deployment access
 
 ## 📝 Version History
+- **v4.29.12** (2026-07-29) - My Profile and secure self-service account deletion
 - **v4.29.11** (2026-07-28) - Cross-oversight capacity fallback (auto + manual assign)
 - **v4.29.10** (2026-07-28) - Auto-assign fills 3+ day events (no longer stops at 2 shifts per person)
 - **v4.29.9** (2026-07-28) - Multi-day shift dates; same clock times on different days no longer conflict

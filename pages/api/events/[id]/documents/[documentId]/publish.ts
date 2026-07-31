@@ -50,6 +50,15 @@ async function handlePublishDocument(req: NextApiRequest, res: NextApiResponse, 
       return res.status(404).json({ success: false, error: 'Event not found' })
     }
 
+    const document = await prisma.event_documents.findFirst({
+      where: { id: documentId, eventId, isActive: true },
+      select: { id: true, title: true },
+    })
+
+    if (!document) {
+      return res.status(404).json({ success: false, error: 'Document not found' })
+    }
+
     let publishedCount = 0
 
     if (publishType === 'all') {
@@ -61,6 +70,7 @@ async function handlePublishDocument(req: NextApiRequest, res: NextApiResponse, 
         WHERE ev."eventId" = ${eventId}
         AND ev."isActive" = true
         AND ev."on_volunteer_roster" = true
+        AND v."isActive" = true
       ` as any[]
 
       publishedCount = eventVolunteers.length
@@ -76,7 +86,7 @@ async function handlePublishDocument(req: NextApiRequest, res: NextApiResponse, 
       
       console.log(`Published document ${documentId} to all ${publishedCount} roster volunteers in event ${eventId}`)
     } else {
-      // Verify volunteers exist and are part of this event
+      // Selected people must be on the Volunteers roster for this event (not IVS-only)
       const eventVolunteers = await prisma.$queryRaw`
         SELECT ev."volunteerId", v."firstName", v."lastName"
         FROM event_volunteers ev
@@ -84,10 +94,15 @@ async function handlePublishDocument(req: NextApiRequest, res: NextApiResponse, 
         WHERE ev."eventId" = ${eventId}
         AND ev."volunteerId" = ANY(${attendantIds})
         AND ev."isActive" = true
+        AND ev."on_volunteer_roster" = true
+        AND v."isActive" = true
       ` as any[]
 
       if (eventVolunteers.length !== attendantIds.length) {
-        return res.status(400).json({ success: false, error: 'Some volunteers are not part of this event' })
+        return res.status(400).json({
+          success: false,
+          error: 'Some volunteers are not on this event Volunteers roster',
+        })
       }
 
       publishedCount = eventVolunteers.length
@@ -101,7 +116,7 @@ async function handlePublishDocument(req: NextApiRequest, res: NextApiResponse, 
         `
       }
       
-      console.log(`Published document ${documentId} to ${publishedCount} selected volunteers in event ${eventId}`)
+      console.log(`Published document ${documentId} to ${publishedCount} selected roster volunteers in event ${eventId}`)
     }
 
     // Update document record with publish status

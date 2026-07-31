@@ -138,7 +138,12 @@ export default function EventDocumentsPage({ eventId, event, documents, canEdit,
       const result = await response.json()
 
       if (result.success) {
-        setSuccess(`Document published to ${publishType === 'all' ? 'all volunteers' : `${selectedAttendants.length} volunteers`}`)
+        const count = result.data?.publishedCount ?? selectedAttendants.length
+        setSuccess(
+          publishType === 'all'
+            ? `Document published to all ${count} roster volunteers`
+            : `Document published to ${count} volunteers`
+        )
         setShowPublishModal(false)
         setSelectedDocument(null)
         setSelectedAttendants([])
@@ -389,7 +394,7 @@ export default function EventDocumentsPage({ eventId, event, documents, canEdit,
                           <div className="flex items-center space-x-2 mt-2">
                             {document.publishedTo === 'all' ? (
                               <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-                                📢 Published to All Volunteers
+                                📢 Published to All Roster Volunteers
                               </span>
                             ) : document.publishedCount > 0 ? (
                               <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
@@ -477,7 +482,7 @@ export default function EventDocumentsPage({ eventId, event, documents, canEdit,
                           onChange={(e) => setPublishType(e.target.value as 'all' | 'individual')}
                           className="mr-2"
                         />
-                        <span>📢 All Volunteers ({attendants.length} people)</span>
+                        <span>📢 All Volunteers on roster ({attendants.length} people)</span>
                       </label>
                       <label className="flex items-center">
                         <input
@@ -491,6 +496,9 @@ export default function EventDocumentsPage({ eventId, event, documents, canEdit,
                         <span>👤 Select Individual Volunteers</span>
                       </label>
                     </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Roster only — IVS Module people are not included unless they were also added to Volunteers.
+                    </p>
                   </div>
 
                   {publishType === 'individual' && (
@@ -648,25 +656,36 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       fileOnDisk: documentFileExists(doc.fileUrl),
     }))
 
-    // Fetch attendants for publishing
-    const attendants = await prisma.volunteers.findMany({
+    // Roster only for publish picker — exclude IVS-only imports
+    const { volunteerRosterWhere } = await import('../../../src/lib/volunteerRoster')
+    const rosterMemberships = await prisma.event_volunteers.findMany({
       where: {
-        event_volunteers_primary: {
-          some: {
-            events: {
-              id: id as string
-            }
-          }
-        }
+        eventId: id as string,
+        isActive: true,
+        volunteerId: { not: null },
+        ...volunteerRosterWhere,
+        volunteer: { isActive: true },
       },
       select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        congregation: true,
-        email: true
-      }
+        volunteer: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            congregation: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: [
+        { volunteer: { lastName: 'asc' } },
+        { volunteer: { firstName: 'asc' } },
+      ],
     })
+
+    const attendants = rosterMemberships
+      .map((m) => m.volunteer)
+      .filter((v): v is NonNullable<typeof v> => !!v)
 
     const eventModuleConfig = (event.settings as any)?.modules
       ? {

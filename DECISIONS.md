@@ -623,6 +623,12 @@ This document tracks significant technical decisions made during development.
 **Decision:** Keep as-is — **manage** on IVS Approvals; **lookup** on Early Check-In (admin tab + volunteer Early Check-In for IVS team). Do not add a separate dashboard-wide contacts panel unless a later need is confirmed.  
 **Consequences:** IVS team volunteers already reach lookup via Early Check-In; non–IVS-team volunteers do not see the panel.
 
+### D-TS-046: IVS dashboard intake eligibility = event roster
+**Date:** 2026-07-31  
+**Context:** v4.30.0 gated **Request Volunteer** on `event_volunteers.ivsImportBatchId != null`. On real events, import rows often use placeholder emails and cannot sign in, while the working IVS team sits on the roster without an import batch — so the tab never appeared.  
+**Decision:** Anyone with an **active** `event_volunteers` row on an **IVS-enabled** event may submit intake requests (same people who can use Early Check-In for roster access). Submissions still create Pending IVS Approvals rows with real email/phone; no auto-approve.  
+**Consequences:** Shipped **v4.30.1**. Staff still review on Approvals; import-batch remains how IVS list membership is marked for Approvals/export, not who can request.
+
 ---
 
 ## Shared Decisions

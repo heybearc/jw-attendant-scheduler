@@ -91,7 +91,9 @@ export default function EventSettingsPage({ userRole }: EventSettingsProps) {
                 <div className="border-l-4 border-green-500 pl-4">
                   <h4 className="font-semibold text-gray-900">📄 Documents Module</h4>
                   <p className="text-gray-600 text-sm">
-                    Controls the Documents page for sharing files with volunteers. 
+                    Controls the Documents page for sharing files with volunteers.
+                    Publishing goes to people on the <strong>Volunteers roster</strong> only
+                    (IVS-only people are not included unless they were also added to the roster).
                     Disable this if you don't need to share documents for this event.
                   </p>
                 </div>

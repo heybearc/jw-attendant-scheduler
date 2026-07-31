@@ -9,6 +9,7 @@ import dynamic from 'next/dynamic'
 import AnnouncementBanner from '../../components/AnnouncementBanner'
 import VolunteerPdfViewer from '../../components/VolunteerPdfViewer'
 import EarlyCheckinPanel from '../../components/EarlyCheckinPanel'
+import IvsVolunteerRequestPanel from '../../components/IvsVolunteerRequestPanel'
 import {
   canSimulateVolunteerRole,
   getViewAsHeaders,
@@ -142,6 +143,7 @@ interface DashboardData {
   activeCountSessions?: CountSession[]
   activeCountGroups?: ActiveCountGroup[]
   isIVSTeamMember?: boolean
+  canSubmitIvsRequests?: boolean
 }
 
 interface ChatChannel {
@@ -187,7 +189,7 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
   const [respondingToRequest, setRespondingToRequest] = useState<string | null>(null)
   const [availabilityComments, setAvailabilityComments] = useState<Record<string, string>>({})
   const [isMobile, setIsMobile] = useState(false)
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'checkin'>('dashboard')
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'checkin' | 'request'>('dashboard')
   const [viewingDocument, setViewingDocument] = useState<Document | null>(null)
   const [chatChannels, setChatChannels] = useState<ChatChannel[]>([])
   const [chatLoading, setChatLoading] = useState(false)
@@ -1104,6 +1106,7 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
           }
           enterCountViewAsVolunteerId={effectiveViewAsVolunteerId}
           showEarlyCheckIn={!!dashboardData.isIVSTeamMember}
+          showIvsRequest={!!dashboardData.canSubmitIvsRequests}
         />
       </>
     )
@@ -1252,10 +1255,10 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
             <p className="mb-6 text-sm text-gray-500">Loading chat availability...</p>
           )}
 
-          {/* Tab Navigation for IVS Team Members */}
-          {dashboardData.isIVSTeamMember && (
+          {/* Tab Navigation for IVS features */}
+          {(dashboardData.isIVSTeamMember || dashboardData.canSubmitIvsRequests) && (
             <div className="mb-6 border-b border-gray-200">
-              <div className="flex gap-4">
+              <div className="flex flex-wrap gap-4">
                 <button
                   onClick={() => setActiveTab('dashboard')}
                   className={`px-4 py-2 font-semibold transition-colors border-b-2 ${
@@ -1266,16 +1269,30 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
                 >
                   📋 Dashboard
                 </button>
-                <button
-                  onClick={() => setActiveTab('checkin')}
-                  className={`px-4 py-2 font-semibold transition-colors border-b-2 ${
-                    activeTab === 'checkin'
-                      ? 'border-purple-600 text-purple-600'
-                      : 'border-transparent text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  ✅ Early Check-In
-                </button>
+                {dashboardData.isIVSTeamMember && (
+                  <button
+                    onClick={() => setActiveTab('checkin')}
+                    className={`px-4 py-2 font-semibold transition-colors border-b-2 ${
+                      activeTab === 'checkin'
+                        ? 'border-purple-600 text-purple-600'
+                        : 'border-transparent text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    ✅ Early Check-In
+                  </button>
+                )}
+                {dashboardData.canSubmitIvsRequests && (
+                  <button
+                    onClick={() => setActiveTab('request')}
+                    className={`px-4 py-2 font-semibold transition-colors border-b-2 ${
+                      activeTab === 'request'
+                        ? 'border-indigo-600 text-indigo-600'
+                        : 'border-transparent text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    ➕ Request Volunteer
+                  </button>
+                )}
               </div>
             </div>
           )}
@@ -1987,6 +2004,10 @@ export default function VolunteerDashboard({ initialEventId }: VolunteerDashboar
                 showHeader={false}
               />
             </div>
+          )}
+
+          {activeTab === 'request' && dashboardData.canSubmitIvsRequests && (
+            <IvsVolunteerRequestPanel eventId={dashboardData.event.id} />
           )}
         </div>
       </div>

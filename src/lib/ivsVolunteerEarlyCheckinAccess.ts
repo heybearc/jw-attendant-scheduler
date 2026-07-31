@@ -123,3 +123,87 @@ export async function verifyVolunteerIvsEarlyCheckinAccess(
     viewAsVolunteerId: getViewAsVolunteerId(req),
   })
 }
+
+/**
+ * IVS volunteer intake: only people on this event's IVS roster
+ * (active event_volunteers with ivsImportBatchId set). Staff View As supported.
+ */
+export async function verifyVolunteerOnIvsRosterForIds(
+  sessionUserId: string,
+  sessionRole: string | undefined,
+  eventId: string,
+  options?: { viewAsVolunteerId?: string | null },
+): Promise<EarlyCheckinAccessResult> {
+  const event = await prisma.events.findUnique({
+    where: { id: eventId },
+    select: { settings: true },
+  })
+
+  const ivsModuleEnabled = !!(event?.settings as any)?.modules?.ivsModule
+  if (!ivsModuleEnabled) {
+    return { ok: false, status: 403, message: 'IVS module is not enabled for this event' }
+  }
+
+  let volunteerId: string | null = null
+  const viewAs = options?.viewAsVolunteerId?.trim() || null
+  if (viewAs && canUseViewAs(sessionRole)) {
+    const exists = await prisma.volunteers.findUnique({
+      where: { id: viewAs },
+      select: { id: true },
+    })
+    volunteerId = exists?.id ?? null
+  } else {
+    volunteerId = await resolveVolunteerIdForSessionUser(sessionUserId, sessionRole || '')
+    if (!volunteerId) {
+      const byId = await prisma.volunteers.findUnique({
+        where: { id: sessionUserId },
+        select: { id: true },
+      })
+      volunteerId = byId?.id ?? null
+    }
+  }
+
+  if (!volunteerId) {
+    return {
+      ok: false,
+      status: 403,
+      message: 'Access denied — only IVS roster volunteers can submit requests',
+    }
+  }
+
+  const onIvs = await prisma.event_volunteers.findFirst({
+    where: {
+      eventId,
+      volunteerId,
+      isActive: true,
+      ivsImportBatchId: { not: null },
+    },
+    select: { id: true },
+  })
+
+  if (!onIvs) {
+    return {
+      ok: false,
+      status: 403,
+      message: 'Access denied — only IVS roster volunteers can submit requests',
+    }
+  }
+
+  return { ok: true, volunteerId }
+}
+
+export async function verifyVolunteerOnIvsRoster(
+  req: NextApiRequest,
+  sessionUserId: string,
+  sessionRole: string | undefined,
+  eventId: string,
+): Promise<EarlyCheckinAccessResult> {
+  return verifyVolunteerOnIvsRosterForIds(sessionUserId, sessionRole, eventId, {
+    viewAsVolunteerId: getViewAsVolunteerId(req),
+  })
+}
+
+/** Marker embedded in ivsApprovalNotes so submitters can list their own requests. */
+export function ivsRequestByMarker(volunteerId: string): string {
+  return `[requestedBy:${volunteerId}]`
+}

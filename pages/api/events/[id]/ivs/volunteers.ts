@@ -6,6 +6,7 @@ import { canViewIvsVolunteers, canManageIvsVolunteers } from '@/lib/eventAccess'
 import { earlyCheckinInclude, mapVolunteerEarlyCheckinPayload } from '@/lib/ivsEarlyCheckin'
 import { ivsPlaceholderEmail } from '@/lib/ivs'
 import { findOrCreateVolunteer } from '@/lib/volunteerHelpers'
+import { isValidPhoneNumber, normalizePhoneOrNull } from '@/lib/formatPhone'
 import { v4 as uuidv4 } from 'uuid'
 
 export default async function handler(
@@ -53,6 +54,8 @@ export default async function handler(
         firstName: base.firstName,
         lastName: base.lastName,
         congregation: base.congregation,
+        email: ev.volunteer?.email || '',
+        phone: ev.volunteer?.phone || '',
         approvalStatus: ev.ivsApprovalStatus || 'Pending',
         submittedBy: ev.ivsSubmittedBy || '',
         requestRound: ev.ivsRequestRound || 1,
@@ -115,6 +118,8 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
     const firstName = String(b.firstName ?? '').trim()
     const lastName = String(b.lastName ?? '').trim()
     const congregation = String(b.congregation ?? '').trim()
+    const email = String(b.email ?? '').trim().toLowerCase()
+    const phoneRaw = String(b.phone ?? '').trim()
     const requestRound = Math.max(1, parseInt(String(b.requestRound ?? '1'), 10) || 1)
     const departmentName =
       b.departmentName != null && String(b.departmentName).trim() !== ''
@@ -128,13 +133,30 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
       })
     }
 
+    if (!email || !email.includes('@')) {
+      return res.status(400).json({
+        success: false,
+        message: 'A valid email is required',
+      })
+    }
+
+    if (!phoneRaw || !isValidPhoneNumber(phoneRaw)) {
+      return res.status(400).json({
+        success: false,
+        message: 'A valid 10-digit phone number is required',
+      })
+    }
+
+    const phone = normalizePhoneOrNull(phoneRaw)
+    const resolvedEmail = email || ivsPlaceholderEmail(firstName, lastName)
+
     const existing = await prisma.event_volunteers.findFirst({
       where: {
         eventId,
         ivsImportBatchId: { not: null },
         volunteer: {
           email: {
-            equals: ivsPlaceholderEmail(firstName, lastName),
+            equals: resolvedEmail,
             mode: 'insensitive',
           },
         },
@@ -149,12 +171,20 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
       })
     }
 
-    const globalVolunteer = await findOrCreateVolunteer({
+    let globalVolunteer = await findOrCreateVolunteer({
       firstName,
       lastName,
-      email: ivsPlaceholderEmail(firstName, lastName),
+      email: resolvedEmail,
       congregation,
+      phone: phone || undefined,
     })
+
+    if (phone && globalVolunteer.phone !== phone) {
+      globalVolunteer = await prisma.volunteers.update({
+        where: { id: globalVolunteer.id },
+        data: { phone, updatedAt: new Date() },
+      })
+    }
 
     const fos = globalVolunteer.formsOfService
     const formsOfService = Array.isArray(fos) ? fos : typeof fos === 'string' ? [fos] : []

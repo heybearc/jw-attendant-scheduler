@@ -20,12 +20,16 @@ export default function MobileFeaturesHelp() {
         </p>
 
         <h3>Dashboard Features</h3>
-        <p>The mobile volunteer dashboard includes 4 main tabs:</p>
+        <p>The mobile volunteer dashboard includes these tabs:</p>
         <ul>
           <li><strong>📋 Assignments:</strong> View all your position assignments for the event</li>
           <li><strong>📅 Availability:</strong> Respond to availability requests from overseers</li>
           <li><strong>👥 Contacts:</strong> Quick access to oversight contacts with one-tap call/email</li>
           <li><strong>📄 Documents:</strong> View all published event documents</li>
+          <li>
+            <strong>➕ Request:</strong> If you are on the IVS list for the event, submit a new IVS volunteer
+            for staff approval (email and phone required)
+          </li>
         </ul>
 
         <h3>Header Actions</h3>

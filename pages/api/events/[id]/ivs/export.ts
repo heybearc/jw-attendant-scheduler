@@ -66,6 +66,8 @@ export default async function handler(
     const exportData = eventVolunteers.map(ev => ({
       NAME: `${ev.volunteer?.firstName || ''} ${ev.volunteer?.lastName || ''}`.trim(),
       CONGREGATION: ev.volunteer?.congregation || '',
+      EMAIL: ev.volunteer?.email || '',
+      PHONE: ev.volunteer?.phone || '',
       'APPROVAL STATUS': ev.ivsApprovalStatus || 'Pending',
       'APPROVAL DATE':
         (ev.ivsApprovalStatus || 'Pending') === 'Approved' && ev.ivsApprovedAt
@@ -82,6 +84,8 @@ export default async function handler(
     worksheet.columns = [
       { header: 'NAME', key: 'NAME', width: 25 },
       { header: 'CONGREGATION', key: 'CONGREGATION', width: 20 },
+      { header: 'EMAIL', key: 'EMAIL', width: 28 },
+      { header: 'PHONE', key: 'PHONE', width: 16 },
       { header: 'APPROVAL STATUS', key: 'APPROVAL STATUS', width: 15 },
       { header: 'APPROVAL DATE', key: 'APPROVAL DATE', width: 15 },
       { header: 'DEPARTMENT', key: 'DEPARTMENT', width: 20 },

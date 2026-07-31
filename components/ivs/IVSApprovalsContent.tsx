@@ -25,6 +25,8 @@ interface IVSVolunteer {
   firstName: string
   lastName: string
   congregation: string
+  email?: string
+  phone?: string
   approvalStatus: string
   submittedBy: string
   requestRound: number
@@ -103,6 +105,8 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
     firstName: string
     lastName: string
     congregation: string
+    email: string
+    phone: string
     requestRound: number
     departmentName?: string
   }) => {
@@ -382,7 +386,16 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
       const fullName = `${v.firstName} ${v.lastName}`.toLowerCase()
       const congregation = v.congregation.toLowerCase()
       const department = (v.submittedBy || '').toLowerCase()
-      if (!fullName.includes(search) && !congregation.includes(search) && !department.includes(search)) return false
+      const email = (v.email || '').toLowerCase()
+      const phone = (v.phone || '').toLowerCase()
+      if (
+        !fullName.includes(search) &&
+        !congregation.includes(search) &&
+        !department.includes(search) &&
+        !email.includes(search) &&
+        !phone.includes(search)
+      )
+        return false
     }
     return true
   })
@@ -587,7 +600,7 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
           enterKeyHint="search"
           value={searchTerm}
           onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-          placeholder="Search by name, congregation, or department..."
+          placeholder="Search by name, congregation, department, email, or phone..."
           className="w-full min-h-[44px] px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
         />
       </div>
@@ -757,6 +770,12 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
                       {volunteer.firstName} {volunteer.lastName}
                     </div>
                     <div className="text-sm text-gray-600 break-words">{volunteer.congregation}</div>
+                    {(volunteer.email || volunteer.phone) && (
+                      <div className="text-sm text-gray-600 break-words space-y-0.5">
+                        {volunteer.email ? <div>{volunteer.email}</div> : null}
+                        {volunteer.phone ? <div>{volunteer.phone}</div> : null}
+                      </div>
+                    )}
                     <div className="text-xs text-gray-500">
                       {volunteer.submittedBy || '—'} · Request {volunteer.requestRound}
                     </div>
@@ -860,6 +879,8 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
                   >
                     Congregation {sortField === 'congregation' && (sortDirection === 'asc' ? '↑' : '↓')}
                   </th>
+                  <th className="px-4 py-2 border text-left">Email</th>
+                  <th className="px-4 py-2 border text-left">Phone</th>
                   <th
                     className="px-4 py-2 border text-left cursor-pointer hover:bg-gray-100"
                     onClick={() => handleSort('submittedBy')}
@@ -903,6 +924,8 @@ export default function IVSApprovalsContent({ event, canEdit }: IVSApprovalsCont
                       {volunteer.firstName} {volunteer.lastName}
                     </td>
                     <td className="px-4 py-2 border">{volunteer.congregation}</td>
+                    <td className="px-4 py-2 border text-sm break-all">{volunteer.email || '—'}</td>
+                    <td className="px-4 py-2 border text-sm whitespace-nowrap">{volunteer.phone || '—'}</td>
                     <td className="px-4 py-2 border">{volunteer.submittedBy}</td>
                     <td className="px-4 py-2 border">Request {volunteer.requestRound}</td>
                     <td className="px-4 py-2 border">

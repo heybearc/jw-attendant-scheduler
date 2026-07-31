@@ -4,6 +4,7 @@ import { formatCalendarDateLabel } from '@/lib/calendarDate'
 import Link from 'next/link'
 import PWABottomNav from './PWABottomNav'
 import VolunteerPdfViewer from './VolunteerPdfViewer'
+import IvsVolunteerRequestPanel from './IvsVolunteerRequestPanel'
 import { displayPhone } from '@/lib/formatPhone'
 import { notifyAlert } from '../lib/ui/toast'
 
@@ -104,6 +105,8 @@ interface MobileVolunteerDashboardProps {
   chatHref?: string
   /** When true, Check-In is available in the bottom nav for this event */
   showEarlyCheckIn?: boolean
+  /** IVS roster people can submit new volunteer requests */
+  showIvsRequest?: boolean
   /** When staff simulates a volunteer, preserve view-as on links to Enter Count */
   enterCountViewAsVolunteerId?: string | null
 }
@@ -125,12 +128,15 @@ export default function MobileVolunteerDashboard({
   chatUnreadCount = 0,
   chatHref = '/volunteer/chat',
   showEarlyCheckIn = false,
+  showIvsRequest = false,
   enterCountViewAsVolunteerId = null
 }: MobileVolunteerDashboardProps) {
   const enterCountViewAsQuery = enterCountViewAsVolunteerId
     ? `?viewAsVolunteerId=${enterCountViewAsVolunteerId}`
     : ''
-  const [activeTab, setActiveTab] = useState<'assignments' | 'availability' | 'contacts' | 'documents'>('assignments')
+  const [activeTab, setActiveTab] = useState<
+    'assignments' | 'availability' | 'contacts' | 'documents' | 'request'
+  >('assignments')
   const [expandedAssignment, setExpandedAssignment] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
   const [respondingToRequest, setRespondingToRequest] = useState<string | null>(null)
@@ -317,6 +323,18 @@ export default function MobileVolunteerDashboard({
               </span>
             )}
           </button>
+          {showIvsRequest && (
+            <button
+              onClick={() => setActiveTab('request')}
+              className={`flex-1 py-3 text-sm font-medium transition-all ${
+                activeTab === 'request'
+                  ? 'bg-white bg-opacity-20 border-b-2 border-white'
+                  : 'text-blue-100 hover:bg-white hover:bg-opacity-10'
+              }`}
+            >
+              ➕ Request
+            </button>
+          )}
         </div>
       </div>
 
@@ -724,6 +742,10 @@ export default function MobileVolunteerDashboard({
               ))
             )}
           </div>
+        )}
+
+        {activeTab === 'request' && showIvsRequest && (
+          <IvsVolunteerRequestPanel eventId={event.id} />
         )}
       </div>
 

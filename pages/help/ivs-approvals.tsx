@@ -26,6 +26,12 @@ export default function IVSApprovalsHelp() {
               manage early check-in eligibility, and check volunteers in on the day of the event.
             </p>
             <p className="text-gray-700 mb-4">
+              People already on the IVS list can also submit new volunteers from their volunteer dashboard
+              (<strong>Request Volunteer</strong>). Those requests arrive as <strong>Pending</strong> for
+              staff to approve. Email and phone are required on dashboard requests and are shown on the
+              Approvals list.
+            </p>
+            <p className="text-gray-700 mb-4">
               On a phone or tablet, <strong>Approvals</strong> uses a card layout (no sideways scrolling),
               and <strong>Early Check-In</strong> uses large buttons—handy at the registration table.
               On a wider screen, Approvals still shows the full table.
@@ -75,6 +81,12 @@ export default function IVSApprovalsHelp() {
               <li><strong>NAME</strong> — Full name (first and last)</li>
               <li><strong>CONGREGATION</strong> — Home congregation</li>
             </ul>
+
+            <h3 className="text-xl font-semibold text-gray-700 mb-3">Add volunteer (manual)</h3>
+            <p className="text-gray-700 mb-4">
+              On Approvals, <strong>Add volunteer</strong> requires email and phone in addition to name and
+              congregation. Department is optional. The Approvals table and export include email and phone.
+            </p>
 
             <h3 className="text-xl font-semibold text-gray-700 mb-3">Optional columns</h3>
             <ul className="list-disc list-inside space-y-2 text-gray-700 mb-6 ml-4">

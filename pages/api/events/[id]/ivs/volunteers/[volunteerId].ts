@@ -54,6 +54,8 @@ export default async function handler(
       firstName,
       lastName,
       congregation,
+      email,
+      phone,
       ivsApprovalStatus,
       ivsApprovalNotes,
       ivsDeniedReason,
@@ -74,19 +76,52 @@ export default async function handler(
       return res.status(404).json({ success: false, message: 'IVS volunteer not found in event' })
     }
 
-    // Update global volunteer record if name/congregation changed
-    if ((firstName || lastName || congregation) && eventVolunteer.volunteerId) {
+    // Update global volunteer record if identity/contact fields changed
+    if (
+      (firstName || lastName || congregation || email !== undefined || phone !== undefined) &&
+      eventVolunteer.volunteerId
+    ) {
       const volunteer = await prisma.volunteers.findUnique({
         where: { id: eventVolunteer.volunteerId }
       })
 
       if (volunteer) {
+        const { normalizePhoneOrNull, isValidPhoneNumber } = await import('@/lib/formatPhone')
+        const phoneUpdate =
+          phone !== undefined
+            ? (() => {
+                const raw = String(phone ?? '').trim()
+                if (!raw) return null
+                if (!isValidPhoneNumber(raw)) {
+                  throw Object.assign(new Error('Enter a valid 10-digit phone number'), {
+                    statusCode: 400,
+                  })
+                }
+                return normalizePhoneOrNull(raw)
+              })()
+            : undefined
+
+        const emailUpdate =
+          email !== undefined
+            ? (() => {
+                const normalized = String(email ?? '').trim().toLowerCase()
+                if (!normalized || !normalized.includes('@')) {
+                  throw Object.assign(new Error('Enter a valid email address'), {
+                    statusCode: 400,
+                  })
+                }
+                return normalized
+              })()
+            : undefined
+
         await prisma.volunteers.update({
           where: { id: eventVolunteer.volunteerId },
           data: {
             ...(firstName && { firstName }),
             ...(lastName && { lastName }),
             ...(congregation && { congregation }),
+            ...(emailUpdate !== undefined && { email: emailUpdate }),
+            ...(phoneUpdate !== undefined && { phone: phoneUpdate }),
             updatedAt: new Date()
           }
         })
@@ -164,7 +199,13 @@ export default async function handler(
       message: 'Volunteer updated successfully'
     })
 
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.statusCode === 400) {
+      return res.status(400).json({
+        success: false,
+        message: error.message || 'Invalid request',
+      })
+    }
     // Error logged by handleApiError
     return res.status(500).json({
       success: false,

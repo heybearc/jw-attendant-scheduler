@@ -2,12 +2,15 @@ import { useState } from 'react'
 import { ConventionDay } from '@prisma/client'
 import { EarlyEntrySchedule } from '@/lib/ivsEarlyCheckin'
 import { EarlyEntryDayControls } from './ivs/EarlyEntryDayControls'
+import { formatPhoneNumber, isValidPhoneNumber } from '@/lib/formatPhone'
 
 interface IVSVolunteer {
   id: string
   firstName: string
   lastName: string
   congregation: string
+  email?: string
+  phone?: string
   approvalStatus: string
   submittedBy: string
   requestRound: number
@@ -29,6 +32,8 @@ export default function EditVolunteerModal({ volunteer, onClose, onSave }: EditV
   const [firstName, setFirstName] = useState(volunteer.firstName)
   const [lastName, setLastName] = useState(volunteer.lastName)
   const [congregation, setCongregation] = useState(volunteer.congregation)
+  const [email, setEmail] = useState(volunteer.email || '')
+  const [phone, setPhone] = useState(volunteer.phone || '')
   const [approvalStatus, setApprovalStatus] = useState(volunteer.approvalStatus)
   const [notes, setNotes] = useState(volunteer.notes || '')
   const [deniedReason, setDeniedReason] = useState('')
@@ -41,13 +46,27 @@ export default function EditVolunteerModal({ volunteer, onClose, onSave }: EditV
   )
   const [requestRound, setRequestRound] = useState(volunteer.requestRound)
   const [department, setDepartment] = useState(volunteer.submittedBy)
+  const [error, setError] = useState('')
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    const em = email.trim().toLowerCase()
+    const ph = phone.trim()
+    if (!em || !em.includes('@')) {
+      setError('Enter a valid email address')
+      return
+    }
+    if (!ph || !isValidPhoneNumber(ph)) {
+      setError('Enter a valid 10-digit phone number')
+      return
+    }
+    setError('')
     onSave({
       firstName,
       lastName,
       congregation,
+      email: em,
+      phone: ph,
       ivsApprovalStatus: approvalStatus,
       ivsApprovalNotes: notes,
       ...(approvalStatus === 'Not Approved' && deniedReason && { ivsDeniedReason: deniedReason }),
@@ -94,6 +113,32 @@ export default function EditVolunteerModal({ volunteer, onClose, onSave }: EditV
               className="w-full px-3 py-2 border rounded-md"
               required
             />
+          </div>
+
+          {error ? <p className="mb-3 text-sm text-red-600">{error}</p> : null}
+
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Email *</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-3 py-2 border rounded-md"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Phone *</label>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(formatPhoneNumber(e.target.value))}
+                className="w-full px-3 py-2 border rounded-md"
+                required
+                placeholder="(555) 123-4567"
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4 mb-4">

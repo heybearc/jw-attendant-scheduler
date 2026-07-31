@@ -246,6 +246,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     )
     const ivsTeamMember = earlyAccess.ok ? eventVolunteer : null
 
+    const { verifyVolunteerOnIvsRosterForIds } = await import('@/lib/ivsVolunteerEarlyCheckinAccess')
+    const ivsRosterAccess = await verifyVolunteerOnIvsRosterForIds(
+      session.user.id,
+      session.user.role,
+      eid,
+      { viewAsVolunteerId: getViewAsVolunteerId(req) || vid }
+    )
+    const canSubmitIvsRequests = ivsRosterAccess.ok
+
     // Count groups where this volunteer is primary or secondary counter (one combined entry per group).
     const volunteerGroups = await prisma.count_session_groups.findMany({
       where: {
@@ -430,6 +439,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           status: event.status
         },
         isIVSTeamMember: !!ivsTeamMember,
+        canSubmitIvsRequests,
         assignments,
         activeCountGroups: volunteerGroups.map((g) => ({
           sessionId: g.countSessionId,

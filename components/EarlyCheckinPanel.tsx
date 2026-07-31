@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, type CSSProperties } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { ConventionDay } from '@prisma/client'
 import {
   conventionDayLabel,
@@ -229,10 +229,7 @@ export default function EarlyCheckinPanel({
       : 'Today (not a convention day)'
 
   return (
-    <div
-      className="h-full min-h-0 flex flex-col"
-      style={{ WebkitOverflowScrolling: 'touch' } as CSSProperties}
-    >
+    <div className="flex flex-col">
       {showHeader && (
         <div
           className="bg-blue-600 text-white p-4 sticky top-0 z-10 shadow-lg"
@@ -344,7 +341,7 @@ export default function EarlyCheckinPanel({
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto overscroll-contain p-4 pb-28">
+      <div className={`p-4 ${showHeader ? 'pb-28' : ''}`}>
         {loadError ? (
           <div className="text-center py-8 text-red-600 px-4">{loadError}</div>
         ) : loading ? (

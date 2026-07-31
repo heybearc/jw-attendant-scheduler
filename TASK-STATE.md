@@ -1,8 +1,8 @@
 # TheoShift Task State
 
-**Last updated:** 2026-07-30  
+**Last updated:** 2026-07-31  
 **Branch:** `main`  
-**Production:** **LIVE** **GREEN** `10.92.3.22` · **STANDBY** **BLUE** `10.92.3.24` — both **v4.29.13**.
+**Production:** **LIVE** **BLUE** `10.92.3.24` · **STANDBY** **GREEN** `10.92.3.22` — both **v4.29.14**.
 
 ---
 
@@ -12,10 +12,11 @@
 
 ### What I'm doing right now
 
-Shipped **v4.29.13** (document publish roster-only). Resume Positions + Volunteers mobile audit next.
+Shipped **v4.29.14** (early check-in scroll on tablet/mobile). Resume Positions + Volunteers mobile audit next.
 
 ### Recent completions
 
+- ✅ **v4.29.14** — Early check-in list reachable when scrolling on tablet/mobile
 - ✅ **v4.29.13** — Document publish targets Volunteers roster only (not IVS-only)
 - ✅ **v4.29.12** — My Profile + secure self-service account deletion (FB-038)
 - ✅ **v4.29.11** — Cross-oversight fallback for auto-assign + full roster manual assign
@@ -49,6 +50,7 @@ Open Positions on a narrow viewport and continue the mobile audit; note any hori
 
 **Recently addressed (don’t regress)**
 
+- ~~Early check-in clipped / not scrollable on tablet~~ — **v4.29.14**.
 - ~~Document publish included IVS-only~~ — **v4.29.13** roster-only publish modal + API.
 - ~~Mobile Early Check-In greyed / Access Denied for roster~~ — **v4.29.5–v4.29.7**.
 - ~~Browser alert/confirm popups~~ — **v4.22.0** uses in-app toasts and dialogs app-wide.
@@ -63,9 +65,9 @@ Open Positions on a narrow viewport and continue the mobile audit; note any hori
 
 ## Session snapshot — recent `main` commits
 
+- `b9746682` — Release v4.29.14 — Early check-in scroll on tablet/mobile
+- `b953430f` — fix: early check-in list reachable on tablet and mobile
 - `724f3021` — Release v4.29.13 — Document publish roster-only
-- `bbd0b660` — fix: publish documents to Volunteers roster only
-- `b2e072eb` — Release v4.29.12 — My Profile and secure account deletion
 
 ---
 

@@ -12,29 +12,20 @@
 
 ### What I'm doing right now
 
-Shipped **v4.30.1** (Request Volunteer for whole IVS event roster). Resume Positions + Volunteers mobile audit next.
+Shipped IVS volunteer intake (**v4.30.0** / **v4.30.1**). Resume Positions + Volunteers mobile audit next.
 
 ### Recent completions
 
-- ✅ **v4.30.1** — Request Volunteer available to everyone on an IVS event roster (same rule as Early Check-In)
-- ✅ **v4.30.0** — IVS volunteers can request new people from the dashboard; Approvals show email/phone
+- ✅ **v4.30.1** — Request Volunteer for whole IVS event roster (same rule as Early Check-In)
+- ✅ **v4.30.0** — IVS dashboard intake (Pending requests + email/phone on Approvals/export)
 - ✅ **v4.29.14** — Early check-in list reachable when scrolling on tablet/mobile
 - ✅ **v4.29.13** — Document publish targets Volunteers roster only (not IVS-only)
 - ✅ **v4.29.12** — My Profile + secure self-service account deletion (FB-038)
-- ✅ **v4.29.11** — Cross-oversight fallback for auto-assign + full roster manual assign
-- ✅ **v4.29.10** — Auto-assign beyond 2 shifts so Sunday (etc.) can fill
-- ✅ **v4.29.9** — Multi-day shift `shiftDate` + day-aware conflicts; help FAQ
-- ✅ **v4.29.8** — Shift-level overseer/keyman assign; bulk set/update volunteers needed
-- ✅ **v4.29.7** — Mobile Early Check-In hardening + staff Check-In route; 5/5 browser matrix on STANDBY
-- ✅ **v4.29.6** — Roster members can use Early Check-In (no position assignment required)
-- ✅ **v4.29.5** — Mobile Check-In nav `eventId` + access alignment
-- ✅ **v4.29.4** — Safe bulk email: roster-only, confirm count, throttle, abort
-- ✅ **v4.29.3** — Promote IVS-only people onto Volunteers roster
 
 ### Next steps
 
 1. Continue **mobile audit**: Positions + Volunteers (narrow viewport).
-2. Triage new feedback.
+2. Triage new feedback (`/admin/feedback` or `scripts/ssh-query-feedback.sh new`).
 
 ## Exact next command
 
@@ -52,6 +43,7 @@ Open Positions on a narrow viewport and continue the mobile audit; note any hori
 
 **Recently addressed (don’t regress)**
 
+- ~~Request Volunteer tab hidden for real IVS team~~ — **v4.30.1** (roster gate, not import-batch-only).
 - ~~Early check-in clipped / not scrollable on tablet~~ — **v4.29.14**.
 - ~~Document publish included IVS-only~~ — **v4.29.13** roster-only publish modal + API.
 - ~~Mobile Early Check-In greyed / Access Denied for roster~~ — **v4.29.5–v4.29.7**.
@@ -67,15 +59,16 @@ Open Positions on a narrow viewport and continue the mobile audit; note any hori
 
 ## Session snapshot — recent `main` commits
 
-- `b9746682` — Release v4.29.14 — Early check-in scroll on tablet/mobile
-- `b953430f` — fix: early check-in list reachable on tablet and mobile
-- `724f3021` — Release v4.29.13 — Document publish roster-only
+- `4750f4c6` — chore: mark production on v4.30.1 after ship
+- `48d0e85f` — Release v4.30.1 — Request Volunteer for whole IVS event roster
+- `1d8ed414` — Release v4.30.0 — IVS volunteer intake from dashboard
+- `753e58fa` — feat: IVS volunteer intake from dashboard
 
 ---
 
 ## Feedback triage (this session)
 
-- **Resolved:** 0 · **Promoted:** 0 · **Triaged:** 0 new
+- **Resolved:** 0 · **Promoted:** 0 · **Triaged:** 0 new (admin `new` query empty)
 
 ---
 

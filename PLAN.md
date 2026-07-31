@@ -1,8 +1,8 @@
 # TheoShift Plan
 
-**Last updated:** 2026-07-28  
+**Last updated:** 2026-07-31  
 **Current phase:** Feature Development + Platform Infrastructure  
-**Status:** **v4.29.7 LIVE** (GREEN). Mobile Early Check-In path hardened; Positions Option C shipped earlier (v4.29.0). Full Positions redesign remains backlog.
+**Status:** **v4.30.1 LIVE** (BLUE). IVS dashboard intake shipped; mobile audit continues (Positions + Volunteers). Full Positions redesign remains backlog.
 
 ---
 
@@ -25,6 +25,13 @@ This follows the usual small-team pattern: **one system of record in the app**, 
 ### Active Work
 - **Mobile readiness across TheoShift** — Positions + Volunteers pages next (narrow viewport). Early Check-In volunteer path done through **v4.29.7**.
 - **Positions Send Notifications safety** — Match v4.29.4 bulk-email pattern (roster-only confirm, throttle, abort).
+
+### Recently Completed (2026-07-31)
+- ✅ **v4.30.1** — Request Volunteer eligibility = active roster on IVS-enabled event (aligned with Early Check-In; **D-TS-046**)
+- ✅ **v4.30.0** — IVS volunteer intake from dashboard (Pending → Approvals; email/phone required; staff columns + export)
+- ✅ **v4.29.14** — Early check-in list reachable when scrolling on tablet/mobile
+- ✅ **v4.29.13** — Document publish targets Volunteers roster only (not IVS-only)
+- ✅ **v4.29.12** — My Profile + secure self-service account deletion (FB-038)
 
 ### Recently Completed (2026-07-27 → 2026-07-28)
 - ✅ **v4.29.7** — Mobile Early Check-In UI harden (touch/safe-area/16px search) + staff `/volunteer/early-checkin` middleware; Playwright mobile matrix 5/5 on STANDBY
@@ -351,8 +358,8 @@ Feedback **FB-036** closed as deferred; all scope lives in this section until an
 
 ## Version History
 
-**Current:** v4.22.0 (toasts + inline dialogs; LIVE + STANDBY synced)  
-**Previous:** v4.21.9 (IVS access/bulk)  
+**Current:** v4.30.1 (IVS dashboard intake; LIVE BLUE + STANDBY GREEN synced)  
+**Previous:** v4.30.0 (IVS intake initial ship) / v4.29.14 (early check-in scroll)  
 **Baseline:** v4.0.0 (production-ready platform)
 
 ---

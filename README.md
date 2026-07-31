@@ -275,6 +275,7 @@ For issues or questions:
 4. Contact the project maintainer for deployment access
 
 ## 📝 Version History
+- **v4.29.14** (2026-07-31) - Early check-in list reachable when scrolling on tablet/mobile
 - **v4.29.13** (2026-07-30) - Document publish targets Volunteers roster only (not IVS-only)
 - **v4.29.12** (2026-07-29) - My Profile and secure self-service account deletion
 - **v4.29.11** (2026-07-28) - Cross-oversight capacity fallback (auto + manual assign)

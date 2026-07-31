@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-07-31  
 **Branch:** `main`  
-**Production:** **LIVE** **GREEN** `10.92.3.22` · **STANDBY** **BLUE** `10.92.3.24` — both **v4.30.0**.
+**Production:** **LIVE** **BLUE** `10.92.3.24` · **STANDBY** **GREEN** `10.92.3.22` — both **v4.30.1**.
 
 ---
 
@@ -12,10 +12,11 @@
 
 ### What I'm doing right now
 
-Shipped **v4.30.0** (IVS volunteer intake from dashboard). Resume Positions + Volunteers mobile audit next.
+Shipped **v4.30.1** (Request Volunteer for whole IVS event roster). Resume Positions + Volunteers mobile audit next.
 
 ### Recent completions
 
+- ✅ **v4.30.1** — Request Volunteer available to everyone on an IVS event roster (same rule as Early Check-In)
 - ✅ **v4.30.0** — IVS volunteers can request new people from the dashboard; Approvals show email/phone
 - ✅ **v4.29.14** — Early check-in list reachable when scrolling on tablet/mobile
 - ✅ **v4.29.13** — Document publish targets Volunteers roster only (not IVS-only)

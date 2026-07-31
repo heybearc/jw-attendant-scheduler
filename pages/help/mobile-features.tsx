@@ -27,8 +27,8 @@ export default function MobileFeaturesHelp() {
           <li><strong>👥 Contacts:</strong> Quick access to oversight contacts with one-tap call/email</li>
           <li><strong>📄 Documents:</strong> View all published event documents</li>
           <li>
-            <strong>➕ Request:</strong> If you are on the IVS list for the event, submit a new IVS volunteer
-            for staff approval (email and phone required)
+            <strong>➕ Request:</strong> When the event uses IVS, submit a new IVS volunteer for staff
+            approval (email and phone required)
           </li>
         </ul>
 

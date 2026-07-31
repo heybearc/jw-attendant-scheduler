@@ -125,8 +125,9 @@ export async function verifyVolunteerIvsEarlyCheckinAccess(
 }
 
 /**
- * IVS volunteer intake: only people on this event's IVS roster
- * (active event_volunteers with ivsImportBatchId set). Staff View As supported.
+ * IVS volunteer intake: anyone active on the roster of an IVS-enabled event,
+ * matching Early Check-In eligibility. A resolvable volunteers.id is required
+ * because submissions are attributed to the submitter. Staff View As supported.
  */
 export async function verifyVolunteerOnIvsRosterForIds(
   sessionUserId: string,
@@ -167,25 +168,24 @@ export async function verifyVolunteerOnIvsRosterForIds(
     return {
       ok: false,
       status: 403,
-      message: 'Access denied — only IVS roster volunteers can submit requests',
+      message: 'Access denied — only people on this event roster can submit requests',
     }
   }
 
-  const onIvs = await prisma.event_volunteers.findFirst({
+  const onEvent = await prisma.event_volunteers.findFirst({
     where: {
       eventId,
       volunteerId,
       isActive: true,
-      ivsImportBatchId: { not: null },
     },
     select: { id: true },
   })
 
-  if (!onIvs) {
+  if (!onEvent) {
     return {
       ok: false,
       status: 403,
-      message: 'Access denied — only IVS roster volunteers can submit requests',
+      message: 'Access denied — only people on this event roster can submit requests',
     }
   }
 

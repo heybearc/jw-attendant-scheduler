@@ -26,10 +26,10 @@ export default function IVSApprovalsHelp() {
               manage early check-in eligibility, and check volunteers in on the day of the event.
             </p>
             <p className="text-gray-700 mb-4">
-              People already on the IVS list can also submit new volunteers from their volunteer dashboard
-              (<strong>Request Volunteer</strong>). Those requests arrive as <strong>Pending</strong> for
-              staff to approve. Email and phone are required on dashboard requests and are shown on the
-              Approvals list.
+              When the IVS module is on, anyone on the event roster can submit new volunteers from their
+              volunteer dashboard (<strong>Request Volunteer</strong>) — the same people who can use
+              Early Check-In. Those requests arrive as <strong>Pending</strong> for staff to approve.
+              Email and phone are required on dashboard requests and are shown on the Approvals list.
             </p>
             <p className="text-gray-700 mb-4">
               On a phone or tablet, <strong>Approvals</strong> uses a card layout (no sideways scrolling),

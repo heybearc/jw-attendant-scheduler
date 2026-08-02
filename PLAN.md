@@ -1,8 +1,8 @@
 # TheoShift Plan
 
-**Last updated:** 2026-07-31  
+**Last updated:** 2026-08-02  
 **Current phase:** Feature Development + Platform Infrastructure  
-**Status:** **v4.30.1 LIVE** (BLUE). IVS dashboard intake shipped; mobile audit continues (Positions + Volunteers). Full Positions redesign remains backlog.
+**Status:** **v4.31.0 LIVE** (GREEN). Near-term gaps shipped (availability filter, assign-time edits, safer notifications, mobile polish). Full Positions redesign remains backlog.
 
 ---
 

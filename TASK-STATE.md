@@ -1,35 +1,33 @@
 # TheoShift Task State
 
-**Last updated:** 2026-07-31  
+**Last updated:** 2026-08-02  
 **Branch:** `main`  
-**Production:** **LIVE** **BLUE** `10.92.3.24` · **STANDBY** **GREEN** `10.92.3.22` — both **v4.30.1**.
+**Production:** **LIVE** **GREEN** `10.92.3.22` · **STANDBY** **BLUE** `10.92.3.24` — both **v4.31.0**.
 
 ---
 
 ## Current Task
 
-**Mobile readiness (Positions / Volunteers)** — NEXT
+**Idle after ship** — next: triage feedback or continue Positions redesign backlog when prioritized.
 
 ### What I'm doing right now
 
-Shipped IVS volunteer intake (**v4.30.0** / **v4.30.1**). Resume Positions + Volunteers mobile audit next.
+Shipped **v4.31.0** (availability filter, assign-time edits, safer Positions notifications, mobile polish, chat push copy).
 
 ### Recent completions
 
-- ✅ **v4.30.1** — Request Volunteer for whole IVS event roster (same rule as Early Check-In)
+- ✅ **v4.31.0** — Volunteers availability filter; edit shift times in assign flow; Positions Send Notifications throttle/abort; chat push copy; mobile polish
+- ✅ **v4.30.1** — Request Volunteer for whole IVS event roster
 - ✅ **v4.30.0** — IVS dashboard intake (Pending requests + email/phone on Approvals/export)
-- ✅ **v4.29.14** — Early check-in list reachable when scrolling on tablet/mobile
-- ✅ **v4.29.13** — Document publish targets Volunteers roster only (not IVS-only)
-- ✅ **v4.29.12** — My Profile + secure self-service account deletion (FB-038)
 
 ### Next steps
 
-1. Continue **mobile audit**: Positions + Volunteers (narrow viewport).
-2. Triage new feedback (`/admin/feedback` or `scripts/ssh-query-feedback.sh new`).
+1. Triage new feedback (`/admin/feedback` or `scripts/ssh-query-feedback.sh new`).
+2. Positions redesign / native chat remain backlog (deferred).
 
 ## Exact next command
 
-Open Positions on a narrow viewport and continue the mobile audit; note any horizontal-scroll or &lt;44px tap issues.
+`scripts/ssh-query-feedback.sh new` — or pick next backlog item from PLAN.md.
 
 ---
 
@@ -37,18 +35,14 @@ Open Positions on a narrow viewport and continue the mobile audit; note any hori
 
 **Current**
 
-- **Chat push banner** — Expected when Web Push is unavailable (e.g. iPhone Safari not installed to Home Screen). Chat still works via polling; copy always mentions iPhone even on unsupported desktop browsers.
 - **PIN column** — Still in DB; magic links are primary UI. Planned cleanup per backlog (legacy note).
-- **Positions Send Notifications** — Still lacks confirm/throttle/abort (other bulk emails fixed in v4.29.4).
 
 **Recently addressed (don’t regress)**
 
-- ~~Request Volunteer tab hidden for real IVS team~~ — **v4.30.1** (roster gate, not import-batch-only).
-- ~~Early check-in clipped / not scrollable on tablet~~ — **v4.29.14**.
-- ~~Document publish included IVS-only~~ — **v4.29.13** roster-only publish modal + API.
-- ~~Mobile Early Check-In greyed / Access Denied for roster~~ — **v4.29.5–v4.29.7**.
-- ~~Browser alert/confirm popups~~ — **v4.22.0** uses in-app toasts and dialogs app-wide.
-- ~~Phantom count assignments~~ — **D-TS-043**; suggested rows are draft for volunteer surfaces.
+- ~~Positions Send Notifications lacking confirm/throttle/abort~~ — **v4.31.0**.
+- ~~Chat push banner always mentions iPhone~~ — **v4.31.0**.
+- ~~Volunteers no availability filter~~ — **v4.31.0**.
+- ~~Request Volunteer tab hidden for real IVS team~~ — **v4.30.1**.
 
 **Infrastructure**
 
@@ -59,16 +53,17 @@ Open Positions on a narrow viewport and continue the mobile audit; note any hori
 
 ## Session snapshot — recent `main` commits
 
-- `4750f4c6` — chore: mark production on v4.30.1 after ship
-- `48d0e85f` — Release v4.30.1 — Request Volunteer for whole IVS event roster
-- `1d8ed414` — Release v4.30.0 — IVS volunteer intake from dashboard
-- `753e58fa` — feat: IVS volunteer intake from dashboard
+- `9704574d` — Release v4.31.0
+- `e9ad8c13` — feat: mobile polish and in-place shift time edits on assign
+- `e426d000` — feat: filter Volunteers roster by availability status
+- `bacfdf93` — fix: platform-aware chat push unsupported banner copy
+- `a2face1f` — fix: throttle and abort Positions assignment notification sends
 
 ---
 
 ## Feedback triage (this session)
 
-- **Resolved:** 0 · **Promoted:** 0 · **Triaged:** 0 new (admin `new` query empty)
+- **Resolved:** 0 · **Promoted:** 0 · **Triaged:** 0
 
 ---
 

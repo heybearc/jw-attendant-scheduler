@@ -11,7 +11,12 @@ import { sortShiftsByTime } from '../../lib/shiftSort'
 import { createPositionService } from '../../lib/positionService'
 import { notifyAlert, toast } from '../../lib/ui/toast'
 import { appConfirm } from '../../lib/ui/confirm'
+import {
+  buildVolunteerAssignmentMap,
+  getConflictsForShift,
+} from '../../hooks/useConflicts'
 import ShiftInlineEditor from '../ShiftInlineEditor'
+import CreatePositionModal from '../CreatePositionModal'
 
 function formatTime12Hour(time24: string): string {
   if (!time24) return ''
@@ -29,7 +34,14 @@ type Assignment = {
   role: string
   volunteer?: { id: string; firstName: string; lastName: string } | null
   attendant?: { id: string; firstName: string; lastName: string } | null
-  shift?: { id: string } | null
+  shift?: {
+    id: string
+    name: string
+    startTime?: string | null
+    endTime?: string | null
+    isAllDay: boolean
+    shiftDate?: string | Date | null
+  } | null
 }
 
 type Shift = {
@@ -107,6 +119,16 @@ export default function PositionsDayBoard({
   const [bulkDay, setBulkDay] = useState(eventDateKeys[0] || '')
   const [settingDayKey, setSettingDayKey] = useState<string | null>(null)
   const [bulkSettingDay, setBulkSettingDay] = useState(false)
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [createForm, setCreateForm] = useState({
+    positionNumber: 1,
+    name: '',
+    area: '',
+    description: '',
+  })
+  const [creatingPosition, setCreatingPosition] = useState(false)
+  const [addShiftPosition, setAddShiftPosition] = useState<Position | null>(null)
+  const [savingNewShift, setSavingNewShift] = useState(false)
 
   const undatedShiftCount = useMemo(() => {
     let n = 0
@@ -240,8 +262,124 @@ export default function PositionsDayBoard({
     setSelectedUndated(new Set(rows.map(({ position, shift }) => `${position.id}:${shift.id}`)))
   }
 
+  const assignmentMap = useMemo(
+    () => buildVolunteerAssignmentMap(positions),
+    [positions]
+  )
+
+  const conflictMap = useMemo(() => {
+    if (!assignTarget) return new Map()
+    return getConflictsForShift(
+      attendants.map((a) => a.id),
+      assignTarget.shift,
+      assignmentMap
+    )
+  }, [assignTarget, attendants, assignmentMap])
+
+  const nextPositionNumber = useMemo(() => {
+    const max = positions.reduce(
+      (acc, p) => Math.max(acc, p.positionNumber || 0),
+      0
+    )
+    return max + 1
+  }, [positions])
+
+  const openCreatePosition = () => {
+    setCreateForm({
+      positionNumber: nextPositionNumber,
+      name: '',
+      area: '',
+      description: '',
+    })
+    setShowCreateModal(true)
+  }
+
+  const handleCreatePosition = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!createForm.name.trim()) {
+      notifyAlert('Position name is required')
+      return
+    }
+    setCreatingPosition(true)
+    try {
+      const res = await fetch(`/api/events/${eventId}/positions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(createForm),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        notifyAlert(data.error || 'Failed to create position')
+        return
+      }
+      const created = data.data || data.position || data
+      toast.success('Position created')
+      setShowCreateModal(false)
+      if (created?.id) {
+        setAddShiftPosition({
+          id: created.id,
+          name: created.name || createForm.name,
+          positionNumber: created.positionNumber || createForm.positionNumber,
+          isActive: true,
+          area: createForm.area || null,
+          shifts: [],
+          assignments: [],
+        })
+      } else {
+        router.reload()
+      }
+    } catch {
+      notifyAlert('Failed to create position')
+    } finally {
+      setCreatingPosition(false)
+    }
+  }
+
+  const handleCreateShift = async (values: {
+    name: string
+    startTime: string
+    endTime: string
+    isAllDay: boolean
+    volunteersNeeded: number
+    shiftDate: string | null
+  }) => {
+    if (!addShiftPosition) return
+    setSavingNewShift(true)
+    try {
+      const ok = await positionService.createShift(addShiftPosition.id, {
+        name: values.name,
+        startTime: values.isAllDay ? null : values.startTime || null,
+        endTime: values.isAllDay ? null : values.endTime || null,
+        isAllDay: values.isAllDay,
+        volunteersNeeded: values.volunteersNeeded,
+        shiftDate: values.shiftDate,
+      })
+      if (!ok) {
+        notifyAlert('Failed to create shift')
+        return
+      }
+      toast.success('Shift added')
+      setAddShiftPosition(null)
+      router.reload()
+    } catch {
+      notifyAlert('Failed to create shift')
+    } finally {
+      setSavingNewShift(false)
+    }
+  }
+
   const handleAssign = async (volunteerId: string) => {
     if (!assignTarget) return
+    const conflict = conflictMap.get(volunteerId)
+    if (conflict?.hasConflict) {
+      const confirmed = await appConfirm({
+        title: 'Scheduling conflict',
+        message: `${conflict.message}\n\nAssign anyway? Coordinators can override conflicts.`,
+        confirmLabel: 'Assign anyway',
+        cancelLabel: 'Cancel',
+      })
+      if (!confirmed) return
+    }
     setAssigning(true)
     try {
       const res = await fetch(`/api/events/${eventId}/assignments`, {
@@ -256,7 +394,23 @@ export default function PositionsDayBoard({
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        notifyAlert(data.message || data.error || 'Failed to assign')
+        if (res.status === 409) {
+          const details = data.conflicts
+            ?.map((c: { positionName?: string; shiftName?: string }) =>
+              `${c.positionName || ''} — ${c.shiftName || ''}`.trim()
+            )
+            .filter(Boolean)
+            .join(', ')
+          notifyAlert(
+            data.message ||
+              data.error ||
+              (details
+                ? `Time conflict: already assigned to ${details}`
+                : 'Assignment conflict')
+          )
+        } else {
+          notifyAlert(data.message || data.error || 'Failed to assign')
+        }
         return
       }
       setAssignTarget(null)
@@ -307,8 +461,16 @@ export default function PositionsDayBoard({
           .toLowerCase()
           .includes(q)
       })
+      .sort((a, b) => {
+        const ac = conflictMap.get(a.id)?.hasConflict ? 1 : 0
+        const bc = conflictMap.get(b.id)?.hasConflict ? 1 : 0
+        if (ac !== bc) return ac - bc
+        return `${a.lastName} ${a.firstName}`.localeCompare(
+          `${b.lastName} ${b.firstName}`
+        )
+      })
       .slice(0, 40)
-  }, [attendants, assignSearch, assignTarget])
+  }, [attendants, assignSearch, assignTarget, conflictMap])
 
   return (
     <div className="space-y-4">
@@ -363,6 +525,31 @@ export default function PositionsDayBoard({
           ))}
         </div>
         <div className="flex flex-col gap-2 sm:items-end">
+          {canManageContent && (
+            <div className="flex flex-wrap gap-2 justify-end">
+              <button
+                type="button"
+                onClick={openCreatePosition}
+                className="inline-flex min-h-[44px] items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 touch-manipulation"
+              >
+                Create position
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const first = filteredPositions[0] || null
+                  if (!first) {
+                    notifyAlert('Create a position first')
+                    return
+                  }
+                  setAddShiftPosition(first)
+                }}
+                className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 touch-manipulation"
+              >
+                Add shift
+              </button>
+            </div>
+          )}
           <input
             type="search"
             value={search}
@@ -740,6 +927,13 @@ export default function PositionsDayBoard({
                         >
                           Edit times
                         </button>
+                        <button
+                          type="button"
+                          onClick={() => setAddShiftPosition(position)}
+                          className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 touch-manipulation"
+                        >
+                          Add shift
+                        </button>
                       </div>
                     )}
                   </>
@@ -775,22 +969,40 @@ export default function PositionsDayBoard({
                 autoFocus
               />
               <div className="max-h-64 space-y-1 overflow-y-auto">
-                {assignCandidates.map((a) => (
-                  <button
-                    key={a.id}
-                    type="button"
-                    disabled={assigning}
-                    onClick={() => handleAssign(a.id)}
-                    className="flex w-full min-h-[44px] items-center justify-between rounded-md px-3 py-2 text-left text-sm hover:bg-blue-50 touch-manipulation disabled:opacity-50"
-                  >
-                    <span>
-                      {a.firstName} {a.lastName}
-                    </span>
-                    {a.congregation && (
-                      <span className="text-xs text-gray-500">{a.congregation}</span>
-                    )}
-                  </button>
-                ))}
+                {assignCandidates.map((a) => {
+                  const conflict = conflictMap.get(a.id)
+                  const hasConflict = conflict?.hasConflict
+                  return (
+                    <button
+                      key={a.id}
+                      type="button"
+                      disabled={assigning}
+                      onClick={() => handleAssign(a.id)}
+                      className="flex w-full min-h-[44px] items-center justify-between gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-blue-50 touch-manipulation disabled:opacity-50"
+                    >
+                      <span className="min-w-0">
+                        <span className="block truncate font-medium text-gray-900">
+                          {a.firstName} {a.lastName}
+                        </span>
+                        {a.congregation && (
+                          <span className="block text-xs text-gray-500">
+                            {a.congregation}
+                          </span>
+                        )}
+                        {hasConflict && (
+                          <span className="mt-0.5 block text-xs text-amber-700">
+                            {conflict!.message}
+                          </span>
+                        )}
+                      </span>
+                      {hasConflict && (
+                        <span className="shrink-0 rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-800">
+                          Conflict
+                        </span>
+                      )}
+                    </button>
+                  )
+                })}
                 {assignCandidates.length === 0 && (
                   <p className="py-6 text-center text-sm text-gray-500">No matches</p>
                 )}
@@ -807,6 +1019,76 @@ export default function PositionsDayBoard({
               >
                 Cancel
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <CreatePositionModal
+        isOpen={showCreateModal}
+        editingPosition={null}
+        formData={createForm}
+        onClose={() => {
+          if (creatingPosition) return
+          setShowCreateModal(false)
+        }}
+        onSubmit={handleCreatePosition}
+        onFormDataChange={setCreateForm}
+      />
+
+      {addShiftPosition && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center">
+          <div className="w-full max-w-md overflow-hidden rounded-lg bg-white shadow-xl">
+            <div className="border-b border-gray-200 px-4 py-3">
+              <h3 className="text-lg font-semibold text-gray-900">Add shift</h3>
+              <p className="text-sm text-gray-600">{addShiftPosition.name}</p>
+            </div>
+            <div className="px-4 py-3">
+              {filteredPositions.length > 1 && (
+                <div className="mb-3">
+                  <label className="mb-1 block text-sm font-medium text-gray-700">
+                    Position
+                  </label>
+                  <select
+                    value={addShiftPosition.id}
+                    onChange={(e) => {
+                      const next = filteredPositions.find(
+                        (p) => p.id === e.target.value
+                      )
+                      if (next) setAddShiftPosition(next)
+                    }}
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 min-h-[44px] text-base sm:text-sm"
+                  >
+                    {filteredPositions.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        #{p.positionNumber} {p.name || p.positionName}
+                      </option>
+                    ))}
+                    {!filteredPositions.some((p) => p.id === addShiftPosition.id) && (
+                      <option value={addShiftPosition.id}>
+                        #{addShiftPosition.positionNumber} {addShiftPosition.name}
+                      </option>
+                    )}
+                  </select>
+                </div>
+              )}
+              <ShiftInlineEditor
+                initial={{
+                  name: 'All Day',
+                  startTime: '',
+                  endTime: '',
+                  isAllDay: true,
+                  volunteersNeeded: 1,
+                  shiftDate:
+                    activeDay !== 'undated'
+                      ? activeDay
+                      : eventDateKeys[0] || null,
+                }}
+                eventDateKeys={eventDateKeys}
+                saving={savingNewShift}
+                onCancel={() => setAddShiftPosition(null)}
+                onSave={handleCreateShift}
+              />
             </div>
           </div>
         </div>

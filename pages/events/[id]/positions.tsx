@@ -176,6 +176,7 @@ interface AssignVolunteerModalProps {
   filteredAttendants: Attendant[]
   allPositions: Position[]
   eventId: string
+  eventDateKeys?: string[]
   initialRole?: AssignmentRole
   /** When set, list sorts matching oversight first and labels others */
   preferredOverseerId?: string | null
@@ -191,6 +192,7 @@ function AssignVolunteerModal({
   filteredAttendants,
   allPositions,
   eventId,
+  eventDateKeys = [],
   initialRole = 'VOLUNTEER',
   preferredOverseerId = null,
   preferredKeymanId = null,
@@ -204,6 +206,9 @@ function AssignVolunteerModal({
   const [search, setSearch] = React.useState('')
   const [inlineError, setInlineError] = React.useState<string | null>(null)
   const [submitting, setSubmitting] = React.useState(false)
+  const [localShifts, setLocalShifts] = React.useState(() => position.shifts || [])
+  const [editingTimes, setEditingTimes] = React.useState(false)
+  const [savingTimes, setSavingTimes] = React.useState(false)
 
   const roleLabel =
     selectedRole === 'OVERSEER' ? 'Overseer' : selectedRole === 'KEYMAN' ? 'Keyman' : 'Volunteer'
@@ -223,9 +228,14 @@ function AssignVolunteerModal({
 
   // Recompute conflict map whenever the selected shift changes
   const activeShift = React.useMemo(() => {
-    if (!selectedShiftId) return position.shifts?.[0] || null
-    return position.shifts?.find(s => s.id === selectedShiftId) || null
-  }, [selectedShiftId, position.shifts])
+    if (!selectedShiftId) return localShifts[0] || null
+    return localShifts.find(s => s.id === selectedShiftId) || null
+  }, [selectedShiftId, localShifts])
+
+  const assigneeCount = React.useMemo(() => {
+    if (!activeShift?.id) return 0
+    return (position.assignments || []).filter((a) => a.shift?.id === activeShift.id).length
+  }, [activeShift?.id, position.assignments])
 
   const conflictMap = React.useMemo(
     () => getConflictsForShift(filteredAttendants.map(a => a.id), activeShift, assignmentMap),
@@ -250,6 +260,67 @@ function AssignVolunteerModal({
     if (ac !== bc) return ac - bc
     return `${a.lastName} ${a.firstName}`.localeCompare(`${b.lastName} ${b.firstName}`)
   })
+
+  const handleSaveShiftTimes = async (values: {
+    name: string
+    startTime: string
+    endTime: string
+    isAllDay: boolean
+    volunteersNeeded: number
+    shiftDate: string | null
+  }) => {
+    if (!activeShift) return
+    if (assigneeCount > 0) {
+      const confirmed = await appConfirm({
+        title: 'Update shift times',
+        message: `This updates times for ${assigneeCount} assigned volunteer${
+          assigneeCount === 1 ? '' : 's'
+        } on this shift. Continue?`,
+        confirmLabel: 'Update times',
+        cancelLabel: 'Cancel',
+      })
+      if (!confirmed) return
+    }
+
+    setSavingTimes(true)
+    setInlineError(null)
+    try {
+      const positionService = createPositionService(eventId)
+      const ok = await positionService.updateShift(position.id, activeShift.id, {
+        name: values.name,
+        startTime: values.isAllDay ? null : values.startTime || null,
+        endTime: values.isAllDay ? null : values.endTime || null,
+        isAllDay: values.isAllDay,
+        volunteersNeeded: values.volunteersNeeded,
+        shiftDate: values.shiftDate,
+      })
+      if (!ok) {
+        setInlineError('Failed to update shift times.')
+        return
+      }
+      setLocalShifts((prev) =>
+        prev.map((s) =>
+          s.id === activeShift.id
+            ? {
+                ...s,
+                name: values.name,
+                startTime: values.isAllDay ? undefined : values.startTime,
+                endTime: values.isAllDay ? undefined : values.endTime,
+                isAllDay: values.isAllDay,
+                volunteersNeeded: values.volunteersNeeded,
+                shiftDate: values.shiftDate,
+              }
+            : s
+        )
+      )
+      setEditingTimes(false)
+      toast.success('Shift times updated')
+    } catch {
+      setInlineError('Failed to update shift times.')
+    } finally {
+      setSavingTimes(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -301,7 +372,7 @@ function AssignVolunteerModal({
 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+      <div className="relative top-10 mx-auto p-5 border w-[min(100%-1.5rem,28rem)] shadow-lg rounded-md bg-white mb-8">
         <div className="mt-3">
           {/* Header */}
           <div className="flex items-start justify-between mb-4">
@@ -311,7 +382,11 @@ function AssignVolunteerModal({
               </h3>
               <p className="text-sm text-gray-500 mt-0.5">{position.name}</p>
             </div>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 ml-4 mt-0.5">
+            <button
+              type="button"
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 ml-4 mt-0.5 min-h-[44px] min-w-[44px] inline-flex items-center justify-center touch-manipulation"
+            >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -325,7 +400,7 @@ function AssignVolunteerModal({
               <select
                 value={selectedRole}
                 onChange={e => { setSelectedRole(e.target.value as AssignmentRole); setInlineError(null) }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="w-full px-3 py-2 min-h-[44px] text-base sm:text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="VOLUNTEER">Volunteer</option>
                 <option value="OVERSEER">Overseer (this shift)</option>
@@ -338,22 +413,62 @@ function AssignVolunteerModal({
               )}
             </div>
 
-            {/* Shift selector */}
+            {/* Shift selector + in-place time edit */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Shift</label>
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <label className="block text-sm font-medium text-gray-700">Shift</label>
+                {activeShift && !editingTimes && (
+                  <button
+                    type="button"
+                    onClick={() => setEditingTimes(true)}
+                    className="text-sm text-blue-600 hover:text-blue-800 min-h-[44px] px-2 touch-manipulation"
+                  >
+                    Edit times
+                  </button>
+                )}
+              </div>
               <select
                 value={selectedShiftId}
-                onChange={e => { setSelectedShiftId(e.target.value); setInlineError(null) }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                onChange={e => {
+                  setSelectedShiftId(e.target.value)
+                  setEditingTimes(false)
+                  setInlineError(null)
+                }}
+                className="w-full px-3 py-2 min-h-[44px] text-base sm:text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               >
                 <option value="">Select a shift...</option>
-                {position.shifts?.map(shift => (
+                {localShifts.map(shift => (
                   <option key={shift.id} value={shift.id}>
-                    {shift.name}{!shift.isAllDay && shift.startTime ? ` (${formatTime(shift.startTime)} – ${formatTime(shift.endTime || '')})` : ''}
+                    {shift.name}{!shift.isAllDay && shift.startTime ? ` (${formatTime(shift.startTime)} – ${formatTime(shift.endTime || '')})` : shift.isAllDay ? ' (All Day)' : ''}
                   </option>
                 ))}
               </select>
+              {activeShift && !editingTimes && (
+                <p className="text-xs text-gray-500 mt-1">
+                  {activeShift.isAllDay
+                    ? 'All day'
+                    : `${formatTime(activeShift.startTime || '')} – ${formatTime(activeShift.endTime || '')}`}
+                  {assigneeCount > 0 ? ` · ${assigneeCount} already assigned` : ''}
+                  {' · '}Times are shared for everyone on this shift.
+                </p>
+              )}
+              {editingTimes && activeShift && (
+                <ShiftInlineEditor
+                  initial={{
+                    name: activeShift.name || '',
+                    startTime: activeShift.startTime || '',
+                    endTime: activeShift.endTime || '',
+                    isAllDay: !!activeShift.isAllDay,
+                    volunteersNeeded: getShiftVolunteersNeeded(activeShift),
+                    shiftDate: toDateKey(activeShift.shiftDate),
+                  }}
+                  eventDateKeys={eventDateKeys}
+                  saving={savingTimes}
+                  onCancel={() => setEditingTimes(false)}
+                  onSave={handleSaveShiftTimes}
+                />
+              )}
             </div>
 
             {/* Volunteer search */}
@@ -364,7 +479,7 @@ function AssignVolunteerModal({
                 placeholder="Search by name or congregation..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="w-full px-3 py-2 min-h-[44px] text-base sm:text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               {(preferredOverseerId || preferredKeymanId) && selectedRole === 'VOLUNTEER' && (
                 <p className="text-xs text-gray-500 mt-1">
@@ -1530,14 +1645,14 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                     </svg>
                   </button>
                   {showFiltersMenu && (
-                    <div className="absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                    <div className="absolute left-0 mt-2 w-64 max-w-[calc(100vw-2rem)] bg-white rounded-lg shadow-lg border border-gray-200 z-20">
                       <div className="p-3 space-y-2">
                         <div>
                           <label className="block text-xs font-medium text-gray-700 mb-1">Overseer</label>
                           <select
                             value={selectedOverseer}
                             onChange={(e) => setSelectedOverseer(e.target.value)}
-                            className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 min-h-[44px] text-base sm:text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                           >
                             <option value="all">All Overseers</option>
                             {Array.from(new Set(
@@ -1560,7 +1675,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                           <select
                             value={roleFilter}
                             onChange={(e) => setRoleFilter(e.target.value as 'all' | 'overseers' | 'assistants' | 'keymen')}
-                            className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 min-h-[44px] text-base sm:text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                           >
                             <option value="all">All Roles</option>
                             <option value="overseers">Overseers</option>
@@ -2209,12 +2324,12 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                                       {filledCount}/{neededCount}
                                     </span>
                                   </div>
-                                  <div className="flex items-center space-x-1">
+                                  <div className="flex items-center gap-1 shrink-0">
                                     {canManageContent && !isEditing && (
                                       <button
                                         type="button"
                                         onClick={() => setEditingShiftId(shift.id)}
-                                        className="text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded px-1.5 py-0.5 transition-colors"
+                                        className="text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded px-3 py-2 min-h-[44px] min-w-[44px] touch-manipulation transition-colors"
                                         title={`Edit ${shift.name} shift`}
                                       >
                                         Edit
@@ -2224,7 +2339,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                                       <button
                                         type="button"
                                         onClick={() => handleDeleteShift(position.id, shift.id, shift.name || 'Shift')}
-                                        className="text-xs text-red-600 hover:text-red-800 hover:bg-red-100 rounded px-1 py-0.5 transition-colors"
+                                        className="text-xs text-red-600 hover:text-red-800 hover:bg-red-100 rounded px-3 py-2 min-h-[44px] min-w-[44px] touch-manipulation transition-colors"
                                         title={`Delete ${shift.name || 'Shift'} shift`}
                                       >
                                         ✕
@@ -2247,6 +2362,17 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                                     saving={savingShiftId === shift.id}
                                     onCancel={() => setEditingShiftId(null)}
                                     onSave={async (values) => {
+                                      if (filledCount > 0) {
+                                        const confirmed = await appConfirm({
+                                          title: 'Update shift times',
+                                          message: `This updates times for ${filledCount} assigned volunteer${
+                                            filledCount === 1 ? '' : 's'
+                                          } on this shift. Continue?`,
+                                          confirmLabel: 'Update times',
+                                          cancelLabel: 'Cancel',
+                                        })
+                                        if (!confirmed) return
+                                      }
                                       setSavingShiftId(shift.id)
                                       try {
                                         const ok = await positionService.updateShift(position.id, shift.id, {
@@ -2692,6 +2818,7 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
               filteredAttendants={filteredAttendants}
               allPositions={positions}
               eventId={eventId}
+              eventDateKeys={eventDateKeys}
               initialRole={assignModalRole}
               preferredOverseerId={positionOverseer?.id || null}
               preferredKeymanId={positionKeyman?.id || null}

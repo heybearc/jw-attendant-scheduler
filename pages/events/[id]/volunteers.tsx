@@ -1128,7 +1128,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setFilters({ ...filters, isActive: 'all' })}
-                  className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                  className={`px-3 py-2 min-h-[44px] rounded-full text-sm font-medium transition-colors touch-manipulation ${
                     filters.isActive === 'all'
                       ? 'bg-blue-600 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -1138,7 +1138,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                 </button>
                 <button
                   onClick={() => setFilters({ ...filters, isActive: 'true' })}
-                  className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                  className={`px-3 py-2 min-h-[44px] rounded-full text-sm font-medium transition-colors touch-manipulation ${
                     filters.isActive === 'true'
                       ? 'bg-green-600 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -1148,7 +1148,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                 </button>
                 <button
                   onClick={() => setFilters({ ...filters, isActive: 'false' })}
-                  className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                  className={`px-3 py-2 min-h-[44px] rounded-full text-sm font-medium transition-colors touch-manipulation ${
                     filters.isActive === 'false'
                       ? 'bg-red-600 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -1279,7 +1279,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                     placeholder="Search by name, email, phone, congregation..."
                     value={filters.search}
                     onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    className="block w-full pl-10 pr-3 py-2 min-h-[44px] text-base sm:text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
               </div>

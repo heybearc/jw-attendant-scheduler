@@ -82,7 +82,7 @@ export default function ShiftInlineEditor({
             type="time"
             value={values.startTime}
             onChange={(e) => setValues({ ...values, startTime: e.target.value })}
-            className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-2 py-2 min-h-[44px] text-base sm:text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             disabled={saving || values.isAllDay}
           />
         </div>
@@ -92,13 +92,13 @@ export default function ShiftInlineEditor({
             type="time"
             value={values.endTime}
             onChange={(e) => setValues({ ...values, endTime: e.target.value })}
-            className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-2 py-2 min-h-[44px] text-base sm:text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             disabled={saving || values.isAllDay}
           />
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-3">
-        <label className="flex items-center text-xs text-gray-700">
+        <label className="flex items-center text-xs text-gray-700 min-h-[44px]">
           <input
             type="checkbox"
             checked={values.isAllDay}
@@ -110,12 +110,12 @@ export default function ShiftInlineEditor({
                 endTime: e.target.checked ? '' : values.endTime
               })
             }
-            className="mr-1.5"
+            className="mr-1.5 h-4 w-4"
             disabled={saving}
           />
           All Day
         </label>
-        <label className="flex items-center gap-1 text-xs text-gray-700">
+        <label className="flex items-center gap-1 text-xs text-gray-700 min-h-[44px]">
           Need
           <input
             type="number"
@@ -128,7 +128,7 @@ export default function ShiftInlineEditor({
                 volunteersNeeded: Math.max(1, Math.min(50, parseInt(e.target.value, 10) || 1))
               })
             }
-            className="w-14 px-1 py-1 border border-gray-300 rounded text-xs"
+            className="w-14 px-1 py-2 min-h-[44px] border border-gray-300 rounded text-sm"
             disabled={saving}
           />
         </label>
@@ -138,14 +138,14 @@ export default function ShiftInlineEditor({
           type="button"
           onClick={onCancel}
           disabled={saving}
-          className="px-2.5 py-1 text-xs border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+          className="px-3 py-2 min-h-[44px] text-sm border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 touch-manipulation"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={saving}
-          className="px-2.5 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-md disabled:opacity-60"
+          className="px-3 py-2 min-h-[44px] text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md disabled:opacity-60 touch-manipulation"
         >
           {saving ? 'Saving…' : 'Save'}
         </button>

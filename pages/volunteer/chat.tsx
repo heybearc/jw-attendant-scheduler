@@ -9,7 +9,7 @@ import {
   getViewAsVolunteerId,
   setViewAsVolunteerId,
 } from '@/lib/viewAsClient'
-import { disableChatPushSubscription, enableChatPushSubscription } from '@/lib/chatPushClient'
+import { disableChatPushSubscription, enableChatPushSubscription, isAppleTouchDevice } from '@/lib/chatPushClient'
 import { notifyAlert, toast } from '../../lib/ui/toast'
 
 interface ChatChannel {
@@ -664,8 +664,9 @@ export default function VolunteerChatPage() {
                     </span>
                   ) : pushStatus === 'unsupported' ? (
                     <span className="text-xs text-amber-900 bg-amber-50 border border-amber-200 rounded px-2 py-2">
-                      This browser can&apos;t show push alerts. On iPhone, add TheoShift to your Home Screen and use
-                      Safari 16.4+, or try Chrome on Android.
+                      {isAppleTouchDevice()
+                        ? 'This browser can\u2019t show push alerts. Add TheoShift to your Home Screen and use Safari 16.4+.'
+                        : 'This browser can\u2019t show push alerts. Chat still updates while this page is open; try Chrome, Firefox, or Edge. On iPhone, install TheoShift to the Home Screen if needed.'}
                     </span>
                   ) : (
                     <button

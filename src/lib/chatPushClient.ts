@@ -4,6 +4,19 @@
 
 export type ChatPushSetupStatus = 'unknown' | 'enabled' | 'disabled' | 'unsupported'
 
+/** True for iPhone / iPad / iPod (incl. iPadOS desktop UA spoof via touch points). */
+export function isAppleTouchDevice(): boolean {
+  if (typeof navigator === 'undefined') return false
+  const ua = navigator.userAgent || ''
+  if (/iPhone|iPad|iPod/i.test(ua)) return true
+  // iPadOS 13+ may report as Mac; touch points distinguish it
+  return (
+    /Macintosh/i.test(ua) &&
+    typeof (navigator as Navigator & { maxTouchPoints?: number }).maxTouchPoints === 'number' &&
+    (navigator as Navigator & { maxTouchPoints: number }).maxTouchPoints > 1
+  )
+}
+
 export function vapidPublicKeyToUint8(base64String: string): Uint8Array {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')

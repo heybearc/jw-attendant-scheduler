@@ -2,95 +2,96 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../../auth/[...nextauth]'
 import { prisma } from '../../../../../src/lib/prisma'
-import nodemailer from 'nodemailer'
 import { generateAssignmentCreatedEmail } from '../../../../../src/lib/assignmentEmails'
-import { handleApiError } from '@/lib/apiError'
 import { canManageAssignments } from '../../../../../src/lib/eventAccess'
+import { isEmailConfigured, sendEmail } from '@/lib/email'
+import {
+  tryAcquireEmailJob,
+  runThrottledBulkEmail,
+  estimateBulkEmailDurationSeconds,
+  getBulkEmailJob,
+  bulkEmailJobKey,
+  uniqueByEmail,
+} from '@/lib/bulkEmailJob'
 
-// Send email using database configuration (same pattern as availability-request)
-async function sendAssignmentEmail(to: string, subject: string, html: string) {
-  const emailConfig = await prisma.system_settings.findFirst({
-    where: { key: 'email_config' }
-  })
+const JOB_KIND = 'assignment-notifications'
 
-  if (!emailConfig) {
-    throw new Error('Email configuration not found')
-  }
-
-  const { authType, config } = JSON.parse(emailConfig.value)
-
-  let transporter
-  
-  if (authType === 'gmail') {
-    transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
-      requireTLS: true,
-      auth: {
-        user: config.gmailEmail,
-        pass: config.gmailAppPassword
-      }
-    })
-  } else {
-    transporter = nodemailer.createTransport({
-      host: config.smtpServer,
-      port: parseInt(config.smtpPort || '587'),
-      secure: config.smtpSecure || false,
-      requireTLS: !config.smtpSecure,
-      auth: {
-        user: config.smtpUser,
-        pass: config.smtpPassword
-      }
-    })
-  }
-
-  await transporter.sendMail({
-    from: `"TheoShift Team" <${config.fromEmail}>`,
-    to,
-    subject,
-    html
-  })
+type PreparedRecipient = {
+  id: string
+  email: string
+  firstName: string
+  lastName: string
+  subject: string
+  html: string
 }
 
 /**
- * Phase 4C Feature #1: Bulk Assignment Notifications
- * Manual endpoint to send notifications for unsent assignments
- * Called when coordinator clicks "Send Notifications" button
+ * Bulk assignment notifications — one email per assigned volunteer (throttled + abortable).
  */
-
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     const session = await getServerSession(req, res, authOptions)
     if (!session) {
-      return res.status(401).json({ error: 'Unauthorized' })
+      return res.status(401).json({ success: false, error: 'Unauthorized' })
     }
 
     const { id: eventId } = req.query
-
     if (!eventId || typeof eventId !== 'string') {
-      return res.status(400).json({ error: 'Event ID is required' })
+      return res.status(400).json({ success: false, error: 'Event ID is required' })
     }
 
     const user = await prisma.users.findUnique({
-      where: { email: session.user?.email || '' }
+      where: { email: session.user?.email || '' },
     })
-
     if (!user) {
-      return res.status(404).json({ error: 'User not found' })
+      return res.status(404).json({ success: false, error: 'User not found' })
     }
 
     if (!(await canManageAssignments(user.id, eventId))) {
-      return res.status(403).json({ error: 'Insufficient permissions' })
+      return res.status(403).json({ success: false, error: 'Insufficient permissions' })
+    }
+
+    if (req.method === 'GET') {
+      const assignments = await prisma.position_assignments.findMany({
+        where: { positions: { eventId } },
+        select: {
+          volunteerId: true,
+          volunteer: {
+            select: {
+              email: true,
+              user: { select: { email: true } },
+            },
+          },
+        },
+      })
+      const byVolunteer = new Map<string, string>()
+      for (const a of assignments) {
+        if (!a.volunteerId || byVolunteer.has(a.volunteerId)) continue
+        const email = (a.volunteer?.user?.email || a.volunteer?.email || '').trim()
+        if (email) byVolunteer.set(a.volunteerId, email)
+      }
+      const recipientCount = byVolunteer.size
+      return res.status(200).json({
+        success: true,
+        recipientCount,
+        estimatedSeconds: estimateBulkEmailDurationSeconds(recipientCount),
+      })
     }
 
     if (req.method !== 'POST') {
-      return res.status(405).json({ error: 'Method not allowed' })
+      return res.status(405).json({ success: false, error: 'Method not allowed' })
     }
 
-    // Check notification settings
+    const emailReady = await isEmailConfigured()
+    if (!emailReady) {
+      return res.status(400).json({
+        success: false,
+        error: 'Email is not configured',
+      })
+    }
+
     const settingsRecord = await prisma.system_settings.findFirst({
-      where: { key: 'notification_settings' }
+      where: { key: 'notification_settings' },
     })
 
     let notificationsEnabled = true
@@ -105,142 +106,156 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (!notificationsEnabled) {
       return res.status(400).json({
+        success: false,
         error: 'Notifications disabled',
-        message: 'Assignment notifications are disabled in settings'
+        message: 'Assignment notifications are disabled in settings',
       })
     }
 
-    // Find all assignments for this event
     const assignments = await prisma.position_assignments.findMany({
-      where: {
-        positions: { eventId: eventId }
-      }
+      where: { positions: { eventId } },
+      include: {
+        volunteer: { include: { user: true } },
+        positions: { include: { events: true } },
+        shift: true,
+        overseer: { include: { user: true } },
+      },
+      orderBy: { assignedAt: 'asc' },
     })
 
     if (assignments.length === 0) {
       return res.status(200).json({
         success: true,
-        message: 'No assignments to notify',
         sent: 0,
-        failed: 0
+        failed: 0,
+        message: 'No assignments to notify',
       })
     }
 
-    // Get unique volunteers from assignments
-    const volunteerIds = [...new Set(assignments.map(a => a.volunteerId))]
-    
-    let sent = 0
-    let failed = 0
-    const errors: string[] = []
+    const preparedByVolunteer = new Map<string, PreparedRecipient>()
+    for (const assignment of assignments) {
+      if (!assignment.volunteerId || preparedByVolunteer.has(assignment.volunteerId)) continue
+      const volunteer = assignment.volunteer
+      if (!volunteer) continue
 
-    // Send one notification per volunteer (consolidates all their assignments)
-    for (const volunteerId of volunteerIds) {
-      const volunteerAssignments = assignments.filter(a => a.volunteerId === volunteerId)
-      
-      try {
-        // Get full assignment details with volunteer and event info
-        const assignment = await prisma.position_assignments.findUnique({
-          where: { id: volunteerAssignments[0].id },
-          include: {
-            volunteer: {
-              include: {
-                user: true
-              }
-            },
-            positions: {
-              include: {
-                events: true
-              }
-            },
-            shift: true,
-            overseer: {
-              include: {
-                user: true
-              }
-            }
-          }
-        })
+      const volunteerEmail = (volunteer.user?.email || volunteer.email || '').trim()
+      if (!volunteerEmail) continue
 
-        if (!assignment || !assignment.volunteer) {
-          throw new Error('Assignment or volunteer not found')
-        }
+      const volunteerFirstName = volunteer.user?.firstName || volunteer.firstName
+      const volunteerLastName = volunteer.user?.lastName || volunteer.lastName
+      const event = assignment.positions.events
 
-        const volunteer = assignment.volunteer
-        const event = assignment.positions.events
-        
-        // Get volunteer email (from user if linked, otherwise from volunteer record)
-        const volunteerEmail = volunteer.user?.email || volunteer.email
-        const volunteerFirstName = volunteer.user?.firstName || volunteer.firstName
-        const volunteerLastName = volunteer.user?.lastName || volunteer.lastName
+      const eventDate = new Date(event.startDate).toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      })
 
-        // Format event date
-        const eventDate = new Date(event.startDate).toLocaleDateString('en-US', {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        })
+      const overseer = assignment.overseer
+      const overseerName = overseer
+        ? `${overseer.user?.firstName || overseer.firstName} ${overseer.user?.lastName || overseer.lastName}`
+        : undefined
+      const overseerEmail = overseer
+        ? overseer.user?.email || overseer.email || undefined
+        : undefined
+      const overseerPhone = overseer
+        ? overseer.user?.phone || overseer.phone || undefined
+        : undefined
 
-        // Format shift times
-        const isAllDay = assignment.shift?.isAllDay || false
-        const shiftName = assignment.shift?.name
-        const shiftStart = assignment.shift?.startTime || ''
-        const shiftEnd = assignment.shift?.endTime || ''
+      const html = generateAssignmentCreatedEmail({
+        volunteerFirstName,
+        volunteerLastName,
+        volunteerEmail,
+        eventName: event.name,
+        eventDate,
+        eventLocation: event.location || event.venue || 'Location TBD',
+        positionName: assignment.positions.name,
+        positionNumber: assignment.positions.positionNumber,
+        shiftName: assignment.shift?.name,
+        shiftStart: assignment.shift?.startTime || '',
+        shiftEnd: assignment.shift?.endTime || '',
+        isAllDay: assignment.shift?.isAllDay || false,
+        overseerName,
+        overseerEmail,
+        overseerPhone: overseerPhone ?? undefined,
+        eventUrl: `${process.env.NEXTAUTH_URL}/events/${event.id}/positions`,
+      })
 
-        // Get overseer info if exists
-        const overseer = assignment.overseer
-        const overseerName = overseer ? `${overseer.user?.firstName || overseer.firstName} ${overseer.user?.lastName || overseer.lastName}` : undefined
-        const overseerEmail = overseer ? (overseer.user?.email || overseer.email) : undefined
-        const overseerPhone = overseer ? (overseer.user?.phone || overseer.phone) : undefined
-
-        // Generate email HTML
-        const emailHtml = generateAssignmentCreatedEmail({
-          volunteerFirstName,
-          volunteerLastName,
-          volunteerEmail,
-          eventName: event.name,
-          eventDate,
-          eventLocation: event.location || event.venue || 'Location TBD',
-          positionName: assignment.positions.name,
-          positionNumber: assignment.positions.positionNumber,
-          shiftName,
-          shiftStart,
-          shiftEnd,
-          isAllDay,
-          overseerName,
-          overseerEmail,
-          overseerPhone: overseerPhone ?? undefined,
-          eventUrl: `${process.env.NEXTAUTH_URL}/events/${event.id}/positions`
-        })
-
-        // Send email directly (same pattern as availability-request)
-        await sendAssignmentEmail(
-          volunteerEmail,
-          `Your assignment for ${event.name}`,
-          emailHtml
-        )
-
-        sent++
-      } catch (error: any) {
-        failed++
-        errors.push(`Volunteer ${volunteerId}: ${error.message}`)
-      }
+      preparedByVolunteer.set(assignment.volunteerId, {
+        id: assignment.volunteerId,
+        email: volunteerEmail,
+        firstName: volunteerFirstName,
+        lastName: volunteerLastName,
+        subject: `Your assignment for ${event.name}`,
+        html,
+      })
     }
 
+    const prepared = uniqueByEmail([...preparedByVolunteer.values()])
+    if (prepared.length === 0) {
+      return res.status(200).json({
+        success: true,
+        sent: 0,
+        failed: 0,
+        message: 'No assigned volunteers with an email address.',
+      })
+    }
 
-    return res.status(200).json({
-      success: true,
-      message: `Sent ${sent} notification(s)${failed > 0 ? `, ${failed} failed` : ''}`,
-      sent,
-      failed,
-      errors: failed > 0 ? errors : undefined
+    const jobKey = bulkEmailJobKey(eventId, JOB_KIND)
+    if (!tryAcquireEmailJob(jobKey)) {
+      return res.status(409).json({
+        success: false,
+        error:
+          'An email blast is already in progress for this event. Wait or abort it first.',
+        job: getBulkEmailJob(jobKey),
+      })
+    }
+
+    const htmlByEmail = new Map(prepared.map((r) => [r.email.toLowerCase(), r]))
+    const n = prepared.length
+    const estimatedSeconds = estimateBulkEmailDurationSeconds(n)
+
+    void runThrottledBulkEmail({
+      eventId,
+      kind: JOB_KIND,
+      recipients: prepared.map((r) => ({
+        id: r.id,
+        email: r.email,
+        firstName: r.firstName,
+        lastName: r.lastName,
+      })),
+      sendOne: async (recipient) => {
+        const full = htmlByEmail.get(recipient.email.toLowerCase())
+        if (!full) throw new Error('Prepared email missing for recipient')
+        await sendEmail({
+          to: full.email,
+          subject: full.subject,
+          html: full.html,
+        })
+      },
+    }).then((snap) => {
+      console.log(
+        `[assignment-notifications] event=${eventId} done sent=${snap.sent} failed=${snap.failed} aborted=${snap.aborted}`
+      )
     })
 
-  } catch (error: any) {
-    // Error logged by handleApiError
+    return res.status(202).json({
+      success: true,
+      async: true,
+      job: JOB_KIND,
+      recipientCount: n,
+      estimatedSeconds,
+      message: `Queued ${n} recipient${n === 1 ? '' : 's'} (~${Math.ceil(
+        estimatedSeconds / 60
+      )} min at Gmail-safe pace). Abort from Positions if needed — do not click Send again.`,
+    })
+  } catch (error: unknown) {
+    console.error('[assignment-notifications]', error)
     return res.status(500).json({
+      success: false,
       error: 'Internal server error',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     })
   }
 }

@@ -26,6 +26,10 @@ import crypto from 'crypto'
 import { notifyAlert, toast } from '../../../lib/ui/toast'
 import { appConfirm, appConfirmMessage } from '../../../lib/ui/confirm'
 import {
+  abortEventBulkEmail,
+  formatBulkEmailConfirmMessage,
+} from '../../../lib/bulkEmailClient'
+import {
   countShiftAssignments,
   getPositionSlotFillRatio,
   getShiftVolunteersNeeded,
@@ -537,6 +541,10 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
   const [showFiltersMenu, setShowFiltersMenu] = useState(false)
   const [showExportMenu, setShowExportMenu] = useState(false)
   const [showActionsMenu, setShowActionsMenu] = useState(false)
+  const [bulkEmailJobKind, setBulkEmailJobKind] = useState<'assignment-notifications' | null>(
+    null
+  )
+  const [assignmentNotifySending, setAssignmentNotifySending] = useState(false)
   const [isSmallScreen, setIsSmallScreen] = useState(false)
   const [editingShiftId, setEditingShiftId] = useState<string | null>(null)
   const [savingShiftId, setSavingShiftId] = useState<string | null>(null)
@@ -1628,28 +1636,86 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                           <button
                             onClick={async () => {
                               setShowActionsMenu(false)
-                              if (!(await appConfirmMessage('📧 Send assignment notifications to all volunteers?\n\nThis will send an email to each volunteer with their current assignments.\n\nContinue?'))) return
+                              if (assignmentNotifySending || bulkEmailJobKind) {
+                                notifyAlert('An assignment notification send is already in progress.')
+                                return
+                              }
                               try {
-                                const response = await fetch(`/api/events/${eventId}/assignments/send-notifications`, {
-                                  method: 'POST',
-                                  headers: { 'Content-Type': 'application/json' }
-                                })
-                                const data = await response.json()
-                                if (response.ok && data.success) {
-                                  notifyAlert(data.failed > 0 ? `⚠️ ${data.message}\n\nErrors:\n${data.errors?.join('\n') || 'Unknown errors'}` : `✅ ${data.message}`)
-                                } else {
-                                  notifyAlert(`❌ ${data.error || data.message || 'Failed to send notifications'}`)
+                                const previewRes = await fetch(
+                                  `/api/events/${eventId}/assignments/send-notifications`,
+                                  { credentials: 'include' }
+                                )
+                                const preview = await previewRes.json().catch(() => ({}))
+                                const count =
+                                  typeof preview.recipientCount === 'number'
+                                    ? preview.recipientCount
+                                    : 0
+                                if (!previewRes.ok) {
+                                  notifyAlert(preview.error || preview.message || 'Could not preview recipients')
+                                  return
                                 }
-                              } catch (error) {
-                                notifyAlert(`❌ Failed to send notifications: ${error.message}`)
+                                if (count === 0) {
+                                  notifyAlert('No assigned volunteers with an email address to notify.')
+                                  return
+                                }
+                                const confirmed = await appConfirm({
+                                  title: 'Send assignment notifications',
+                                  message: formatBulkEmailConfirmMessage({
+                                    recipientCount: count,
+                                    estimatedSeconds:
+                                      typeof preview.estimatedSeconds === 'number'
+                                        ? preview.estimatedSeconds
+                                        : Math.ceil(count * 1.2),
+                                    scopeNote:
+                                      'Assigned volunteers with email only (one email per person).',
+                                  }),
+                                  confirmLabel: 'Queue emails',
+                                  cancelLabel: 'Cancel',
+                                })
+                                if (!confirmed) return
+
+                                setAssignmentNotifySending(true)
+                                setBulkEmailJobKind('assignment-notifications')
+                                const response = await fetch(
+                                  `/api/events/${eventId}/assignments/send-notifications`,
+                                  {
+                                    method: 'POST',
+                                    credentials: 'include',
+                                    headers: { 'Content-Type': 'application/json' },
+                                  }
+                                )
+                                const data = await response.json().catch(() => ({}))
+                                if (response.ok && data.success) {
+                                  notifyAlert(data.message || `Queued ${count} notification(s)`)
+                                  if (!data.async) {
+                                    setBulkEmailJobKind(null)
+                                  }
+                                } else {
+                                  setBulkEmailJobKind(null)
+                                  notifyAlert(
+                                    data.error || data.message || 'Failed to send notifications'
+                                  )
+                                }
+                              } catch (error: unknown) {
+                                setBulkEmailJobKind(null)
+                                notifyAlert(
+                                  `Failed to send notifications: ${
+                                    error instanceof Error ? error.message : String(error)
+                                  }`
+                                )
+                              } finally {
+                                setAssignmentNotifySending(false)
                               }
                             }}
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                            disabled={assignmentNotifySending}
+                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 min-h-[44px]"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                             </svg>
-                            <span>Send Notifications</span>
+                            <span>
+                              {assignmentNotifySending ? 'Queuing...' : 'Send Notifications'}
+                            </span>
                           </button>
                           <div className="border-t border-gray-200 my-1"></div>
                           <button
@@ -1704,6 +1770,19 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
                     </div>
                   )}
                 </div>
+                {canManageContent && bulkEmailJobKind && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const result = await abortEventBulkEmail(eventId, bulkEmailJobKind)
+                      notifyAlert(result.message)
+                      if (result.ok) setBulkEmailJobKind(null)
+                    }}
+                    className="inline-flex items-center gap-1 px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-md transition-colors min-h-[44px] touch-manipulation"
+                  >
+                    Abort notification send
+                  </button>
+                )}
               </div>
 
               {/* Bulk Operations Bar (contextual) */}

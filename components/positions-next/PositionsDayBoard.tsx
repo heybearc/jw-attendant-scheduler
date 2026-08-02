@@ -102,6 +102,11 @@ export default function PositionsDayBoard({
   const [editingShiftKey, setEditingShiftKey] = useState<string | null>(null)
   const [savingShiftKey, setSavingShiftKey] = useState<string | null>(null)
   const [removingId, setRemovingId] = useState<string | null>(null)
+  const [underfilledOnly, setUnderfilledOnly] = useState(false)
+  const [selectedUndated, setSelectedUndated] = useState<Set<string>>(new Set())
+  const [bulkDay, setBulkDay] = useState(eventDateKeys[0] || '')
+  const [settingDayKey, setSettingDayKey] = useState<string | null>(null)
+  const [bulkSettingDay, setBulkSettingDay] = useState(false)
 
   const undatedShiftCount = useMemo(() => {
     let n = 0
@@ -142,11 +147,98 @@ export default function PositionsDayBoard({
       for (const shift of shifts) {
         const key = toDateKey(shift.shiftDate) || 'undated'
         if (key !== activeDay) continue
+        const filled = countShiftAssignments(position.assignments, shift.id)
+        const needed = getShiftVolunteersNeeded(shift)
+        if (underfilledOnly && filled >= needed) continue
         out.push({ position, shift })
       }
     }
     return out
+  }, [filteredPositions, activeDay, underfilledOnly])
+
+  const dayCoverage = useMemo(() => {
+    let filled = 0
+    let needed = 0
+    let shifts = 0
+    for (const position of filteredPositions) {
+      for (const shift of position.shifts || []) {
+        const key = toDateKey(shift.shiftDate) || 'undated'
+        if (key !== activeDay) continue
+        shifts++
+        filled += countShiftAssignments(position.assignments, shift.id)
+        needed += getShiftVolunteersNeeded(shift)
+      }
+    }
+    return { filled, needed, shifts, open: Math.max(0, needed - filled) }
   }, [filteredPositions, activeDay])
+
+  const setShiftDay = async (
+    positionId: string,
+    shiftId: string,
+    shiftDate: string
+  ) => {
+    const rowKey = `${positionId}:${shiftId}`
+    setSettingDayKey(rowKey)
+    try {
+      const ok = await positionService.updateShift(positionId, shiftId, {
+        shiftDate,
+      })
+      if (!ok) {
+        notifyAlert('Failed to set day')
+        return false
+      }
+      return true
+    } catch {
+      notifyAlert('Failed to set day')
+      return false
+    } finally {
+      setSettingDayKey(null)
+    }
+  }
+
+  const handleBulkSetDay = async () => {
+    if (!bulkDay || selectedUndated.size === 0) return
+    const confirmed = await appConfirm({
+      title: 'Set day for shifts',
+      message: `Set ${selectedUndated.size} undated shift${
+        selectedUndated.size === 1 ? '' : 's'
+      } to ${formatEventDayLabel(bulkDay)}?`,
+      confirmLabel: 'Set day',
+      cancelLabel: 'Cancel',
+    })
+    if (!confirmed) return
+    setBulkSettingDay(true)
+    try {
+      let okCount = 0
+      for (const key of selectedUndated) {
+        const [positionId, shiftId] = key.split(':')
+        const ok = await positionService.updateShift(positionId, shiftId, {
+          shiftDate: bulkDay,
+        })
+        if (ok) okCount++
+      }
+      toast.success(`Updated ${okCount} of ${selectedUndated.size} shifts`)
+      setSelectedUndated(new Set())
+      router.reload()
+    } catch {
+      notifyAlert('Bulk set day failed')
+    } finally {
+      setBulkSettingDay(false)
+    }
+  }
+
+  const toggleUndatedSelect = (rowKey: string) => {
+    setSelectedUndated((prev) => {
+      const next = new Set(prev)
+      if (next.has(rowKey)) next.delete(rowKey)
+      else next.add(rowKey)
+      return next
+    })
+  }
+
+  const selectAllUndatedVisible = () => {
+    setSelectedUndated(new Set(rows.map(({ position, shift }) => `${position.id}:${shift.id}`)))
+  }
 
   const handleAssign = async (volunteerId: string) => {
     if (!assignTarget) return
@@ -254,7 +346,10 @@ export default function PositionsDayBoard({
             <button
               key={day}
               type="button"
-              onClick={() => setActiveDay(day)}
+              onClick={() => {
+                setActiveDay(day)
+                setSelectedUndated(new Set())
+              }}
               className={`px-3 py-2 min-h-[44px] rounded-md text-sm font-medium touch-manipulation ${
                 activeDay === day
                   ? 'bg-blue-600 text-white'
@@ -267,14 +362,93 @@ export default function PositionsDayBoard({
             </button>
           ))}
         </div>
-        <input
-          type="search"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Filter stations…"
-          className="w-full sm:w-64 px-3 py-2 min-h-[44px] text-base sm:text-sm border border-gray-300 rounded-md"
-        />
+        <div className="flex flex-col gap-2 sm:items-end">
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Filter stations…"
+            className="w-full sm:w-64 px-3 py-2 min-h-[44px] text-base sm:text-sm border border-gray-300 rounded-md"
+          />
+          <label className="inline-flex min-h-[44px] items-center gap-2 text-sm text-gray-700 touch-manipulation">
+            <input
+              type="checkbox"
+              checked={underfilledOnly}
+              onChange={(e) => setUnderfilledOnly(e.target.checked)}
+              className="h-4 w-4"
+            />
+            Underfilled only
+          </label>
+        </div>
       </div>
+
+      <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-gray-800">
+        <p className="font-medium text-gray-900">
+          {activeDay === 'undated'
+            ? 'Undated shifts'
+            : formatEventDayLabel(activeDay)}{' '}
+          coverage
+        </p>
+        <p className="mt-1">
+          {dayCoverage.filled}/{dayCoverage.needed} slots filled · {dayCoverage.open} open ·{' '}
+          {dayCoverage.shifts} shift{dayCoverage.shifts === 1 ? '' : 's'}
+          {underfilledOnly ? ' · showing underfilled only' : ''}
+        </p>
+        <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-gray-100">
+          <div
+            className={`h-2 rounded-full ${
+              dayCoverage.needed > 0 && dayCoverage.filled >= dayCoverage.needed
+                ? 'bg-green-500'
+                : dayCoverage.filled > 0
+                  ? 'bg-amber-400'
+                  : 'bg-gray-300'
+            }`}
+            style={{
+              width: `${
+                dayCoverage.needed > 0
+                  ? Math.min(
+                      100,
+                      Math.round((dayCoverage.filled / dayCoverage.needed) * 100)
+                    )
+                  : 0
+              }%`,
+            }}
+          />
+        </div>
+      </div>
+
+      {activeDay === 'undated' && canManageContent && eventDateKeys.length > 0 && rows.length > 0 && (
+        <div className="flex flex-col gap-2 rounded-md border border-indigo-200 bg-indigo-50 px-4 py-3 sm:flex-row sm:items-center">
+          <button
+            type="button"
+            onClick={selectAllUndatedVisible}
+            className="inline-flex min-h-[44px] items-center rounded-md border border-indigo-300 bg-white px-3 py-2 text-sm touch-manipulation"
+          >
+            Select all visible ({rows.length})
+          </button>
+          <select
+            value={bulkDay}
+            onChange={(e) => setBulkDay(e.target.value)}
+            className="min-h-[44px] rounded-md border border-indigo-300 bg-white px-3 py-2 text-sm"
+          >
+            {eventDateKeys.map((key) => (
+              <option key={key} value={key}>
+                {formatEventDayLabel(key)}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            disabled={bulkSettingDay || selectedUndated.size === 0 || !bulkDay}
+            onClick={handleBulkSetDay}
+            className="inline-flex min-h-[44px] items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:bg-indigo-300 touch-manipulation"
+          >
+            {bulkSettingDay
+              ? 'Updating…'
+              : `Set day on ${selectedUndated.size || 0} selected`}
+          </button>
+        </div>
+      )}
 
       {rows.length === 0 ? (
         <div className="rounded-lg border border-dashed border-gray-300 bg-white p-8 text-center text-sm text-gray-600">
@@ -306,7 +480,19 @@ export default function PositionsDayBoard({
                 className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
               >
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
+                  <div className="flex gap-3">
+                    {activeDay === 'undated' && canManageContent && (
+                      <label className="mt-1 inline-flex min-h-[44px] min-w-[44px] items-start touch-manipulation">
+                        <input
+                          type="checkbox"
+                          checked={selectedUndated.has(rowKey)}
+                          onChange={() => toggleUndatedSelect(rowKey)}
+                          className="mt-1 h-4 w-4"
+                          aria-label="Select undated shift"
+                        />
+                      </label>
+                    )}
+                    <div>
                     <h3 className="text-base font-semibold text-gray-900">
                       #{position.positionNumber}{' '}
                       {position.name || position.positionName}
@@ -327,6 +513,35 @@ export default function PositionsDayBoard({
                         </span>
                       ) : null}
                     </p>
+                    {canManageContent &&
+                      !toDateKey(shift.shiftDate) &&
+                      eventDateKeys.length > 0 &&
+                      !isEditing && (
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                          <select
+                            defaultValue=""
+                            disabled={settingDayKey === rowKey}
+                            onChange={async (e) => {
+                              const day = e.target.value
+                              if (!day) return
+                              const ok = await setShiftDay(position.id, shift.id, day)
+                              if (ok) {
+                                toast.success(`Set to ${formatEventDayLabel(day)}`)
+                                router.reload()
+                              }
+                            }}
+                            className="min-h-[44px] rounded-md border border-amber-300 bg-amber-50 px-2 py-1.5 text-sm"
+                          >
+                            <option value="">Set day…</option>
+                            {eventDateKeys.map((key) => (
+                              <option key={key} value={key}>
+                                {formatEventDayLabel(key)}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div className="text-sm text-gray-700">
                     <span
@@ -335,6 +550,7 @@ export default function PositionsDayBoard({
                       }`}
                     >
                       {filled}/{needed} filled
+                      {filled < needed ? ` · ${needed - filled} open` : ''}
                     </span>
                   </div>
                 </div>
@@ -506,6 +722,19 @@ export default function PositionsDayBoard({
                         </button>
                         <button
                           type="button"
+                          onClick={() =>
+                            setAssignTarget({
+                              position,
+                              shift,
+                              role: 'KEYMAN',
+                            })
+                          }
+                          className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 touch-manipulation"
+                        >
+                          Set keyman
+                        </button>
+                        <button
+                          type="button"
                           onClick={() => setEditingShiftKey(rowKey)}
                           className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 touch-manipulation"
                         >
@@ -528,7 +757,9 @@ export default function PositionsDayBoard({
               <h3 className="text-lg font-semibold text-gray-900">
                 {assignTarget.role === 'OVERSEER'
                   ? 'Set shift overseer'
-                  : 'Assign volunteer'}
+                  : assignTarget.role === 'KEYMAN'
+                    ? 'Set keyman'
+                    : 'Assign volunteer'}
               </h3>
               <p className="text-sm text-gray-600">
                 {assignTarget.position.name} · {assignTarget.shift.name}

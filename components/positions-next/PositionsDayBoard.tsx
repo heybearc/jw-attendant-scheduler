@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/router'
 import {
   countShiftAssignments,
@@ -7,7 +8,10 @@ import {
 import { formatEventDayLabel } from '../../lib/eventDates'
 import { toDateKey } from '../../lib/shiftConflict'
 import { sortShiftsByTime } from '../../lib/shiftSort'
-import { notifyAlert } from '../../lib/ui/toast'
+import { createPositionService } from '../../lib/positionService'
+import { notifyAlert, toast } from '../../lib/ui/toast'
+import { appConfirm } from '../../lib/ui/confirm'
+import ShiftInlineEditor from '../ShiftInlineEditor'
 
 function formatTime12Hour(time24: string): string {
   if (!time24) return ''
@@ -83,6 +87,7 @@ export default function PositionsDayBoard({
   eventDateKeys,
 }: Props) {
   const router = useRouter()
+  const positionService = useMemo(() => createPositionService(eventId), [eventId])
   const [activeDay, setActiveDay] = useState<DayKey>(
     eventDateKeys[0] || 'undated'
   )
@@ -94,15 +99,26 @@ export default function PositionsDayBoard({
   } | null>(null)
   const [assignSearch, setAssignSearch] = useState('')
   const [assigning, setAssigning] = useState(false)
+  const [editingShiftKey, setEditingShiftKey] = useState<string | null>(null)
+  const [savingShiftKey, setSavingShiftKey] = useState<string | null>(null)
+  const [removingId, setRemovingId] = useState<string | null>(null)
+
+  const undatedShiftCount = useMemo(() => {
+    let n = 0
+    for (const p of positions) {
+      for (const s of p.shifts || []) {
+        if (!toDateKey(s.shiftDate)) n++
+      }
+    }
+    return n
+  }, [positions])
 
   const dayTabs: DayKey[] = useMemo(() => {
     const keys = [...eventDateKeys]
-    const hasUndated = positions.some((p) =>
-      (p.shifts || []).some((s) => !toDateKey(s.shiftDate))
-    )
+    const hasUndated = undatedShiftCount > 0
     if (hasUndated || keys.length === 0) keys.push('undated')
     return keys
-  }, [eventDateKeys, positions])
+  }, [eventDateKeys, undatedShiftCount])
 
   const filteredPositions = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -161,6 +177,34 @@ export default function PositionsDayBoard({
     }
   }
 
+  const handleRemove = async (assignment: Assignment) => {
+    const ok = await appConfirm({
+      title: 'Remove assignment',
+      message: `Remove ${personName(assignment)} from this shift?`,
+      confirmLabel: 'Remove',
+      cancelLabel: 'Cancel',
+    })
+    if (!ok) return
+    setRemovingId(assignment.id)
+    try {
+      const res = await fetch(
+        `/api/events/${eventId}/assignments/${assignment.id}`,
+        { method: 'DELETE', credentials: 'include' }
+      )
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        notifyAlert(data.error || data.message || 'Failed to remove')
+        return
+      }
+      toast.success('Assignment removed')
+      router.reload()
+    } catch {
+      notifyAlert('Failed to remove assignment')
+    } finally {
+      setRemovingId(null)
+    }
+  }
+
   const assignCandidates = useMemo(() => {
     if (!assignTarget) return []
     const q = assignSearch.trim().toLowerCase()
@@ -176,6 +220,34 @@ export default function PositionsDayBoard({
 
   return (
     <div className="space-y-4">
+      {eventDateKeys.length > 1 && undatedShiftCount > 0 && (
+        <div className="rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+          <p className="font-medium">
+            {undatedShiftCount} shift{undatedShiftCount === 1 ? '' : 's'} still have no day set
+          </p>
+          <p className="mt-1">
+            On multi-day events, undated shifts land on the <strong>No day set</strong> tab and
+            can look like time conflicts. Open classic Positions, edit each shift, and choose the
+            correct day.
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setActiveDay('undated')}
+              className="inline-flex min-h-[44px] items-center rounded-md border border-amber-400 bg-white px-3 py-2 text-sm font-medium touch-manipulation"
+            >
+              Show undated shifts
+            </button>
+            <Link
+              href={`/events/${eventId}/positions`}
+              className="inline-flex min-h-[44px] items-center rounded-md border border-amber-400 bg-white px-3 py-2 text-sm font-medium touch-manipulation"
+            >
+              Fix days in classic Positions
+            </Link>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap gap-2">
           {dayTabs.map((day) => (
@@ -189,7 +261,9 @@ export default function PositionsDayBoard({
                   : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
               }`}
             >
-              {day === 'undated' ? 'No day set' : formatEventDayLabel(day)}
+              {day === 'undated'
+                ? `No day set${undatedShiftCount ? ` (${undatedShiftCount})` : ''}`
+                : formatEventDayLabel(day)}
             </button>
           ))}
         </div>
@@ -204,11 +278,14 @@ export default function PositionsDayBoard({
 
       {rows.length === 0 ? (
         <div className="rounded-lg border border-dashed border-gray-300 bg-white p-8 text-center text-sm text-gray-600">
-          No shifts for this day. Set a day on shifts in classic Positions, or pick another day.
+          {activeDay === 'undated'
+            ? 'No undated shifts. All shifts have a day set.'
+            : 'No shifts for this day. Set a day on shifts in classic Positions, or pick another day.'}
         </div>
       ) : (
         <div className="space-y-3">
           {rows.map(({ position, shift }) => {
+            const rowKey = `${position.id}:${shift.id}`
             const filled = countShiftAssignments(position.assignments, shift.id)
             const needed = getShiftVolunteersNeeded(shift)
             const shiftAssignments = (position.assignments || []).filter(
@@ -221,10 +298,11 @@ export default function PositionsDayBoard({
             const keyman = shiftAssignments.find((a) => a.role === 'KEYMAN')
             const positionOverseer = position.oversight?.[0]?.overseer
             const pct = Math.min(100, Math.round((filled / Math.max(needed, 1)) * 100))
+            const isEditing = editingShiftKey === rowKey
 
             return (
               <article
-                key={`${position.id}-${shift.id}`}
+                key={rowKey}
                 className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
               >
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
@@ -243,6 +321,11 @@ export default function PositionsDayBoard({
                           ? ' · All day'
                           : ''}
                       {position.area ? ` · ${position.area}` : ''}
+                      {!toDateKey(shift.shiftDate) && eventDateKeys.length > 1 ? (
+                        <span className="ml-1 rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-900">
+                          No day
+                        </span>
+                      ) : null}
                     </p>
                   </div>
                   <div className="text-sm text-gray-700">
@@ -265,71 +348,172 @@ export default function PositionsDayBoard({
                   />
                 </div>
 
-                <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                      Shift overseer
-                    </p>
-                    <p className="text-gray-900">
-                      {overseer
-                        ? personName(overseer)
-                        : positionOverseer
-                          ? `${positionOverseer.firstName} ${positionOverseer.lastName} (position)`
-                          : '—'}
-                    </p>
-                    {keyman && (
-                      <p className="text-xs text-gray-600">
-                        Keyman: {personName(keyman)}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                      Assigned
-                    </p>
-                    {volunteers.length === 0 ? (
-                      <p className="text-gray-500">None yet</p>
-                    ) : (
-                      <ul className="space-y-0.5">
-                        {volunteers.map((v) => (
-                          <li key={v.id} className="text-gray-900">
-                            {personName(v)}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                </div>
+                {isEditing && canManageContent ? (
+                  <ShiftInlineEditor
+                    initial={{
+                      name: shift.name || '',
+                      startTime: shift.startTime || '',
+                      endTime: shift.endTime || '',
+                      isAllDay: !!shift.isAllDay,
+                      volunteersNeeded: needed,
+                      shiftDate: toDateKey(shift.shiftDate),
+                    }}
+                    eventDateKeys={eventDateKeys}
+                    saving={savingShiftKey === rowKey}
+                    onCancel={() => setEditingShiftKey(null)}
+                    onSave={async (values) => {
+                      if (filled > 0) {
+                        const confirmed = await appConfirm({
+                          title: 'Update shift times',
+                          message: `This updates times for ${filled} assigned volunteer${
+                            filled === 1 ? '' : 's'
+                          } on this shift. Continue?`,
+                          confirmLabel: 'Update times',
+                          cancelLabel: 'Cancel',
+                        })
+                        if (!confirmed) return
+                      }
+                      setSavingShiftKey(rowKey)
+                      try {
+                        const ok = await positionService.updateShift(
+                          position.id,
+                          shift.id,
+                          {
+                            name: values.name,
+                            startTime: values.isAllDay ? null : values.startTime || null,
+                            endTime: values.isAllDay ? null : values.endTime || null,
+                            isAllDay: values.isAllDay,
+                            volunteersNeeded: values.volunteersNeeded,
+                            shiftDate: values.shiftDate,
+                          }
+                        )
+                        if (!ok) {
+                          notifyAlert('Failed to update shift')
+                          return
+                        }
+                        setEditingShiftKey(null)
+                        toast.success('Shift updated')
+                        router.reload()
+                      } catch {
+                        notifyAlert('Failed to update shift')
+                      } finally {
+                        setSavingShiftKey(null)
+                      }
+                    }}
+                  />
+                ) : (
+                  <>
+                    <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
+                      <div>
+                        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                          Shift overseer
+                        </p>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-gray-900">
+                            {overseer
+                              ? personName(overseer)
+                              : positionOverseer
+                                ? `${positionOverseer.firstName} ${positionOverseer.lastName} (position)`
+                                : '—'}
+                          </p>
+                          {canManageContent && overseer && (
+                            <button
+                              type="button"
+                              disabled={removingId === overseer.id}
+                              onClick={() => handleRemove(overseer)}
+                              className="text-xs text-red-600 hover:text-red-800 min-h-[44px] px-2 touch-manipulation"
+                            >
+                              Remove
+                            </button>
+                          )}
+                        </div>
+                        {keyman && (
+                          <div className="mt-1 flex flex-wrap items-center gap-2">
+                            <p className="text-xs text-gray-600">
+                              Keyman: {personName(keyman)}
+                            </p>
+                            {canManageContent && (
+                              <button
+                                type="button"
+                                disabled={removingId === keyman.id}
+                                onClick={() => handleRemove(keyman)}
+                                className="text-xs text-red-600 hover:text-red-800 min-h-[44px] px-2 touch-manipulation"
+                              >
+                                Remove
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                          Assigned
+                        </p>
+                        {volunteers.length === 0 ? (
+                          <p className="text-gray-500">None yet</p>
+                        ) : (
+                          <ul className="space-y-1">
+                            {volunteers.map((v) => (
+                              <li
+                                key={v.id}
+                                className="flex flex-wrap items-center gap-2 text-gray-900"
+                              >
+                                <span>{personName(v)}</span>
+                                {canManageContent && (
+                                  <button
+                                    type="button"
+                                    disabled={removingId === v.id}
+                                    onClick={() => handleRemove(v)}
+                                    className="text-xs text-red-600 hover:text-red-800 min-h-[44px] px-2 touch-manipulation"
+                                  >
+                                    Remove
+                                  </button>
+                                )}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    </div>
 
-                {canManageContent && (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setAssignTarget({
-                          position,
-                          shift,
-                          role: 'VOLUNTEER',
-                        })
-                      }
-                      className="inline-flex min-h-[44px] items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 touch-manipulation"
-                    >
-                      Assign volunteer
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setAssignTarget({
-                          position,
-                          shift,
-                          role: 'OVERSEER',
-                        })
-                      }
-                      className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 touch-manipulation"
-                    >
-                      Set shift overseer
-                    </button>
-                  </div>
+                    {canManageContent && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setAssignTarget({
+                              position,
+                              shift,
+                              role: 'VOLUNTEER',
+                            })
+                          }
+                          className="inline-flex min-h-[44px] items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 touch-manipulation"
+                        >
+                          Assign volunteer
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setAssignTarget({
+                              position,
+                              shift,
+                              role: 'OVERSEER',
+                            })
+                          }
+                          className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 touch-manipulation"
+                        >
+                          Set shift overseer
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEditingShiftKey(rowKey)}
+                          className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 touch-manipulation"
+                        >
+                          Edit times
+                        </button>
+                      </div>
+                    )}
+                  </>
                 )}
               </article>
             )

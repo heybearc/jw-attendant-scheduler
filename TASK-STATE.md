@@ -21,12 +21,12 @@ Building `/events/[id]/positions-next` day-board preview (multi-day grouping, ca
 
 ### Next steps
 
-1. Smoke `positions-next` on STANDBY.
-2. Iterate redesign: remove assignee, edit shift times, undated-shift prompts, publish gate.
+1. Smoke remove / Edit times / undated banner on STANDBY `positions-next`.
+2. Next redesign slices: bulk tools parity, publish gate.
 
 ## Exact next command
 
-Open `/events/<id>/positions-next` on STANDBY (or classic Positions → **Try new layout**).
+Open `/events/<id>/positions-next` on STANDBY (`https://blue.theoshift.com`).
 
 ---
 

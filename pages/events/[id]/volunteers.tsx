@@ -241,13 +241,15 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
     overseerId: string
     keymanId: string
     formsOfService: string[]
+    availability: 'all' | 'AVAILABLE' | 'NOT_AVAILABLE' | 'PARTIAL' | 'PENDING' | 'none'
   }>({
     search: '',
     congregation: '',
     isActive: 'true', // Default to Active only
     overseerId: '',
     keymanId: '',
-    formsOfService: []
+    formsOfService: [],
+    availability: 'all',
   })
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(20)
@@ -264,12 +266,18 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
       const overseerId = urlParams.get('overseerId') || ''
       const keymanId = urlParams.get('keymanId') || ''
       const formsOfService = urlParams.get('formsOfService')?.split(',').filter(Boolean) || []
+      const availabilityRaw = urlParams.get('availability') || 'all'
+      const availability = (
+        ['all', 'AVAILABLE', 'NOT_AVAILABLE', 'PARTIAL', 'PENDING', 'none'].includes(availabilityRaw)
+          ? availabilityRaw
+          : 'all'
+      ) as 'all' | 'AVAILABLE' | 'NOT_AVAILABLE' | 'PARTIAL' | 'PENDING' | 'none'
       const page = parseInt(urlParams.get('page') || '1')
       const perPage = parseInt(urlParams.get('perPage') || '20')
       
       // Only update if there are actual URL parameters to restore
-      if (search || congregation || isActive !== 'true' || overseerId || keymanId || formsOfService.length > 0 || page !== 1 || perPage !== 20) {
-        setFilters({ search, congregation, isActive, overseerId, keymanId, formsOfService })
+      if (search || congregation || isActive !== 'true' || overseerId || keymanId || formsOfService.length > 0 || availability !== 'all' || page !== 1 || perPage !== 20) {
+        setFilters({ search, congregation, isActive, overseerId, keymanId, formsOfService, availability })
         setCurrentPage(page)
         setItemsPerPage(perPage)
       }
@@ -286,6 +294,7 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
       if (filters.overseerId) url.searchParams.set('overseerId', filters.overseerId)
       if (filters.keymanId) url.searchParams.set('keymanId', filters.keymanId)
       if (filters.formsOfService.length > 0) url.searchParams.set('formsOfService', filters.formsOfService.join(','))
+      if (filters.availability !== 'all') url.searchParams.set('availability', filters.availability)
       url.searchParams.set('page', currentPage.toString())
       url.searchParams.set('perPage', itemsPerPage.toString())
       sessionStorage.setItem(
@@ -336,8 +345,14 @@ export default function EventAttendantsPage({ eventId, event, attendants, canMan
             attForm.toLowerCase().includes(filterForm.toLowerCase())
           )
         ))
+
+    const status = attendant.availability?.status
+    const matchesAvailability =
+      filters.availability === 'all' ||
+      (filters.availability === 'none' && !status) ||
+      (filters.availability !== 'none' && status === filters.availability)
     
-    return matchesSearch && matchesCongregation && matchesStatus && matchesOverseer && matchesKeyman && matchesFormsOfService
+    return matchesSearch && matchesCongregation && matchesStatus && matchesOverseer && matchesKeyman && matchesFormsOfService && matchesAvailability
   })
 
   const totalPages = itemsPerPage === -1 ? 1 : Math.ceil(filteredAttendants.length / itemsPerPage)
@@ -1318,18 +1333,51 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </div>
+
+                <div className="relative w-full sm:w-auto">
+                  <select
+                    value={filters.availability}
+                    onChange={(e) =>
+                      setFilters({
+                        ...filters,
+                        availability: e.target.value as typeof filters.availability,
+                      })
+                    }
+                    className="w-full px-3 py-2 pr-10 min-h-[44px] border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 appearance-none"
+                  >
+                    <option value="all">All availability</option>
+                    <option value="AVAILABLE">Available</option>
+                    <option value="NOT_AVAILABLE">Not available</option>
+                    <option value="PARTIAL">Partial</option>
+                    <option value="PENDING">Pending</option>
+                    <option value="none">No request yet</option>
+                  </select>
+                  <svg
+                    className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
                 
                 {/* Filter Presets Button */}
                 <FilterPresets
                   currentFilters={filters}
-                  onApplyPreset={(newFilters) => setFilters(newFilters)}
+                  onApplyPreset={(newFilters) =>
+                    setFilters({
+                      ...newFilters,
+                      availability: newFilters.availability || 'all',
+                    })
+                  }
                   eventId={eventId}
                 />
                 
-                {(filters.search || filters.congregation || filters.overseerId || filters.keymanId || filters.formsOfService.length > 0) && (
+                {(filters.search || filters.congregation || filters.overseerId || filters.keymanId || filters.formsOfService.length > 0 || filters.availability !== 'all') && (
                   <button
-                    onClick={() => setFilters({ search: '', congregation: '', isActive: filters.isActive, overseerId: '', keymanId: '', formsOfService: [] })}
-                    className="inline-flex items-center px-3 py-2 text-sm text-gray-700 hover:text-gray-900 font-medium"
+                    onClick={() => setFilters({ search: '', congregation: '', isActive: filters.isActive, overseerId: '', keymanId: '', formsOfService: [], availability: 'all' })}
+                    className="inline-flex items-center px-3 py-2 min-h-[44px] text-sm text-gray-700 hover:text-gray-900 font-medium touch-manipulation"
                   >
                     <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1487,7 +1535,7 @@ Bob,Johnson,bob.johnson@example.com,,South Congregation,"Regular Pioneer",,true`
             </div>
             <div className="flex items-end">
               <button
-                onClick={() => setFilters({ search: '', congregation: '', isActive: 'true', overseerId: '', keymanId: '', formsOfService: [] })}
+                onClick={() => setFilters({ search: '', congregation: '', isActive: 'true', overseerId: '', keymanId: '', formsOfService: [], availability: 'all' })}
                 className="w-full bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-md transition-colors min-h-[44px] touch-manipulation"
               >
                 Clear All Filters

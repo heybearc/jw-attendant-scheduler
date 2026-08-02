@@ -12,6 +12,7 @@ interface FilterPreset {
     overseerId: string
     keymanId: string
     formsOfService: string[]
+    availability?: 'all' | 'AVAILABLE' | 'NOT_AVAILABLE' | 'PARTIAL' | 'PENDING' | 'none'
   }
 }
 
@@ -74,6 +75,16 @@ export default function FilterPresets({ currentFilters, onApplyPreset, eventId }
     if (preset.filters.congregation) parts.push(`Congregation: "${preset.filters.congregation}"`)
     if (preset.filters.isActive !== 'true') parts.push(`Status: ${preset.filters.isActive === 'all' ? 'All' : 'Inactive'}`)
     if (preset.filters.formsOfService.length > 0) parts.push(`Roles: ${preset.filters.formsOfService.join(', ')}`)
+    if (preset.filters.availability && preset.filters.availability !== 'all') {
+      const labels: Record<string, string> = {
+        AVAILABLE: 'Available',
+        NOT_AVAILABLE: 'Not available',
+        PARTIAL: 'Partial',
+        PENDING: 'Pending',
+        none: 'No request yet',
+      }
+      parts.push(`Availability: ${labels[preset.filters.availability] || preset.filters.availability}`)
+    }
     return parts.length > 0 ? parts.join(' • ') : 'No filters'
   }
 

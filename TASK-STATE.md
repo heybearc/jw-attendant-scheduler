@@ -8,26 +8,25 @@
 
 ## Current Task
 
-**Idle after ship** — next: triage feedback or continue Positions redesign backlog when prioritized.
+**Positions redesign (parallel surface)** — NEXT
 
 ### What I'm doing right now
 
-Shipped **v4.31.0** (availability filter, assign-time edits, safer Positions notifications, mobile polish, chat push copy).
+Building `/events/[id]/positions-next` day-board preview (multi-day grouping, capacity, per-shift overseer, quick assign). Classic Positions remains default.
 
 ### Recent completions
 
-- ✅ **v4.31.0** — Volunteers availability filter; edit shift times in assign flow; Positions Send Notifications throttle/abort; chat push copy; mobile polish
+- ✅ **v4.31.0** — Availability filter; assign-time edits; safer Positions notifications; chat push copy; mobile polish
 - ✅ **v4.30.1** — Request Volunteer for whole IVS event roster
-- ✅ **v4.30.0** — IVS dashboard intake (Pending requests + email/phone on Approvals/export)
 
 ### Next steps
 
-1. Triage new feedback (`/admin/feedback` or `scripts/ssh-query-feedback.sh new`).
-2. Positions redesign / native chat remain backlog (deferred).
+1. Smoke `positions-next` on STANDBY.
+2. Iterate redesign: remove assignee, edit shift times, undated-shift prompts, publish gate.
 
 ## Exact next command
 
-`scripts/ssh-query-feedback.sh new` — or pick next backlog item from PLAN.md.
+Open `/events/<id>/positions-next` on STANDBY (or classic Positions → **Try new layout**).
 
 ---
 
@@ -35,14 +34,8 @@ Shipped **v4.31.0** (availability filter, assign-time edits, safer Positions not
 
 **Current**
 
-- **PIN column** — Still in DB; magic links are primary UI. Planned cleanup per backlog (legacy note).
-
-**Recently addressed (don’t regress)**
-
-- ~~Positions Send Notifications lacking confirm/throttle/abort~~ — **v4.31.0**.
-- ~~Chat push banner always mentions iPhone~~ — **v4.31.0**.
-- ~~Volunteers no availability filter~~ — **v4.31.0**.
-- ~~Request Volunteer tab hidden for real IVS team~~ — **v4.30.1**.
+- **PIN column** — Still in DB; magic links are primary UI.
+- **Positions redesign** — Preview only; not published as default.
 
 **Infrastructure**
 
@@ -53,20 +46,11 @@ Shipped **v4.31.0** (availability filter, assign-time edits, safer Positions not
 
 ## Session snapshot — recent `main` commits
 
+- `7b4d7d32` — chore: mark production on v4.31.0 after ship
 - `9704574d` — Release v4.31.0
-- `e9ad8c13` — feat: mobile polish and in-place shift time edits on assign
-- `e426d000` — feat: filter Volunteers roster by availability status
-- `bacfdf93` — fix: platform-aware chat push unsupported banner copy
-- `a2face1f` — fix: throttle and abort Positions assignment notification sends
 
 ---
 
 ## Feedback triage (this session)
 
 - **Resolved:** 0 · **Promoted:** 0 · **Triaged:** 0
-
----
-
-## Historical note
-
-Long-form day-by-day completions lived in this file through 2026-05-05 and were **rotated out on 2026-05-06**. Older milestones: **`git log --oneline`**, GitHub **Releases**.

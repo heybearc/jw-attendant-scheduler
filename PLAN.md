@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-08-02  
 **Current phase:** Feature Development + Platform Infrastructure  
-**Status:** **v4.31.0 LIVE** (GREEN). Near-term gaps shipped (availability filter, assign-time edits, safer notifications, mobile polish). Full Positions redesign remains backlog.
+**Status:** **v4.31.0 LIVE** (GREEN). Positions redesign preview at `/positions-next` (classic remains default).
 
 ---
 

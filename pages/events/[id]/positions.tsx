@@ -1547,6 +1547,17 @@ export default function EventPositionsPage({ eventId, event, positions: initialP
               Fri / Sat / Sun (or the event day) — naming the shift is not enough.
             </div>
           )}
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-md border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-950">
+            <span>
+              Preview the day-board Positions redesign (multi-day stations + per-shift overseers). Classic layout stays default.
+            </span>
+            <Link
+              href={`/events/${eventId}/positions-next`}
+              className="inline-flex min-h-[44px] items-center rounded-md border border-indigo-300 bg-white px-3 py-2 font-medium text-indigo-900 hover:bg-indigo-100 touch-manipulation"
+            >
+              Try new layout
+            </Link>
+          </div>
           <div className="mb-8">
             {/* Professional Action Toolbar */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

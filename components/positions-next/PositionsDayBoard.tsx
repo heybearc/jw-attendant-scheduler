@@ -79,6 +79,7 @@ export default function PositionsDayBoard({
   const [savingNewShift, setSavingNewShift] = useState(false)
   const [notifySending, setNotifySending] = useState(false)
   const [notifyJobActive, setNotifyJobActive] = useState(false)
+  const [deletingKey, setDeletingKey] = useState<string | null>(null)
 
   const undatedShiftCount = useMemo(() => {
     let n = 0
@@ -318,6 +319,84 @@ export default function PositionsDayBoard({
       notifyAlert('Failed to remove assignment')
     } finally {
       setRemovingId(null)
+    }
+  }
+
+  const handleDeleteShift = async (
+    positionId: string,
+    shiftId: string,
+    shiftName: string
+  ) => {
+    const ok = await appConfirm({
+      title: 'Delete shift',
+      message: `Delete "${shiftName}"? This also removes anyone assigned to it.`,
+      confirmLabel: 'Delete shift',
+      cancelLabel: 'Cancel',
+    })
+    if (!ok) return
+    const key = `${positionId}:${shiftId}`
+    setDeletingKey(key)
+    try {
+      const success = await positionService.deleteShift(positionId, shiftId)
+      if (!success) {
+        notifyAlert('Failed to delete shift')
+        return
+      }
+      toast.success('Shift deleted')
+      router.reload()
+    } catch {
+      notifyAlert('Failed to delete shift')
+    } finally {
+      setDeletingKey(null)
+    }
+  }
+
+  const handleDeactivatePosition = async (position: Position) => {
+    const ok = await appConfirm({
+      title: 'Deactivate position',
+      message: `Deactivate "#${position.positionNumber} ${
+        position.name || position.positionName
+      }"? It can be reactivated later in classic Positions.`,
+      confirmLabel: 'Deactivate',
+      cancelLabel: 'Cancel',
+    })
+    if (!ok) return
+    setDeletingKey(position.id)
+    try {
+      const success = await positionService.deletePosition(position.id)
+      if (!success) {
+        notifyAlert('Failed to deactivate position')
+        return
+      }
+      toast.success('Position deactivated')
+      router.reload()
+    } catch {
+      notifyAlert('Failed to deactivate position')
+    } finally {
+      setDeletingKey(null)
+    }
+  }
+
+  const runShiftMoreAction = async (
+    action: string,
+    position: Position,
+    shift: Shift
+  ) => {
+    if (!action) return
+    if (action === 'overseer') {
+      setAssignTarget({ position, shift, role: 'OVERSEER' })
+      return
+    }
+    if (action === 'keyman') {
+      setAssignTarget({ position, shift, role: 'KEYMAN' })
+      return
+    }
+    if (action === 'edit') {
+      setEditingShiftKey(`${position.id}:${shift.id}`)
+      return
+    }
+    if (action === 'delete') {
+      await handleDeleteShift(position.id, shift.id, shift.name || 'Shift')
     }
   }
 
@@ -627,13 +706,23 @@ export default function PositionsDayBoard({
                     </p>
                   </div>
                   {canManageContent && (
-                    <button
-                      type="button"
-                      onClick={() => setAddShiftPosition(position)}
-                      className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 touch-manipulation"
-                    >
-                      Add shift
-                    </button>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setAddShiftPosition(position)}
+                        className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 touch-manipulation"
+                      >
+                        Add shift
+                      </button>
+                      <button
+                        type="button"
+                        disabled={deletingKey === position.id}
+                        onClick={() => handleDeactivatePosition(position)}
+                        className="inline-flex min-h-[44px] items-center rounded-md border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50 touch-manipulation"
+                      >
+                        Deactivate
+                      </button>
+                    </div>
                   )}
                 </header>
 
@@ -880,7 +969,7 @@ export default function PositionsDayBoard({
                             </div>
 
                             {canManageContent && (
-                              <div className="mt-2 flex flex-wrap gap-2">
+                              <div className="mt-2 flex flex-wrap items-center gap-2">
                                 <button
                                   type="button"
                                   onClick={() =>
@@ -894,39 +983,28 @@ export default function PositionsDayBoard({
                                 >
                                   Assign
                                 </button>
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    setAssignTarget({
+                                <select
+                                  key={`${rowKey}-more`}
+                                  defaultValue=""
+                                  disabled={deletingKey === rowKey}
+                                  onChange={async (e) => {
+                                    const action = e.target.value
+                                    e.target.value = ''
+                                    await runShiftMoreAction(
+                                      action,
                                       position,
-                                      shift,
-                                      role: 'OVERSEER',
-                                    })
-                                  }
-                                  className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 touch-manipulation"
+                                      shift
+                                    )
+                                  }}
+                                  className="min-h-[44px] rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 touch-manipulation"
+                                  aria-label="More shift actions"
                                 >
-                                  Overseer
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    setAssignTarget({
-                                      position,
-                                      shift,
-                                      role: 'KEYMAN',
-                                    })
-                                  }
-                                  className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 touch-manipulation"
-                                >
-                                  Keyman
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => setEditingShiftKey(rowKey)}
-                                  className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 touch-manipulation"
-                                >
-                                  Edit times
-                                </button>
+                                  <option value="">More…</option>
+                                  <option value="overseer">Set overseer</option>
+                                  <option value="keyman">Set keyman</option>
+                                  <option value="edit">Edit times</option>
+                                  <option value="delete">Delete shift</option>
+                                </select>
                               </div>
                             )}
                           </>

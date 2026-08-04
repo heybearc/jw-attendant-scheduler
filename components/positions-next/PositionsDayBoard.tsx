@@ -1,5 +1,4 @@
 import React, { useMemo, useState } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/router'
 import {
   countShiftAssignments,
@@ -12,69 +11,22 @@ import { createPositionService } from '../../lib/positionService'
 import { notifyAlert, toast } from '../../lib/ui/toast'
 import { appConfirm } from '../../lib/ui/confirm'
 import {
-  buildVolunteerAssignmentMap,
-  getConflictsForShift,
-} from '../../hooks/useConflicts'
+  abortEventBulkEmail,
+  formatBulkEmailConfirmMessage,
+} from '../../lib/bulkEmailClient'
 import ShiftInlineEditor from '../ShiftInlineEditor'
 import CreatePositionModal from '../CreatePositionModal'
-
-function formatTime12Hour(time24: string): string {
-  if (!time24) return ''
-  const [hours, minutes] = time24.split(':')
-  const hour = parseInt(hours, 10)
-  const ampm = hour >= 12 ? 'PM' : 'AM'
-  const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
-  return `${hour12}:${minutes} ${ampm}`
-}
-
-type DayKey = string | 'undated'
-
-type Assignment = {
-  id: string
-  role: string
-  volunteer?: { id: string; firstName: string; lastName: string } | null
-  attendant?: { id: string; firstName: string; lastName: string } | null
-  shift?: {
-    id: string
-    name: string
-    startTime?: string | null
-    endTime?: string | null
-    isAllDay: boolean
-    shiftDate?: string | Date | null
-  } | null
-}
-
-type Shift = {
-  id: string
-  name: string
-  startTime?: string | null
-  endTime?: string | null
-  isAllDay: boolean
-  volunteersNeeded?: number
-  shiftDate?: string | null
-}
-
-type Position = {
-  id: string
-  name: string
-  positionName?: string
-  positionNumber: number
-  isActive: boolean
-  area?: string | null
-  shifts?: Shift[]
-  assignments?: Assignment[]
-  oversight?: Array<{
-    overseer?: { firstName: string; lastName: string } | null
-    keyman?: { firstName: string; lastName: string } | null
-  }>
-}
-
-type Volunteer = {
-  id: string
-  firstName: string
-  lastName: string
-  congregation?: string | null
-}
+import DayBoardAssignModal from './DayBoardAssignModal'
+import DayBoardAddShiftModal from './DayBoardAddShiftModal'
+import {
+  type AssignTarget,
+  type DayKey,
+  type Position,
+  type Shift,
+  type Volunteer,
+  personName,
+  shiftLabel,
+} from './types'
 
 type Props = {
   eventId: string
@@ -86,9 +38,11 @@ type Props = {
   eventDateKeys: string[]
 }
 
-function personName(a: Assignment): string {
-  const p = a.volunteer || a.attendant
-  return p ? `${p.firstName} ${p.lastName}` : 'Unknown'
+type StationGroup = {
+  position: Position
+  shifts: Shift[]
+  filled: number
+  needed: number
 }
 
 export default function PositionsDayBoard({
@@ -104,13 +58,7 @@ export default function PositionsDayBoard({
     eventDateKeys[0] || 'undated'
   )
   const [search, setSearch] = useState('')
-  const [assignTarget, setAssignTarget] = useState<{
-    position: Position
-    shift: Shift
-    role: 'VOLUNTEER' | 'OVERSEER' | 'KEYMAN'
-  } | null>(null)
-  const [assignSearch, setAssignSearch] = useState('')
-  const [assigning, setAssigning] = useState(false)
+  const [assignTarget, setAssignTarget] = useState<AssignTarget | null>(null)
   const [editingShiftKey, setEditingShiftKey] = useState<string | null>(null)
   const [savingShiftKey, setSavingShiftKey] = useState<string | null>(null)
   const [removingId, setRemovingId] = useState<string | null>(null)
@@ -129,6 +77,8 @@ export default function PositionsDayBoard({
   const [creatingPosition, setCreatingPosition] = useState(false)
   const [addShiftPosition, setAddShiftPosition] = useState<Position | null>(null)
   const [savingNewShift, setSavingNewShift] = useState(false)
+  const [notifySending, setNotifySending] = useState(false)
+  const [notifyJobActive, setNotifyJobActive] = useState(false)
 
   const undatedShiftCount = useMemo(() => {
     let n = 0
@@ -142,8 +92,7 @@ export default function PositionsDayBoard({
 
   const dayTabs: DayKey[] = useMemo(() => {
     const keys = [...eventDateKeys]
-    const hasUndated = undatedShiftCount > 0
-    if (hasUndated || keys.length === 0) keys.push('undated')
+    if (undatedShiftCount > 0 || keys.length === 0) keys.push('undated')
     return keys
   }, [eventDateKeys, undatedShiftCount])
 
@@ -162,18 +111,25 @@ export default function PositionsDayBoard({
     })
   }, [positions, search])
 
-  const rows = useMemo(() => {
-    const out: Array<{ position: Position; shift: Shift }> = []
+  const stations = useMemo((): StationGroup[] => {
+    const out: StationGroup[] = []
     for (const position of filteredPositions) {
-      const shifts = sortShiftsByTime(position.shifts || [])
-      for (const shift of shifts) {
+      const dayShifts = sortShiftsByTime(position.shifts || []).filter((shift) => {
         const key = toDateKey(shift.shiftDate) || 'undated'
-        if (key !== activeDay) continue
+        if (key !== activeDay) return false
         const filled = countShiftAssignments(position.assignments, shift.id)
         const needed = getShiftVolunteersNeeded(shift)
-        if (underfilledOnly && filled >= needed) continue
-        out.push({ position, shift })
+        if (underfilledOnly && filled >= needed) return false
+        return true
+      })
+      if (dayShifts.length === 0) continue
+      let filled = 0
+      let needed = 0
+      for (const shift of dayShifts) {
+        filled += countShiftAssignments(position.assignments, shift.id)
+        needed += getShiftVolunteersNeeded(shift)
       }
+      out.push({ position, shifts: dayShifts, filled, needed })
     }
     return out
   }, [filteredPositions, activeDay, underfilledOnly])
@@ -182,17 +138,19 @@ export default function PositionsDayBoard({
     let filled = 0
     let needed = 0
     let shifts = 0
-    for (const position of filteredPositions) {
-      for (const shift of position.shifts || []) {
-        const key = toDateKey(shift.shiftDate) || 'undated'
-        if (key !== activeDay) continue
-        shifts++
-        filled += countShiftAssignments(position.assignments, shift.id)
-        needed += getShiftVolunteersNeeded(shift)
-      }
+    for (const s of stations) {
+      filled += s.filled
+      needed += s.needed
+      shifts += s.shifts.length
     }
     return { filled, needed, shifts, open: Math.max(0, needed - filled) }
-  }, [filteredPositions, activeDay])
+  }, [stations])
+
+  const nextPositionNumber = useMemo(() => {
+    return (
+      positions.reduce((acc, p) => Math.max(acc, p.positionNumber || 0), 0) + 1
+    )
+  }, [positions])
 
   const setShiftDay = async (
     positionId: string,
@@ -248,41 +206,6 @@ export default function PositionsDayBoard({
       setBulkSettingDay(false)
     }
   }
-
-  const toggleUndatedSelect = (rowKey: string) => {
-    setSelectedUndated((prev) => {
-      const next = new Set(prev)
-      if (next.has(rowKey)) next.delete(rowKey)
-      else next.add(rowKey)
-      return next
-    })
-  }
-
-  const selectAllUndatedVisible = () => {
-    setSelectedUndated(new Set(rows.map(({ position, shift }) => `${position.id}:${shift.id}`)))
-  }
-
-  const assignmentMap = useMemo(
-    () => buildVolunteerAssignmentMap(positions),
-    [positions]
-  )
-
-  const conflictMap = useMemo(() => {
-    if (!assignTarget) return new Map()
-    return getConflictsForShift(
-      attendants.map((a) => a.id),
-      assignTarget.shift,
-      assignmentMap
-    )
-  }, [assignTarget, attendants, assignmentMap])
-
-  const nextPositionNumber = useMemo(() => {
-    const max = positions.reduce(
-      (acc, p) => Math.max(acc, p.positionNumber || 0),
-      0
-    )
-    return max + 1
-  }, [positions])
 
   const openCreatePosition = () => {
     setCreateForm({
@@ -368,62 +291,9 @@ export default function PositionsDayBoard({
     }
   }
 
-  const handleAssign = async (volunteerId: string) => {
-    if (!assignTarget) return
-    const conflict = conflictMap.get(volunteerId)
-    if (conflict?.hasConflict) {
-      const confirmed = await appConfirm({
-        title: 'Scheduling conflict',
-        message: `${conflict.message}\n\nAssign anyway? Coordinators can override conflicts.`,
-        confirmLabel: 'Assign anyway',
-        cancelLabel: 'Cancel',
-      })
-      if (!confirmed) return
-    }
-    setAssigning(true)
-    try {
-      const res = await fetch(`/api/events/${eventId}/assignments`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          positionId: assignTarget.position.id,
-          volunteerId,
-          shiftId: assignTarget.shift.id,
-          role: assignTarget.role,
-        }),
-      })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) {
-        if (res.status === 409) {
-          const details = data.conflicts
-            ?.map((c: { positionName?: string; shiftName?: string }) =>
-              `${c.positionName || ''} — ${c.shiftName || ''}`.trim()
-            )
-            .filter(Boolean)
-            .join(', ')
-          notifyAlert(
-            data.message ||
-              data.error ||
-              (details
-                ? `Time conflict: already assigned to ${details}`
-                : 'Assignment conflict')
-          )
-        } else {
-          notifyAlert(data.message || data.error || 'Failed to assign')
-        }
-        return
-      }
-      setAssignTarget(null)
-      setAssignSearch('')
-      router.reload()
-    } catch {
-      notifyAlert('Failed to assign')
-    } finally {
-      setAssigning(false)
-    }
-  }
-
-  const handleRemove = async (assignment: Assignment) => {
+  const handleRemove = async (
+    assignment: Parameters<typeof personName>[0]
+  ) => {
     const ok = await appConfirm({
       title: 'Remove assignment',
       message: `Remove ${personName(assignment)} from this shift?`,
@@ -451,58 +321,114 @@ export default function PositionsDayBoard({
     }
   }
 
-  const assignCandidates = useMemo(() => {
-    if (!assignTarget) return []
-    const q = assignSearch.trim().toLowerCase()
-    return attendants
-      .filter((a) => {
-        if (!q) return true
-        return `${a.firstName} ${a.lastName} ${a.congregation || ''}`
-          .toLowerCase()
-          .includes(q)
+  const handleSendNotifications = async () => {
+    if (notifySending || notifyJobActive) {
+      notifyAlert('An assignment notification send is already in progress.')
+      return
+    }
+    try {
+      const previewRes = await fetch(
+        `/api/events/${eventId}/assignments/send-notifications`,
+        { credentials: 'include' }
+      )
+      const preview = await previewRes.json().catch(() => ({}))
+      const count =
+        typeof preview.recipientCount === 'number' ? preview.recipientCount : 0
+      if (!previewRes.ok) {
+        notifyAlert(preview.error || preview.message || 'Could not preview recipients')
+        return
+      }
+      if (count === 0) {
+        notifyAlert('No assigned volunteers with an email address to notify.')
+        return
+      }
+      const confirmed = await appConfirm({
+        title: 'Send assignment notifications',
+        message: formatBulkEmailConfirmMessage({
+          recipientCount: count,
+          estimatedSeconds:
+            typeof preview.estimatedSeconds === 'number'
+              ? preview.estimatedSeconds
+              : Math.ceil(count * 1.2),
+          scopeNote:
+            'Assigned volunteers with email only (one email per person).',
+        }),
+        confirmLabel: 'Queue emails',
+        cancelLabel: 'Cancel',
       })
-      .sort((a, b) => {
-        const ac = conflictMap.get(a.id)?.hasConflict ? 1 : 0
-        const bc = conflictMap.get(b.id)?.hasConflict ? 1 : 0
-        if (ac !== bc) return ac - bc
-        return `${a.lastName} ${a.firstName}`.localeCompare(
-          `${b.lastName} ${b.firstName}`
-        )
-      })
-      .slice(0, 40)
-  }, [attendants, assignSearch, assignTarget, conflictMap])
+      if (!confirmed) return
+
+      setNotifySending(true)
+      setNotifyJobActive(true)
+      const response = await fetch(
+        `/api/events/${eventId}/assignments/send-notifications`,
+        {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+        }
+      )
+      const data = await response.json().catch(() => ({}))
+      if (response.ok && data.success) {
+        notifyAlert(data.message || `Queued ${count} notification(s)`)
+        if (!data.async) setNotifyJobActive(false)
+      } else {
+        setNotifyJobActive(false)
+        notifyAlert(data.error || data.message || 'Failed to send notifications')
+      }
+    } catch (error: unknown) {
+      setNotifyJobActive(false)
+      notifyAlert(
+        `Failed to send notifications: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      )
+    } finally {
+      setNotifySending(false)
+    }
+  }
+
+  const handleAbortNotifications = async () => {
+    const result = await abortEventBulkEmail(
+      eventId,
+      'assignment-notifications'
+    )
+    notifyAlert(result.message)
+    if (result.ok) setNotifyJobActive(false)
+  }
+
+  const selectAllUndatedVisible = () => {
+    const keys = new Set<string>()
+    for (const station of stations) {
+      for (const shift of station.shifts) {
+        keys.add(`${station.position.id}:${shift.id}`)
+      }
+    }
+    setSelectedUndated(keys)
+  }
 
   return (
     <div className="space-y-4">
       {eventDateKeys.length > 1 && undatedShiftCount > 0 && (
         <div className="rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950">
-          <p className="font-medium">
-            {undatedShiftCount} shift{undatedShiftCount === 1 ? '' : 's'} still have no day set
+          <p>
+            <span className="font-medium">
+              {undatedShiftCount} undated shift
+              {undatedShiftCount === 1 ? '' : 's'}
+            </span>
+            {' — '}set a day here, or open the No day set tab.
           </p>
-          <p className="mt-1">
-            On multi-day events, undated shifts land on the <strong>No day set</strong> tab and
-            can look like time conflicts. Open classic Positions, edit each shift, and choose the
-            correct day.
-          </p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => setActiveDay('undated')}
-              className="inline-flex min-h-[44px] items-center rounded-md border border-amber-400 bg-white px-3 py-2 text-sm font-medium touch-manipulation"
-            >
-              Show undated shifts
-            </button>
-            <Link
-              href={`/events/${eventId}/positions`}
-              className="inline-flex min-h-[44px] items-center rounded-md border border-amber-400 bg-white px-3 py-2 text-sm font-medium touch-manipulation"
-            >
-              Fix days in classic Positions
-            </Link>
-          </div>
+          <button
+            type="button"
+            onClick={() => setActiveDay('undated')}
+            className="mt-2 inline-flex min-h-[44px] items-center rounded-md border border-amber-400 bg-white px-3 py-2 text-sm font-medium touch-manipulation"
+          >
+            Show undated
+          </button>
         </div>
       )}
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex flex-wrap gap-2">
           {dayTabs.map((day) => (
             <button
@@ -526,7 +452,7 @@ export default function PositionsDayBoard({
         </div>
         <div className="flex flex-col gap-2 sm:items-end">
           {canManageContent && (
-            <div className="flex flex-wrap gap-2 justify-end">
+            <div className="flex flex-wrap justify-end gap-2">
               <button
                 type="button"
                 onClick={openCreatePosition}
@@ -537,7 +463,7 @@ export default function PositionsDayBoard({
               <button
                 type="button"
                 onClick={() => {
-                  const first = filteredPositions[0] || null
+                  const first = filteredPositions[0]
                   if (!first) {
                     notifyAlert('Create a position first')
                     return
@@ -548,6 +474,23 @@ export default function PositionsDayBoard({
               >
                 Add shift
               </button>
+              <button
+                type="button"
+                disabled={notifySending}
+                onClick={handleSendNotifications}
+                className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 disabled:opacity-50 touch-manipulation"
+              >
+                {notifySending ? 'Queuing…' : 'Send notifications'}
+              </button>
+              {notifyJobActive && (
+                <button
+                  type="button"
+                  onClick={handleAbortNotifications}
+                  className="inline-flex min-h-[44px] items-center rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 touch-manipulation"
+                >
+                  Abort send
+                </button>
+              )}
             </div>
           )}
           <input
@@ -574,12 +517,12 @@ export default function PositionsDayBoard({
           {activeDay === 'undated'
             ? 'Undated shifts'
             : formatEventDayLabel(activeDay)}{' '}
-          coverage
+          · {stations.length} station{stations.length === 1 ? '' : 's'}
         </p>
         <p className="mt-1">
-          {dayCoverage.filled}/{dayCoverage.needed} slots filled · {dayCoverage.open} open ·{' '}
+          {dayCoverage.filled}/{dayCoverage.needed} slots · {dayCoverage.open} open ·{' '}
           {dayCoverage.shifts} shift{dayCoverage.shifts === 1 ? '' : 's'}
-          {underfilledOnly ? ' · showing underfilled only' : ''}
+          {underfilledOnly ? ' · underfilled only' : ''}
         </p>
         <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-gray-100">
           <div
@@ -604,19 +547,26 @@ export default function PositionsDayBoard({
         </div>
       </div>
 
-      {activeDay === 'undated' && canManageContent && eventDateKeys.length > 0 && rows.length > 0 && (
-        <div className="flex flex-col gap-2 rounded-md border border-indigo-200 bg-indigo-50 px-4 py-3 sm:flex-row sm:items-center">
+      {activeDay === 'undated' && canManageContent && stations.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 rounded-md border border-indigo-200 bg-indigo-50 px-3 py-2">
           <button
             type="button"
             onClick={selectAllUndatedVisible}
-            className="inline-flex min-h-[44px] items-center rounded-md border border-indigo-300 bg-white px-3 py-2 text-sm touch-manipulation"
+            className="min-h-[44px] rounded-md border border-indigo-300 bg-white px-3 py-2 text-sm touch-manipulation"
           >
-            Select all visible ({rows.length})
+            Select all
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedUndated(new Set())}
+            className="min-h-[44px] rounded-md border border-indigo-300 bg-white px-3 py-2 text-sm touch-manipulation"
+          >
+            Clear
           </button>
           <select
             value={bulkDay}
             onChange={(e) => setBulkDay(e.target.value)}
-            className="min-h-[44px] rounded-md border border-indigo-300 bg-white px-3 py-2 text-sm"
+            className="min-h-[44px] rounded-md border border-indigo-300 bg-white px-2 py-1.5 text-sm"
           >
             {eventDateKeys.map((key) => (
               <option key={key} value={key}>
@@ -632,396 +582,377 @@ export default function PositionsDayBoard({
           >
             {bulkSettingDay
               ? 'Updating…'
-              : `Set day on ${selectedUndated.size || 0} selected`}
+              : `Set day on ${selectedUndated.size || 0}`}
           </button>
         </div>
       )}
 
-      {rows.length === 0 ? (
+      {stations.length === 0 ? (
         <div className="rounded-lg border border-dashed border-gray-300 bg-white p-8 text-center text-sm text-gray-600">
           {activeDay === 'undated'
             ? 'No undated shifts. All shifts have a day set.'
-            : 'No shifts for this day. Set a day on shifts in classic Positions, or pick another day.'}
+            : canManageContent
+              ? 'No shifts for this day. Add a shift or pick another day.'
+              : 'No shifts for this day.'}
         </div>
       ) : (
-        <div className="space-y-3">
-          {rows.map(({ position, shift }) => {
-            const rowKey = `${position.id}:${shift.id}`
-            const filled = countShiftAssignments(position.assignments, shift.id)
-            const needed = getShiftVolunteersNeeded(shift)
-            const shiftAssignments = (position.assignments || []).filter(
-              (a) => a.shift?.id === shift.id
-            )
-            const volunteers = shiftAssignments.filter(
-              (a) => a.role === 'VOLUNTEER' || a.role === 'ATTENDANT'
-            )
-            const overseer = shiftAssignments.find((a) => a.role === 'OVERSEER')
-            const keyman = shiftAssignments.find((a) => a.role === 'KEYMAN')
+        <div className="space-y-4">
+          {stations.map(({ position, shifts, filled: stationFilled, needed: stationNeeded }) => {
             const positionOverseer = position.oversight?.[0]?.overseer
-            const pct = Math.min(100, Math.round((filled / Math.max(needed, 1)) * 100))
-            const isEditing = editingShiftKey === rowKey
-
             return (
-              <article
-                key={rowKey}
-                className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
+              <section
+                key={position.id}
+                className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm"
               >
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="flex gap-3">
-                    {activeDay === 'undated' && canManageContent && (
-                      <label className="mt-1 inline-flex min-h-[44px] min-w-[44px] items-start touch-manipulation">
-                        <input
-                          type="checkbox"
-                          checked={selectedUndated.has(rowKey)}
-                          onChange={() => toggleUndatedSelect(rowKey)}
-                          className="mt-1 h-4 w-4"
-                          aria-label="Select undated shift"
-                        />
-                      </label>
-                    )}
-                    <div>
+                <header className="flex flex-col gap-2 border-b border-gray-100 bg-gray-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
                     <h3 className="text-base font-semibold text-gray-900">
                       #{position.positionNumber}{' '}
                       {position.name || position.positionName}
                     </h3>
                     <p className="text-sm text-gray-600">
-                      {shift.name}
-                      {!shift.isAllDay && shift.startTime
-                        ? ` · ${formatTime12Hour(shift.startTime)} – ${formatTime12Hour(
-                            shift.endTime || ''
-                          )}`
-                        : shift.isAllDay
-                          ? ' · All day'
-                          : ''}
-                      {position.area ? ` · ${position.area}` : ''}
-                      {!toDateKey(shift.shiftDate) && eventDateKeys.length > 1 ? (
-                        <span className="ml-1 rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-900">
-                          No day
-                        </span>
-                      ) : null}
+                      {position.area ? `${position.area} · ` : ''}
+                      <span
+                        className={
+                          stationFilled >= stationNeeded
+                            ? 'text-green-700'
+                            : 'text-amber-700'
+                        }
+                      >
+                        {stationFilled}/{stationNeeded} filled
+                      </span>
+                      {positionOverseer
+                        ? ` · Overseer ${positionOverseer.firstName} ${positionOverseer.lastName}`
+                        : ''}
                     </p>
-                    {canManageContent &&
-                      !toDateKey(shift.shiftDate) &&
-                      eventDateKeys.length > 0 &&
-                      !isEditing && (
-                        <div className="mt-2 flex flex-wrap items-center gap-2">
-                          <select
-                            defaultValue=""
-                            disabled={settingDayKey === rowKey}
-                            onChange={async (e) => {
-                              const day = e.target.value
-                              if (!day) return
-                              const ok = await setShiftDay(position.id, shift.id, day)
-                              if (ok) {
-                                toast.success(`Set to ${formatEventDayLabel(day)}`)
+                  </div>
+                  {canManageContent && (
+                    <button
+                      type="button"
+                      onClick={() => setAddShiftPosition(position)}
+                      className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 touch-manipulation"
+                    >
+                      Add shift
+                    </button>
+                  )}
+                </header>
+
+                <div className="divide-y divide-gray-100">
+                  {shifts.map((shift) => {
+                    const rowKey = `${position.id}:${shift.id}`
+                    const filled = countShiftAssignments(
+                      position.assignments,
+                      shift.id
+                    )
+                    const needed = getShiftVolunteersNeeded(shift)
+                    const shiftAssignments = (position.assignments || []).filter(
+                      (a) => a.shift?.id === shift.id
+                    )
+                    const volunteers = shiftAssignments.filter(
+                      (a) => a.role === 'VOLUNTEER' || a.role === 'ATTENDANT'
+                    )
+                    const overseer = shiftAssignments.find(
+                      (a) => a.role === 'OVERSEER'
+                    )
+                    const keyman = shiftAssignments.find(
+                      (a) => a.role === 'KEYMAN'
+                    )
+                    const isEditing = editingShiftKey === rowKey
+                    const pct = Math.min(
+                      100,
+                      Math.round((filled / Math.max(needed, 1)) * 100)
+                    )
+
+                    return (
+                      <div key={rowKey} className="px-4 py-3">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                          <div className="flex gap-3">
+                            {activeDay === 'undated' && canManageContent && (
+                              <label className="mt-1 inline-flex min-h-[44px] min-w-[44px] items-start touch-manipulation">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedUndated.has(rowKey)}
+                                  onChange={() => {
+                                    setSelectedUndated((prev) => {
+                                      const next = new Set(prev)
+                                      if (next.has(rowKey)) next.delete(rowKey)
+                                      else next.add(rowKey)
+                                      return next
+                                    })
+                                  }}
+                                  className="mt-1 h-4 w-4"
+                                  aria-label="Select undated shift"
+                                />
+                              </label>
+                            )}
+                            <div>
+                              <p className="font-medium text-gray-900">
+                                {shiftLabel(shift)}
+                                {!toDateKey(shift.shiftDate) &&
+                                eventDateKeys.length > 1 ? (
+                                  <span className="ml-1 rounded bg-amber-100 px-1.5 py-0.5 text-xs font-normal text-amber-900">
+                                    No day
+                                  </span>
+                                ) : null}
+                              </p>
+                              <p
+                                className={`text-sm ${
+                                  filled >= needed
+                                    ? 'text-green-700'
+                                    : 'text-amber-700'
+                                }`}
+                              >
+                                {filled}/{needed}
+                                {filled < needed
+                                  ? ` · ${needed - filled} open`
+                                  : ''}
+                              </p>
+                              {canManageContent &&
+                                !toDateKey(shift.shiftDate) &&
+                                eventDateKeys.length > 0 &&
+                                !isEditing && (
+                                  <select
+                                    defaultValue=""
+                                    disabled={settingDayKey === rowKey}
+                                    onChange={async (e) => {
+                                      const day = e.target.value
+                                      if (!day) return
+                                      const ok = await setShiftDay(
+                                        position.id,
+                                        shift.id,
+                                        day
+                                      )
+                                      if (ok) {
+                                        toast.success(
+                                          `Set to ${formatEventDayLabel(day)}`
+                                        )
+                                        router.reload()
+                                      }
+                                    }}
+                                    className="mt-2 min-h-[44px] rounded-md border border-amber-300 bg-amber-50 px-2 py-1.5 text-sm"
+                                  >
+                                    <option value="">Set day…</option>
+                                    {eventDateKeys.map((key) => (
+                                      <option key={key} value={key}>
+                                        {formatEventDayLabel(key)}
+                                      </option>
+                                    ))}
+                                  </select>
+                                )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
+                          <div
+                            className={`h-1.5 rounded-full ${
+                              pct >= 100
+                                ? 'bg-green-500'
+                                : pct > 0
+                                  ? 'bg-amber-400'
+                                  : 'bg-gray-300'
+                            }`}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+
+                        {isEditing && canManageContent ? (
+                          <ShiftInlineEditor
+                            initial={{
+                              name: shift.name || '',
+                              startTime: shift.startTime || '',
+                              endTime: shift.endTime || '',
+                              isAllDay: !!shift.isAllDay,
+                              volunteersNeeded: needed,
+                              shiftDate: toDateKey(shift.shiftDate),
+                            }}
+                            eventDateKeys={eventDateKeys}
+                            saving={savingShiftKey === rowKey}
+                            onCancel={() => setEditingShiftKey(null)}
+                            onSave={async (values) => {
+                              if (filled > 0) {
+                                const confirmed = await appConfirm({
+                                  title: 'Update shift times',
+                                  message: `This updates times for ${filled} assigned volunteer${
+                                    filled === 1 ? '' : 's'
+                                  }. Continue?`,
+                                  confirmLabel: 'Update times',
+                                  cancelLabel: 'Cancel',
+                                })
+                                if (!confirmed) return
+                              }
+                              setSavingShiftKey(rowKey)
+                              try {
+                                const ok = await positionService.updateShift(
+                                  position.id,
+                                  shift.id,
+                                  {
+                                    name: values.name,
+                                    startTime: values.isAllDay
+                                      ? null
+                                      : values.startTime || null,
+                                    endTime: values.isAllDay
+                                      ? null
+                                      : values.endTime || null,
+                                    isAllDay: values.isAllDay,
+                                    volunteersNeeded: values.volunteersNeeded,
+                                    shiftDate: values.shiftDate,
+                                  }
+                                )
+                                if (!ok) {
+                                  notifyAlert('Failed to update shift')
+                                  return
+                                }
+                                setEditingShiftKey(null)
+                                toast.success('Shift updated')
                                 router.reload()
+                              } catch {
+                                notifyAlert('Failed to update shift')
+                              } finally {
+                                setSavingShiftKey(null)
                               }
                             }}
-                            className="min-h-[44px] rounded-md border border-amber-300 bg-amber-50 px-2 py-1.5 text-sm"
-                          >
-                            <option value="">Set day…</option>
-                            {eventDateKeys.map((key) => (
-                              <option key={key} value={key}>
-                                {formatEventDayLabel(key)}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="text-sm text-gray-700">
-                    <span
-                      className={`font-medium ${
-                        filled >= needed ? 'text-green-700' : 'text-amber-700'
-                      }`}
-                    >
-                      {filled}/{needed} filled
-                      {filled < needed ? ` · ${needed - filled} open` : ''}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-gray-100">
-                  <div
-                    className={`h-2 rounded-full ${
-                      pct >= 100 ? 'bg-green-500' : pct > 0 ? 'bg-amber-400' : 'bg-gray-300'
-                    }`}
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
-
-                {isEditing && canManageContent ? (
-                  <ShiftInlineEditor
-                    initial={{
-                      name: shift.name || '',
-                      startTime: shift.startTime || '',
-                      endTime: shift.endTime || '',
-                      isAllDay: !!shift.isAllDay,
-                      volunteersNeeded: needed,
-                      shiftDate: toDateKey(shift.shiftDate),
-                    }}
-                    eventDateKeys={eventDateKeys}
-                    saving={savingShiftKey === rowKey}
-                    onCancel={() => setEditingShiftKey(null)}
-                    onSave={async (values) => {
-                      if (filled > 0) {
-                        const confirmed = await appConfirm({
-                          title: 'Update shift times',
-                          message: `This updates times for ${filled} assigned volunteer${
-                            filled === 1 ? '' : 's'
-                          } on this shift. Continue?`,
-                          confirmLabel: 'Update times',
-                          cancelLabel: 'Cancel',
-                        })
-                        if (!confirmed) return
-                      }
-                      setSavingShiftKey(rowKey)
-                      try {
-                        const ok = await positionService.updateShift(
-                          position.id,
-                          shift.id,
-                          {
-                            name: values.name,
-                            startTime: values.isAllDay ? null : values.startTime || null,
-                            endTime: values.isAllDay ? null : values.endTime || null,
-                            isAllDay: values.isAllDay,
-                            volunteersNeeded: values.volunteersNeeded,
-                            shiftDate: values.shiftDate,
-                          }
-                        )
-                        if (!ok) {
-                          notifyAlert('Failed to update shift')
-                          return
-                        }
-                        setEditingShiftKey(null)
-                        toast.success('Shift updated')
-                        router.reload()
-                      } catch {
-                        notifyAlert('Failed to update shift')
-                      } finally {
-                        setSavingShiftKey(null)
-                      }
-                    }}
-                  />
-                ) : (
-                  <>
-                    <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
-                      <div>
-                        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                          Shift overseer
-                        </p>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="text-gray-900">
-                            {overseer
-                              ? personName(overseer)
-                              : positionOverseer
-                                ? `${positionOverseer.firstName} ${positionOverseer.lastName} (position)`
-                                : '—'}
-                          </p>
-                          {canManageContent && overseer && (
-                            <button
-                              type="button"
-                              disabled={removingId === overseer.id}
-                              onClick={() => handleRemove(overseer)}
-                              className="text-xs text-red-600 hover:text-red-800 min-h-[44px] px-2 touch-manipulation"
-                            >
-                              Remove
-                            </button>
-                          )}
-                        </div>
-                        {keyman && (
-                          <div className="mt-1 flex flex-wrap items-center gap-2">
-                            <p className="text-xs text-gray-600">
-                              Keyman: {personName(keyman)}
-                            </p>
-                            {canManageContent && (
-                              <button
-                                type="button"
-                                disabled={removingId === keyman.id}
-                                onClick={() => handleRemove(keyman)}
-                                className="text-xs text-red-600 hover:text-red-800 min-h-[44px] px-2 touch-manipulation"
-                              >
-                                Remove
-                              </button>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                          Assigned
-                        </p>
-                        {volunteers.length === 0 ? (
-                          <p className="text-gray-500">None yet</p>
+                          />
                         ) : (
-                          <ul className="space-y-1">
-                            {volunteers.map((v) => (
-                              <li
-                                key={v.id}
-                                className="flex flex-wrap items-center gap-2 text-gray-900"
-                              >
-                                <span>{personName(v)}</span>
-                                {canManageContent && (
+                          <>
+                            <div className="mt-2 space-y-1 text-sm text-gray-800">
+                              <p>
+                                <span className="text-gray-500">Overseer · </span>
+                                {overseer
+                                  ? personName(overseer)
+                                  : positionOverseer
+                                    ? `${positionOverseer.firstName} ${positionOverseer.lastName} (position)`
+                                    : '—'}
+                                {canManageContent && overseer && (
                                   <button
                                     type="button"
-                                    disabled={removingId === v.id}
-                                    onClick={() => handleRemove(v)}
-                                    className="text-xs text-red-600 hover:text-red-800 min-h-[44px] px-2 touch-manipulation"
+                                    disabled={removingId === overseer.id}
+                                    onClick={() => handleRemove(overseer)}
+                                    className="ml-2 text-xs text-red-600 hover:text-red-800 min-h-[44px] px-1 touch-manipulation"
                                   >
                                     Remove
                                   </button>
                                 )}
-                              </li>
-                            ))}
-                          </ul>
+                              </p>
+                              {(keyman || canManageContent) && (
+                                <p>
+                                  <span className="text-gray-500">Keyman · </span>
+                                  {keyman ? personName(keyman) : '—'}
+                                  {canManageContent && keyman && (
+                                    <button
+                                      type="button"
+                                      disabled={removingId === keyman.id}
+                                      onClick={() => handleRemove(keyman)}
+                                      className="ml-2 text-xs text-red-600 hover:text-red-800 min-h-[44px] px-1 touch-manipulation"
+                                    >
+                                      Remove
+                                    </button>
+                                  )}
+                                </p>
+                              )}
+                              <div>
+                                <span className="text-gray-500">Assigned · </span>
+                                {volunteers.length === 0 ? (
+                                  <span className="text-gray-500">None</span>
+                                ) : (
+                                  <ul className="mt-1 space-y-0.5">
+                                    {volunteers.map((v) => (
+                                      <li
+                                        key={v.id}
+                                        className="flex flex-wrap items-center gap-2"
+                                      >
+                                        <span>{personName(v)}</span>
+                                        {canManageContent && (
+                                          <button
+                                            type="button"
+                                            disabled={removingId === v.id}
+                                            onClick={() => handleRemove(v)}
+                                            className="text-xs text-red-600 hover:text-red-800 min-h-[44px] px-1 touch-manipulation"
+                                          >
+                                            Remove
+                                          </button>
+                                        )}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </div>
+                            </div>
+
+                            {canManageContent && (
+                              <div className="mt-2 flex flex-wrap gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setAssignTarget({
+                                      position,
+                                      shift,
+                                      role: 'VOLUNTEER',
+                                    })
+                                  }
+                                  className="inline-flex min-h-[44px] items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 touch-manipulation"
+                                >
+                                  Assign
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setAssignTarget({
+                                      position,
+                                      shift,
+                                      role: 'OVERSEER',
+                                    })
+                                  }
+                                  className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 touch-manipulation"
+                                >
+                                  Overseer
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setAssignTarget({
+                                      position,
+                                      shift,
+                                      role: 'KEYMAN',
+                                    })
+                                  }
+                                  className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 touch-manipulation"
+                                >
+                                  Keyman
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingShiftKey(rowKey)}
+                                  className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 touch-manipulation"
+                                >
+                                  Edit times
+                                </button>
+                              </div>
+                            )}
+                          </>
                         )}
                       </div>
-                    </div>
-
-                    {canManageContent && (
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setAssignTarget({
-                              position,
-                              shift,
-                              role: 'VOLUNTEER',
-                            })
-                          }
-                          className="inline-flex min-h-[44px] items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 touch-manipulation"
-                        >
-                          Assign volunteer
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setAssignTarget({
-                              position,
-                              shift,
-                              role: 'OVERSEER',
-                            })
-                          }
-                          className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 touch-manipulation"
-                        >
-                          Set shift overseer
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setAssignTarget({
-                              position,
-                              shift,
-                              role: 'KEYMAN',
-                            })
-                          }
-                          className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 touch-manipulation"
-                        >
-                          Set keyman
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setEditingShiftKey(rowKey)}
-                          className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 touch-manipulation"
-                        >
-                          Edit times
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setAddShiftPosition(position)}
-                          className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 touch-manipulation"
-                        >
-                          Add shift
-                        </button>
-                      </div>
-                    )}
-                  </>
-                )}
-              </article>
+                    )
+                  })}
+                </div>
+              </section>
             )
           })}
         </div>
       )}
 
       {assignTarget && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center">
-          <div className="max-h-[85vh] w-full max-w-md overflow-hidden rounded-lg bg-white shadow-xl">
-            <div className="border-b border-gray-200 px-4 py-3">
-              <h3 className="text-lg font-semibold text-gray-900">
-                {assignTarget.role === 'OVERSEER'
-                  ? 'Set shift overseer'
-                  : assignTarget.role === 'KEYMAN'
-                    ? 'Set keyman'
-                    : 'Assign volunteer'}
-              </h3>
-              <p className="text-sm text-gray-600">
-                {assignTarget.position.name} · {assignTarget.shift.name}
-              </p>
-            </div>
-            <div className="px-4 py-3">
-              <input
-                type="search"
-                value={assignSearch}
-                onChange={(e) => setAssignSearch(e.target.value)}
-                placeholder="Search name or congregation…"
-                className="mb-3 w-full rounded-md border border-gray-300 px-3 py-2 min-h-[44px] text-base sm:text-sm"
-                autoFocus
-              />
-              <div className="max-h-64 space-y-1 overflow-y-auto">
-                {assignCandidates.map((a) => {
-                  const conflict = conflictMap.get(a.id)
-                  const hasConflict = conflict?.hasConflict
-                  return (
-                    <button
-                      key={a.id}
-                      type="button"
-                      disabled={assigning}
-                      onClick={() => handleAssign(a.id)}
-                      className="flex w-full min-h-[44px] items-center justify-between gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-blue-50 touch-manipulation disabled:opacity-50"
-                    >
-                      <span className="min-w-0">
-                        <span className="block truncate font-medium text-gray-900">
-                          {a.firstName} {a.lastName}
-                        </span>
-                        {a.congregation && (
-                          <span className="block text-xs text-gray-500">
-                            {a.congregation}
-                          </span>
-                        )}
-                        {hasConflict && (
-                          <span className="mt-0.5 block text-xs text-amber-700">
-                            {conflict!.message}
-                          </span>
-                        )}
-                      </span>
-                      {hasConflict && (
-                        <span className="shrink-0 rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-800">
-                          Conflict
-                        </span>
-                      )}
-                    </button>
-                  )
-                })}
-                {assignCandidates.length === 0 && (
-                  <p className="py-6 text-center text-sm text-gray-500">No matches</p>
-                )}
-              </div>
-            </div>
-            <div className="flex justify-end gap-2 border-t border-gray-200 px-4 py-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setAssignTarget(null)
-                  setAssignSearch('')
-                }}
-                className="min-h-[44px] rounded-md border border-gray-300 px-4 py-2 text-sm touch-manipulation"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
+        <DayBoardAssignModal
+          eventId={eventId}
+          target={assignTarget}
+          positions={positions}
+          attendants={attendants}
+          onClose={() => setAssignTarget(null)}
+          onAssigned={() => {
+            setAssignTarget(null)
+            router.reload()
+          }}
+        />
       )}
 
       <CreatePositionModal
@@ -1037,61 +968,18 @@ export default function PositionsDayBoard({
       />
 
       {addShiftPosition && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center">
-          <div className="w-full max-w-md overflow-hidden rounded-lg bg-white shadow-xl">
-            <div className="border-b border-gray-200 px-4 py-3">
-              <h3 className="text-lg font-semibold text-gray-900">Add shift</h3>
-              <p className="text-sm text-gray-600">{addShiftPosition.name}</p>
-            </div>
-            <div className="px-4 py-3">
-              {filteredPositions.length > 1 && (
-                <div className="mb-3">
-                  <label className="mb-1 block text-sm font-medium text-gray-700">
-                    Position
-                  </label>
-                  <select
-                    value={addShiftPosition.id}
-                    onChange={(e) => {
-                      const next = filteredPositions.find(
-                        (p) => p.id === e.target.value
-                      )
-                      if (next) setAddShiftPosition(next)
-                    }}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 min-h-[44px] text-base sm:text-sm"
-                  >
-                    {filteredPositions.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        #{p.positionNumber} {p.name || p.positionName}
-                      </option>
-                    ))}
-                    {!filteredPositions.some((p) => p.id === addShiftPosition.id) && (
-                      <option value={addShiftPosition.id}>
-                        #{addShiftPosition.positionNumber} {addShiftPosition.name}
-                      </option>
-                    )}
-                  </select>
-                </div>
-              )}
-              <ShiftInlineEditor
-                initial={{
-                  name: 'All Day',
-                  startTime: '',
-                  endTime: '',
-                  isAllDay: true,
-                  volunteersNeeded: 1,
-                  shiftDate:
-                    activeDay !== 'undated'
-                      ? activeDay
-                      : eventDateKeys[0] || null,
-                }}
-                eventDateKeys={eventDateKeys}
-                saving={savingNewShift}
-                onCancel={() => setAddShiftPosition(null)}
-                onSave={handleCreateShift}
-              />
-            </div>
-          </div>
-        </div>
+        <DayBoardAddShiftModal
+          position={addShiftPosition}
+          positions={filteredPositions}
+          eventDateKeys={eventDateKeys}
+          defaultDay={
+            activeDay !== 'undated' ? activeDay : eventDateKeys[0] || null
+          }
+          saving={savingNewShift}
+          onPositionChange={setAddShiftPosition}
+          onCancel={() => setAddShiftPosition(null)}
+          onSave={handleCreateShift}
+        />
       )}
     </div>
   )

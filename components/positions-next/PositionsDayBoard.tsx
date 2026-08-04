@@ -8,16 +8,21 @@ import { formatEventDayLabel } from '../../lib/eventDates'
 import { toDateKey } from '../../lib/shiftConflict'
 import { sortShiftsByTime } from '../../lib/shiftSort'
 import { createPositionService } from '../../lib/positionService'
+import { AutoAssignmentEngine } from '../../lib/autoAssignmentEngine'
 import { notifyAlert, toast } from '../../lib/ui/toast'
 import { appConfirm } from '../../lib/ui/confirm'
 import {
   abortEventBulkEmail,
   formatBulkEmailConfirmMessage,
 } from '../../lib/bulkEmailClient'
+import { useExport } from '../../hooks/useExport'
 import ShiftInlineEditor from '../ShiftInlineEditor'
 import CreatePositionModal from '../CreatePositionModal'
+import BulkPositionCreator from '../positions/BulkPositionCreator'
 import DayBoardAssignModal from './DayBoardAssignModal'
 import DayBoardAddShiftModal from './DayBoardAddShiftModal'
+import DayBoardOversightModal from './DayBoardOversightModal'
+import DayBoardApplyTemplateModal from './DayBoardApplyTemplateModal'
 import {
   type AssignTarget,
   type DayKey,
@@ -25,11 +30,13 @@ import {
   type Shift,
   type Volunteer,
   personName,
+  positionDisplayName,
   shiftLabel,
 } from './types'
 
 type Props = {
   eventId: string
+  eventName: string
   eventStart: string | null
   eventEnd: string | null
   positions: Position[]
@@ -47,6 +54,7 @@ type StationGroup = {
 
 export default function PositionsDayBoard({
   eventId,
+  eventName,
   positions,
   attendants,
   canManageContent,
@@ -54,6 +62,11 @@ export default function PositionsDayBoard({
 }: Props) {
   const router = useRouter()
   const positionService = useMemo(() => createPositionService(eventId), [eventId])
+  const { isExporting, handleExportPDF, handleExportExcel } = useExport({
+    eventId,
+    eventName,
+    positions: positions as any,
+  })
   const [activeDay, setActiveDay] = useState<DayKey>(
     eventDateKeys[0] || 'undated'
   )
@@ -63,11 +76,13 @@ export default function PositionsDayBoard({
   const [savingShiftKey, setSavingShiftKey] = useState<string | null>(null)
   const [removingId, setRemovingId] = useState<string | null>(null)
   const [underfilledOnly, setUnderfilledOnly] = useState(false)
+  const [showInactive, setShowInactive] = useState(false)
   const [selectedUndated, setSelectedUndated] = useState<Set<string>>(new Set())
   const [bulkDay, setBulkDay] = useState(eventDateKeys[0] || '')
   const [settingDayKey, setSettingDayKey] = useState<string | null>(null)
   const [bulkSettingDay, setBulkSettingDay] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [editingPosition, setEditingPosition] = useState<Position | null>(null)
   const [createForm, setCreateForm] = useState({
     positionNumber: 1,
     name: '',
@@ -80,6 +95,12 @@ export default function PositionsDayBoard({
   const [notifySending, setNotifySending] = useState(false)
   const [notifyJobActive, setNotifyJobActive] = useState(false)
   const [deletingKey, setDeletingKey] = useState<string | null>(null)
+  const [oversightPosition, setOversightPosition] = useState<Position | null>(
+    null
+  )
+  const [showBulkCreator, setShowBulkCreator] = useState(false)
+  const [showApplyTemplate, setShowApplyTemplate] = useState(false)
+  const [autoAssigning, setAutoAssigning] = useState(false)
 
   const undatedShiftCount = useMemo(() => {
     let n = 0
@@ -100,7 +121,7 @@ export default function PositionsDayBoard({
   const filteredPositions = useMemo(() => {
     const q = search.trim().toLowerCase()
     return positions.filter((p) => {
-      if (!p.isActive) return false
+      if (!p.isActive && !showInactive) return false
       if (!q) return true
       const name = (p.name || p.positionName || '').toLowerCase()
       const area = (p.area || '').toLowerCase()
@@ -110,7 +131,7 @@ export default function PositionsDayBoard({
         String(p.positionNumber).includes(q)
       )
     })
-  }, [positions, search])
+  }, [positions, search, showInactive])
 
   const stations = useMemo((): StationGroup[] => {
     const out: StationGroup[] = []
@@ -123,7 +144,12 @@ export default function PositionsDayBoard({
         if (underfilledOnly && filled >= needed) return false
         return true
       })
-      if (dayShifts.length === 0) continue
+      if (dayShifts.length === 0) {
+        if (showInactive && !position.isActive) {
+          out.push({ position, shifts: [], filled: 0, needed: 0 })
+        }
+        continue
+      }
       let filled = 0
       let needed = 0
       for (const shift of dayShifts) {
@@ -133,7 +159,27 @@ export default function PositionsDayBoard({
       out.push({ position, shifts: dayShifts, filled, needed })
     }
     return out
-  }, [filteredPositions, activeDay, underfilledOnly])
+  }, [filteredPositions, activeDay, underfilledOnly, showInactive])
+
+  const inactiveCount = useMemo(
+    () => positions.filter((p) => !p.isActive).length,
+    [positions]
+  )
+
+  const dayScopedUnfilledCount = useMemo(() => {
+    let open = 0
+    for (const p of positions) {
+      if (!p.isActive) continue
+      for (const s of p.shifts || []) {
+        const key = toDateKey(s.shiftDate) || 'undated'
+        if (key !== activeDay) continue
+        const filled = countShiftAssignments(p.assignments, s.id)
+        const needed = getShiftVolunteersNeeded(s)
+        open += Math.max(0, needed - filled)
+      }
+    }
+    return open
+  }, [positions, activeDay])
 
   const dayCoverage = useMemo(() => {
     let filled = 0
@@ -209,11 +255,23 @@ export default function PositionsDayBoard({
   }
 
   const openCreatePosition = () => {
+    setEditingPosition(null)
     setCreateForm({
       positionNumber: nextPositionNumber,
       name: '',
       area: '',
       description: '',
+    })
+    setShowCreateModal(true)
+  }
+
+  const openEditPosition = (position: Position) => {
+    setEditingPosition(position)
+    setCreateForm({
+      positionNumber: position.positionNumber,
+      name: position.name || position.positionName || '',
+      area: position.area || '',
+      description: position.description || '',
     })
     setShowCreateModal(true)
   }
@@ -226,6 +284,24 @@ export default function PositionsDayBoard({
     }
     setCreatingPosition(true)
     try {
+      if (editingPosition) {
+        const ok = await positionService.updatePosition(editingPosition.id, {
+          positionNumber: createForm.positionNumber,
+          name: createForm.name,
+          area: createForm.area || undefined,
+          description: createForm.description || undefined,
+        })
+        if (!ok) {
+          notifyAlert('Failed to update position')
+          return
+        }
+        toast.success('Position updated')
+        setShowCreateModal(false)
+        setEditingPosition(null)
+        router.reload()
+        return
+      }
+
       const res = await fetch(`/api/events/${eventId}/positions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -253,7 +329,9 @@ export default function PositionsDayBoard({
         router.reload()
       }
     } catch {
-      notifyAlert('Failed to create position')
+      notifyAlert(
+        editingPosition ? 'Failed to update position' : 'Failed to create position'
+      )
     } finally {
       setCreatingPosition(false)
     }
@@ -354,9 +432,9 @@ export default function PositionsDayBoard({
   const handleDeactivatePosition = async (position: Position) => {
     const ok = await appConfirm({
       title: 'Deactivate position',
-      message: `Deactivate "#${position.positionNumber} ${
-        position.name || position.positionName
-      }"? It can be reactivated later in classic Positions.`,
+      message: `Deactivate "#${position.positionNumber} ${positionDisplayName(
+        position
+      )}"? It can be reactivated from Show inactive.`,
       confirmLabel: 'Deactivate',
       cancelLabel: 'Cancel',
     })
@@ -374,6 +452,68 @@ export default function PositionsDayBoard({
       notifyAlert('Failed to deactivate position')
     } finally {
       setDeletingKey(null)
+    }
+  }
+
+  const handleReactivatePosition = async (position: Position) => {
+    setDeletingKey(position.id)
+    try {
+      const ok = await positionService.activatePosition(position.id)
+      if (!ok) {
+        notifyAlert('Failed to reactivate position')
+        return
+      }
+      toast.success('Position reactivated')
+      router.reload()
+    } catch {
+      notifyAlert('Failed to reactivate position')
+    } finally {
+      setDeletingKey(null)
+    }
+  }
+
+  const handleAutoAssignDay = async () => {
+    if (dayScopedUnfilledCount === 0) {
+      notifyAlert('No open slots on this day')
+      return
+    }
+    const dayLabel =
+      activeDay === 'undated' ? 'undated shifts' : formatEventDayLabel(activeDay)
+    const confirmed = await appConfirm({
+      title: 'Auto-assign (this day only)',
+      message: `Fill up to ${dayScopedUnfilledCount} open slot${
+        dayScopedUnfilledCount === 1 ? '' : 's'
+      } for ${dayLabel}?\n\nOnly shifts on this day are considered.`,
+      confirmLabel: 'Auto-assign',
+      cancelLabel: 'Cancel',
+    })
+    if (!confirmed) return
+
+    setAutoAssigning(true)
+    try {
+      const dayPositions = positions
+        .filter((p) => p.isActive)
+        .map((p) => ({
+          ...p,
+          shifts: (p.shifts || []).filter((s) => {
+            const key = toDateKey(s.shiftDate) || 'undated'
+            return key === activeDay
+          }),
+        }))
+        .filter((p) => (p.shifts || []).length > 0)
+
+      const engine = new AutoAssignmentEngine({
+        eventId,
+        positions: dayPositions as any,
+        attendants: attendants as any,
+      })
+      const result = await engine.execute()
+      notifyAlert(result.message)
+      router.reload()
+    } catch {
+      notifyAlert('Failed to auto-assign')
+    } finally {
+      setAutoAssigning(false)
     }
   }
 
@@ -537,12 +677,37 @@ export default function PositionsDayBoard({
                 onClick={openCreatePosition}
                 className="inline-flex min-h-[44px] items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 touch-manipulation"
               >
-                Create position
+                Create
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowBulkCreator(true)}
+                className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 touch-manipulation"
+              >
+                Bulk create
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowApplyTemplate(true)}
+                className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 touch-manipulation"
+              >
+                Apply template
+              </button>
+              <button
+                type="button"
+                disabled={autoAssigning || dayScopedUnfilledCount === 0}
+                onClick={handleAutoAssignDay}
+                className="inline-flex min-h-[44px] items-center rounded-md border border-orange-300 bg-orange-50 px-3 py-2 text-sm font-medium text-orange-900 hover:bg-orange-100 disabled:opacity-50 touch-manipulation"
+                title="Fills open slots for the active day only"
+              >
+                {autoAssigning
+                  ? 'Assigning…'
+                  : `Auto-assign (${dayScopedUnfilledCount})`}
               </button>
               <button
                 type="button"
                 onClick={() => {
-                  const first = filteredPositions[0]
+                  const first = filteredPositions.find((p) => p.isActive)
                   if (!first) {
                     notifyAlert('Create a position first')
                     return
@@ -559,7 +724,7 @@ export default function PositionsDayBoard({
                 onClick={handleSendNotifications}
                 className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 disabled:opacity-50 touch-manipulation"
               >
-                {notifySending ? 'Queuing…' : 'Send notifications'}
+                {notifySending ? 'Queuing…' : 'Notify'}
               </button>
               {notifyJobActive && (
                 <button
@@ -570,6 +735,24 @@ export default function PositionsDayBoard({
                   Abort send
                 </button>
               )}
+              <select
+                defaultValue=""
+                disabled={isExporting}
+                onChange={async (e) => {
+                  const action = e.target.value
+                  e.target.value = ''
+                  if (action === 'pdf') await handleExportPDF()
+                  if (action === 'excel') await handleExportExcel()
+                }}
+                className="min-h-[44px] rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 touch-manipulation"
+                aria-label="Export"
+              >
+                <option value="">
+                  {isExporting ? 'Exporting…' : 'Export…'}
+                </option>
+                <option value="pdf">Export PDF</option>
+                <option value="excel">Export Excel</option>
+              </select>
             </div>
           )}
           <input
@@ -579,15 +762,27 @@ export default function PositionsDayBoard({
             placeholder="Filter stations…"
             className="w-full sm:w-64 px-3 py-2 min-h-[44px] text-base sm:text-sm border border-gray-300 rounded-md"
           />
-          <label className="inline-flex min-h-[44px] items-center gap-2 text-sm text-gray-700 touch-manipulation">
-            <input
-              type="checkbox"
-              checked={underfilledOnly}
-              onChange={(e) => setUnderfilledOnly(e.target.checked)}
-              className="h-4 w-4"
-            />
-            Underfilled only
-          </label>
+          <div className="flex flex-wrap justify-end gap-3">
+            <label className="inline-flex min-h-[44px] items-center gap-2 text-sm text-gray-700 touch-manipulation">
+              <input
+                type="checkbox"
+                checked={underfilledOnly}
+                onChange={(e) => setUnderfilledOnly(e.target.checked)}
+                className="h-4 w-4"
+              />
+              Underfilled only
+            </label>
+            <label className="inline-flex min-h-[44px] items-center gap-2 text-sm text-gray-700 touch-manipulation">
+              <input
+                type="checkbox"
+                checked={showInactive}
+                onChange={(e) => setShowInactive(e.target.checked)}
+                className="h-4 w-4"
+              />
+              Show inactive
+              {inactiveCount > 0 ? ` (${inactiveCount})` : ''}
+            </label>
+          </div>
         </div>
       </div>
 
@@ -687,19 +882,28 @@ export default function PositionsDayBoard({
                   <div>
                     <h3 className="text-base font-semibold text-gray-900">
                       #{position.positionNumber}{' '}
-                      {position.name || position.positionName}
+                      {positionDisplayName(position)}
+                      {!position.isActive && (
+                        <span className="ml-2 rounded bg-gray-200 px-1.5 py-0.5 text-xs font-normal text-gray-700">
+                          Inactive
+                        </span>
+                      )}
                     </h3>
                     <p className="text-sm text-gray-600">
                       {position.area ? `${position.area} · ` : ''}
-                      <span
-                        className={
-                          stationFilled >= stationNeeded
-                            ? 'text-green-700'
-                            : 'text-amber-700'
-                        }
-                      >
-                        {stationFilled}/{stationNeeded} filled
-                      </span>
+                      {shifts.length === 0 ? (
+                        <span className="text-gray-500">No shifts this day</span>
+                      ) : (
+                        <span
+                          className={
+                            stationFilled >= stationNeeded
+                              ? 'text-green-700'
+                              : 'text-amber-700'
+                          }
+                        >
+                          {stationFilled}/{stationNeeded} filled
+                        </span>
+                      )}
                       {positionOverseer
                         ? ` · Overseer ${positionOverseer.firstName} ${positionOverseer.lastName}`
                         : ''}
@@ -707,21 +911,48 @@ export default function PositionsDayBoard({
                   </div>
                   {canManageContent && (
                     <div className="flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setAddShiftPosition(position)}
-                        className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 touch-manipulation"
-                      >
-                        Add shift
-                      </button>
-                      <button
-                        type="button"
-                        disabled={deletingKey === position.id}
-                        onClick={() => handleDeactivatePosition(position)}
-                        className="inline-flex min-h-[44px] items-center rounded-md border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50 touch-manipulation"
-                      >
-                        Deactivate
-                      </button>
+                      {position.isActive ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => openEditPosition(position)}
+                            className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 touch-manipulation"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setOversightPosition(position)}
+                            className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 touch-manipulation"
+                          >
+                            Oversight
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setAddShiftPosition(position)}
+                            className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 touch-manipulation"
+                          >
+                            Add shift
+                          </button>
+                          <button
+                            type="button"
+                            disabled={deletingKey === position.id}
+                            onClick={() => handleDeactivatePosition(position)}
+                            className="inline-flex min-h-[44px] items-center rounded-md border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50 touch-manipulation"
+                          >
+                            Deactivate
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={deletingKey === position.id}
+                          onClick={() => handleReactivatePosition(position)}
+                          className="inline-flex min-h-[44px] items-center rounded-md bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50 touch-manipulation"
+                        >
+                          Reactivate
+                        </button>
+                      )}
                     </div>
                   )}
                 </header>
@@ -1035,11 +1266,22 @@ export default function PositionsDayBoard({
 
       <CreatePositionModal
         isOpen={showCreateModal}
-        editingPosition={null}
+        editingPosition={
+          editingPosition
+            ? {
+                id: editingPosition.id,
+                positionNumber: editingPosition.positionNumber,
+                name: editingPosition.name || editingPosition.positionName || '',
+                area: editingPosition.area || undefined,
+                description: editingPosition.description || undefined,
+              }
+            : null
+        }
         formData={createForm}
         onClose={() => {
           if (creatingPosition) return
           setShowCreateModal(false)
+          setEditingPosition(null)
         }}
         onSubmit={handleCreatePosition}
         onFormDataChange={setCreateForm}
@@ -1048,7 +1290,7 @@ export default function PositionsDayBoard({
       {addShiftPosition && (
         <DayBoardAddShiftModal
           position={addShiftPosition}
-          positions={filteredPositions}
+          positions={filteredPositions.filter((p) => p.isActive)}
           eventDateKeys={eventDateKeys}
           defaultDay={
             activeDay !== 'undated' ? activeDay : eventDateKeys[0] || null
@@ -1058,6 +1300,52 @@ export default function PositionsDayBoard({
           onCancel={() => setAddShiftPosition(null)}
           onSave={handleCreateShift}
         />
+      )}
+
+      {oversightPosition && (
+        <DayBoardOversightModal
+          eventId={eventId}
+          position={oversightPosition}
+          attendants={attendants}
+          onClose={() => setOversightPosition(null)}
+          onSaved={() => {
+            setOversightPosition(null)
+            router.reload()
+          }}
+        />
+      )}
+
+      {showApplyTemplate && (
+        <DayBoardApplyTemplateModal
+          eventId={eventId}
+          positions={positions}
+          onClose={() => setShowApplyTemplate(false)}
+          onApplied={() => {
+            setShowApplyTemplate(false)
+            router.reload()
+          }}
+        />
+      )}
+
+      {showBulkCreator && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-black/40 p-4 sm:items-center">
+          <div className="my-4 w-full max-w-md">
+            <BulkPositionCreator
+              eventId={eventId}
+              onCancel={() => setShowBulkCreator(false)}
+              onSuccess={(result) => {
+                const n = result?.created ?? result?.length ?? ''
+                toast.success(
+                  typeof n === 'number'
+                    ? `Created ${n} positions`
+                    : 'Positions created'
+                )
+                setShowBulkCreator(false)
+                router.reload()
+              }}
+            />
+          </div>
+        </div>
       )}
     </div>
   )

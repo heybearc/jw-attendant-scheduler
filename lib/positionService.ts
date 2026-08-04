@@ -40,6 +40,8 @@ export interface Assignment {
 export interface UpdatePositionData {
   name?: string
   area?: string
+  description?: string
+  positionNumber?: number
   isActive?: boolean
 }
 

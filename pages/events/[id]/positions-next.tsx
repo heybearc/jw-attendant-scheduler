@@ -91,6 +91,7 @@ export default function PositionsNextPage({
 
           <PositionsDayBoard
             eventId={eventId}
+            eventName={event.name}
             eventStart={event.startDate}
             eventEnd={event.endDate}
             positions={positions}

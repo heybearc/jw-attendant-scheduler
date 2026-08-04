@@ -34,11 +34,21 @@ export type Position = {
   positionNumber: number
   isActive: boolean
   area?: string | null
+  description?: string | null
   shifts?: Shift[]
   assignments?: Assignment[]
   oversight?: Array<{
-    overseer?: { firstName: string; lastName: string } | null
-    keyman?: { firstName: string; lastName: string } | null
+    id?: string
+    overseer?: {
+      id: string
+      firstName: string
+      lastName: string
+    } | null
+    keyman?: {
+      id: string
+      firstName: string
+      lastName: string
+    } | null
   }>
 }
 
@@ -47,6 +57,9 @@ export type Volunteer = {
   firstName: string
   lastName: string
   congregation?: string | null
+  isActive?: boolean
+  overseerId?: string | null
+  keymanId?: string | null
 }
 
 export type AssignTarget = {
@@ -77,4 +90,8 @@ export function shiftLabel(shift: Shift): string {
     )}`
   }
   return shift.name
+}
+
+export function positionDisplayName(p: Position): string {
+  return p.name || p.positionName || `Position ${p.positionNumber}`
 }

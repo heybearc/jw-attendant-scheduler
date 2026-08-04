@@ -27,6 +27,17 @@ export default function DayBoardAssignModal({
   const [search, setSearch] = useState('')
   const [assigning, setAssigning] = useState(false)
 
+  const preferredOverseerId = target.position.oversight?.[0]?.overseer?.id || null
+  const preferredKeymanId = target.position.oversight?.[0]?.keyman?.id || null
+
+  const matchesPreferred = (a: Volunteer) => {
+    if (!preferredOverseerId && !preferredKeymanId) return true
+    return Boolean(
+      (preferredOverseerId && a.overseerId === preferredOverseerId) ||
+        (preferredKeymanId && a.keymanId === preferredKeymanId)
+    )
+  }
+
   const assignmentMap = useMemo(
     () => buildVolunteerAssignmentMap(positions),
     [positions]
@@ -52,6 +63,9 @@ export default function DayBoardAssignModal({
           .includes(q)
       })
       .sort((a, b) => {
+        const aPref = matchesPreferred(a) ? 0 : 1
+        const bPref = matchesPreferred(b) ? 0 : 1
+        if (aPref !== bPref) return aPref - bPref
         const ac = conflictMap.get(a.id)?.hasConflict ? 1 : 0
         const bc = conflictMap.get(b.id)?.hasConflict ? 1 : 0
         if (ac !== bc) return ac - bc
@@ -60,7 +74,7 @@ export default function DayBoardAssignModal({
         )
       })
       .slice(0, 40)
-  }, [attendants, search, conflictMap])
+  }, [attendants, search, conflictMap, preferredOverseerId, preferredKeymanId])
 
   const roleLabel =
     target.role === 'OVERSEER'
@@ -121,6 +135,9 @@ export default function DayBoardAssignModal({
     }
   }
 
+  const showPreferredHint =
+    target.role === 'VOLUNTEER' && (preferredOverseerId || preferredKeymanId)
+
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center">
       <div className="max-h-[85vh] w-full max-w-md overflow-hidden rounded-lg bg-white shadow-xl">
@@ -136,13 +153,19 @@ export default function DayBoardAssignModal({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search name or congregation…"
-            className="mb-3 w-full rounded-md border border-gray-300 px-3 py-2 min-h-[44px] text-base sm:text-sm"
+            className="mb-2 w-full rounded-md border border-gray-300 px-3 py-2 min-h-[44px] text-base sm:text-sm"
             autoFocus
           />
+          {showPreferredHint && (
+            <p className="mb-2 text-xs text-gray-500">
+              Matching overseer/keyman listed first. Others available for overflow.
+            </p>
+          )}
           <div className="max-h-64 space-y-1 overflow-y-auto">
             {candidates.map((a) => {
               const conflict = conflictMap.get(a.id)
               const hasConflict = conflict?.hasConflict
+              const preferred = matchesPreferred(a)
               return (
                 <button
                   key={a.id}
@@ -166,11 +189,18 @@ export default function DayBoardAssignModal({
                       </span>
                     )}
                   </span>
-                  {hasConflict && (
-                    <span className="shrink-0 rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-800">
-                      Conflict
-                    </span>
-                  )}
+                  <span className="flex shrink-0 items-center gap-1">
+                    {!preferred && showPreferredHint && (
+                      <span className="rounded bg-slate-100 px-1.5 py-0.5 text-xs font-medium text-slate-700">
+                        Other
+                      </span>
+                    )}
+                    {hasConflict && (
+                      <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-800">
+                        Conflict
+                      </span>
+                    )}
+                  </span>
                 </button>
               )
             })}

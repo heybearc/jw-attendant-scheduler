@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/router'
 import {
   countShiftAssignments,
@@ -101,6 +101,14 @@ export default function PositionsDayBoard({
   const [showBulkCreator, setShowBulkCreator] = useState(false)
   const [showApplyTemplate, setShowApplyTemplate] = useState(false)
   const [autoAssigning, setAutoAssigning] = useState(false)
+  /** Manual expand overrides; absent key = default (open if underfilled). */
+  const [expandOverride, setExpandOverride] = useState<Record<string, boolean>>(
+    {}
+  )
+
+  useEffect(() => {
+    setExpandOverride({})
+  }, [activeDay])
 
   const undatedShiftCount = useMemo(() => {
     let n = 0
@@ -180,6 +188,72 @@ export default function PositionsDayBoard({
     }
     return open
   }, [positions, activeDay])
+
+  const eventDaySummaries = useMemo(() => {
+    return eventDateKeys.map((day) => {
+      let filled = 0
+      let needed = 0
+      for (const p of positions) {
+        if (!p.isActive) continue
+        for (const s of p.shifts || []) {
+          if (toDateKey(s.shiftDate) !== day) continue
+          filled += countShiftAssignments(p.assignments, s.id)
+          needed += getShiftVolunteersNeeded(s)
+        }
+      }
+      return {
+        day,
+        filled,
+        needed,
+        open: Math.max(0, needed - filled),
+      }
+    })
+  }, [positions, eventDateKeys])
+
+  const stationExpanded = (positionId: string, filled: number, needed: number) => {
+    if (Object.prototype.hasOwnProperty.call(expandOverride, positionId)) {
+      return expandOverride[positionId]
+    }
+    // Default: expand underfilled / empty; collapse fully filled
+    return needed === 0 || filled < needed
+  }
+
+  const toggleStation = (positionId: string, currentlyOpen: boolean) => {
+    setExpandOverride((prev) => ({ ...prev, [positionId]: !currentlyOpen }))
+  }
+
+  const expandAllStations = () => {
+    const next: Record<string, boolean> = {}
+    for (const s of stations) next[s.position.id] = true
+    setExpandOverride(next)
+  }
+
+  const collapseFilledStations = () => {
+    const next: Record<string, boolean> = {}
+    for (const s of stations) {
+      next[s.position.id] = s.needed === 0 || s.filled < s.needed
+    }
+    setExpandOverride(next)
+  }
+
+  const runToolbarAction = async (action: string) => {
+    if (!action) return
+    if (action === 'create') openCreatePosition()
+    else if (action === 'bulk') setShowBulkCreator(true)
+    else if (action === 'template') setShowApplyTemplate(true)
+    else if (action === 'auto') await handleAutoAssignDay()
+    else if (action === 'add-shift') {
+      const first = filteredPositions.find((p) => p.isActive)
+      if (!first) {
+        notifyAlert('Create a position first')
+        return
+      }
+      setAddShiftPosition(first)
+    } else if (action === 'notify') await handleSendNotifications()
+    else if (action === 'abort') await handleAbortNotifications()
+    else if (action === 'pdf') await handleExportPDF()
+    else if (action === 'excel') await handleExportExcel()
+  }
 
   const dayCoverage = useMemo(() => {
     let filled = 0
@@ -647,6 +721,39 @@ export default function PositionsDayBoard({
         </div>
       )}
 
+      {eventDateKeys.length > 1 && (
+        <div className="flex flex-wrap gap-2 text-sm">
+          {eventDaySummaries.map(({ day, filled, needed, open }) => (
+            <button
+              key={day}
+              type="button"
+              onClick={() => {
+                setActiveDay(day)
+                setSelectedUndated(new Set())
+              }}
+              className={`inline-flex min-h-[44px] items-center rounded-md border px-3 py-1.5 touch-manipulation ${
+                activeDay === day
+                  ? 'border-blue-500 bg-blue-50 text-blue-900'
+                  : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <span className="font-medium">{formatEventDayLabel(day)}</span>
+              <span
+                className={`ml-1.5 ${
+                  needed > 0 && filled >= needed
+                    ? 'text-green-700'
+                    : open > 0
+                      ? 'text-amber-700'
+                      : 'text-gray-500'
+                }`}
+              >
+                {filled}/{needed}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex flex-wrap gap-2">
           {dayTabs.map((day) => (
@@ -671,89 +778,123 @@ export default function PositionsDayBoard({
         </div>
         <div className="flex flex-col gap-2 sm:items-end">
           {canManageContent && (
-            <div className="flex flex-wrap justify-end gap-2">
-              <button
-                type="button"
-                onClick={openCreatePosition}
-                className="inline-flex min-h-[44px] items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 touch-manipulation"
-              >
-                Create
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowBulkCreator(true)}
-                className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 touch-manipulation"
-              >
-                Bulk create
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowApplyTemplate(true)}
-                className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 touch-manipulation"
-              >
-                Apply template
-              </button>
-              <button
-                type="button"
-                disabled={autoAssigning || dayScopedUnfilledCount === 0}
-                onClick={handleAutoAssignDay}
-                className="inline-flex min-h-[44px] items-center rounded-md border border-orange-300 bg-orange-50 px-3 py-2 text-sm font-medium text-orange-900 hover:bg-orange-100 disabled:opacity-50 touch-manipulation"
-                title="Fills open slots for the active day only"
-              >
-                {autoAssigning
-                  ? 'Assigning…'
-                  : `Auto-assign (${dayScopedUnfilledCount})`}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const first = filteredPositions.find((p) => p.isActive)
-                  if (!first) {
-                    notifyAlert('Create a position first')
-                    return
-                  }
-                  setAddShiftPosition(first)
-                }}
-                className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 touch-manipulation"
-              >
-                Add shift
-              </button>
-              <button
-                type="button"
-                disabled={notifySending}
-                onClick={handleSendNotifications}
-                className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 disabled:opacity-50 touch-manipulation"
-              >
-                {notifySending ? 'Queuing…' : 'Notify'}
-              </button>
-              {notifyJobActive && (
-                <button
-                  type="button"
-                  onClick={handleAbortNotifications}
-                  className="inline-flex min-h-[44px] items-center rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 touch-manipulation"
-                >
-                  Abort send
-                </button>
-              )}
+            <>
+              {/* Mobile: single Actions control */}
               <select
                 defaultValue=""
-                disabled={isExporting}
+                disabled={autoAssigning || notifySending || isExporting}
                 onChange={async (e) => {
                   const action = e.target.value
                   e.target.value = ''
-                  if (action === 'pdf') await handleExportPDF()
-                  if (action === 'excel') await handleExportExcel()
+                  await runToolbarAction(action)
                 }}
-                className="min-h-[44px] rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 touch-manipulation"
-                aria-label="Export"
+                className="w-full min-h-[44px] rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 touch-manipulation sm:hidden"
+                aria-label="Actions"
               >
-                <option value="">
-                  {isExporting ? 'Exporting…' : 'Export…'}
+                <option value="">Actions…</option>
+                <option value="create">Create position</option>
+                <option value="bulk">Bulk create</option>
+                <option value="template">Apply template</option>
+                <option
+                  value="auto"
+                  disabled={dayScopedUnfilledCount === 0}
+                >
+                  Auto-assign ({dayScopedUnfilledCount})
                 </option>
+                <option value="add-shift">Add shift</option>
+                <option value="notify">Send notifications</option>
+                {notifyJobActive && (
+                  <option value="abort">Abort send</option>
+                )}
                 <option value="pdf">Export PDF</option>
                 <option value="excel">Export Excel</option>
               </select>
-            </div>
+
+              {/* Desktop: visible action buttons */}
+              <div className="hidden flex-wrap justify-end gap-2 sm:flex">
+                <button
+                  type="button"
+                  onClick={openCreatePosition}
+                  className="inline-flex min-h-[44px] items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 touch-manipulation"
+                >
+                  Create
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowBulkCreator(true)}
+                  className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 touch-manipulation"
+                >
+                  Bulk create
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowApplyTemplate(true)}
+                  className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 touch-manipulation"
+                >
+                  Apply template
+                </button>
+                <button
+                  type="button"
+                  disabled={autoAssigning || dayScopedUnfilledCount === 0}
+                  onClick={handleAutoAssignDay}
+                  className="inline-flex min-h-[44px] items-center rounded-md border border-orange-300 bg-orange-50 px-3 py-2 text-sm font-medium text-orange-900 hover:bg-orange-100 disabled:opacity-50 touch-manipulation"
+                  title="Fills open slots for the active day only"
+                >
+                  {autoAssigning
+                    ? 'Assigning…'
+                    : `Auto-assign (${dayScopedUnfilledCount})`}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const first = filteredPositions.find((p) => p.isActive)
+                    if (!first) {
+                      notifyAlert('Create a position first')
+                      return
+                    }
+                    setAddShiftPosition(first)
+                  }}
+                  className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 touch-manipulation"
+                >
+                  Add shift
+                </button>
+                <button
+                  type="button"
+                  disabled={notifySending}
+                  onClick={handleSendNotifications}
+                  className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 disabled:opacity-50 touch-manipulation"
+                >
+                  {notifySending ? 'Queuing…' : 'Notify'}
+                </button>
+                {notifyJobActive && (
+                  <button
+                    type="button"
+                    onClick={handleAbortNotifications}
+                    className="inline-flex min-h-[44px] items-center rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 touch-manipulation"
+                  >
+                    Abort send
+                  </button>
+                )}
+                <select
+                  defaultValue=""
+                  disabled={isExporting}
+                  onChange={async (e) => {
+                    const action = e.target.value
+                    e.target.value = ''
+                    if (action === 'pdf') await handleExportPDF()
+                    if (action === 'excel') await handleExportExcel()
+                  }}
+                  className="min-h-[44px] rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 touch-manipulation"
+                  aria-label="Export"
+                >
+                  <option value="">
+                    {isExporting ? 'Exporting…' : 'Export…'}
+                  </option>
+                  <option value="pdf">Export PDF</option>
+                  <option value="excel">Export Excel</option>
+                </select>
+              </div>
+            </>
           )}
           <input
             type="search"
@@ -870,47 +1011,93 @@ export default function PositionsDayBoard({
               : 'No shifts for this day.'}
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={expandAllStations}
+              className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 touch-manipulation"
+            >
+              Expand all
+            </button>
+            <button
+              type="button"
+              onClick={collapseFilledStations}
+              className="inline-flex min-h-[44px] items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 touch-manipulation"
+            >
+              Collapse filled
+            </button>
+          </div>
           {stations.map(({ position, shifts, filled: stationFilled, needed: stationNeeded }) => {
             const positionOverseer = position.oversight?.[0]?.overseer
+            const isOpen = stationExpanded(
+              position.id,
+              stationFilled,
+              stationNeeded
+            )
             return (
               <section
                 key={position.id}
                 className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm"
               >
-                <header className="flex flex-col gap-2 border-b border-gray-100 bg-gray-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <h3 className="text-base font-semibold text-gray-900">
-                      #{position.positionNumber}{' '}
-                      {positionDisplayName(position)}
-                      {!position.isActive && (
-                        <span className="ml-2 rounded bg-gray-200 px-1.5 py-0.5 text-xs font-normal text-gray-700">
-                          Inactive
-                        </span>
-                      )}
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      {position.area ? `${position.area} · ` : ''}
-                      {shifts.length === 0 ? (
-                        <span className="text-gray-500">No shifts this day</span>
-                      ) : (
-                        <span
-                          className={
-                            stationFilled >= stationNeeded
-                              ? 'text-green-700'
-                              : 'text-amber-700'
-                          }
-                        >
-                          {stationFilled}/{stationNeeded} filled
-                        </span>
-                      )}
-                      {positionOverseer
-                        ? ` · Overseer ${positionOverseer.firstName} ${positionOverseer.lastName}`
-                        : ''}
-                    </p>
-                  </div>
-                  {canManageContent && (
-                    <div className="flex flex-wrap gap-2">
+                <header className="flex flex-col gap-2 bg-gray-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                  <button
+                    type="button"
+                    onClick={() => toggleStation(position.id, isOpen)}
+                    className="flex min-h-[44px] flex-1 items-start gap-2 text-left touch-manipulation"
+                    aria-expanded={isOpen}
+                  >
+                    <span
+                      className="mt-1 inline-flex h-6 w-6 shrink-0 items-center justify-center text-gray-500"
+                      aria-hidden
+                    >
+                      <svg
+                        className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-90' : ''}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    </span>
+                    <span>
+                      <span className="block text-base font-semibold text-gray-900">
+                        #{position.positionNumber}{' '}
+                        {positionDisplayName(position)}
+                        {!position.isActive && (
+                          <span className="ml-2 rounded bg-gray-200 px-1.5 py-0.5 text-xs font-normal text-gray-700">
+                            Inactive
+                          </span>
+                        )}
+                      </span>
+                      <span className="mt-0.5 block text-sm text-gray-600">
+                        {position.area ? `${position.area} · ` : ''}
+                        {shifts.length === 0 ? (
+                          <span className="text-gray-500">No shifts this day</span>
+                        ) : (
+                          <span
+                            className={
+                              stationFilled >= stationNeeded
+                                ? 'text-green-700'
+                                : 'text-amber-700'
+                            }
+                          >
+                            {stationFilled}/{stationNeeded} filled
+                          </span>
+                        )}
+                        {positionOverseer
+                          ? ` · Overseer ${positionOverseer.firstName} ${positionOverseer.lastName}`
+                          : ''}
+                      </span>
+                    </span>
+                  </button>
+                  {canManageContent && isOpen && (
+                    <div className="flex flex-wrap gap-2 sm:pl-8">
                       {position.isActive ? (
                         <>
                           <button
@@ -957,7 +1144,8 @@ export default function PositionsDayBoard({
                   )}
                 </header>
 
-                <div className="divide-y divide-gray-100">
+                {isOpen && (
+                <div className="divide-y divide-gray-100 border-t border-gray-100">
                   {shifts.map((shift) => {
                     const rowKey = `${position.id}:${shift.id}`
                     const filled = countShiftAssignments(
@@ -1244,6 +1432,7 @@ export default function PositionsDayBoard({
                     )
                   })}
                 </div>
+                )}
               </section>
             )
           })}

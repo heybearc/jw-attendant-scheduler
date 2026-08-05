@@ -1,32 +1,32 @@
 # TheoShift Task State
 
-**Last updated:** 2026-08-02  
+**Last updated:** 2026-08-04  
 **Branch:** `main`  
-**Production:** **LIVE** **GREEN** `10.92.3.22` · **STANDBY** **BLUE** `10.92.3.24` — both **v4.31.0**.
+**Production:** **LIVE** **BLUE** `10.92.3.24` · **STANDBY** **GREEN** `10.92.3.22` — both **v4.32.0**.
 
 ---
 
 ## Current Task
 
-**Positions redesign (parallel surface)** — NEXT
+**Positions redesign — publish gate** — NEXT
 
 ### What I'm doing right now
 
-Building `/events/[id]/positions-next` day-board preview (multi-day grouping, capacity, per-shift overseer, quick assign). Classic Positions remains default.
+Day-board preview shipped in **v4.32.0** (still optional via **Try new layout**). Classic Positions remains the default Positions tab until explicitly published.
 
 ### Recent completions
 
+- ✅ **v4.32.0** — Positions day-board preview (stations by day, collapse UX, day-scoped auto-assign, thin bulk setup, help)
 - ✅ **v4.31.0** — Availability filter; assign-time edits; safer Positions notifications; chat push copy; mobile polish
-- ✅ **v4.30.1** — Request Volunteer for whole IVS event roster
 
 ### Next steps
 
-1. Smoke remove / Edit times / undated banner on STANDBY `positions-next`.
-2. Next redesign slices: bulk tools parity, publish gate.
+1. Smoke day board on production (`Try new layout`).
+2. When ready: publish gate — make day board the default Positions nav target.
 
 ## Exact next command
 
-Open `/events/<id>/positions-next` on STANDBY (`https://blue.theoshift.com`).
+Open an event → Positions → **Try new layout** on https://theoshift.com (or confirm publish).
 
 ---
 
@@ -39,18 +39,4 @@ Open `/events/<id>/positions-next` on STANDBY (`https://blue.theoshift.com`).
 
 **Infrastructure**
 
-- **`/release` does not deploy** — Only HAProxy. Build on STANDBY before `/release`.
-- **PM2 names:** BLUE → `theoshift-blue`, GREEN → `theoshift-green`.
-
----
-
-## Session snapshot — recent `main` commits
-
-- `7b4d7d32` — chore: mark production on v4.31.0 after ship
-- `9704574d` — Release v4.31.0
-
----
-
-## Feedback triage (this session)
-
-- **Resolved:** 0 · **Promoted:** 0 · **Triaged:** 0
+- Blue-green via HAProxy; do not assume container color without `get_deployment_status`.

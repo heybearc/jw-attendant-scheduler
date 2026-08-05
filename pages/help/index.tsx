@@ -83,6 +83,12 @@ export default function HelpPage({ userRole }: HelpPageProps) {
       roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN']
     },
     {
+      id: 'positions-day-board',
+      title: 'Stations by day (new Positions layout)',
+      description: 'Day board for multi-day stations, assign, and setup tools',
+      roles: ['ADMIN', 'OVERSEER', 'ASSISTANT_OVERSEER', 'KEYMAN']
+    },
+    {
       id: 'count-times',
       title: '⏱️ Count Times',
       description: 'Recording and managing attendance counts',

@@ -183,7 +183,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             sequence: shift.sequence,
             isAllDay: shift.isAllDay,
             startTime: shift.startTime,
-            endTime: shift.endTime
+            endTime: shift.endTime,
+            shiftDate: shift.shiftDate,
+            volunteersNeeded: shift.volunteersNeeded
           }
         })
       }
@@ -202,6 +204,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               volunteerId: assignment.volunteerId,
               shiftId: newShiftId || undefined,
               role: assignment.role || 'VOLUNTEER',
+              overseerId: assignment.overseerId,
+              keymanId: assignment.keymanId,
               assignedBy: user.id
             }
           })
@@ -229,27 +233,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Clone lanyards (if enabled and lanyard settings exist)
     if (cloneLanyards && originalEvent.lanyard_settings) {
-      // First create lanyard_settings for the new event
+      const totalLanyards = originalEvent.lanyard_settings.totalLanyards
+      // Fresh event: all badges available (do not inherit checkout state)
       const newLanyardSettingsId = uuidv4()
       await prisma.lanyard_settings.create({
         data: {
           id: newLanyardSettingsId,
           eventId: newEventId,
-          totalLanyards: originalEvent.lanyard_settings.totalLanyards,
-          availableLanyards: originalEvent.lanyard_settings.availableLanyards,
+          totalLanyards,
+          availableLanyards: totalLanyards,
           isActive: originalEvent.lanyard_settings.isActive,
           updatedAt: new Date()
         }
       })
 
-      // Then clone individual lanyards
       for (const lanyard of originalEvent.lanyard_settings.lanyards) {
         await prisma.lanyards.create({
           data: {
             id: uuidv4(),
             lanyardSettingId: newLanyardSettingsId,
             badgeNumber: lanyard.badgeNumber,
-            status: lanyard.status,
+            status: 'AVAILABLE',
+            isCheckedOut: false,
+            checkedOutTo: null,
+            checkedOutAt: null,
+            checkedInAt: null,
             notes: lanyard.notes,
             updatedAt: new Date()
           }
@@ -265,6 +273,40 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       where: { eventId: id }
     }) : []
 
+    const remapScopeIds = (
+      scopeType: string | null | undefined,
+      scopeIds: unknown
+    ): unknown => {
+      if (!scopeIds) return undefined
+      const ids = Array.isArray(scopeIds)
+        ? scopeIds
+        : typeof scopeIds === 'string'
+          ? (() => {
+              try {
+                const parsed = JSON.parse(scopeIds)
+                return Array.isArray(parsed) ? parsed : []
+              } catch {
+                return []
+              }
+            })()
+          : []
+
+      // Position scopes are event-specific — remap to cloned position IDs
+      if (scopeType === 'POSITION') {
+        if (!clonePositions || positionMapping.size === 0) {
+          return []
+        }
+        return ids
+          .map((oldId: unknown) =>
+            typeof oldId === 'string' ? positionMapping.get(oldId) : undefined
+          )
+          .filter((id: string | undefined): id is string => Boolean(id))
+      }
+
+      // DEPARTMENT / STATION_RANGE use shared catalog IDs — copy as-is
+      return ids
+    }
+
     for (const permission of originalPermissions) {
       console.log(`[CLONE] Cloning permission for user ${permission.userId} with role ${permission.role}`)
       await prisma.event_permissions.create({
@@ -274,7 +316,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           userId: permission.userId,
           role: permission.role,
           scopeType: permission.scopeType,
-          scopeIds: permission.scopeIds ?? undefined,
+          scopeIds: remapScopeIds(permission.scopeType, permission.scopeIds) as any,
           createdAt: new Date(),
           updatedAt: new Date()
         }

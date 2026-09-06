@@ -26,7 +26,7 @@ test.describe('Generated release — Event clone parity', () => {
     await expect(page.getByRole('heading', { name: /Clone Event/i })).toBeVisible({
       timeout: 10000,
     })
-    await expect(page.getByText(/Volunteer Links/i)).toBeVisible()
+    await expect(page.getByText('Volunteer Links', { exact: true })).toBeVisible()
     await expect(
       page.getByText(/Department overseer contacts, keymen, and position oversight/i)
     ).toBeVisible()

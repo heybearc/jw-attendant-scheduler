@@ -92,24 +92,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         startTime: originalEvent.startTime,
         endTime: originalEvent.endTime,
         location: originalEvent.location,
+        locationId: originalEvent.locationId,
+        venue: originalEvent.venue,
         capacity: originalEvent.capacity,
         volunteersNeeded: originalEvent.volunteersNeeded,
         status: 'UPCOMING',
         createdBy: user.id,
         updatedAt: new Date(),
-        // Clone oversight details (if enabled) - stored in settings JSON
-        ...(cloneOversight && originalEvent.settings && {
-          settings: originalEvent.settings
-        }),
-        // Clone settings (if enabled)
+        // Module / terminology settings (JSON)
         ...(cloneSettings && {
-          settings: originalEvent.settings ?? undefined
+          settings: originalEvent.settings ?? undefined,
+          notificationSettings: originalEvent.notificationSettings ?? undefined
+        }),
+        // Event-level oversight contacts (columns — not settings JSON)
+        ...(cloneOversight && {
+          departmentOverseerName: originalEvent.departmentOverseerName,
+          departmentOverseerPhone: originalEvent.departmentOverseerPhone,
+          departmentOverseerEmail: originalEvent.departmentOverseerEmail,
+          departmentOverseerUserId: originalEvent.departmentOverseerUserId,
+          departmentOverseerAssistants: originalEvent.departmentOverseerAssistants ?? undefined,
+          keyman: originalEvent.keyman ?? undefined
         })
       }
     })
 
     // Clone event_volunteers (if enabled)
     const volunteerMapping = new Map<string, string>()
+    let clonedVolunteerCount = 0
     if (cloneVolunteers) {
       for (const eventVolunteer of originalEvent.event_volunteers) {
       const newVolunteerId = uuidv4()
@@ -123,6 +132,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           volunteerId: eventVolunteer.volunteerId,
           role: eventVolunteer.role,
           isActive: eventVolunteer.isActive,
+          // Required for Volunteers / Positions roster visibility (default false = IVS-only)
+          onVolunteerRoster: eventVolunteer.onVolunteerRoster,
+          isKeyman: eventVolunteer.isKeyman,
+          isOverseer: eventVolunteer.isOverseer,
+          isElder: eventVolunteer.isElder,
           assignedDepartments: eventVolunteer.assignedDepartments ?? undefined,
           assignedStationRanges: eventVolunteer.assignedStationRanges ?? undefined,
           keymanId: eventVolunteer.keymanId,
@@ -130,6 +144,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           updatedAt: new Date()
         }
       })
+      clonedVolunteerCount++
       }
     }
 
@@ -194,18 +209,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       }
 
-      // Clone oversight assignments for this position
-      for (const oversight of position.oversight) {
-        await prisma.position_oversight_assignments.create({
-          data: {
-            id: uuidv4(),
-            positionId: newPositionId,
-            eventId: newEventId,
-            overseerId: oversight.overseerId,
-            keymanId: oversight.keymanId,
-            assignedBy: user.id
-          }
-        })
+      // Clone position-level oversight (overseer/keyman per position)
+      if (cloneOversight) {
+        for (const oversight of position.oversight) {
+          await prisma.position_oversight_assignments.create({
+            data: {
+              id: uuidv4(),
+              positionId: newPositionId,
+              eventId: newEventId,
+              overseerId: oversight.overseerId,
+              keymanId: oversight.keymanId,
+              assignedBy: user.id
+            }
+          })
+        }
       }
     }
     }
@@ -264,15 +281,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
     }
 
-    const positionCount = originalEvent.positions.length
-    const lanyardCount = originalEvent.lanyard_settings?.lanyards.length || 0
+    const positionCount = clonePositions ? originalEvent.positions.length : 0
+    const lanyardCount = cloneLanyards ? (originalEvent.lanyard_settings?.lanyards.length || 0) : 0
     
     return res.status(200).json({ 
       success: true, 
       data: { 
         id: newEventId,
         name: clonedEvent.name,
-        message: `Event cloned successfully with ${positionCount} positions, ${originalEvent.event_volunteers.length} volunteers, ${lanyardCount} lanyards, and ${originalPermissions.length} permissions`
+        message: `Event cloned successfully with ${positionCount} positions, ${clonedVolunteerCount} volunteers, ${lanyardCount} lanyards, and ${originalPermissions.length} permissions`
       }
     })
 

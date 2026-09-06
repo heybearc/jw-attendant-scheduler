@@ -177,7 +177,7 @@ export default function CloneEventModal({ isOpen, onClose, onConfirm, eventName 
                   <div className="ml-3 flex-1">
                     <div className="text-sm font-medium text-gray-900">Oversight Details</div>
                     <div className="text-xs text-gray-600 mt-1">
-                      Circuit overseer, assembly overseer, and keyman information
+                      Department overseer contacts, keymen, and position oversight assignments
                     </div>
                   </div>
                 </label>

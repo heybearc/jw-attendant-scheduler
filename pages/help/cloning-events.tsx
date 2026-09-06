@@ -116,7 +116,7 @@ export default function CloningEventsPage({ userRole }: CloningEventsProps) {
                 <div className="border-l-4 border-green-500 pl-4">
                   <h4 className="font-semibold text-gray-900">👥 Volunteers</h4>
                   <p className="text-gray-600 text-sm mb-2">
-                    Copy the volunteer list (people registered for the event).
+                    Copy the volunteer list (people registered for the event) onto the new event’s Volunteers tab.
                   </p>
                   <p className="text-gray-600 text-sm italic">
                     <strong>When to use:</strong> When the same people will serve at the new event.
@@ -129,7 +129,7 @@ export default function CloningEventsPage({ userRole }: CloningEventsProps) {
                 <div className="border-l-4 border-purple-500 pl-4">
                   <h4 className="font-semibold text-gray-900">📌 Assignments</h4>
                   <p className="text-gray-600 text-sm mb-2">
-                    Copy volunteer-to-position assignments (who is assigned where).
+                    Copy volunteer-to-position assignments (who is assigned where), including shift day and how many people each shift needs.
                   </p>
                   <p className="text-gray-600 text-sm italic">
                     <strong>When to use:</strong> When you want the exact same people in the exact same positions.
@@ -142,17 +142,27 @@ export default function CloningEventsPage({ userRole }: CloningEventsProps) {
                 <div className="border-l-4 border-orange-500 pl-4">
                   <h4 className="font-semibold text-gray-900">🎫 Lanyards</h4>
                   <p className="text-gray-600 text-sm mb-2">
-                    Copy lanyard assignments and configurations.
+                    Copy lanyard badge numbers and configuration. Checkout state starts fresh (all available).
                   </p>
                   <p className="text-gray-600 text-sm italic">
                     <strong>When to use:</strong> When volunteers will use the same lanyard setup.
                   </p>
                 </div>
 
+                <div className="border-l-4 border-violet-500 pl-4">
+                  <h4 className="font-semibold text-gray-900">🧭 Oversight Details</h4>
+                  <p className="text-gray-600 text-sm mb-2">
+                    Copy department overseer contacts, keymen, and per-position oversight assignments.
+                  </p>
+                  <p className="text-gray-600 text-sm italic">
+                    <strong>When to use:</strong> When the same oversight structure applies to the new event.
+                  </p>
+                </div>
+
                 <div className="border-l-4 border-pink-500 pl-4">
                   <h4 className="font-semibold text-gray-900">🔐 Permissions</h4>
                   <p className="text-gray-600 text-sm mb-2">
-                    Copy user permissions (who can edit/manage the event).
+                    Copy user permissions (who can edit/manage the event). Position-scoped access is remapped to the new positions.
                   </p>
                   <p className="text-gray-600 text-sm italic">
                     <strong>When to use:</strong> When the same team will manage the new event.

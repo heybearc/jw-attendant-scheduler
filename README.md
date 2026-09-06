@@ -275,6 +275,7 @@ For issues or questions:
 4. Contact the project maintainer for deployment access
 
 ## 📝 Version History
+- **v4.32.1** (2026-09-05) - Event clone parity (roster, oversight, shift days, fresh lanyards)
 - **v4.32.0** (2026-08-04) - Positions day-board preview (stations by day, collapse UX, day-scoped auto-assign)
 - **v4.31.0** (2026-08-02) - Volunteers availability filter; edit shift times while assigning; safer Positions notification sends
 - **v4.30.1** (2026-07-31) - Request Volunteer available to everyone on an IVS event roster (same rule as Early Check-In)

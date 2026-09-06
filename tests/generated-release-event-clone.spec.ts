@@ -16,10 +16,10 @@ test.describe('Generated release — Event clone parity', () => {
 
   test('clone modal shows oversight and volunteer link options', async ({ page }) => {
     const eventId = await getValidEventId(page)
-    await page.goto(`${BASE_URL}/events/${eventId}`)
+    await page.goto(`${BASE_URL}/events/${eventId}/edit`)
     await page.waitForLoadState('domcontentloaded')
 
-    const cloneTrigger = page.getByRole('button', { name: /Clone Event|Clone/i }).first()
+    const cloneTrigger = page.getByRole('button', { name: /Clone Event/i })
     await expect(cloneTrigger).toBeVisible({ timeout: 15000 })
     await cloneTrigger.click()
 
